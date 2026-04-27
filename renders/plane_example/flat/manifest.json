@@ -3,10 +3,10 @@
   "device": "cuda:0",
   "fov": 60.0,
   "image_size": 224,
-  "camera_distance": 1.6431645430199588,
-  "total_images": 456,
-  "processing_time_seconds": 4.34,
-  "processing_time_human": "0m 4.34s",
+  "camera_distance": 1.6671324120007642,
+  "total_images": 24,
+  "processing_time_seconds": 0.94,
+  "processing_time_human": "0m 0.94s",
   "illumination": "flat",
   "illumination_value": 0.7
 }
