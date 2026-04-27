@@ -3,6 +3,3 @@ venv/
 
 # data
 data/
-
-# png files
-*.png
