@@ -31,7 +31,7 @@ This folder contains an interactive visualization tool with support for 3D meshe
 
 ```powershell
 .\venv\Scripts\python.exe .\InteractiveViewer\view_symmetries.py `
-  --mesh ".\InteractiveViewer\example\example.obj"
+  --mesh ".\objects\plane_example.obj"
 ```
 
 ### Using a specific symmetry file
@@ -40,15 +40,15 @@ If the `.txt` file has a different name than the `.obj`:
 
 ```powershell
 .\venv\Scripts\python.exe .\InteractiveViewer\view_symmetries.py `
-  --mesh ".\InteractiveViewer\example\example.obj" `
-  --symmetries ".\InteractiveViewer\example\example.txt"
+  --mesh ".\objects\plane_example.obj" `
+  --symmetries ".\objects\plane_symmetries.obj"
 ```
 
 ### Adjusting the size of the visualized planes
 
 ```powershell
 .\venv\Scripts\python.exe .\InteractiveViewer\view_symmetries.py `
-  --mesh ".\InteractiveViewer\example\example.obj" `
+  --mesh ".\objects\plane_example.obj" `
   --size 0.3
 ```
 
