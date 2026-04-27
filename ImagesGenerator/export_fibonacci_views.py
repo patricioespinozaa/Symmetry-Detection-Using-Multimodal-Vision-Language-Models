@@ -315,12 +315,12 @@ def main():
     }
     with open(object_output_dir / "manifest.json", "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
-    print("Export completed")
-    print(f"Object: {object_name}")
-    print(f"Output: {object_output_dir}")
-    print(f"Total images: {len(all_records)}")
-    print(f"Illumination: {args.illumination} (gray value {illumination_value})")
-    print(f"\nProcessing time: {int(elapsed_time // 60)}m {elapsed_time % 60:.2f}s ({elapsed_time:.2f}s total)")
+    # print("Export completed")
+    # print(f"Object: {object_name}")
+    # print(f"Output: {object_output_dir}")
+    # print(f"Total images: {len(all_records)}")
+    # print(f"Illumination: {args.illumination} (gray value {illumination_value})")
+    # print(f"\nProcessing time: {int(elapsed_time // 60)}m {elapsed_time % 60:.2f}s ({elapsed_time:.2f}s total)")
 
 if __name__ == "__main__":
     main()
