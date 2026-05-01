@@ -10,70 +10,114 @@ This tool exports multi-view images of a 3D mesh using the Fibonacci sphere samp
 
 ## Usage
 
-
 ```bash
-python ImagesGenerator/export_fibonacci_views.py --mesh path/to/model.obj --output output_folder --repo-views 114 --illumination flat
+python ImagesGenerator/export_fibonacci_views.py \
+  --mesh path/to/model.obj \
+  --output output_folder \
+  --symmetry-type axis_sym \
+  --repo-views 114 \
+  --illumination flat
 ```
 
+### Arguments
 
-- `--mesh`: Path to the input .obj mesh file (required)
-- `--output`: Output folder (default: output)
-- `--repo-views`: Number of Fibonacci viewpoints (default: 26; recommended: 6, 14, 26, 42, 62, 86, 114, ...)
-- `--image-size`: Output image size (default: 512)
-- `--fov`: Field of view in degrees (default: 60.0)
-- `--device`: Device to use (default: cuda:0)
-- `--camera-distance-factor`: Camera distance multiplier (default: 1.2)
-- `--illumination`: Illumination mode for the mesh material. Options:
-	- `flat` (default): uniform gray (0.7)
-	- `darker`: uniform dark gray (0.3)
-	- `brighter`: uniform light gray (0.95)
+| Argument | Default | Description |
+|---|---|---|
+| `--mesh` | *(required)* | Path to the input `.obj` mesh file |
+| `--symmetry-type` | *(required)* | Symmetry type: `axis_sym` or `plane_sym` |
+| `--output` | `output` | Output base folder |
+| `--repo-views` | `26` | Number of Fibonacci viewpoints (recommended: 6, 14, 26, 42, 62, 86, 114, …) |
+| `--image-size` | `512` | Output image size in pixels (square) |
+| `--fov` | `60.0` | Field of view in degrees |
+| `--device` | `cuda:0` | Device to use (`cuda:0` or `cpu`) |
+| `--camera-distance-factor` | `1.2` | Camera distance multiplier |
+| `--illumination` | `flat` | Illumination mode: `flat`, `darker`, or `brighter` |
 
-### Example
+#### `--illumination` options
 
+| Mode | Gray value | Description |
+|---|---|---|
+| `flat` | 0.7 | Uniform mid-gray (default) |
+| `darker` | 0.3 | Uniform dark gray |
+| `brighter` | 0.95 | Uniform light gray |
 
-```bash
-# Flat (default)
-python ImagesGenerator/export_fibonacci_views.py --mesh ./objects/plane_example.obj --output renders/plane_example --repo-views 114 --image-size 224 --illumination flat
-# Darker
-python ImagesGenerator/export_fibonacci_views.py --mesh ./objects/plane_example.obj --output renders/plane_example --repo-views 114 --image-size 224 --illumination darker
-# Brighter
-python ImagesGenerator/export_fibonacci_views.py --mesh ./objects/plane_example.obj --output renders/plane_example --repo-views 114 --image-size 224 --illumination brighter
+## Output structure
+
+Images and metadata are saved under the following directory hierarchy:
+
 ```
-This will generate 114 viewpoints × 4 rotations = 456 images in `renders/plane_example/`.
+<output>/<symmetry_type>/<object_id>/<image_size>/<illumination>/
+```
 
-## Output files
-- Images: `IND_{i}_AZ_{az}_EL_{el}_ROT_{rot}.png`
-- Metadata: `metadata_all.json` (list of all images and their parameters)
-- Manifest: `manifest.json` (summary)
+For example:
 
-### Illumination modes
+```
+renders/plane_example/axis_sym/plane_example/224/flat/
+```
 
-The `--illumination` argument controls the gray value of the mesh material:
+### Output files
 
-| Mode     | Value |
-|----------|-------|
-| flat     | 0.7   |
-| darker   | 0.3   |
-| brighter | 0.95  |
-
----
+- **Images:** `IND_{i}_AZ_{az}_EL_{el}_ROT_{rot}.png`
+- **Metadata:** `metadata_all.json` — list of all images and their parameters
+- **Manifest:** `manifest.json` — processing summary
 
 ### Filename convention
-- `IND_{i}`: Index of the viewpoint (0-based)
-- `AZ_{az}`: Azimuth angle (degrees, integer, 0–359)
-- `EL_{el}`: Elevation angle (degrees, integer, can be negative)
-- `ROT_{rot}`: 2D rotation applied to the image (degrees, one of 0, 90, 180, 270)
 
-**Example:** `IND_03_AZ_120_EL_+45_ROT_090.png` is the 4th viewpoint, azimuth 120°, elevation +45°, rotated 90°.
+| Token | Description |
+|---|---|
+| `IND_{i}` | Viewpoint index (0-based) |
+| `AZ_{az}` | Azimuth angle (integer degrees, 0–359) |
+| `EL_{el}` | Elevation angle (integer degrees, can be negative) |
+| `ROT_{rot}` | 2D rotation applied to the image (0, 90, 180, or 270) |
+
+**Example:** `IND_03_AZ_120_EL_+45_ROT_090.png` → 4th viewpoint, azimuth 120°, elevation +45°, rotated 90°.
 
 ### Metadata fields
+
 Each entry in `metadata_all.json` contains:
-- `index`: Viewpoint index
-- `azimuth`: Azimuth angle
-- `elevation`: Elevation angle
-- `rotation_deg`: 2D rotation applied (0, 90, 180, 270)
-- `rotation_index`: Index of the rotation (0–3)
-- `filename`: Image filename
-- `angle_info`: Dictionary with azimuth, elevation, radius
-- `eye`: Camera position
-- `R`, `T`: Camera extrinsics
+
+| Field | Description |
+|---|---|
+| `index` | Viewpoint index |
+| `azimuth` | Azimuth angle (degrees) |
+| `elevation` | Elevation angle (degrees) |
+| `rotation_deg` | 2D rotation applied (0, 90, 180, or 270) |
+| `rotation_index` | Rotation index (0–3) |
+| `filename` | Image filename |
+| `angle_info` | Dict with `azimuth`, `elevation`, and `radius` |
+| `eye` | Camera position `[x, y, z]` |
+| `R` | Camera rotation matrix |
+| `T` | Camera translation vector |
+
+## Examples
+
+```bash
+# axis_sym — flat illumination
+python ImagesGenerator/export_fibonacci_views.py \
+  --mesh ./objects/plane_example.obj \
+  --output renders/plane_example \
+  --symmetry-type axis_sym \
+  --repo-views 114 \
+  --image-size 224 \
+  --illumination flat
+
+# plane_sym — darker illumination
+python ImagesGenerator/export_fibonacci_views.py \
+  --mesh ./objects/plane_example.obj \
+  --output renders/plane_example \
+  --symmetry-type plane_sym \
+  --repo-views 114 \
+  --image-size 224 \
+  --illumination darker
+
+# plane_sym — brighter illumination
+python ImagesGenerator/export_fibonacci_views.py \
+  --mesh ./objects/plane_example.obj \
+  --output renders/plane_example \
+  --symmetry-type plane_sym \
+  --repo-views 114 \
+  --image-size 224 \
+  --illumination brighter
+```
+
+The commands above generate 114 viewpoints × 4 rotations = **456 images** each.

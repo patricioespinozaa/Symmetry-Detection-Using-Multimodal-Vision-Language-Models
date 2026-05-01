@@ -8,3 +8,6 @@ data/
 *.png
 *.obj
 *.txt
+
+# cache
+*.pyc

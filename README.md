@@ -1,21 +1,118 @@
-# Symmetry-Detection-Using-Multimodal-Vision-Language-Models
+# Symmetry Detection Using Multimodal Vision-Language Models
 
+This repository contains the tooling to render 3D objects, generate multi-view images under different lighting conditions and resolutions, and build the dataset used for symmetry detection experiments.
 
-## Install
+---
 
-.\venv\Scripts\python.exe -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu129
+## Installation
 
-.\venv\Scripts\python.exe -m pip install pytorch3d==0.7.8+pt2.8.0cu129 --extra-index-url https://miropsota.github.io/torch_packages_builder
+### GPU server setup
+
+```bash
+# Check CUDA version
+nvidia-smi
+
+# Create a clean environment
+conda create -n tesis_env python=3.10 -y
+conda activate tesis_env
+
+# 1. PyTorch with CUDA 12.1
+pip install torch==2.3.1 torchvision==0.18.1 \
+  --index-url https://download.pytorch.org/whl/cu121
+
+# 2. PyTorch3D (aligned with PyTorch 2.3.1 + CUDA 12.1)
+pip install pytorch3d==0.7.9+pt2.3.1cu121 \
+  --extra-index-url https://miropsota.github.io/torch_packages_builder
+```
+
+---
 
 ## Dataset generation
 
-### Download object and symmetries data
+### 1. Download objects and symmetry data
 
-.... download from ...
+> *(download instructions here)*
 
+### 2. Generate rendered images
 
-### Generate rendered images
+Use `data_render.py` to batch-render all `.obj` files in a folder. It calls `export_fibonacci_views.py` internally for each object and configuration.
 
-Execute:
+Before rendering starts, the script prints an **execution plan** and asks for confirmation (`OK`) so you can verify the total image count.
 
-python utils/data_render.py --input-folder data/objects/curated_axis_sym_obj --output-folder data/renders --illumination flat --repo-views 114 --image-size 224
+#### Single GPU
+
+```bash
+python3 -m utils.data_render \
+  --input-folder ../data/objects/curated_axis_sym_obj \
+  --output-folder ../data/renders \
+  --symmetry-type axis_sym \
+  --repo-views 114 \
+  --sizes 224 448 1024 \
+  --lightings darker flat brighter
+```
+
+#### Multiple GPUs (one symmetry type per GPU)
+
+```bash
+# GPU 0 — axis symmetry objects
+CUDA_VISIBLE_DEVICES=0 python3 -m utils.data_render \
+  --input-folder ../data/objects/curated_axis_sym_obj \
+  --output-folder ../data/renders \
+  --symmetry-type axis_sym \
+  --repo-views 114 \
+  --sizes 224 448 1024 \
+  --lightings darker flat brighter
+
+# GPU 1 — plane symmetry objects
+CUDA_VISIBLE_DEVICES=1 python3 -m utils.data_render \
+  --input-folder ../data/objects/curated_plane_sym_obj \
+  --output-folder ../data/renders \
+  --symmetry-type plane_sym \
+  --repo-views 114 \
+  --sizes 224 448 1024 \
+  --lightings darker flat brighter
+```
+
+#### `data_render.py` arguments
+
+| Argument | Default | Description |
+|---|---|---|
+| `--input-folder` | *(required)* | Folder containing `.obj` files |
+| `--output-folder` | *(required)* | Output base folder |
+| `--symmetry-type` | *(required)* | `axis_sym` or `plane_sym` |
+| `--repo-views` | `114` | Number of Fibonacci viewpoints |
+| `--sizes` | `224` | One or more image sizes (e.g. `224 448 1024`) |
+| `--lightings` | `flat` | One or more lighting modes: `flat`, `darker`, `brighter` |
+
+#### Output structure
+
+```
+<output-folder>/<symmetry_type>/<object_id>/<image_size>/<illumination>/
+```
+
+Each configuration produces `<repo-views> × 4 rotations` images. For example, 114 views × 4 rotations × 3 sizes × 3 lightings = **5,472 images per object**.
+
+---
+
+### Running long jobs with tmux
+
+When using multiple GPUs, it is recommended to run each job in a separate `tmux` session so the process survives terminal disconnections.
+
+```bash
+# 1. Create a new session
+tmux new -s render_axis_sym
+tmux new -s render_plane_sym
+
+# 2. Launch the render command inside the session
+CUDA_VISIBLE_DEVICES=0 python3 -m utils.data_render ...
+
+# 3. Detach without killing the process
+#    Press: Ctrl+B, then D
+
+# 4. Reattach to a session
+tmux attach -t render_axis_sym
+tmux attach -t render_plane_sym
+
+# 5. List active sessions
+tmux ls
+```

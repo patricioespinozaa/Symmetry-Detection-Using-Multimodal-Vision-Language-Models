@@ -259,6 +259,7 @@ def main():
     parser.add_argument("--repo-views", type=int, default=26, help="Number of Fibonacci views")
     parser.add_argument("--camera-distance-factor", type=float, default=1.2, help="Camera distance multiplier (default 1.2)")
     parser.add_argument("--illumination", type=str, default="flat", choices=["flat", "darker", "brighter"], help="Illumination mode: flat (default), darker, brighter")
+    parser.add_argument("--symmetry-type", type=str, required=True, choices=["axis_sym", "plane_sym"], help="Type of symmetry to detect")
     args = parser.parse_args()
     start_time = time.time()
     device = torch.device(args.device if torch.cuda.is_available() or "cpu" in args.device else "cpu")
@@ -266,8 +267,14 @@ def main():
     mesh_path = Path(args.mesh)
     object_name = mesh_path.stem
     output_root = Path(args.output)
-    # Create subfolder for illumination mode
-    object_output_dir = output_root / object_name / args.illumination
+    # Estructura: <output>/<symmetry_type>/<object_id>/<size>/<lighting>/
+    object_output_dir = (
+        output_root
+        / args.symmetry_type
+        / object_name
+        / str(args.image_size)
+        / args.illumination
+    )
     object_output_dir.mkdir(parents=True, exist_ok=True)
 
     # Illumination value map
