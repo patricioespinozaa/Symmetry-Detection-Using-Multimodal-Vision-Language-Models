@@ -16,15 +16,17 @@ nvidia-smi
 conda create -n tesis_env python=3.10 -y
 conda activate tesis_env
 
-# 1. PyTorch with CUDA 12.1
-pip install torch==2.3.1 torchvision==0.18.1 \
-  --index-url https://download.pytorch.org/whl/cu121
+# Recomendado: limpiar versiones previas de torch
+pip uninstall -y torch torchvision torchaudio pytorch3d
 
-# 2. PyTorch3D (aligned with PyTorch 2.3.1 + CUDA 12.1)
-pip install pytorch3d==0.7.9+pt2.3.1cu121 \
+pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 \
+  --index-url https://download.pytorch.org/whl/cu124
+
+pip install pytorch3d==0.7.9+pt2.6.0cu124 \
   --extra-index-url https://miropsota.github.io/torch_packages_builder
-```
 
+pip install transformers==4.57.1 accelerate==1.10.1 \
+  pillow==11.3.0 einops==0.8.1 tqdm==4.67.1 molmo_utils
 ---
 
 ## Dataset generation
