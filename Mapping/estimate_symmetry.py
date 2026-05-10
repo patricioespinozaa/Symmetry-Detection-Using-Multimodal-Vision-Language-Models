@@ -146,14 +146,15 @@ def process_object(
     symmetry_type: str,
     sizes:         list[int],
     lightings:     list[str],
+    overwrite:     bool = False,
 ) -> None:
     """
     Pool 3D hit points across all (size, illumination) configs and all n_views groups,
     fit the symmetry element per n_views group, and save to predicted_symmetry.json.
-    Skips objects where the output already exists.
+    Skips objects where the output already exists unless --overwrite.
     """
     output_path = object_dir / OUTPUT_FILE
-    if output_path.exists():
+    if output_path.exists() and not overwrite:
         return
 
     # Collect all mapped JSON files for this object
@@ -229,6 +230,8 @@ def parse_args() -> argparse.Namespace:
                    choices=["flat", "darker", "brighter"])
     p.add_argument("--gpu-id",   type=int, default=0)
     p.add_argument("--num-gpus", type=int, default=1)
+    p.add_argument("--overwrite", action="store_true",
+                   help="Overwrite existing predicted_symmetry.json files")
     return p.parse_args()
 
 
@@ -244,6 +247,10 @@ def main() -> None:
     objects     = all_objects[args.gpu_id :: args.num_gpus]
 
     print(f"\nFitting {args.symmetry_type} symmetry for {len(objects)} objects...")
+    if args.overwrite:
+        print("(--overwrite: existing predicted_symmetry.json will be replaced)")
+    else:
+        print("(Existing predicted_symmetry.json skipped — use --overwrite to replace)")
 
     for obj_dir in tqdm(objects, unit="obj", dynamic_ncols=True):
         process_object(
@@ -251,6 +258,7 @@ def main() -> None:
             symmetry_type = args.symmetry_type,
             sizes         = args.sizes,
             lightings     = args.lightings,
+            overwrite     = args.overwrite,
         )
 
     print("Done.")
