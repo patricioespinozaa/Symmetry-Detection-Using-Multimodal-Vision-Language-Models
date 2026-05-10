@@ -226,10 +226,11 @@ def process_object(
     sizes:        list[int],
     lightings:    list[str],
     fov_deg:      float,
+    overwrite:    bool = False,
 ) -> None:
     """
     Map Molmo2 predictions to 3D for all (size, illumination) configs of one object.
-    Skips configs where mapped_points_3d.json already exists.
+    Skips configs where mapped_points_3d.json already exists unless --overwrite.
     """
     object_id = object_dir.name
 
@@ -251,7 +252,7 @@ def process_object(
                 continue
 
             output_path = render_dir / OUTPUT_FILE
-            if output_path.exists():
+            if output_path.exists() and not overwrite:
                 continue   # already mapped — skip
 
             # Read image_size from manifest if available, else use folder name
@@ -358,6 +359,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--lightings", type=str, nargs="+", default=DEFAULT_LIGHTINGS,
                    choices=["flat", "darker", "brighter"])
     p.add_argument("--fov",       type=float, default=FOV_DEG)
+    p.add_argument("--overwrite", action="store_true",
+                   help="Overwrite existing mapped_points_3d.json files")
 
     return p.parse_args()
 
@@ -372,7 +375,11 @@ def preview(args: argparse.Namespace, objects: list[Path]) -> None:
     print(f"Sizes         : {args.sizes}")
     print(f"Lightings     : {args.lightings}")
     print(f"FoV           : {args.fov}°")
-    print(f"(Existing {OUTPUT_FILE} skipped automatically)")
+    print(f"Overwrite      : {args.overwrite}")
+    if not args.overwrite:
+        print(f"(Existing {OUTPUT_FILE} skipped — use --overwrite to replace)")
+    else:
+        print(f"(Existing {OUTPUT_FILE} will be overwritten)")
     print("================================\n")
     if input("Type 'OK' to start: ").strip() != "OK":
         print("Cancelled.")
@@ -413,6 +420,7 @@ def main() -> None:
             sizes      = args.sizes,
             lightings  = args.lightings,
             fov_deg    = args.fov,
+            overwrite  = args.overwrite,
         )
 
     print(f"\nDone.")
