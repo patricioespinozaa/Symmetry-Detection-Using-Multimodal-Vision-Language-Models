@@ -1,13 +1,8 @@
 # venv
 venv/
 
-# data
-data/
-
 # png
 *.png
-*.obj
-*.txt
 
 # cache
 *.pyc
