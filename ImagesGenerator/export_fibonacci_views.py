@@ -142,32 +142,6 @@ def save_image_tensor(image_tensor: torch.Tensor, output_path: Path):
     image_rgb = np.clip(image_rgb * 255.0, 0, 255).astype(np.uint8)
     Image.fromarray(image_rgb).save(output_path)
 
-def save_image_tensor_with_rotations(image_tensor: torch.Tensor, output_path_base: Path, meta_base: dict, records: list, idx: int, az: int, el: int):
-    """
-    Save the image tensor with 4 rotations (0, 90, 180, 270 degrees) and append metadata for each.
-    Args:
-        image_tensor: Rendered image tensor
-        output_path_base: Output directory
-        meta_base: Base metadata dict
-        records: List to append metadata
-        idx: Viewpoint index
-        az: Azimuth
-        el: Elevation
-    """
-    image_rgb = image_tensor[..., :3].detach().cpu().numpy()
-    image_rgb = np.clip(image_rgb * 255.0, 0, 255).astype(np.uint8)
-    pil_img = Image.fromarray(image_rgb)
-    for rot_idx, rot_deg in enumerate([0, 90, 180, 270]):
-        img_rot = pil_img.rotate(-rot_deg, expand=True)  # PIL rotates counterclockwise
-        filename = f"IND_{idx:02d}_AZ_{az:03d}_EL_{el:+03d}_ROT_{rot_deg:03d}.png"
-        img_path = output_path_base / filename
-        img_rot.save(img_path)
-        meta = meta_base.copy()
-        meta["filename"] = filename
-        meta["rotation_deg"] = rot_deg
-        meta["rotation_index"] = rot_idx
-        records.append(meta)
-
 def render_fibonacci(mesh, eye_positions, output_dir: Path, fov: float, image_size: int, device: torch.device, angle_info=None):
     """
     Render the mesh from all Fibonacci viewpoints and save 4 rotated images per view.
@@ -225,17 +199,18 @@ def render_fibonacci(mesh, eye_positions, output_dir: Path, fov: float, image_si
     for i in range(len(eye_positions)):
         az = angle_info[i]['azimuth']
         el = angle_info[i]['elevation']
-        meta_base = {
+        filename = f"IND_{i:02d}_AZ_{az:03d}_EL_{el:+03d}.png"
+        save_image_tensor(images[i], output_dir / filename)
+        records.append({
             "index": i,
+            "filename": filename,
             "azimuth": az,
             "elevation": el,
             "angle_info": angle_info[i],
             "eye": [float(x) for x in eye_positions[i].tolist()],
             "R": R[i].detach().cpu().tolist(),
             "T": T[i].detach().cpu().tolist(),
-        }
-        # Save 4 rotated images and metadata per viewpoint
-        save_image_tensor_with_rotations(images[i], output_dir, meta_base, records, i, az, el)
+        })
     return records
 
 def write_metadata(object_output_dir: Path, all_records):
