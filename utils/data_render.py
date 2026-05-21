@@ -12,7 +12,7 @@ def preview_execution(obj_files, sizes, lightings, repo_views, output_folder, sy
 
     total_objects = len(obj_files)
     total_configs = len(sizes) * len(lightings)
-    images_per_object = repo_views * 4 * total_configs  # 4 rotations
+    images_per_object = repo_views * total_configs  
     total_images = total_objects * images_per_object
 
     print("\n========== EXECUTION PLAN ==========")
@@ -23,7 +23,6 @@ def preview_execution(obj_files, sizes, lightings, repo_views, output_folder, sy
     print(f"Views per object: {repo_views}")
     print(f"Sizes:            {sizes}")
     print(f"Lightings:        {lightings}")
-    print(f"Rotations/object: 4")
     print(f"Images/object:    {images_per_object}")
     print(f"TOTAL IMAGES:     {total_images}")
     print("====================================\n")

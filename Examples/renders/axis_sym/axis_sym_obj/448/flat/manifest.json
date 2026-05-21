@@ -1,0 +1,12 @@
+{
+  "mesh": "Examples/objects/axis_sym_obj.obj",
+  "device": "cuda:0",
+  "fov": 60.0,
+  "image_size": 448,
+  "camera_distance": 1.2155497597531302,
+  "total_images": 114,
+  "processing_time_seconds": 10.11,
+  "processing_time_human": "0m 10.11s",
+  "illumination": "flat",
+  "illumination_value": 0.7
+}

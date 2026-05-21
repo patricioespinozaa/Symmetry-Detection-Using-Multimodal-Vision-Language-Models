@@ -1,0 +1,12 @@
+{
+  "mesh": "Examples/objects/plane_sym_obj.obj",
+  "device": "cuda:0",
+  "fov": 60.0,
+  "image_size": 224,
+  "camera_distance": 1.6355837640625572,
+  "total_images": 114,
+  "processing_time_seconds": 4.69,
+  "processing_time_human": "0m 4.69s",
+  "illumination": "flat",
+  "illumination_value": 0.7
+}
