@@ -1,8 +1,5 @@
 # venv
 venv/
 
-# png
-*.png
-
 # cache
 *.pyc
