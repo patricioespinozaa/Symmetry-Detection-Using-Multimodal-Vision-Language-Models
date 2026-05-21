@@ -232,12 +232,9 @@ def load_metadata(render_dir: Path) -> list[dict]:
         return json.load(f)
 
 
-def get_rot000_entries(metadata: list[dict], n_views: int) -> list[dict]:
-    """First n_views viewpoints, ROT_000 only, sorted by index."""
-    entries = [
-        m for m in metadata
-        if m["index"] < n_views and m["rotation_deg"] == 0
-    ]
+def get_n_views_entries(metadata: list[dict], n_views: int) -> list[dict]:
+    """First n_views viewpoints, sorted by index."""
+    entries = [m for m in metadata if m["index"] < n_views]
     return sorted(entries, key=lambda e: e["index"])
 
 
@@ -461,7 +458,7 @@ def process_object(
                 continue
 
             for n_views in pending:
-                entries = get_rot000_entries(metadata, n_views)
+                entries = get_n_views_entries(metadata, n_views)
                 if not entries:
                     continue
 
