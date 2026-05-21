@@ -21,8 +21,8 @@ Expects the output produced by `data_render.py` / `export_fibonacci_views.py`:
 
 ```
 <renders_root>/<symmetry_type>/<object_id>/<image_size>/<illumination>/
-    IND_00_AZ_090_EL_+89_ROT_000.png
-    ...                                   # 114 views × 4 rotations = 456 images
+    IND_00_AZ_090_EL_+89.png
+    ...                                   # 114 images (one per viewpoint)
     metadata_all.json
 ```
 
@@ -54,7 +54,7 @@ Results are written alongside the renders as a **cumulative JSON** file:
     "images_sent": [
       {
         "img_idx":   0,
-        "filename":  "IND_00_AZ_090_EL_+89_ROT_000.png",
+        "filename":  "IND_00_AZ_090_EL_+89.png",
         "index":     0,
         "azimuth":   90,
         "elevation": 89,
