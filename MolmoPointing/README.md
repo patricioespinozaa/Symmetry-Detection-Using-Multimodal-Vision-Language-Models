@@ -124,6 +124,14 @@ CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
     --lightings flat \
     --view-groups 1 6 14 26 \
     --prompt-mode auto
+
+CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
+    --renders-root ../data/renders \
+    --symmetry-type plane_sym \
+    --sizes 224 \
+    --lightings flat \
+    --view-groups 1 6 14 26 \
+    --prompt-mode auto
 ```
 
 ### Two GPUs — split by symmetry type
