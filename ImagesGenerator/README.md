@@ -1,12 +1,13 @@
-# Mesh View Sampling - Fibonacci (4R-FI Protocol)
+# Mesh View Sampling - Fibonacci (FI Protocol)
 
-This tool exports multi-view images of a 3D mesh using the Fibonacci sphere sampling method, with 4 in-plane rotations per viewpoint (4R-FI).
+This tool exports multi-view images of a 3D mesh using the Fibonacci sphere sampling method.
 
 ## Workflow
+
 - Loads a `.obj` mesh file.
 - Generates camera viewpoints distributed uniformly on the sphere using the Fibonacci method.
-- For each viewpoint, renders the mesh and saves 4 images, each rotated by 0°, 90°, 180°, and 270° (2D rotation of the rendered image).
-- Saves metadata for each image, including camera parameters and rotation info.
+- For each viewpoint, renders the mesh and saves one image.
+- Saves metadata for each image, including camera parameters.
 
 ## Usage
 
@@ -15,7 +16,7 @@ python ImagesGenerator/export_fibonacci_views.py \
   --mesh path/to/model.obj \
   --output output_folder \
   --symmetry-type axis_sym \
-  --repo-views 114 \
+  --repo-views 26 \
   --illumination flat
 ```
 
@@ -45,20 +46,26 @@ python ImagesGenerator/export_fibonacci_views.py \
 
 Images and metadata are saved under the following directory hierarchy:
 
+
 ```
 <output>/<symmetry_type>/<object_id>/<image_size>/<illumination>/
 ```
 
-For example:
+For example, running with `--mesh Examples/objects/axis_sym_obj.obj --output Examples/renders --image-size 224 --illumination flat` produces:
 
 ```
-renders/plane_example/axis_sym/plane_example/224/flat/
+Examples/renders/axis_sym/axis_sym_obj/224/flat/
+├── IND_00_AZ_090_EL_+89.png
+├── IND_01_AZ_243_EL_+67.png
+├── ...
+├── metadata_all.json
+└── manifest.json
 ```
 
 ### Output files
 
-- **Images:** `IND_{i}_AZ_{az}_EL_{el}_ROT_{rot}.png`
-- **Metadata:** `metadata_all.json` — list of all images and their parameters
+- **Images:** `IND_{i}_AZ_{az}_EL_{el}.png`
+- **Metadata:** `metadata_all.json` — list of all images and their camera parameters
 - **Manifest:** `manifest.json` — processing summary
 
 ### Filename convention
@@ -68,9 +75,8 @@ renders/plane_example/axis_sym/plane_example/224/flat/
 | `IND_{i}` | Viewpoint index (0-based) |
 | `AZ_{az}` | Azimuth angle (integer degrees, 0–359) |
 | `EL_{el}` | Elevation angle (integer degrees, can be negative) |
-| `ROT_{rot}` | 2D rotation applied to the image (0, 90, 180, or 270) |
 
-**Example:** `IND_03_AZ_120_EL_+45_ROT_090.png` → 4th viewpoint, azimuth 120°, elevation +45°, rotated 90°.
+**Example:** `IND_03_AZ_120_EL_+45.png` → 4th viewpoint, azimuth 120°, elevation +45°.
 
 ### Metadata fields
 
@@ -79,11 +85,9 @@ Each entry in `metadata_all.json` contains:
 | Field | Description |
 |---|---|
 | `index` | Viewpoint index |
+| `filename` | Image filename |
 | `azimuth` | Azimuth angle (degrees) |
 | `elevation` | Elevation angle (degrees) |
-| `rotation_deg` | 2D rotation applied (0, 90, 180, or 270) |
-| `rotation_index` | Rotation index (0–3) |
-| `filename` | Image filename |
 | `angle_info` | Dict with `azimuth`, `elevation`, and `radius` |
 | `eye` | Camera position `[x, y, z]` |
 | `R` | Camera rotation matrix |
@@ -91,33 +95,26 @@ Each entry in `metadata_all.json` contains:
 
 ## Examples
 
+The following commands render the bundled example objects from `Examples/objects/` and write results to `Examples/renders/`.
+
 ```bash
-# axis_sym — flat illumination
+# Axial symmetry example
 python ImagesGenerator/export_fibonacci_views.py \
-  --mesh ./objects/plane_example.obj \
-  --output renders/plane_example \
+  --mesh Examples/objects/axis_sym_obj.obj \
+  --output Examples/renders \
   --symmetry-type axis_sym \
-  --repo-views 114 \
+  --repo-views 26 \
   --image-size 224 \
   --illumination flat
 
-# plane_sym — darker illumination
+# Planar symmetry example
 python ImagesGenerator/export_fibonacci_views.py \
-  --mesh ./objects/plane_example.obj \
-  --output renders/plane_example \
+  --mesh Examples/objects/plane_sym_obj.obj \
+  --output Examples/renders \
   --symmetry-type plane_sym \
-  --repo-views 114 \
+  --repo-views 26 \
   --image-size 224 \
-  --illumination darker
-
-# plane_sym — brighter illumination
-python ImagesGenerator/export_fibonacci_views.py \
-  --mesh ./objects/plane_example.obj \
-  --output renders/plane_example \
-  --symmetry-type plane_sym \
-  --repo-views 114 \
-  --image-size 224 \
-  --illumination brighter
+  --illumination flat
 ```
 
-The commands above generate 114 viewpoints × 4 rotations = **456 images** each.
+Each command generates **26 images** (one per viewpoint), saved under `Examples/renders/<symmetry_type>/`.
