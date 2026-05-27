@@ -136,8 +136,8 @@ and project that axis into each image.
 For each image:
 1. Identify the visible projection of the global symmetry axis.
 2. Return:
-   - one point where the projected axis intersects the object near the TOP,
-   - one point where the projected axis intersects the object near the BOTTOM.
+   - one point where the projected axis intersects the object near the TOP and within the object pixels,
+   - one point where the projected axis intersects the object near the BOTTOM and within the object pixels.
 
 IMPORTANT RULES:
 - The 2 points of each image MUST be collinear with the axis projection.
