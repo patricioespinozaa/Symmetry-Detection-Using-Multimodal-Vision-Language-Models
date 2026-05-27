@@ -62,7 +62,7 @@ CUDA_VISIBLE_DEVICES=0 python3 -m utils.data_render \
   --output-folder ../data/renders \
   --symmetry-type axis_sym \
   --repo-views 114 \
-  --sizes 224 448 1024 \
+  --sizes 224 448 1134 \
   --lightings darker flat brighter
 
 # GPU 1 — plane symmetry objects
@@ -71,7 +71,7 @@ CUDA_VISIBLE_DEVICES=1 python3 -m utils.data_render \
   --output-folder ../data/renders \
   --symmetry-type plane_sym \
   --repo-views 114 \
-  --sizes 224 448 1024 \
+  --sizes 224 448 1134 \
   --lightings darker flat brighter
 ```
 
@@ -83,7 +83,7 @@ CUDA_VISIBLE_DEVICES=1 python3 -m utils.data_render \
 | `--output-folder` | *(required)* | Output base folder |
 | `--symmetry-type` | *(required)* | `axis_sym` or `plane_sym` |
 | `--repo-views` | `114` | Number of Fibonacci viewpoints |
-| `--sizes` | `224` | One or more image sizes (e.g. `224 448 1024`) |
+| `--sizes` | `224` | One or more image sizes (e.g. `224 448 1134`) |
 | `--lightings` | `flat` | One or more lighting modes: `flat`, `darker`, `brighter` |
 
 #### Output structure
