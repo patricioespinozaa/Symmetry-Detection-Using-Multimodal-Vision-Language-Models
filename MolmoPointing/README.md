@@ -122,7 +122,7 @@ CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
     --symmetry-type axis_sym \
     --sizes 224 \
     --lightings flat \
-    --view-groups 1 6 14 26 \
+    --view-groups 6 \
     --prompt-mode auto
 
 CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
