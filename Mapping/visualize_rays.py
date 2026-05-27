@@ -94,12 +94,12 @@ def camera_ray(
     Returns (origin, unit_direction) in world space.
     Convention: p_cam = R @ p_world + T  →  origin = −R^T @ T
     """
-    R_np = np.array(R, dtype=np.float64)
-    T_np = np.array(T, dtype=np.float64)
-    origin   = -R_np.T @ T_np
+    R_np     = np.array(R, dtype=np.float64)
+    T_np     = np.array(T, dtype=np.float64)
+    origin   = -(R_np @ T_np)                          # era: -R_np.T @ T_np
     half_tan = np.tan(np.deg2rad(fov_deg) / 2.0)
     dir_cam  = np.array([ndc_x * half_tan, ndc_y * half_tan, 1.0])
-    dir_world = R_np.T @ dir_cam
+    dir_world = R_np @ dir_cam                          # era: R_np.T @ dir_cam
     dir_world /= np.linalg.norm(dir_world)
     return origin, dir_world
 
@@ -291,6 +291,17 @@ def main():
         cam   = images_sent[img_idx]
         R, T  = cam["R"], cam["T"]
 
+        R_np    = np.array(R, dtype=np.float64)
+        T_np    = np.array(T, dtype=np.float64)
+        eye     = np.array(cam["eye"], dtype=np.float64)
+        formula = -R_np.T @ T_np
+        print(f"[cam {img_idx}] eye:      {eye.round(4)}")
+        print(f"[cam {img_idx}] -R.T @ T: {formula.round(4)}")
+        print(f"[cam {img_idx}] diff:     {np.linalg.norm(eye - formula):.6f}")
+        formula_correcto = -(R_np @ T_np)
+        print(f"-(R @ T):      {formula_correcto.round(4)}")
+        print(f"diff from eye: {np.linalg.norm(eye - formula_correcto):.6f}")
+        
         # Camera position (use 'eye' if present, else compute from R,T)
         if "eye" in cam:
             cam_origin = np.array(cam["eye"], dtype=np.float64)
