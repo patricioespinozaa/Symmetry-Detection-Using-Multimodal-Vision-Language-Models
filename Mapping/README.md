@@ -404,3 +404,14 @@ To rerun a specific object in `map_to_3d.py` or `estimate_symmetry.py`, delete t
 rm ../data/renders/axis_sym/<object_id>/224/flat/mapped_points_3d.json
 rm ../data/renders/axis_sym/<object_id>/predicted_symmetry.json
 ```
+
+# Visualize rays
+
+| Elemento              | Color       | Fuente                                                      |
+|-----------------------|-------------|--------------------------------------------------------------|
+| Malla 3D              | Gris        | `.obj`                                                       |
+| Posiciones de cámara  | Azul (esferas) | `images_sent[].eye` en `molmo_multiview.json`             |
+| Rayos que impactan    | Verde       | cámara → punto de intersección con la malla                 |
+| Rayos que fallan      | Naranja     | cámara → cámara + dirección × `ray_length`                  |
+| Puntos de impacto     | Amarillo    | intersección exacta en la superficie                        |
+| GT axis/plane         | Azul/Verde  | `.txt` (con `--show-gt`)                                    |

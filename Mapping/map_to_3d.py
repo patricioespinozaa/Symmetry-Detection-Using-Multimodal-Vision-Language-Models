@@ -111,59 +111,68 @@ def molmo_to_ndc(x: float, y: float, image_size: int) -> tuple[float, float]:
     return ndc_x, ndc_y
 
 
-def build_camera_rays(
-    ndc_x: float,
-    ndc_y: float,
-    R: list[list[float]],
-    T: list[float],
-    fov_deg: float,
-    image_size: int,
-) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Build a camera ray in world space for a given NDC point.
+#def build_camera_rays(
+#    ndc_x: float,
+#    ndc_y: float,
+#    R: list[list[float]],
+#    T: list[float],
+#    fov_deg: float,
+#    image_size: int,
+#) -> tuple[np.ndarray, np.ndarray]:
+#    """
+#    Build a camera ray in world space for a given NDC point.
+#
+#    PyTorch3D convention:
+#      - Camera looks along +Z in camera space
+#      - R, T transform world → camera:  p_cam = R @ p_world + T
+#      - To go camera → world:           p_world = R^T @ (p_cam - T)
+#
+#    The ray origin is the camera centre in world space.
+#    The ray direction is computed from the NDC point using the FoV.
+#
+#    Args:
+#        ndc_x, ndc_y: NDC coordinates in [-1, 1]
+#        R:            3×3 rotation matrix (world → camera), row-major
+#        T:            translation vector (world → camera)
+#        fov_deg:      field of view in degrees (full angle)
+#        image_size:   image width = height in pixels
+#
+#    Returns:
+#        ray_origin:    (3,) world-space camera centre
+#        ray_direction: (3,) normalized world-space ray direction
+#    """
+#    R_np = np.array(R, dtype=np.float64)       # (3, 3)
+#    T_np = np.array(T, dtype=np.float64)       # (3,)
+#
+#    # Camera centre in world space: C = -R^T @ T
+#    ray_origin = -R_np.T @ T_np                # (3,)
+#
+#    # Half-tangent for the full FoV
+#    half_tan = np.tan(np.deg2rad(fov_deg) / 2.0)
+#
+#    # Direction in camera space (looking along +Z)
+#    # x scales with ndc_x, y scales with ndc_y (aspect=1 → same scale)
+#    dir_cam = np.array([
+#        ndc_x * half_tan,
+#        ndc_y * half_tan,
+#        1.0,
+#    ], dtype=np.float64)
+#
+#    # Rotate to world space: dir_world = R^T @ dir_cam
+#    dir_world = R_np.T @ dir_cam
+#    dir_world /= np.linalg.norm(dir_world)
+#
+#    return ray_origin, dir_world
 
-    PyTorch3D convention:
-      - Camera looks along +Z in camera space
-      - R, T transform world → camera:  p_cam = R @ p_world + T
-      - To go camera → world:           p_world = R^T @ (p_cam - T)
-
-    The ray origin is the camera centre in world space.
-    The ray direction is computed from the NDC point using the FoV.
-
-    Args:
-        ndc_x, ndc_y: NDC coordinates in [-1, 1]
-        R:            3×3 rotation matrix (world → camera), row-major
-        T:            translation vector (world → camera)
-        fov_deg:      field of view in degrees (full angle)
-        image_size:   image width = height in pixels
-
-    Returns:
-        ray_origin:    (3,) world-space camera centre
-        ray_direction: (3,) normalized world-space ray direction
-    """
-    R_np = np.array(R, dtype=np.float64)       # (3, 3)
-    T_np = np.array(T, dtype=np.float64)       # (3,)
-
-    # Camera centre in world space: C = -R^T @ T
-    ray_origin = -R_np.T @ T_np                # (3,)
-
-    # Half-tangent for the full FoV
+def build_camera_ray(ndc_x, ndc_y, R, T, fov_deg):
+    R_np     = np.array(R, dtype=np.float64)
+    T_np     = np.array(T, dtype=np.float64)
+    origin   = -(R_np @ T_np)                          # era: -R_np.T @ T_np
     half_tan = np.tan(np.deg2rad(fov_deg) / 2.0)
-
-    # Direction in camera space (looking along +Z)
-    # x scales with ndc_x, y scales with ndc_y (aspect=1 → same scale)
-    dir_cam = np.array([
-        ndc_x * half_tan,
-        ndc_y * half_tan,
-        1.0,
-    ], dtype=np.float64)
-
-    # Rotate to world space: dir_world = R^T @ dir_cam
-    dir_world = R_np.T @ dir_cam
+    dir_cam  = np.array([ndc_x * half_tan, ndc_y * half_tan, 1.0])
+    dir_world = R_np @ dir_cam                          # era: R_np.T @ dir_cam
     dir_world /= np.linalg.norm(dir_world)
-
-    return ray_origin, dir_world
-
+    return origin, dir_world
 
 # ── Mesh loading ──────────────────────────────────────────────────────────────
 
