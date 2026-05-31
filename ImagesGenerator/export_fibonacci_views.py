@@ -284,7 +284,7 @@ def main():
     """
 
     # Argument parsing
-    parser = argparse.ArgumentParser(description="Export mesh views using Fibonacci method with 4 2D rotations.")
+    parser = argparse.ArgumentParser(description="Export mesh views using Fibonacci method.")
     parser.add_argument("--mesh", type=str, required=True, help="Path to the .obj file")
     parser.add_argument("--output", type=str, default="output", help="Output base folder")
     parser.add_argument("--device", type=str, default="cuda:0", help="Device: cuda:0 or cpu")
