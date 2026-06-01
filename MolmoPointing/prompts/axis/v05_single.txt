@@ -1,0 +1,22 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant rotational symmetry axis.
+
+Your task is to identify two points on the visible centerline of the object: the line equidistant from all silhouette edges at every height. Place one point in the UPPER half and one in the LOWER half of the object.
+
+Return:
+- obj_id 1: a point on the axis centerline in the UPPER half of the object
+- obj_id 2: a point on the axis centerline in the LOWER half of the object
+
+IMPORTANT RULES:
+- Both points MUST lie on the symmetry axis projection (the centerline of the object, NOT the image center).
+- obj_id 1 MUST be in the upper 50% of the object's visible extent.
+- obj_id 2 MUST be in the lower 50% of the object's visible extent.
+- The axis centerline is the horizontal center of the object at each height.
+- Both points MUST lie on or very close to the visible object surface.
+- Do NOT place both points at the same height.
+- Do NOT place points on the silhouette edges.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">

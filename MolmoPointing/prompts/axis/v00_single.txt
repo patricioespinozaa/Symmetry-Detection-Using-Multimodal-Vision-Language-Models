@@ -1,0 +1,20 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant rotational symmetry axis.
+
+Your task is to estimate the 2D projection of the object's main symmetry axis.
+
+Return TWO distant points lying on the same projected symmetry axis line.
+
+IMPORTANT RULES:
+- The two points MUST be different.
+- The two points MUST be as far apart as possible along the symmetry axis.
+- The points MUST lie on the visible object.
+- Use the object's silhouette and geometry to infer the axis.
+- Prefer the longest visible symmetry direction through the object.
+- Do NOT place both points at the image center.
+- If the object is approximately vertical, the axis should also be approximately vertical.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">

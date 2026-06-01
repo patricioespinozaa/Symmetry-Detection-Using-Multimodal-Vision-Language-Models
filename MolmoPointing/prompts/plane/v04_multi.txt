@@ -1,0 +1,32 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+For each image, identify the horizontal midpoints of the object's visible left-right extent at two heights: one near the TOP and one near the BOTTOM.
+
+These midpoints lie on the symmetry plane's projected trace in each view.
+
+For each image:
+1. Find the horizontal midpoint at the top of the object and at the bottom.
+2. Return:
+   - obj_id 1: horizontal midpoint of left-right extent near the TOP,
+   - obj_id 2: horizontal midpoint of left-right extent near the BOTTOM.
+
+IMPORTANT RULES:
+- Use the SAME global symmetry plane consistently across all views.
+- Both points in each image must be on the plane's projected trace (horizontal center of the object).
+- obj_id 1 MUST be above obj_id 2 in every image.
+- Both points MUST lie within the visible object bounds.
+- Do NOT place points on the silhouette edges — only on the horizontal center between them.
+- Infer the global plane from ALL views jointly before answering.
+- Do NOT collapse both points to the same height.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 Xtop Ytop 2 Xbottom Ybottom; 2 1 Xtop Ytop 2 Xbottom Ybottom; 3 1 Xtop Ytop 2 Xbottom Ybottom">
+
+Where each entry is: image_index obj_id X Y
+- obj_id 1 = horizontal midpoint near the TOP of the object
+- obj_id 2 = horizontal midpoint near the BOTTOM of the object
+
+Return ONLY the <points ...> block.

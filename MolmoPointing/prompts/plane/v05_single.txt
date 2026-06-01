@@ -1,0 +1,21 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+Your task is to identify two points on the symmetry plane's visible surface trace that are as far apart from each other as possible.
+
+Return:
+- obj_id 1: one extremal endpoint of the visible symmetry plane trace
+- obj_id 2: the opposite extremal endpoint of the same trace
+
+IMPORTANT RULES:
+- Both points MUST lie ON the symmetry plane's visible surface trace.
+- The two points MUST be as far apart as possible (maximize the distance between them).
+- Both points MUST lie on the visible object surface.
+- If the symmetry plane is viewed edge-on (appears as a line), choose the two endpoints of that line.
+- If the symmetry plane trace is a curve, choose the two most distant visible points on it.
+- Do NOT collapse both points to the same location or close together.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">

@@ -278,15 +278,21 @@ def _call_model(images: list[Image.Image], prompt: str) -> str:
     )
     inputs = {k: v.to(model.device) for k, v in inputs.items()}
 
-    max_new_tokens = 300 + len(images) * 100
+    # Output is a single <points coords="..."> tag: ~10 tokens per image + fixed overhead.
+    max_new_tokens = 80 + len(images) * 15
 
     with torch.inference_mode():
         output_ids = model.generate(**inputs, max_new_tokens=max_new_tokens)
 
-    return processor.tokenizer.decode(
-        output_ids[0, inputs["input_ids"].size(1):],
+    n_input = inputs["input_ids"].size(1)
+    del inputs                  # free GPU tensors immediately
+    text = processor.tokenizer.decode(
+        output_ids[0, n_input:],
         skip_special_tokens=True,
     )
+    del output_ids
+    torch.cuda.empty_cache()
+    return text
 
 
 # ── Coordinate parsers ────────────────────────────────────────────────────────
@@ -567,6 +573,8 @@ def parse_args() -> argparse.Namespace:
                    help="Limit to the first N objects (sorted order). Useful for subset experiments.")
     p.add_argument("--list-prompts", action="store_true",
                    help="List all registered prompts and exit.")
+    p.add_argument("--yes", "-y", action="store_true",
+                   help="Skip the confirmation prompt (useful for automated loops).")
 
     p.add_argument("--gpu-id",   type=int, default=0)
     p.add_argument("--num-gpus", type=int, default=1)
@@ -612,9 +620,10 @@ def preview(args: argparse.Namespace, objects: list[Path],
     print(f"Combinations  : {n_configs} per object")
     print(f"(Existing JSON keys are skipped automatically)")
     print("============================================\n")
-    if input("Type 'OK' to start: ").strip() != "OK":
-        print("Cancelled.")
-        sys.exit(0)
+    if not args.yes:
+        if input("Type 'OK' to start: ").strip() != "OK":
+            print("Cancelled.")
+            sys.exit(0)
 
 
 def main() -> None:

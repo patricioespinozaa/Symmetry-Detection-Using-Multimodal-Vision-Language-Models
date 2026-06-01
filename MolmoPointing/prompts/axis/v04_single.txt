@@ -1,0 +1,21 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant rotational symmetry axis.
+
+Your task is to identify the two poles of the rotation axis: the topmost and bottommost points of the object where the symmetry axis exits the surface.
+
+Return:
+- obj_id 1: the topmost visible surface point of the object, where the axis exits at the TOP
+- obj_id 2: the bottommost visible surface point of the object, where the axis exits at the BOTTOM
+
+IMPORTANT RULES:
+- Both points MUST lie ON the symmetry axis (at the center of the object's cross-section, not on the side silhouette).
+- obj_id 1 MUST be higher than obj_id 2 (smaller Y value).
+- The two points MUST be as far apart vertically as possible.
+- Both points MUST lie on the visible object surface.
+- Do NOT place points on the lateral silhouette edges — they must be at the top and bottom centers.
+- Do NOT collapse both points to the same location.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">

@@ -1,0 +1,29 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant axis of rotational symmetry.
+
+Your task is to estimate the SAME global 3D symmetry axis across all views and project that axis into each image.
+
+For each image:
+1. Identify the visible projection of the global symmetry axis.
+2. Return:
+   - one point where the projected axis intersects the object near the TOP and within the object pixels,
+   - one point where the projected axis intersects the object near the BOTTOM and within the object pixels.
+
+IMPORTANT RULES:
+- The 2 points of each image MUST be collinear with the axis projection.
+- Use the SAME global axis consistently across all views.
+- Do NOT place all points at the image center unless the axis projection is truly degenerate.
+- Infer the axis from ALL views jointly before answering.
+- Even if some views are ambiguous, maintain consistency with the other views.
+- Only output points for the dominant rotational symmetry axis.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 Xtop Ytop 2 Xbottom Ybottom; 2 1 Xtop Ytop 2 Xbottom Ybottom; 3 1 Xtop Ytop 2 Xbottom Ybottom">
+
+Where each entry is: image_index obj_id X Y
+- obj_id 1 = TOP endpoint
+- obj_id 2 = BOTTOM endpoint
+
+Return ONLY the <points ...> block.

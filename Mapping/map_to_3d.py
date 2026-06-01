@@ -382,6 +382,8 @@ def parse_args() -> argparse.Namespace:
                    ))
     p.add_argument("--max-objects", type=int, default=None,
                    help="Limit to the first N objects (sorted order).")
+    p.add_argument("--yes", "-y", action="store_true",
+                   help="Skip the confirmation prompt (useful for automated loops).")
 
     return p.parse_args()
 
@@ -402,9 +404,10 @@ def preview(args: argparse.Namespace, objects: list[Path]) -> None:
     else:
         print(f"(Existing {OUTPUT_FILE} will be overwritten)")
     print("================================\n")
-    if input("Type 'OK' to start: ").strip() != "OK":
-        print("Cancelled.")
-        sys.exit(0)
+    if not args.yes:
+        if input("Type 'OK' to start: ").strip() != "OK":
+            print("Cancelled.")
+            sys.exit(0)
 
 
 def main() -> None:

@@ -1,0 +1,19 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+Your task is to estimate the 2D projection of the symmetry plane boundary visible in this image.
+
+Return TWO distant points that both lie on the visible intersection line of the symmetry plane with the object's surface.
+
+IMPORTANT RULES:
+- The two points MUST be different.
+- The two points MUST be as far apart as possible along the visible symmetry boundary.
+- The points MUST lie on the visible object surface.
+- Use the object's bilateral symmetry to infer the mirror plane.
+- The symmetry plane divides the object into two mirror-image halves; find the dividing boundary.
+- Do NOT place both points at the image center.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">
