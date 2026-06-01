@@ -63,9 +63,62 @@ molmo_multiview_<EXP_ID>.json
 
 ---
 
-## Run ALL axis experiments (single command block)
+## Run ALL axis experiments (two-phase workflow)
 
-Copy and paste the entire block. It runs all 6 axis variants sequentially.
+### Phase 1 — Molmo (GPU)
+
+```bash
+RENDERS=../data/renders
+
+# Todos los prompts axiales — solo inferencia Molmo
+for EXP in axis_v00 axis_v01 axis_v02 axis_v03 axis_v04 axis_v05; do
+    echo "===== Molmo: $EXP ====="
+    CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
+        --renders-root $RENDERS --symmetry-type axis_sym \
+        --sizes 224 --lightings flat --view-groups 1 6 14 26 \
+        --max-objects 50 --prompt-id $EXP --experiment-id $EXP \
+        --prompt-mode auto --yes
+done
+```
+
+### Fase 2 — Mapeo + estimación + evaluación (CPU) · ejecutar después
+
+```bash
+RENDERS=../data/renders
+OBJECTS=../data/objects
+
+run_axis_mapping() {
+    local EXP=$1
+    local MODE=$2
+    echo ""
+    echo "============================================="
+    echo "  axis mapping: $EXP  (point-mode=$MODE)"
+    echo "============================================="
+
+    python Mapping/map_to_3d.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type axis_sym --sizes 224 --lightings flat \
+        --max-objects 50 --experiment-id $EXP --overwrite --yes
+
+    python Mapping/estimate_symmetry.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type axis_sym --sizes 224 --lightings flat \
+        --max-objects 50 --experiment-id $EXP --point-mode $MODE --overwrite
+
+    python Mapping/evaluate.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type axis_sym --sizes 224 --lightings flat \
+        --max-objects 50 --experiment-id $EXP
+}
+
+# Points directly on the axis → independent
+for EXP in axis_v00 axis_v04 axis_v05; do run_axis_mapping $EXP independent; done
+
+# Bilateral symmetric pairs → midpoint
+for EXP in axis_v01 axis_v02 axis_v03; do run_axis_mapping $EXP midpoint; done
+```
+
+### Todo en un solo bloque (sin separar fases)
 
 ```bash
 RENDERS=../data/renders
@@ -101,34 +154,42 @@ run_axis_exp() {
         --max-objects 50 --experiment-id $EXP
 }
 
-# Points directly on the axis → independent
 for EXP in axis_v00 axis_v04 axis_v05; do run_axis_exp $EXP independent; done
-
-# Bilateral symmetric pairs → midpoint
 for EXP in axis_v01 axis_v02 axis_v03; do run_axis_exp $EXP midpoint; done
 ```
 
 ---
 
-## Run ALL plane experiments (single command block)
+## Run ALL plane experiments (two-phase workflow)
+
+### Fase 1 — Molmo (GPU)
 
 ```bash
 RENDERS=../data/renders
-OBJECTS=../data/objects
 
-run_plane_exp() {
-    local EXP=$1
-    local MODE=$2
-    echo ""
-    echo "=============================================="
-    echo "  plane experiment: $EXP  (point-mode=$MODE)"
-    echo "=============================================="
-
+for EXP in plane_v00 plane_v01 plane_v02 plane_v03 plane_v04 plane_v05; do
+    echo "===== Molmo: $EXP ====="
     CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
         --renders-root $RENDERS --symmetry-type plane_sym \
         --sizes 224 --lightings flat --view-groups 1 6 14 26 \
         --max-objects 50 --prompt-id $EXP --experiment-id $EXP \
         --prompt-mode auto --yes
+done
+```
+
+### Fase 2 — Mapeo + estimación + evaluación (CPU)
+
+```bash
+RENDERS=../data/renders
+OBJECTS=../data/objects
+
+run_plane_mapping() {
+    local EXP=$1
+    local MODE=$2
+    echo ""
+    echo "=============================================="
+    echo "  plane mapping: $EXP  (point-mode=$MODE)"
+    echo "=============================================="
 
     python Mapping/map_to_3d.py \
         --renders-root $RENDERS --objects-root $OBJECTS \
@@ -147,10 +208,10 @@ run_plane_exp() {
 }
 
 # Points directly on the plane → independent
-for EXP in plane_v00 plane_v02 plane_v04 plane_v05; do run_plane_exp $EXP independent; done
+for EXP in plane_v00 plane_v02 plane_v04 plane_v05; do run_plane_mapping $EXP independent; done
 
 # Bilateral symmetric pairs → midpoint
-for EXP in plane_v01 plane_v03; do run_plane_exp $EXP midpoint; done
+for EXP in plane_v01 plane_v03; do run_plane_mapping $EXP midpoint; done
 ```
 
 ---
