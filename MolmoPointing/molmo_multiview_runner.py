@@ -8,6 +8,18 @@ Molmo2 pointing and saves results to a cumulative JSON file. Results are
 accumulated per (object, resolution, illumination) — re-running with new
 view groups adds new keys without overwriting existing ones.
 
+Experiment mode
+---------------
+Use --experiment-id and --prompt-id together to run isolated prompt experiments:
+
+    --experiment-id EXP_ID   Changes output filename to molmo_multiview_EXP_ID.json.
+                             Production file (molmo_multiview.json) is never touched.
+    --prompt-id     PROMPT   Loads single/multi prompt texts from prompts_registry.py.
+                             Run `python MolmoPointing/prompts_registry.py` to list
+                             all registered prompts.
+    --max-objects   N        Limits processing to the first N objects (sorted order),
+                             useful for quick subset experiments.
+
 Prompt modes
 ------------
 Four modes controlled by --prompt-mode:
@@ -24,15 +36,18 @@ Four modes controlled by --prompt-mode:
 Output structure
 ----------------
 <renders_root>/<symmetry_type>/<object_id>/<image_size>/<illumination>/
-    molmo_multiview.json    ← cumulative results, one key per n_views
+    molmo_multiview.json              ← production (no --experiment-id)
+    molmo_multiview_<EXP_ID>.json     ← experiment
 
 JSON format
 -----------
 {
   "6": {
+    "experiment_id": "axis_v01",       # null when no --experiment-id
+    "prompt_id":     "axis_v01",       # null when no --prompt-id
     "prompt_mode": "auto",
     "prompt_used": "...",
-    "raw_output": "...",          # list of strings when prompt_mode is "single"
+    "raw_output": "...",
     "points_by_image": {
       "0": [{"obj_id": 1, "x": 450.0, "y": 230.0}, ...],
       "1": [...]
@@ -41,7 +56,6 @@ JSON format
     "n_points": 4,
     "n_images_with_points": 3
   },
-  "14": { ... },
   ...
 }
 
@@ -52,40 +66,31 @@ its key already exists in the JSON.
 
 Usage
 -----
-    # Recommended: auto mode
+    # Production run (recommended mode)
     CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \\
         --renders-root ../data/renders \\
         --symmetry-type axis_sym \\
         --view-groups 1 6 14 26 \\
         --prompt-mode auto
 
-    # Global prompt for all view groups
+    # Prompt experiment on first 50 objects
     CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \\
         --renders-root ../data/renders \\
         --symmetry-type axis_sym \\
-        --prompt-mode global
-
-    # Single-image prompt, N calls per group
-    CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \\
-        --renders-root ../data/renders \\
-        --symmetry-type axis_sym \\
-        --prompt-mode single
-
-    # Multi-image prompt, 1 call per group
-    CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \\
-        --renders-root ../data/renders \\
-        --symmetry-type axis_sym \\
-        --prompt-mode multi
+        --sizes 224 --lightings flat \\
+        --view-groups 1 6 14 26 \\
+        --max-objects 50 \\
+        --prompt-id axis_v01 \\
+        --experiment-id axis_v01 \\
+        --prompt-mode auto
 
     # Two GPUs
     CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \\
-        --renders-root ../data/renders \\
-        --symmetry-type axis_sym \\
+        --renders-root ../data/renders --symmetry-type axis_sym \\
         --gpu-id 0 --num-gpus 2 --prompt-mode auto
 
     CUDA_VISIBLE_DEVICES=1 python MolmoPointing/molmo_multiview_runner.py \\
-        --renders-root ../data/renders \\
-        --symmetry-type plane_sym \\
+        --renders-root ../data/renders --symmetry-type plane_sym \\
         --gpu-id 1 --num-gpus 2 --prompt-mode auto
 """
 
@@ -102,7 +107,11 @@ from PIL import Image
 from tqdm import tqdm
 from transformers import AutoModelForImageTextToText, AutoProcessor
 
-# ── Prompts ───────────────────────────────────────────────────────────────────
+# Allow importing prompts_registry from this directory
+sys.path.insert(0, str(Path(__file__).parent))
+from prompts_registry import PROMPTS, get_prompt, list_prompts
+
+# ── Default prompt texts (kept for backward compatibility) ────────────────────
 
 PROMPT_SINGLE = """You are given ONE image of a 3D object.
 
@@ -197,6 +206,17 @@ OUTPUT_FILE   = "molmo_multiview.json"
 DEFAULT_VIEW_GROUPS   = [1, 6, 14, 26, 42, 62, 86, 114]
 DEFAULT_IMAGE_SIZES   = [224, 448, 1136]
 DEFAULT_ILLUMINATIONS = ["flat", "brighter", "darker"]
+
+
+# ── Filename helper ───────────────────────────────────────────────────────────
+
+def _exp_filename(base: str, experiment_id: str | None) -> str:
+    """Return base unchanged, or base_EXPID.ext when experiment_id is set."""
+    if not experiment_id:
+        return base
+    dot = base.rfind(".")
+    return f"{base[:dot]}_{experiment_id}{base[dot:]}"
+
 
 # ── Model singleton ───────────────────────────────────────────────────────────
 
@@ -336,77 +356,77 @@ def parse_multi_coords(text: str, n_images: int) -> dict[str, list[dict]]:
 
 # ── Inference modes ───────────────────────────────────────────────────────────
 
-def run_global(images: list[Image.Image]) -> dict:
-    """One call with all images using PROMPT_GLOBAL."""
-    raw           = _call_model(images, PROMPT_GLOBAL)
+def run_global(images: list[Image.Image], prompt: str = PROMPT_GLOBAL) -> dict:
+    """One call with all images using the given prompt (global format)."""
+    raw           = _call_model(images, prompt)
     points_by_img = parse_multi_coords(raw, n_images=len(images))
     return {
-        "prompt_used":     PROMPT_GLOBAL,
+        "prompt_used":     prompt,
         "raw_output":      raw,
         "points_by_image": points_by_img,
     }
 
 
-def run_single_mode(images: list[Image.Image]) -> dict:
+def run_single_mode(images: list[Image.Image], prompt: str = PROMPT_SINGLE) -> dict:
     """
-    One call per image using PROMPT_SINGLE.
+    One call per image using the given single-image prompt.
     raw_output stored as list (one entry per image).
-    points_by_image keys correspond to image position in the original list.
     """
     raw_outputs   = []
     points_by_img = {}
 
     for i, img in enumerate(images):
-        raw = _call_model([img], PROMPT_SINGLE)
+        raw = _call_model([img], prompt)
         raw_outputs.append(raw)
         pts = parse_single_coords(raw)
         if "0" in pts:
             points_by_img[str(i)] = pts["0"]
 
     return {
-        "prompt_used":     PROMPT_SINGLE,
+        "prompt_used":     prompt,
         "raw_output":      raw_outputs,
         "points_by_image": points_by_img,
     }
 
 
-def run_multi(images: list[Image.Image]) -> dict:
-    """One call with all images using PROMPT_MULTI."""
-    raw           = _call_model(images, PROMPT_MULTI)
+def run_multi(images: list[Image.Image], prompt: str = PROMPT_MULTI) -> dict:
+    """One call with all images using the given multi-image prompt."""
+    raw           = _call_model(images, prompt)
     points_by_img = parse_multi_coords(raw, n_images=len(images))
     return {
-        "prompt_used":     PROMPT_MULTI,
+        "prompt_used":     prompt,
         "raw_output":      raw,
         "points_by_image": points_by_img,
     }
 
 
 def run_inference(
-    images:      list[Image.Image],
-    prompt_mode: str,
+    images:        list[Image.Image],
+    prompt_mode:   str,
+    prompt_single: str = PROMPT_SINGLE,
+    prompt_multi:  str = PROMPT_MULTI,
+    prompt_global: str = PROMPT_GLOBAL,
 ) -> dict:
     """
     Dispatch to the correct inference mode.
 
-    global  → PROMPT_GLOBAL, 1 call for all images
-    single  → PROMPT_SINGLE, 1 call per image
-    multi   → PROMPT_MULTI,  1 call for all images (fallback to single if n==1)
+    global  → run_global,      1 call  for all images
+    single  → run_single_mode, 1 call  per image
+    multi   → run_multi,       1 call  for all images (fallback to single if n==1)
     auto    → single if n==1, multi if n>1  [recommended]
     """
     n = len(images)
 
     if prompt_mode == "global":
-        return run_global(images)
-
+        return run_global(images, prompt=prompt_global)
     elif prompt_mode == "single":
-        return run_single_mode(images)
-
+        return run_single_mode(images, prompt=prompt_single)
     elif prompt_mode == "multi":
-        return run_single_mode(images) if n == 1 else run_multi(images)
-
+        return run_single_mode(images, prompt=prompt_single) if n == 1 \
+               else run_multi(images, prompt=prompt_multi)
     elif prompt_mode == "auto":
-        return run_single_mode(images) if n == 1 else run_multi(images)
-
+        return run_single_mode(images, prompt=prompt_single) if n == 1 \
+               else run_multi(images, prompt=prompt_multi)
     else:
         raise ValueError(f"Unknown prompt_mode: {prompt_mode!r}")
 
@@ -429,16 +449,22 @@ def save_results(json_path: Path, data: dict) -> None:
 # ── Per-object processor ──────────────────────────────────────────────────────
 
 def process_object(
-    object_dir:   Path,
-    view_groups:  list[int],
-    sizes:        list[int],
-    lightings:    list[str],
-    prompt_mode:  str,
+    object_dir:    Path,
+    view_groups:   list[int],
+    sizes:         list[int],
+    lightings:     list[str],
+    prompt_mode:   str,
+    experiment_id: str | None = None,
+    prompt_id:     str | None = None,
+    prompt_single: str = PROMPT_SINGLE,
+    prompt_multi:  str = PROMPT_MULTI,
 ) -> None:
     """
     Process one object across all (size, illumination, n_views) combinations.
     Skips any (size, illumination, n_views) already present in the JSON.
     """
+    output_file = _exp_filename(OUTPUT_FILE, experiment_id)
+
     for size in sizes:
         for lighting in lightings:
             render_dir = object_dir / str(size) / lighting
@@ -450,7 +476,7 @@ def process_object(
             except FileNotFoundError:
                 continue
 
-            json_path = render_dir / OUTPUT_FILE
+            json_path = render_dir / output_file
             results   = load_results(json_path)
 
             pending = [n for n in view_groups if str(n) not in results]
@@ -467,11 +493,17 @@ def process_object(
                     for e in entries
                 ]
 
-                inference     = run_inference(images, prompt_mode)
+                inference     = run_inference(
+                    images, prompt_mode,
+                    prompt_single=prompt_single,
+                    prompt_multi=prompt_multi,
+                )
                 points_by_img = inference["points_by_image"]
                 n_pts         = sum(len(v) for v in points_by_img.values())
 
                 results[str(n_views)] = {
+                    "experiment_id":         experiment_id,
+                    "prompt_id":             prompt_id,
                     "prompt_mode":           prompt_mode,
                     "prompt_used":           inference["prompt_used"],
                     "raw_output":            inference["raw_output"],
@@ -518,6 +550,24 @@ def parse_args() -> argparse.Namespace:
                        "auto   = single if n_views==1, multi otherwise [recommended]"
                    ))
 
+    # Experiment flags
+    p.add_argument("--experiment-id", default=None,
+                   help=(
+                       "Experiment identifier. When set, results are saved to "
+                       "molmo_multiview_<ID>.json instead of molmo_multiview.json. "
+                       "Use together with --prompt-id for prompt experiments."
+                   ))
+    p.add_argument("--prompt-id", default=None,
+                   help=(
+                       "Prompt variant from prompts_registry.py "
+                       "(e.g. axis_v01, plane_v02). "
+                       "Run `python MolmoPointing/prompts_registry.py` to list options."
+                   ))
+    p.add_argument("--max-objects", type=int, default=None,
+                   help="Limit to the first N objects (sorted order). Useful for subset experiments.")
+    p.add_argument("--list-prompts", action="store_true",
+                   help="List all registered prompts and exit.")
+
     p.add_argument("--gpu-id",   type=int, default=0)
     p.add_argument("--num-gpus", type=int, default=1)
 
@@ -532,7 +582,8 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-def preview(args: argparse.Namespace, objects: list[Path]) -> None:
+def preview(args: argparse.Namespace, objects: list[Path],
+            prompt_single: str, prompt_multi: str) -> None:
     mode_desc = {
         "global": "PROMPT_GLOBAL for all groups — 1 call per group",
         "single": "PROMPT_SINGLE per image — N calls per group",
@@ -540,11 +591,19 @@ def preview(args: argparse.Namespace, objects: list[Path]) -> None:
         "auto":   "PROMPT_SINGLE if n_views==1, PROMPT_MULTI if n_views>1  [recommended]",
     }
     n_configs = len(args.sizes) * len(args.lightings) * len(args.view_groups)
+    output_file = _exp_filename(OUTPUT_FILE, args.experiment_id)
+
     print("\n========== MOLMO MULTIVIEW RUNNER ==========")
     print(f"Renders root  : {args.renders_root}")
     print(f"Symmetry type : {args.symmetry_type}")
     print(f"Prompt mode   : {args.prompt_mode}")
     print(f"              : {mode_desc[args.prompt_mode]}")
+    if args.experiment_id:
+        print(f"Experiment ID : {args.experiment_id}")
+        print(f"Prompt ID     : {args.prompt_id or '(default hardcoded)'}")
+        print(f"Output file   : {output_file}")
+    if args.max_objects:
+        print(f"Max objects   : {args.max_objects}")
     print(f"GPU id/total  : {args.gpu_id} / {args.num_gpus}")
     print(f"Objects       : {len(objects)}")
     print(f"Sizes         : {args.sizes}")
@@ -561,6 +620,22 @@ def preview(args: argparse.Namespace, objects: list[Path]) -> None:
 def main() -> None:
     args = parse_args()
 
+    if args.list_prompts:
+        list_prompts()
+        sys.exit(0)
+
+    # Validate prompt_id early
+    prompt_single, prompt_multi = PROMPT_SINGLE, PROMPT_MULTI
+    if args.prompt_id:
+        try:
+            entry = get_prompt(args.prompt_id)
+        except KeyError as e:
+            print(f"[error] {e}")
+            print("Run with --list-prompts to see available prompt IDs.")
+            sys.exit(1)
+        prompt_single = entry["single"]
+        prompt_multi  = entry["multi"]
+
     symmetry_dir = Path(args.renders_root) / args.symmetry_type
     if not symmetry_dir.exists():
         print(f"[error] Not found: {symmetry_dir}")
@@ -571,9 +646,12 @@ def main() -> None:
         print(f"[error] No object folders in {symmetry_dir}")
         sys.exit(1)
 
+    if args.max_objects:
+        all_objects = all_objects[:args.max_objects]
+
     objects = all_objects[args.gpu_id :: args.num_gpus]
 
-    preview(args, objects)
+    preview(args, objects, prompt_single, prompt_multi)
 
     for obj_dir in tqdm(
         objects,
@@ -583,11 +661,15 @@ def main() -> None:
         bar_format="{desc:<12} {bar:40} {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
     ):
         process_object(
-            object_dir  = obj_dir,
-            view_groups = args.view_groups,
-            sizes       = args.sizes,
-            lightings   = args.lightings,
-            prompt_mode = args.prompt_mode,
+            object_dir    = obj_dir,
+            view_groups   = args.view_groups,
+            sizes         = args.sizes,
+            lightings     = args.lightings,
+            prompt_mode   = args.prompt_mode,
+            experiment_id = args.experiment_id,
+            prompt_id     = args.prompt_id,
+            prompt_single = prompt_single,
+            prompt_multi  = prompt_multi,
         )
 
     print(f"\n[GPU {args.gpu_id}] Done.")

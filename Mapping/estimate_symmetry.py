@@ -81,6 +81,14 @@ DEFAULT_SIZES       = [224, 448, 1136]
 DEFAULT_LIGHTINGS   = ["flat", "brighter", "darker"]
 
 
+def _exp_filename(base: str, experiment_id: str | None) -> str:
+    """Return base unchanged, or base_EXPID.ext when experiment_id is set."""
+    if not experiment_id:
+        return base
+    dot = base.rfind(".")
+    return f"{base[:dot]}_{experiment_id}{base[dot:]}"
+
+
 # ── Fitting ───────────────────────────────────────────────────────────────────
 
 def fit_axis(points: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -147,13 +155,19 @@ def process_object(
     sizes:         list[int],
     lightings:     list[str],
     overwrite:     bool = False,
+    experiment_id: str | None = None,
 ) -> None:
     """
     Pool 3D hit points across all (size, illumination) configs and all n_views groups,
-    fit the symmetry element per n_views group, and save to predicted_symmetry.json.
+    fit the symmetry element per n_views group, and save the result.
+    When experiment_id is set, reads mapped_points_3d_<ID>.json and writes
+    predicted_symmetry_<ID>.json instead of the default filenames.
     Skips objects where the output already exists unless --overwrite.
     """
-    output_path = object_dir / OUTPUT_FILE
+    input_file  = _exp_filename(INPUT_FILE,  experiment_id)
+    output_file = _exp_filename(OUTPUT_FILE, experiment_id)
+
+    output_path = object_dir / output_file
     if output_path.exists() and not overwrite:
         return
 
@@ -163,7 +177,7 @@ def process_object(
 
     for size in sizes:
         for lighting in lightings:
-            mapped_path = object_dir / str(size) / lighting / INPUT_FILE
+            mapped_path = object_dir / str(size) / lighting / input_file
             if not mapped_path.exists():
                 continue
 
@@ -215,6 +229,7 @@ def process_object(
         json.dump(output, f, indent=2)
 
 
+
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def parse_args() -> argparse.Namespace:
@@ -232,6 +247,14 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--num-gpus", type=int, default=1)
     p.add_argument("--overwrite", action="store_true",
                    help="Overwrite existing predicted_symmetry.json files")
+    p.add_argument("--experiment-id", default=None,
+                   help=(
+                       "Experiment identifier. Reads mapped_points_3d_<ID>.json and "
+                       "writes predicted_symmetry_<ID>.json. Must match the --experiment-id "
+                       "used in map_to_3d.py."
+                   ))
+    p.add_argument("--max-objects", type=int, default=None,
+                   help="Limit to the first N objects (sorted order).")
     return p.parse_args()
 
 
@@ -244,13 +267,18 @@ def main() -> None:
         sys.exit(1)
 
     all_objects = sorted(d for d in symmetry_dir.iterdir() if d.is_dir())
-    objects     = all_objects[args.gpu_id :: args.num_gpus]
+    if args.max_objects:
+        all_objects = all_objects[:args.max_objects]
+    objects = all_objects[args.gpu_id :: args.num_gpus]
 
+    output_file = _exp_filename(OUTPUT_FILE, args.experiment_id)
     print(f"\nFitting {args.symmetry_type} symmetry for {len(objects)} objects...")
+    if args.experiment_id:
+        print(f"Experiment ID : {args.experiment_id}  →  {output_file}")
     if args.overwrite:
-        print("(--overwrite: existing predicted_symmetry.json will be replaced)")
+        print(f"(--overwrite: existing {output_file} will be replaced)")
     else:
-        print("(Existing predicted_symmetry.json skipped — use --overwrite to replace)")
+        print(f"(Existing {output_file} skipped — use --overwrite to replace)")
 
     for obj_dir in tqdm(objects, unit="obj", dynamic_ncols=True):
         process_object(
@@ -259,6 +287,7 @@ def main() -> None:
             sizes         = args.sizes,
             lightings     = args.lightings,
             overwrite     = args.overwrite,
+            experiment_id = args.experiment_id,
         )
 
     print("Done.")

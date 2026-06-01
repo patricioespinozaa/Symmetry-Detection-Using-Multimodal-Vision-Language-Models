@@ -90,6 +90,14 @@ OUTPUT_FILE    = "mapped_points_3d.json"
 MOLMO_JSON     = "molmo_multiview.json"
 MANIFEST_FILE  = "manifest.json"
 
+
+def _exp_filename(base: str, experiment_id: str | None) -> str:
+    """Return base unchanged, or base_EXPID.ext when experiment_id is set."""
+    if not experiment_id:
+        return base
+    dot = base.rfind(".")
+    return f"{base[:dot]}_{experiment_id}{base[dot:]}"
+
 DEFAULT_SIZES       = [224, 448, 1136]
 DEFAULT_LIGHTINGS   = ["flat", "brighter", "darker"]
 OBJECTS_SUBDIR      = {"axis_sym": "curated_axis_sym_obj",
@@ -122,10 +130,10 @@ def build_camera_rays(
     """
     Build a camera ray in world space for a given NDC point.
 
-    PyTorch3D convention:
+    PyTorch3D convention (row-vector):
       - Camera looks along +Z in camera space
-      - R, T transform world → camera:  p_cam = R @ p_world + T
-      - To go camera → world:           p_world = R^T @ (p_cam - T)
+      - R, T transform world → camera:  p_cam = p_world @ R + T
+      - Camera centre in world:         C = -T @ R^{-1}  →  -(R @ T) in col-vec numpy
 
     The ray origin is the camera centre in world space.
     The ray direction is computed from the NDC point using the FoV.
@@ -144,8 +152,8 @@ def build_camera_rays(
     R_np = np.array(R, dtype=np.float64)       # (3, 3)
     T_np = np.array(T, dtype=np.float64)       # (3,)
 
-    # Camera centre in world space: C = -R^T @ T
-    ray_origin = -R_np.T @ T_np                # (3,)
+    # Camera centre in world space: C = -R @ T  (PyTorch3D row convention)
+    ray_origin = -(R_np @ T_np)                # (3,)
 
     # Half-tangent for the full FoV
     half_tan = np.tan(np.deg2rad(fov_deg) / 2.0)
@@ -158,8 +166,8 @@ def build_camera_rays(
         1.0,
     ], dtype=np.float64)
 
-    # Rotate to world space: dir_world = R^T @ dir_cam
-    dir_world = R_np.T @ dir_cam
+    # Rotate to world space: dir_world = R @ dir_cam  (PyTorch3D row convention)
+    dir_world = R_np @ dir_cam
     dir_world /= np.linalg.norm(dir_world)
 
     return ray_origin, dir_world
@@ -221,18 +229,23 @@ def cast_ray(
 # ── Per-object mapping ────────────────────────────────────────────────────────
 
 def process_object(
-    object_dir:   Path,
-    obj_path:     Path,
-    sizes:        list[int],
-    lightings:    list[str],
-    fov_deg:      float,
-    overwrite:    bool = False,
+    object_dir:    Path,
+    obj_path:      Path,
+    sizes:         list[int],
+    lightings:     list[str],
+    fov_deg:       float,
+    overwrite:     bool = False,
+    experiment_id: str | None = None,
 ) -> None:
     """
     Map Molmo2 predictions to 3D for all (size, illumination) configs of one object.
-    Skips configs where mapped_points_3d.json already exists unless --overwrite.
+    Skips configs where the output JSON already exists unless --overwrite.
+    When experiment_id is set, reads molmo_multiview_<ID>.json and writes
+    mapped_points_3d_<ID>.json instead of the default filenames.
     """
-    object_id = object_dir.name
+    object_id  = object_dir.name
+    molmo_json = _exp_filename(MOLMO_JSON,   experiment_id)
+    output_file = _exp_filename(OUTPUT_FILE, experiment_id)
 
     # Load mesh once per object (shared across all size/lighting configs)
     try:
@@ -247,11 +260,11 @@ def process_object(
             if not render_dir.exists():
                 continue
 
-            molmo_json_path = render_dir / MOLMO_JSON
+            molmo_json_path = render_dir / molmo_json
             if not molmo_json_path.exists():
                 continue
 
-            output_path = render_dir / OUTPUT_FILE
+            output_path = render_dir / output_file
             if output_path.exists() and not overwrite:
                 continue   # already mapped — skip
 
@@ -361,6 +374,14 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--fov",       type=float, default=FOV_DEG)
     p.add_argument("--overwrite", action="store_true",
                    help="Overwrite existing mapped_points_3d.json files")
+    p.add_argument("--experiment-id", default=None,
+                   help=(
+                       "Experiment identifier. Reads molmo_multiview_<ID>.json and "
+                       "writes mapped_points_3d_<ID>.json. Must match the --experiment-id "
+                       "used in molmo_multiview_runner.py."
+                   ))
+    p.add_argument("--max-objects", type=int, default=None,
+                   help="Limit to the first N objects (sorted order).")
 
     return p.parse_args()
 
@@ -398,7 +419,9 @@ def main() -> None:
     objects_dir    = Path(args.objects_root) / objects_subdir
 
     all_objects = sorted(d for d in symmetry_dir.iterdir() if d.is_dir())
-    objects     = all_objects[args.gpu_id :: args.num_gpus]
+    if args.max_objects:
+        all_objects = all_objects[:args.max_objects]
+    objects = all_objects[args.gpu_id :: args.num_gpus]
 
     preview(args, objects)
 
@@ -415,12 +438,13 @@ def main() -> None:
             continue
 
         process_object(
-            object_dir = obj_dir,
-            obj_path   = obj_path,
-            sizes      = args.sizes,
-            lightings  = args.lightings,
-            fov_deg    = args.fov,
-            overwrite  = args.overwrite,
+            object_dir    = obj_dir,
+            obj_path      = obj_path,
+            sizes         = args.sizes,
+            lightings     = args.lightings,
+            fov_deg       = args.fov,
+            overwrite     = args.overwrite,
+            experiment_id = args.experiment_id,
         )
 
     print(f"\nDone.")
