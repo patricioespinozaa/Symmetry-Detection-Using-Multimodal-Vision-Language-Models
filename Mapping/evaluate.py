@@ -66,12 +66,12 @@ For plane_sym, additional fields per object/n_views:
 
 Usage
 -----
-    python Mapping/evaluate.py \\
-        --renders-root ../data/renders \\
-        --objects-root ../data/objects \\
-        --symmetry-type axis_sym \\
-        --sizes 224 \\
-        --lightings flat
+python Mapping/evaluate.py \
+    --renders-root ../data/renders \
+    --objects-root ../data/objects \
+    --symmetry-type axis_sym \
+    --sizes 224 \
+    --lightings flat
 
     python Mapping/evaluate.py \\
         --renders-root ../data/renders \\
@@ -97,6 +97,16 @@ from tqdm import tqdm
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 PREDICTED_FILE = "predicted_symmetry.json"
+
+
+def _exp_filename(base: str, experiment_id: str | None) -> str:
+    """Return base unchanged, or base_EXPID.ext when experiment_id is set."""
+    if not experiment_id:
+        return base
+    dot = base.rfind(".")
+    return f"{base[:dot]}_{experiment_id}{base[dot:]}"
+
+
 OBJECTS_SUBDIR = {
     "axis_sym":  "curated_axis_sym_obj",
     "plane_sym": "curated_plane_sym_obj",
@@ -296,8 +306,9 @@ def evaluate_plane(pred: dict,
 def evaluate_object(object_dir: Path,
                     true_label: dict,
                     symmetry_type: str,
-                    vertices: np.ndarray | None) -> dict | None:
-    pred_path = object_dir / PREDICTED_FILE
+                    vertices: np.ndarray | None,
+                    predicted_file: str = PREDICTED_FILE) -> dict | None:
+    pred_path = object_dir / predicted_file
     if not pred_path.exists():
         return None
 
@@ -417,6 +428,14 @@ def parse_args() -> argparse.Namespace:
                    default=["flat", "brighter", "darker"],
                    choices=["flat", "darker", "brighter"],
                    help="Lightings used in the experiment (affects output filename)")
+    p.add_argument("--experiment-id", default=None,
+                   help=(
+                       "Experiment identifier. Reads predicted_symmetry_<ID>.json and "
+                       "writes eval_*_<ID>_results.json. Must match the --experiment-id "
+                       "used in estimate_symmetry.py."
+                   ))
+    p.add_argument("--max-objects", type=int, default=None,
+                   help="Limit to the first N objects (sorted order).")
     return p.parse_args()
 
 
@@ -432,12 +451,19 @@ def main() -> None:
         sys.exit(1)
 
     suffix         = experiment_suffix(args.sizes, args.lightings)
-    eval_json_path = symmetry_dir / f"eval_{suffix}_results.json"
-    eval_csv_path  = symmetry_dir / f"eval_{suffix}_summary.csv"
+    exp_suffix     = f"_{args.experiment_id}" if args.experiment_id else ""
+    eval_json_path = symmetry_dir / f"eval_{suffix}{exp_suffix}_results.json"
+    eval_csv_path  = symmetry_dir / f"eval_{suffix}{exp_suffix}_summary.csv"
+    predicted_file = _exp_filename(PREDICTED_FILE, args.experiment_id)
 
     all_object_dirs = sorted(d for d in symmetry_dir.iterdir() if d.is_dir())
+    if args.max_objects:
+        all_object_dirs = all_object_dirs[:args.max_objects]
+
     print(f"\nEvaluating {len(all_object_dirs)} objects  [{args.symmetry_type}]")
     print(f"Experiment    : sizes={args.sizes}  lightings={args.lightings}")
+    if args.experiment_id:
+        print(f"Experiment ID : {args.experiment_id}  →  reads {predicted_file}")
     print(f"Results JSON  : {eval_json_path}")
     print(f"Summary CSV   : {eval_csv_path}\n")
 
@@ -456,7 +482,8 @@ def main() -> None:
             vertices = load_mesh_vertices(objects_dir / f"{obj_dir.name}.obj")
 
         all_results[obj_dir.name] = evaluate_object(
-            obj_dir, true_label, args.symmetry_type, vertices
+            obj_dir, true_label, args.symmetry_type, vertices,
+            predicted_file=predicted_file,
         )
 
     # Save JSON

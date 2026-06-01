@@ -92,14 +92,14 @@ def camera_ray(
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Returns (origin, unit_direction) in world space.
-    Convention: p_cam = R @ p_world + T  →  origin = −R^T @ T
+    PyTorch3D row convention: p_cam = p_world @ R + T  →  origin = −R @ T
     """
     R_np = np.array(R, dtype=np.float64)
     T_np = np.array(T, dtype=np.float64)
-    origin   = -R_np.T @ T_np
+    origin   = -(R_np @ T_np)
     half_tan = np.tan(np.deg2rad(fov_deg) / 2.0)
     dir_cam  = np.array([ndc_x * half_tan, ndc_y * half_tan, 1.0])
-    dir_world = R_np.T @ dir_cam
+    dir_world = R_np @ dir_cam
     dir_world /= np.linalg.norm(dir_world)
     return origin, dir_world
 
@@ -297,7 +297,7 @@ def main():
         else:
             R_np = np.array(R, dtype=np.float64)
             T_np = np.array(T, dtype=np.float64)
-            cam_origin = -R_np.T @ T_np
+            cam_origin = -(R_np @ T_np)
 
         key = tuple(cam_origin.round(6))
         if key not in seen_cam_origins:

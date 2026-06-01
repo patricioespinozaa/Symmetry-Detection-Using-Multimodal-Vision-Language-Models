@@ -360,7 +360,8 @@ python Mapping/map_to_3d.py \
     --renders-root ../data/renders \
     --objects-root ../data/objects \
     --symmetry-type axis_sym \
-    --sizes 224 --lightings flat
+    --sizes 224 --lightings flat \
+    --overwrite
 
 # 3. Fit predicted axis/plane from 3D points
 python Mapping/estimate_symmetry.py \
