@@ -1,0 +1,32 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant axis of rotational symmetry.
+
+For each image, identify the most visible pair of symmetric structural features (handles, holes, protrusions, edges, ribs) that are bilateral mirror images of each other about the global symmetry axis.
+
+For each image:
+1. Identify the most prominent symmetric structural pair in that view.
+2. Return:
+   - obj_id 1: the LEFT instance of the symmetric feature,
+   - obj_id 2: the RIGHT instance of the same feature (mirror image).
+
+The midpoint between each pair lies on the projected axis in that view.
+
+IMPORTANT RULES:
+- Identify the SAME type of structural feature consistently across all views.
+- Use the SAME global axis consistently across all views.
+- Both points MUST lie on the visible object surface in each view.
+- The midpoint between each pair must lie on the projected symmetry axis.
+- If the primary feature is not visible in a view, use the nearest visible symmetric pair.
+- Infer the global axis from ALL views jointly before answering.
+- Do NOT collapse both points to the same location.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 Xleft Yleft 2 Xright Yright; 2 1 Xleft Yleft 2 Xright Yright; 3 1 Xleft Yleft 2 Xright Yright">
+
+Where each entry is: image_index obj_id X Y
+- obj_id 1 = LEFT structural feature
+- obj_id 2 = RIGHT structural feature (mirror)
+
+Return ONLY the <points ...> block.

@@ -123,28 +123,66 @@ def fit_plane(points: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return normal, centroid
 
 
+POINT_MODES = ("independent", "midpoint")
+
+
 def collect_hit_points(
     mapped_json: dict,
     n_views_key: str,
+    point_mode:  str = "independent",
 ) -> np.ndarray | None:
     """
-    Extract all 3D hit points from a mapped_points_3d entry for a given n_views key.
-    Returns (N, 3) array or None if no hits.
+    Extract 3D points from a mapped_points_3d entry for a given n_views key.
+
+    point_mode="independent" (default):
+        Every hit point is added to the cloud as-is.
+        Use with prompts that return points directly on the axis/plane.
+
+    point_mode="midpoint":
+        For each image, obj_id=1 and obj_id=2 are paired and replaced by their
+        3D midpoint. Images where either point missed are discarded.
+        Use with prompts that return bilateral symmetric pairs — the midpoint
+        of each pair lies on the axis/plane instead of the individual points.
+
+    Returns (N, 3) float64 array, or None if fewer than 2 usable points.
     """
     group = mapped_json.get("n_views_results", {}).get(n_views_key)
     if group is None:
         return None
 
-    pts = [
-        p["point_3d"]
-        for p in group.get("points_3d", [])
-        if p["hit"] and p["point_3d"] is not None
-    ]
+    raw_points = group.get("points_3d", [])
 
-    if len(pts) < 2:
-        return None
+    if point_mode == "independent":
+        pts = [
+            p["point_3d"]
+            for p in raw_points
+            if p["hit"] and p["point_3d"] is not None
+        ]
+        if len(pts) < 2:
+            return None
+        return np.array(pts, dtype=np.float64)
 
-    return np.array(pts, dtype=np.float64)
+    elif point_mode == "midpoint":
+        # Group hits by img_idx, then by obj_id
+        by_img: dict[int, dict[int, np.ndarray]] = {}
+        for p in raw_points:
+            if not p["hit"] or p["point_3d"] is None:
+                continue
+            img = p["img_idx"]
+            oid = p["obj_id"]
+            by_img.setdefault(img, {})[oid] = np.array(p["point_3d"], dtype=np.float64)
+
+        midpoints = [
+            (pts[1] + pts[2]) / 2.0
+            for pts in by_img.values()
+            if 1 in pts and 2 in pts
+        ]
+        if len(midpoints) < 2:
+            return None
+        return np.array(midpoints, dtype=np.float64)
+
+    else:
+        raise ValueError(f"Unknown point_mode: {point_mode!r}. Choose from {POINT_MODES}.")
 
 
 # ── Per-object estimation ─────────────────────────────────────────────────────
@@ -156,6 +194,7 @@ def process_object(
     lightings:     list[str],
     overwrite:     bool = False,
     experiment_id: str | None = None,
+    point_mode:    str = "independent",
 ) -> None:
     """
     Pool 3D hit points across all (size, illumination) configs and all n_views groups,
@@ -163,6 +202,8 @@ def process_object(
     When experiment_id is set, reads mapped_points_3d_<ID>.json and writes
     predicted_symmetry_<ID>.json instead of the default filenames.
     Skips objects where the output already exists unless --overwrite.
+    point_mode controls how Molmo's pairs are converted to the SVD point cloud
+    (see collect_hit_points for details).
     """
     input_file  = _exp_filename(INPUT_FILE,  experiment_id)
     output_file = _exp_filename(OUTPUT_FILE, experiment_id)
@@ -185,7 +226,7 @@ def process_object(
                 mapped = json.load(f)
 
             for n_views_key in mapped.get("n_views_results", {}).keys():
-                pts = collect_hit_points(mapped, n_views_key)
+                pts = collect_hit_points(mapped, n_views_key, point_mode=point_mode)
                 if pts is not None:
                     points_per_group[n_views_key].append(pts)
 
@@ -222,6 +263,7 @@ def process_object(
     output = {
         "object_id":           object_dir.name,
         "symmetry_type":       symmetry_type,
+        "point_mode":          point_mode,
         "n_views_predictions": n_views_predictions,
     }
 
@@ -255,6 +297,14 @@ def parse_args() -> argparse.Namespace:
                    ))
     p.add_argument("--max-objects", type=int, default=None,
                    help="Limit to the first N objects (sorted order).")
+    p.add_argument("--point-mode", default="independent", choices=POINT_MODES,
+                   help=(
+                       "How Molmo's point pairs are converted to the SVD cloud. "
+                       "independent = each 3D point enters the cloud as-is (use with "
+                       "prompts that return points directly on the axis/plane). "
+                       "midpoint = obj_id=1 and obj_id=2 per image are replaced by their "
+                       "3D midpoint (use with bilateral symmetric pair prompts)."
+                   ))
     return p.parse_args()
 
 
@@ -273,6 +323,7 @@ def main() -> None:
 
     output_file = _exp_filename(OUTPUT_FILE, args.experiment_id)
     print(f"\nFitting {args.symmetry_type} symmetry for {len(objects)} objects...")
+    print(f"Point mode    : {args.point_mode}")
     if args.experiment_id:
         print(f"Experiment ID : {args.experiment_id}  →  {output_file}")
     if args.overwrite:
@@ -288,6 +339,7 @@ def main() -> None:
             lightings     = args.lightings,
             overwrite     = args.overwrite,
             experiment_id = args.experiment_id,
+            point_mode    = args.point_mode,
         )
 
     print("Done.")

@@ -1,0 +1,23 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+Your task is to identify the most visible pair of corresponding symmetric structural features: two elements of the object (legs, arms, wheels, handles, holes, edges) that are mirror images of each other across the symmetry plane.
+
+Return:
+- obj_id 1: the LEFT instance of the symmetric structural feature
+- obj_id 2: the RIGHT instance of the same feature (mirror image across the symmetry plane)
+
+The midpoint between these two points lies on the symmetry plane's visible trace.
+
+IMPORTANT RULES:
+- Both points MUST lie on the visible object surface.
+- The two features MUST be structurally identical on opposite sides of the symmetry plane.
+- Prefer features that are clearly visible and geometrically salient.
+- The midpoint between obj_id 1 and obj_id 2 lies on the symmetry plane trace.
+- If no obvious structural feature pair exists, use the most prominent symmetric surface points.
+- Do NOT collapse both points to the same location.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">

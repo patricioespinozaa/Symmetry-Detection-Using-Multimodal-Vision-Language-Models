@@ -1,0 +1,30 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+For each image, identify two points that lie DIRECTLY ON the global symmetry plane's surface trace: the visible "seam" or "spine" where the plane intersects the object.
+
+For each image:
+1. Locate the visible trace of the global symmetry plane on the object's surface.
+2. Return:
+   - obj_id 1: a point on the symmetry plane trace near the TOP of the visible object,
+   - obj_id 2: a point on the symmetry plane trace near the BOTTOM of the visible object.
+
+IMPORTANT RULES:
+- Both points in each image MUST lie ON the symmetry plane's visible surface trace.
+- Use the SAME global symmetry plane consistently across all views.
+- The two points MUST be as far apart vertically as possible within each image.
+- Both points MUST lie on the visible object surface.
+- Infer the global plane from ALL views jointly before answering.
+- Do NOT place points on the lateral sides — only on the dividing seam.
+- Do NOT collapse both points to the same location.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 Xtop Ytop 2 Xbottom Ybottom; 2 1 Xtop Ytop 2 Xbottom Ybottom; 3 1 Xtop Ytop 2 Xbottom Ybottom">
+
+Where each entry is: image_index obj_id X Y
+- obj_id 1 = TOP point on the symmetry plane surface trace
+- obj_id 2 = BOTTOM point on the symmetry plane surface trace
+
+Return ONLY the <points ...> block.

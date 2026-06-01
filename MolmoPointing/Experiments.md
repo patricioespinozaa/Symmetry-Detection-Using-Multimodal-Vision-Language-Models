@@ -4,18 +4,55 @@ This document describes the workflow for testing prompt variants on a subset of 
 
 ---
 
-## Overview
+## Registered prompts
 
-The pipeline supports isolated experiments via three flags available in all four scripts:
+Complete reference table — use this to decide which `--point-mode` to pass to `estimate_symmetry.py`.
 
-| Flag | Effect |
-|---|---|
-| `--experiment-id EXP_ID` | All output files get `_EXP_ID` appended. Production files are never touched. |
-| `--prompt-id PROMPT_ID` | Loads prompt texts from `prompts_registry.py` instead of the hardcoded defaults. |
-| `--max-objects N` | Processes only the first N objects (same sorted order across all scripts). |
+### Axis symmetry (`--symmetry-type axis_sym`)
 
-The flags propagate through the full pipeline:
+| ID | Strategy | What Molmo returns | `--point-mode` |
+|---|---|---|---|
+| `axis_v00` | Axis projection | Two far-apart points **directly on** the projected axis | `independent` |
+| `axis_v01` | Bilateral pair | Left point + its **right mirror** equidistant from the axis | `midpoint` |
+| `axis_v02` | Widest silhouette | Leftmost + rightmost surface points at the widest cross-section | `midpoint` |
+| `axis_v03` | Structural feature pairs | Symmetric structural elements (handles, holes, ribs) on each side | `midpoint` |
+| `axis_v04` | Polar extremes | Topmost + bottommost points where the axis **exits** the surface | `independent` |
+| `axis_v05` | Axis centerline | One point on the centerline in the **upper half** + one in the **lower half** | `independent` |
 
+### Plane symmetry (`--symmetry-type plane_sym`)
+
+| ID | Strategy | What Molmo returns | `--point-mode` |
+|---|---|---|---|
+| `plane_v00` | Plane trace | Top + bottom points **on** the plane's surface intersection | `independent` |
+| `plane_v01` | Bilateral pair | Left point + its **right mirror** equidistant from the plane | `midpoint` |
+| `plane_v02` | Plane seam | Two points **on** the visible seam dividing the two mirror halves | `independent` |
+| `plane_v03` | Structural feature pairs | Corresponding symmetric elements (legs, wheels, arms) across the plane | `midpoint` |
+| `plane_v04` | Silhouette midpoints | Horizontal center of the object's width near the **top** + near the **bottom** | `independent` |
+| `plane_v05` | Plane trace extremes | Two most **distant** points along the visible plane trace | `independent` |
+
+### Why `--point-mode` matters
+
+```
+independent  →  each 3D point from ray casting enters SVD directly
+midpoint     →  obj_id=1 and obj_id=2 per image are replaced by their
+                3D midpoint before SVD
+```
+
+SVD for **axis detection** needs the cloud to have high variance *along* the axis. Bilateral pair prompts return points on *opposite sides* of the axis — their midpoints lie on the axis, but the individual points do not. `--point-mode midpoint` corrects this by computing the midpoint in 3D before SVD.
+
+---
+
+## Pipeline flags reference
+
+| Flag | Script(s) | Effect |
+|---|---|---|
+| `--experiment-id EXP_ID` | all 4 | Output files get `_EXP_ID` suffix. Production files never touched. |
+| `--prompt-id PROMPT_ID` | runner only | Loads prompt text from `prompts_registry.py`. |
+| `--point-mode MODE` | estimate_symmetry | `independent` or `midpoint` (see table above). |
+| `--max-objects N` | all 4 | Processes only the first N objects (same sorted order). |
+| `--yes` / `-y` | runner, map_to_3d | Skips interactive confirmation. Required for automated loops. |
+
+File chain per experiment:
 ```
 molmo_multiview_<EXP_ID>.json
   → mapped_points_3d_<EXP_ID>.json
@@ -24,138 +61,126 @@ molmo_multiview_<EXP_ID>.json
   → eval_s224_flat_<EXP_ID>_summary.csv
 ```
 
-Production files (no suffix) are never modified.
-
 ---
 
-## Adding a new prompt
+## Run ALL axis experiments (single command block)
 
-Open `MolmoPointing/prompts_registry.py` and add a new entry to the `PROMPTS` dict:
-
-```python
-"axis_v01": {
-    "symmetry_type": "axis_sym",
-    "description":   "What this variant tests (one line)",
-    "single":        """...""",   # prompt for n_views == 1
-    "multi":         """...""",   # prompt for n_views  > 1
-},
-```
-
-List all registered prompts:
+Copy and paste the entire block. It runs all 6 axis variants sequentially.
 
 ```bash
-python MolmoPointing/molmo_multiview_runner.py --list-prompts
-# or
-python MolmoPointing/prompts_registry.py
+RENDERS=../data/renders
+OBJECTS=../data/objects
+
+run_axis_exp() {
+    local EXP=$1
+    local MODE=$2
+    echo ""
+    echo "============================================="
+    echo "  axis experiment: $EXP  (point-mode=$MODE)"
+    echo "============================================="
+
+    CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
+        --renders-root $RENDERS --symmetry-type axis_sym \
+        --sizes 224 --lightings flat --view-groups 1 6 14 26 \
+        --max-objects 50 --prompt-id $EXP --experiment-id $EXP \
+        --prompt-mode auto --yes
+
+    python Mapping/map_to_3d.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type axis_sym --sizes 224 --lightings flat \
+        --max-objects 50 --experiment-id $EXP --overwrite --yes
+
+    python Mapping/estimate_symmetry.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type axis_sym --sizes 224 --lightings flat \
+        --max-objects 50 --experiment-id $EXP --point-mode $MODE --overwrite
+
+    python Mapping/evaluate.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type axis_sym --sizes 224 --lightings flat \
+        --max-objects 50 --experiment-id $EXP
+}
+
+# Points directly on the axis → independent
+for EXP in axis_v00 axis_v04 axis_v05; do run_axis_exp $EXP independent; done
+
+# Bilateral symmetric pairs → midpoint
+for EXP in axis_v01 axis_v02 axis_v03; do run_axis_exp $EXP midpoint; done
 ```
 
 ---
 
-## Running one experiment (single prompt)
+## Run ALL plane experiments (single command block)
 
-Replace `axis_v01` with your prompt ID and run all four pipeline steps:
+```bash
+RENDERS=../data/renders
+OBJECTS=../data/objects
+
+run_plane_exp() {
+    local EXP=$1
+    local MODE=$2
+    echo ""
+    echo "=============================================="
+    echo "  plane experiment: $EXP  (point-mode=$MODE)"
+    echo "=============================================="
+
+    CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
+        --renders-root $RENDERS --symmetry-type plane_sym \
+        --sizes 224 --lightings flat --view-groups 1 6 14 26 \
+        --max-objects 50 --prompt-id $EXP --experiment-id $EXP \
+        --prompt-mode auto --yes
+
+    python Mapping/map_to_3d.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type plane_sym --sizes 224 --lightings flat \
+        --max-objects 50 --experiment-id $EXP --overwrite --yes
+
+    python Mapping/estimate_symmetry.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type plane_sym --sizes 224 --lightings flat \
+        --max-objects 50 --experiment-id $EXP --point-mode $MODE --overwrite
+
+    python Mapping/evaluate.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type plane_sym --sizes 224 --lightings flat \
+        --max-objects 50 --experiment-id $EXP
+}
+
+# Points directly on the plane → independent
+for EXP in plane_v00 plane_v02 plane_v04 plane_v05; do run_plane_exp $EXP independent; done
+
+# Bilateral symmetric pairs → midpoint
+for EXP in plane_v01 plane_v03; do run_plane_exp $EXP midpoint; done
+```
+
+---
+
+## Running one experiment manually
 
 ```bash
 EXP=axis_v01
+MODE=midpoint   # see table above for correct value per prompt
 
-# Step 1 — Molmo inference
 CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
-    --renders-root ../data/renders \
-    --objects-root ../data/objects \
-    --symmetry-type axis_sym \
-    --sizes 224 --lightings flat \
-    --view-groups 1 6 14 26 \
-    --max-objects 50 \
-    --prompt-id  $EXP \
-    --experiment-id $EXP \
-    --prompt-mode auto
+    --renders-root ../data/renders --symmetry-type axis_sym \
+    --sizes 224 --lightings flat --view-groups 1 6 14 26 \
+    --max-objects 50 --prompt-id $EXP --experiment-id $EXP \
+    --prompt-mode auto --yes
 
-# Step 2 — Ray casting 2D→3D
 python Mapping/map_to_3d.py \
-    --renders-root ../data/renders \
-    --objects-root ../data/objects \
-    --symmetry-type axis_sym \
-    --sizes 224 --lightings flat \
-    --max-objects 50 \
-    --experiment-id $EXP \
-    --overwrite
+    --renders-root ../data/renders --objects-root ../data/objects \
+    --symmetry-type axis_sym --sizes 224 --lightings flat \
+    --max-objects 50 --experiment-id $EXP --overwrite --yes
 
-# Step 3 — RANSAC + SVD
 python Mapping/estimate_symmetry.py \
-    --renders-root ../data/renders \
-    --objects-root ../data/objects \
-    --symmetry-type axis_sym \
-    --sizes 224 --lightings flat \
-    --max-objects 50 \
-    --experiment-id $EXP \
-    --overwrite
+    --renders-root ../data/renders --objects-root ../data/objects \
+    --symmetry-type axis_sym --sizes 224 --lightings flat \
+    --max-objects 50 --experiment-id $EXP --point-mode $MODE --overwrite
 
-# Step 4 — Evaluation
 python Mapping/evaluate.py \
-    --renders-root ../data/renders \
-    --objects-root ../data/objects \
-    --symmetry-type axis_sym \
-    --sizes 224 --lightings flat \
-    --max-objects 50 \
-    --experiment-id $EXP
-```
-
----
-
-## Running all experiments in a loop
-
-```bash
-# Axis experiments
-for EXP in axis_v00 axis_v01 axis_v02 axis_v03 axis_v04; do
-    echo "===== $EXP ====="
-
-    CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
-        --renders-root ../data/renders --objects-root ../data/objects \
-        --symmetry-type axis_sym --sizes 224 --lightings flat \
-        --view-groups 1 6 14 26 --max-objects 50 \
-        --prompt-id $EXP --experiment-id $EXP --prompt-mode auto
-
-    python Mapping/map_to_3d.py \
-        --renders-root ../data/renders --objects-root ../data/objects \
-        --symmetry-type axis_sym --sizes 224 --lightings flat \
-        --max-objects 50 --experiment-id $EXP --overwrite
-
-    python Mapping/estimate_symmetry.py \
-        --renders-root ../data/renders --objects-root ../data/objects \
-        --symmetry-type axis_sym --sizes 224 --lightings flat \
-        --max-objects 50 --experiment-id $EXP --overwrite
-
-    python Mapping/evaluate.py \
-        --renders-root ../data/renders --objects-root ../data/objects \
-        --symmetry-type axis_sym --sizes 224 --lightings flat \
-        --max-objects 50 --experiment-id $EXP
-done
-
-# Plane experiments (same structure, different prompt IDs)
-for EXP in plane_v00 plane_v01 plane_v02; do
-    echo "===== $EXP ====="
-
-    CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
-        --renders-root ../data/renders --objects-root ../data/objects \
-        --symmetry-type plane_sym --sizes 224 --lightings flat \
-        --view-groups 1 6 14 26 --max-objects 50 \
-        --prompt-id $EXP --experiment-id $EXP --prompt-mode auto
-
-    python Mapping/map_to_3d.py \
-        --renders-root ../data/renders --objects-root ../data/objects \
-        --symmetry-type plane_sym --sizes 224 --lightings flat \
-        --max-objects 50 --experiment-id $EXP --overwrite
-
-    python Mapping/estimate_symmetry.py \
-        --renders-root ../data/renders --objects-root ../data/objects \
-        --symmetry-type plane_sym --sizes 224 --lightings flat \
-        --max-objects 50 --experiment-id $EXP --overwrite
-
-    python Mapping/evaluate.py \
-        --renders-root ../data/renders --objects-root ../data/objects \
-        --symmetry-type plane_sym --sizes 224 --lightings flat \
-        --max-objects 50 --experiment-id $EXP
-done
+    --renders-root ../data/renders --objects-root ../data/objects \
+    --symmetry-type axis_sym --sizes 224 --lightings flat \
+    --max-objects 50 --experiment-id $EXP
 ```
 
 ---
@@ -167,17 +192,16 @@ Each experiment produces a CSV at:
 ../data/renders/axis_sym/eval_s224_flat_<EXP_ID>_summary.csv
 ```
 
-To compare all axis experiments side by side:
+Compare all axis experiments side by side:
 
 ```bash
 python - <<'EOF'
 import pandas as pd
 from pathlib import Path
 
-root    = Path("../data/renders/axis_sym")
-csvs    = sorted(root.glob("eval_s224_flat_axis_v*_summary.csv"))
-frames  = []
-
+root   = Path("../data/renders/axis_sym")
+csvs   = sorted(root.glob("eval_s224_flat_axis_v*_summary.csv"))
+frames = []
 for csv in csvs:
     df = pd.read_csv(csv)
     df.insert(0, "experiment", csv.stem.replace("eval_s224_flat_", "").replace("_summary", ""))
@@ -191,6 +215,26 @@ print(combined[cols].to_string(index=False))
 EOF
 ```
 
+Same for plane (replace `axis_sym` and `axis_v` with `plane_sym` and `plane_v`).
+
+---
+
+## Adding a new prompt
+
+1. Create two `.txt` files in the appropriate folder:
+   ```
+   MolmoPointing/prompts/axis/v06_single.txt   ← prompt for n_views == 1
+   MolmoPointing/prompts/axis/v06_multi.txt    ← prompt for n_views  > 1
+   ```
+2. Optionally add a description in `DESCRIPTIONS` in `prompts_registry.py`.
+3. Add the new prompt to the registered prompts table above with its `--point-mode`.
+4. Add it to the appropriate loop in the run-all commands above.
+
+Verify it was detected:
+```bash
+python MolmoPointing/molmo_multiview_runner.py --list-prompts
+```
+
 ---
 
 ## File isolation guarantee
@@ -202,15 +246,4 @@ EOF
 | `axis_v01` | `predicted_symmetry_axis_v01.json` | `predicted_symmetry.json` — untouched |
 | `axis_v01` | `eval_s224_flat_axis_v01_results.json` | `eval_s224_flat_results.json` — untouched |
 
-Running any experiment script **without** `--experiment-id` always uses the production filenames and is unaffected by any experiment runs.
-
----
-
-## Registered prompts
-
-| ID | Type | Description |
-|---|---|---|
-| `axis_v00` | axis_sym | Baseline: current production prompts |
-| `plane_v00` | plane_sym | Baseline: first plane symmetry prompts |
-
-*(Add new rows here as you register prompts in `prompts_registry.py`.)*
+Running any script **without** `--experiment-id` always uses production filenames, unaffected by any experiment.

@@ -1,0 +1,30 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant axis of rotational symmetry.
+
+For each image, identify two points on the visible axis centerline: one in the upper half of the object and one in the lower half. The axis centerline is the line equidistant from all silhouette edges at every height.
+
+For each image:
+1. Locate the axis centerline projection (horizontal center of the object at each height).
+2. Return:
+   - obj_id 1: a point on the axis centerline in the UPPER half of the visible object,
+   - obj_id 2: a point on the axis centerline in the LOWER half of the visible object.
+
+IMPORTANT RULES:
+- Use the SAME global axis consistently across all views.
+- Both points in each image must lie on the projected axis centerline (horizontal center, not the image center).
+- obj_id 1 MUST be above obj_id 2 in every image.
+- Both points MUST lie on or near the visible object surface.
+- Do NOT place points on the silhouette edges.
+- Infer the global axis from ALL views jointly before answering.
+- Do NOT collapse both points to the same height.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 Xupper Yupper 2 Xlower Ylower; 2 1 Xupper Yupper 2 Xlower Ylower; 3 1 Xupper Yupper 2 Xlower Ylower">
+
+Where each entry is: image_index obj_id X Y
+- obj_id 1 = point on axis centerline in the UPPER half
+- obj_id 2 = point on axis centerline in the LOWER half
+
+Return ONLY the <points ...> block.

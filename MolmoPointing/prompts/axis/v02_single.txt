@@ -1,0 +1,23 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant rotational symmetry axis.
+
+Your task is to identify the widest visible cross-section of the object and return the leftmost and rightmost surface points at that height.
+
+Return:
+- obj_id 1: the leftmost visible surface point at the widest cross-section (on the silhouette boundary)
+- obj_id 2: the rightmost visible surface point at the same height (symmetric counterpart on the opposite side)
+
+The midpoint between these two points lies on the projected symmetry axis.
+
+IMPORTANT RULES:
+- Both points MUST lie on the visible silhouette boundary of the object.
+- The two points MUST be at approximately the same height (same Y coordinate).
+- Choose the height where the object appears WIDEST in this view.
+- The midpoint between obj_id 1 and obj_id 2 must lie on the symmetry axis projection.
+- Do NOT place both points at the same location or at the image center.
+- Do NOT place points at the very top or bottom of the object.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">

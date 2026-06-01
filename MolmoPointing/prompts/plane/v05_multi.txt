@@ -1,0 +1,30 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+For each image, identify two points on the global symmetry plane's visible surface trace that are as far apart as possible in that view.
+
+For each image:
+1. Locate the visible trace of the global symmetry plane on the object's surface.
+2. Return the two most distant visible points on that trace:
+   - obj_id 1: one extremal endpoint of the visible plane trace,
+   - obj_id 2: the opposite extremal endpoint.
+
+IMPORTANT RULES:
+- Use the SAME global symmetry plane consistently across all views.
+- Both points in each image MUST lie ON the symmetry plane's visible surface trace.
+- The two points in each image MUST be as far apart as possible.
+- Both points MUST lie on the visible object surface.
+- If the trace appears as a straight line, choose its two endpoints.
+- Infer the global plane from ALL views jointly before answering.
+- Do NOT collapse both points to the same location.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 X1 Y1 2 X2 Y2; 2 1 X1 Y1 2 X2 Y2; 3 1 X1 Y1 2 X2 Y2">
+
+Where each entry is: image_index obj_id X Y
+- obj_id 1 = one extremal point on the plane trace
+- obj_id 2 = opposite extremal point on the plane trace
+
+Return ONLY the <points ...> block.

@@ -1,0 +1,30 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant axis of rotational symmetry.
+
+For each image, identify the two poles of the global rotation axis: the topmost and bottommost points where the axis exits the object's surface.
+
+For each image:
+1. Locate where the global axis exits at the top and bottom of the object.
+2. Return:
+   - obj_id 1: the TOP pole — topmost visible point on the rotation axis,
+   - obj_id 2: the BOTTOM pole — bottommost visible point on the rotation axis.
+
+IMPORTANT RULES:
+- Both points MUST lie ON the rotation axis (at the center of the object, not on the lateral silhouette).
+- Use the SAME global axis consistently across all views.
+- obj_id 1 MUST be above obj_id 2 in each image.
+- The two points MUST be as far apart vertically as possible.
+- Both points MUST lie on the visible object surface.
+- Infer the global axis from ALL views jointly before answering.
+- Do NOT collapse both points to the same location.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 Xtop Ytop 2 Xbottom Ybottom; 2 1 Xtop Ytop 2 Xbottom Ybottom; 3 1 Xtop Ytop 2 Xbottom Ybottom">
+
+Where each entry is: image_index obj_id X Y
+- obj_id 1 = TOP pole of the rotation axis
+- obj_id 2 = BOTTOM pole of the rotation axis
+
+Return ONLY the <points ...> block.
