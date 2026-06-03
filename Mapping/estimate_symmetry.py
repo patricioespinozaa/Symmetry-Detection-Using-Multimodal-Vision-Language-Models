@@ -1,64 +1,62 @@
 """
-estimate_symmetry.py
---------------------
+estimate_symmetry_vf.py
+-----------------------
 Fits a symmetry axis (axis_sym) or plane (plane_sym) from the 3D points
-produced by map_to_3d.py, and saves the predicted symmetry to
-predicted_symmetry.json alongside the renders.
+produced by map_to_3d.py.
 
-Fitting method
---------------
-axis_sym:
-    SVD on the centered 3D hit points → principal component = axis direction.
-    Origin = centroid of the hit points, projected onto the true axis origin
-    along the predicted direction (keeps origin near 0,0,0 for comparison).
+Generates FOUR estimates per n_views group, forming a 2×2 comparison grid:
 
-plane_sym:
-    SVD on the centered 3D hit points → last component (smallest variance)
-    = plane normal. Origin = centroid projected to the plane through (0,0,0).
+                    │  sin SDE   │  con SDE
+  ──────────────────┼────────────┼──────────────
+  sin RANSAC        │  svd       │  svd_sde
+  con RANSAC        │  ransac_svd│  ransac_svd_sde
+  ──────────────────┴────────────┴──────────────
 
-For both types, all hit points across all n_views groups and all
-(size, illumination) configs are pooled together per object before fitting,
-unless --per-config is passed (fits independently per size×illumination).
+  RANSAC  — filtra outliers antes de ajustar (5 % bbox diagonal, 1000 iter)
+  SVD     — ajusta eje/plano sobre el conjunto de puntos (todos o inliers)
+  SDE     — evalúa la calidad del ajuste por reflexión + KDTree (requiere --objects-root)
 
 Output
 ------
 <renders_root>/<symmetry_type>/<object_id>/
-    predicted_symmetry.json    ← one file per object (pooled across configs)
+    predicted_symmetry.json
 
-JSON format — axis_sym
------------------------
+JSON format
+-----------
 {
   "object_id": "...",
   "symmetry_type": "axis_sym",
+  "point_mode": "independent",
   "n_views_predictions": {
-    "1":  {"direction": [dx, dy, dz], "origin": [ox, oy, oz], "n_points": 2},
-    "6":  {"direction": [...], "origin": [...], "n_points": 6},
-    ...
+    "6": {
+      "svd":            {"direction": [...], "origin": [...], "n_points": 12,
+                         "n_inliers": null,  "sde": null,  "accepted": null},
+      "ransac_svd":     {"direction": [...], "origin": [...], "n_points": 12,
+                         "n_inliers": 8,     "sde": null,  "accepted": null},
+      "svd_sde":        {"direction": [...], "origin": [...], "n_points": 12,
+                         "n_inliers": null,  "sde": 0.031, "accepted": true},
+      "ransac_svd_sde": {"direction": [...], "origin": [...], "n_points": 12,
+                         "n_inliers": 8,     "sde": 0.021, "accepted": true}
+    }, ...
   }
 }
 
-JSON format — plane_sym
-------------------------
-{
-  "object_id": "...",
-  "symmetry_type": "plane_sym",
-  "n_views_predictions": {
-    "1":  {"normal": [nx, ny, nz], "origin": [ox, oy, oz], "n_points": 2},
-    ...
-  }
-}
+Para plane_sym "direction" se reemplaza por "normal".
+Cuando no se pasa --objects-root, los campos sde y accepted son null.
 
 Usage
 -----
-    python Mapping/estimate_symmetry.py \\
-        --renders-root ../data/renders \\
-        --symmetry-type axis_sym \\
-        --sizes 224 \\
-        --lightings flat
+python Mapping/estimate_symmetry.py \
+    --renders-root ../data/renders \
+    --objects-root ../data/objects \
+    --symmetry-type axis_sym \
+    --sizes 224 --lightings flat \
+    --overwrite \
 
-    python Mapping/estimate_symmetry.py \\
-        --renders-root ../data/renders \\
-        --symmetry-type plane_sym
+# Sin SDE (no requiere malla):
+python Mapping/estimate_symmetry.py \
+    --renders-root ../data/renders \
+    --symmetry-type axis_sym
 """
 
 from __future__ import annotations
@@ -70,16 +68,33 @@ from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
+from scipy.spatial import KDTree
 from tqdm import tqdm
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
-INPUT_FILE     = "mapped_points_3d.json"
-OUTPUT_FILE    = "predicted_symmetry.json"
+INPUT_FILE   = "mapped_points_3d.json"
+OUTPUT_FILE  = "predicted_symmetry.json"
 
-DEFAULT_SIZES       = [224, 448, 1136]
-DEFAULT_LIGHTINGS   = ["flat", "brighter", "darker"]
+DEFAULT_SIZES     = [224, 448, 1136]
+DEFAULT_LIGHTINGS = ["flat", "brighter", "darker"]
 
+POINT_MODES = ("independent", "midpoint")
+
+OBJECTS_SUBDIR = {
+    "axis_sym":  "curated_axis_sym_obj",
+    "plane_sym": "curated_plane_sym_obj",
+}
+
+RANSAC_ITERS  = 1000
+RANSAC_THRESH = 0.05   # inlier threshold as fraction of bbox diagonal
+SDE_THRESHOLD = 0.05   # accepted if SDE ≤ this value
+N_SDE_SAMPLE  = 1000   # max vertices sampled for SDE
+
+METHODS = ("svd", "ransac_svd", "svd_sde", "ransac_svd_sde")
+
+
+# ── Filename helper ───────────────────────────────────────────────────────────
 
 def _exp_filename(base: str, experiment_id: str | None) -> str:
     """Return base unchanged, or base_EXPID.ext when experiment_id is set."""
@@ -89,42 +104,138 @@ def _exp_filename(base: str, experiment_id: str | None) -> str:
     return f"{base[:dot]}_{experiment_id}{base[dot:]}"
 
 
-# ── Fitting ───────────────────────────────────────────────────────────────────
+# ── Mesh loading ──────────────────────────────────────────────────────────────
+
+def load_mesh_vertices(obj_path: Path) -> np.ndarray | None:
+    """Load .obj and return (N, 3) vertex array. Returns None on failure."""
+    try:
+        import trimesh
+        loaded = trimesh.load(str(obj_path), force="mesh", process=False)
+        if isinstance(loaded, trimesh.Scene):
+            loaded = trimesh.util.concatenate(
+                [g for g in loaded.geometry.values()
+                 if isinstance(g, trimesh.Trimesh)]
+            )
+        return np.array(loaded.vertices, dtype=np.float64)
+    except Exception:
+        return None
+
+
+# ── SVD fitting ───────────────────────────────────────────────────────────────
 
 def fit_axis(points: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Fit a 3D axis (line) through a set of points using SVD (PCA).
-
-    Returns:
-        direction: (3,) unit vector along the axis
-        origin:    (3,) centroid of the points (closest point on axis to origin)
-    """
+    """SVD on points → first PC = axis direction, centroid = origin."""
     centroid  = points.mean(axis=0)
-    centered  = points - centroid
-    _, _, Vt  = np.linalg.svd(centered, full_matrices=False)
-    direction = Vt[0]                          # first principal component
-    direction /= np.linalg.norm(direction)     # ensure unit length
+    _, _, Vt  = np.linalg.svd(points - centroid, full_matrices=False)
+    direction = Vt[0] / (np.linalg.norm(Vt[0]) + 1e-12)
     return direction, centroid
 
 
 def fit_plane(points: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Fit a 3D plane through a set of points using SVD (PCA).
-
-    Returns:
-        normal: (3,) unit normal to the plane
-        origin: (3,) centroid of the points (point on the plane)
-    """
-    centroid  = points.mean(axis=0)
-    centered  = points - centroid
-    _, _, Vt  = np.linalg.svd(centered, full_matrices=False)
-    normal    = Vt[-1]                         # last principal component (min variance)
-    normal   /= np.linalg.norm(normal)
+    """SVD on points → last PC (min variance) = plane normal, centroid = origin."""
+    centroid = points.mean(axis=0)
+    _, _, Vt = np.linalg.svd(points - centroid, full_matrices=False)
+    normal   = Vt[-1] / (np.linalg.norm(Vt[-1]) + 1e-12)
     return normal, centroid
 
 
-POINT_MODES = ("independent", "midpoint")
+# ── RANSAC ────────────────────────────────────────────────────────────────────
 
+def ransac_axis(points: np.ndarray, bbox_diag: float,
+                n_iter: int = RANSAC_ITERS) -> list[int]:
+    """
+    RANSAC line fit. Samples 2 points per iteration.
+    Returns inlier indices (falls back to all points if < 2 inliers found).
+    """
+    n = len(points)
+    if n < 2:
+        return list(range(n))
+
+    threshold = RANSAC_THRESH * bbox_diag
+    best: list[int] = []
+    rng = np.random.default_rng(42)
+
+    for _ in range(n_iter):
+        i, j = rng.choice(n, 2, replace=False)
+        d = points[j] - points[i]
+        norm_d = np.linalg.norm(d)
+        if norm_d < 1e-8:
+            continue
+        d = d / norm_d
+
+        v = points - points[i]
+        dists = np.linalg.norm(v - (v @ d)[:, None] * d, axis=1)
+        inliers = np.where(dists < threshold)[0].tolist()
+        if len(inliers) > len(best):
+            best = inliers
+
+    return best if len(best) >= 2 else list(range(n))
+
+
+def ransac_plane(points: np.ndarray, bbox_diag: float,
+                 n_iter: int = RANSAC_ITERS) -> list[int]:
+    """
+    RANSAC plane fit. Samples 3 points per iteration.
+    Returns inlier indices (falls back to all points if < 2 inliers found).
+    """
+    n = len(points)
+    if n < 3:
+        return list(range(n))
+
+    threshold = RANSAC_THRESH * bbox_diag
+    best: list[int] = []
+    rng = np.random.default_rng(42)
+
+    for _ in range(n_iter):
+        idx = rng.choice(n, 3, replace=False)
+        p1, p2, p3 = points[idx]
+        normal = np.cross(p2 - p1, p3 - p1)
+        norm_n = np.linalg.norm(normal)
+        if norm_n < 1e-8:
+            continue
+        normal = normal / norm_n
+
+        dists = np.abs((points - p1) @ normal)
+        inliers = np.where(dists < threshold)[0].tolist()
+        if len(inliers) > len(best):
+            best = inliers
+
+    return best if len(best) >= 2 else list(range(n))
+
+
+# ── SDE ───────────────────────────────────────────────────────────────────────
+
+def sde_axis(v_sample: np.ndarray, axis_origin: np.ndarray, axis_dir: np.ndarray,
+             bbox_diag: float, kdtree: KDTree) -> float:
+    """
+    SDE for axis symmetry.
+    Reflects each sampled vertex through the axis (= 180° rotation about the axis),
+    queries nearest neighbour in the mesh sample KDTree.
+    Returns mean distance / bbox_diagonal.
+    """
+    v    = v_sample - axis_origin
+    t    = v @ axis_dir
+    proj = axis_origin + t[:, None] * axis_dir   # foot of perpendicular on axis
+    reflected = 2.0 * proj - v_sample
+    dists, _  = kdtree.query(reflected)
+    return float(dists.mean() / bbox_diag)
+
+
+def sde_plane(v_sample: np.ndarray, plane_origin: np.ndarray, plane_normal: np.ndarray,
+              bbox_diag: float, kdtree: KDTree) -> float:
+    """
+    SDE for plane symmetry.
+    Reflects each sampled vertex through the predicted plane,
+    queries nearest neighbour in the mesh sample KDTree.
+    Returns mean distance / bbox_diagonal.
+    """
+    d         = (v_sample - plane_origin) @ plane_normal
+    reflected = v_sample - 2.0 * d[:, None] * plane_normal
+    dists, _  = kdtree.query(reflected)
+    return float(dists.mean() / bbox_diag)
+
+
+# ── Point collection ──────────────────────────────────────────────────────────
 
 def collect_hit_points(
     mapped_json: dict,
@@ -134,15 +245,14 @@ def collect_hit_points(
     """
     Extract 3D points from a mapped_points_3d entry for a given n_views key.
 
-    point_mode="independent" (default):
-        Every hit point is added to the cloud as-is.
+    point_mode="independent":
+        Every hit point enters the cloud as-is.
         Use with prompts that return points directly on the axis/plane.
 
     point_mode="midpoint":
-        For each image, obj_id=1 and obj_id=2 are paired and replaced by their
-        3D midpoint. Images where either point missed are discarded.
-        Use with prompts that return bilateral symmetric pairs — the midpoint
-        of each pair lies on the axis/plane instead of the individual points.
+        For each image, obj_id=1 and obj_id=2 are replaced by their 3D midpoint.
+        Images where either point missed are discarded.
+        Use with bilateral symmetric pair prompts.
 
     Returns (N, 3) float64 array, or None if fewer than 2 usable points.
     """
@@ -153,25 +263,19 @@ def collect_hit_points(
     raw_points = group.get("points_3d", [])
 
     if point_mode == "independent":
-        pts = [
-            p["point_3d"]
-            for p in raw_points
-            if p["hit"] and p["point_3d"] is not None
-        ]
+        pts = [p["point_3d"] for p in raw_points if p["hit"] and p["point_3d"] is not None]
         if len(pts) < 2:
             return None
         return np.array(pts, dtype=np.float64)
 
     elif point_mode == "midpoint":
-        # Group hits by img_idx, then by obj_id
         by_img: dict[int, dict[int, np.ndarray]] = {}
         for p in raw_points:
             if not p["hit"] or p["point_3d"] is None:
                 continue
-            img = p["img_idx"]
-            oid = p["obj_id"]
-            by_img.setdefault(img, {})[oid] = np.array(p["point_3d"], dtype=np.float64)
-
+            by_img.setdefault(p["img_idx"], {})[p["obj_id"]] = np.array(
+                p["point_3d"], dtype=np.float64
+            )
         midpoints = [
             (pts[1] + pts[2]) / 2.0
             for pts in by_img.values()
@@ -185,6 +289,29 @@ def collect_hit_points(
         raise ValueError(f"Unknown point_mode: {point_mode!r}. Choose from {POINT_MODES}.")
 
 
+# ── Entry builder ─────────────────────────────────────────────────────────────
+
+def _make_entry(
+    symmetry_type: str,
+    vec:           np.ndarray,   # direction (axis) or normal (plane)
+    origin:        np.ndarray,
+    n_points:      int,
+    n_inliers:     int | None,
+    sde_val:       float | None,
+) -> dict:
+    """Build a single estimate dict for one method."""
+    vec_key  = "direction" if symmetry_type == "axis_sym" else "normal"
+    accepted = bool(sde_val <= SDE_THRESHOLD) if sde_val is not None else None
+    return {
+        vec_key:     vec.tolist(),
+        "origin":    origin.tolist(),
+        "n_points":  n_points,
+        "n_inliers": n_inliers,
+        "sde":       round(sde_val, 6) if sde_val is not None else None,
+        "accepted":  accepted,
+    }
+
+
 # ── Per-object estimation ─────────────────────────────────────────────────────
 
 def process_object(
@@ -195,15 +322,16 @@ def process_object(
     overwrite:     bool = False,
     experiment_id: str | None = None,
     point_mode:    str = "independent",
+    objects_dir:   Path | None = None,
 ) -> None:
     """
-    Pool 3D hit points across all (size, illumination) configs and all n_views groups,
-    fit the symmetry element per n_views group, and save the result.
-    When experiment_id is set, reads mapped_points_3d_<ID>.json and writes
-    predicted_symmetry_<ID>.json instead of the default filenames.
-    Skips objects where the output already exists unless --overwrite.
-    point_mode controls how Molmo's pairs are converted to the SVD point cloud
-    (see collect_hit_points for details).
+    Generates 4 estimates per n_views group (2×2 grid):
+      svd            — SVD on all points
+      ransac_svd     — RANSAC inlier selection + SVD
+      svd_sde        — SVD on all points + SDE evaluation
+      ransac_svd_sde — RANSAC + SVD + SDE (full pipeline)
+
+    SDE requires objects_dir (mesh). If not provided, sde=null for all methods.
     """
     input_file  = _exp_filename(INPUT_FILE,  experiment_id)
     output_file = _exp_filename(OUTPUT_FILE, experiment_id)
@@ -212,8 +340,24 @@ def process_object(
     if output_path.exists() and not overwrite:
         return
 
-    # Collect all mapped JSON files for this object
-    # Structure: {n_views_key: [array_of_points, ...]}
+    # ── Load mesh for SDE (optional) ──────────────────────────────────────────
+    v_sample       = None
+    kdtree         = None
+    bbox_diag_mesh = None
+
+    if objects_dir is not None:
+        obj_path = objects_dir / f"{object_dir.name}.obj"
+        vertices = load_mesh_vertices(obj_path)
+        if vertices is not None:
+            bbox_diag_mesh = float(
+                np.linalg.norm(vertices.max(axis=0) - vertices.min(axis=0))
+            )
+            n_sde    = min(N_SDE_SAMPLE, len(vertices))
+            sde_idx  = np.random.default_rng(0).choice(len(vertices), n_sde, replace=False)
+            v_sample = vertices[sde_idx]
+            kdtree   = KDTree(v_sample)
+
+    # ── Collect 3D points across all (size, lighting) configs ─────────────────
     points_per_group: dict[str, list[np.ndarray]] = defaultdict(list)
 
     for size in sizes:
@@ -221,10 +365,8 @@ def process_object(
             mapped_path = object_dir / str(size) / lighting / input_file
             if not mapped_path.exists():
                 continue
-
             with open(mapped_path, encoding="utf-8") as f:
                 mapped = json.load(f)
-
             for n_views_key in mapped.get("n_views_results", {}).keys():
                 pts = collect_hit_points(mapped, n_views_key, point_mode=point_mode)
                 if pts is not None:
@@ -233,29 +375,57 @@ def process_object(
     if not points_per_group:
         return
 
-    n_views_predictions = {}
+    # ── Build 4 estimates per n_views group ───────────────────────────────────
+    n_views_predictions: dict = {}
+    has_sde = kdtree is not None and bbox_diag_mesh is not None and bbox_diag_mesh > 1e-6
 
     for n_views_key, arrays in points_per_group.items():
-        # Pool points from all configs for this n_views group
-        all_points = np.concatenate(arrays, axis=0)   # (N, 3)
-
+        all_points = np.concatenate(arrays, axis=0)
         if len(all_points) < 2:
             continue
 
+        n_pts = len(all_points)
+
+        # Bbox diagonal of the point cloud (RANSAC threshold)
+        bbox_diag_pts = float(
+            np.linalg.norm(all_points.max(axis=0) - all_points.min(axis=0))
+        )
+        if bbox_diag_pts < 1e-6:
+            bbox_diag_pts = 1.0
+
+        # ── RANSAC → inliers ──────────────────────────────────────────────────
         if symmetry_type == "axis_sym":
-            direction, origin = fit_axis(all_points)
-            n_views_predictions[n_views_key] = {
-                "direction": direction.tolist(),
-                "origin":    origin.tolist(),
-                "n_points":  len(all_points),
-            }
-        else:  # plane_sym
-            normal, origin = fit_plane(all_points)
-            n_views_predictions[n_views_key] = {
-                "normal":   normal.tolist(),
-                "origin":   origin.tolist(),
-                "n_points": len(all_points),
-            }
+            inlier_idx = ransac_axis(all_points, bbox_diag_pts)
+        else:
+            inlier_idx = ransac_plane(all_points, bbox_diag_pts)
+        inliers    = all_points[inlier_idx]
+        n_inliers  = len(inliers)
+
+        # ── SVD on all points ─────────────────────────────────────────────────
+        if symmetry_type == "axis_sym":
+            vec_svd,    origin_svd    = fit_axis(all_points)
+            vec_ransac, origin_ransac = fit_axis(inliers)
+        else:
+            vec_svd,    origin_svd    = fit_plane(all_points)
+            vec_ransac, origin_ransac = fit_plane(inliers)
+
+        # ── SDE for both estimates ────────────────────────────────────────────
+        sde_svd = sde_ransac = None
+        if has_sde:
+            if symmetry_type == "axis_sym":
+                sde_svd    = sde_axis(v_sample, origin_svd,    vec_svd,    bbox_diag_mesh, kdtree)
+                sde_ransac = sde_axis(v_sample, origin_ransac, vec_ransac, bbox_diag_mesh, kdtree)
+            else:
+                sde_svd    = sde_plane(v_sample, origin_svd,    vec_svd,    bbox_diag_mesh, kdtree)
+                sde_ransac = sde_plane(v_sample, origin_ransac, vec_ransac, bbox_diag_mesh, kdtree)
+
+        # ── 4 estimates ───────────────────────────────────────────────────────
+        n_views_predictions[n_views_key] = {
+            "svd":            _make_entry(symmetry_type, vec_svd,    origin_svd,    n_pts, None,      None),
+            "ransac_svd":     _make_entry(symmetry_type, vec_ransac, origin_ransac, n_pts, n_inliers, None),
+            "svd_sde":        _make_entry(symmetry_type, vec_svd,    origin_svd,    n_pts, None,      sde_svd),
+            "ransac_svd_sde": _make_entry(symmetry_type, vec_ransac, origin_ransac, n_pts, n_inliers, sde_ransac),
+        }
 
     if not n_views_predictions:
         return
@@ -266,22 +436,23 @@ def process_object(
         "point_mode":          point_mode,
         "n_views_predictions": n_views_predictions,
     }
-
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2)
-
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        description="Fit symmetry axis/plane from 3D hit points.",
+        description="Fit symmetry axis/plane — RANSAC + SVD + SDE.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    p.add_argument("--renders-root",  required=True)
-    p.add_argument("--symmetry-type", required=True,
-                   choices=["axis_sym", "plane_sym"])
+    p.add_argument("--renders-root",  required=True,
+                   help="Root folder of renders (output of data_render.py)")
+    p.add_argument("--objects-root",  default=None,
+                   help="Root folder containing curated_axis_sym_obj / curated_plane_sym_obj. "
+                        "Required for SDE scoring. If omitted, SDE is skipped (sde=null).")
+    p.add_argument("--symmetry-type", required=True, choices=["axis_sym", "plane_sym"])
     p.add_argument("--sizes",     type=int, nargs="+", default=DEFAULT_SIZES)
     p.add_argument("--lightings", type=str, nargs="+", default=DEFAULT_LIGHTINGS,
                    choices=["flat", "darker", "brighter"])
@@ -290,21 +461,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--overwrite", action="store_true",
                    help="Overwrite existing predicted_symmetry.json files")
     p.add_argument("--experiment-id", default=None,
-                   help=(
-                       "Experiment identifier. Reads mapped_points_3d_<ID>.json and "
-                       "writes predicted_symmetry_<ID>.json. Must match the --experiment-id "
-                       "used in map_to_3d.py."
-                   ))
+                   help="Reads mapped_points_3d_<ID>.json, writes predicted_symmetry_<ID>.json.")
     p.add_argument("--max-objects", type=int, default=None,
                    help="Limit to the first N objects (sorted order).")
     p.add_argument("--point-mode", default="independent", choices=POINT_MODES,
-                   help=(
-                       "How Molmo's point pairs are converted to the SVD cloud. "
-                       "independent = each 3D point enters the cloud as-is (use with "
-                       "prompts that return points directly on the axis/plane). "
-                       "midpoint = obj_id=1 and obj_id=2 per image are replaced by their "
-                       "3D midpoint (use with bilateral symmetric pair prompts)."
-                   ))
+                   help="independent = each 3D point goes to SVD directly. "
+                        "midpoint = bilateral pairs (obj_id=1, obj_id=2) replaced by 3D midpoint.")
     return p.parse_args()
 
 
@@ -316,6 +478,10 @@ def main() -> None:
         print(f"[error] Not found: {symmetry_dir}")
         sys.exit(1)
 
+    objects_dir = None
+    if args.objects_root:
+        objects_dir = Path(args.objects_root) / OBJECTS_SUBDIR[args.symmetry_type]
+
     all_objects = sorted(d for d in symmetry_dir.iterdir() if d.is_dir())
     if args.max_objects:
         all_objects = all_objects[:args.max_objects]
@@ -324,12 +490,11 @@ def main() -> None:
     output_file = _exp_filename(OUTPUT_FILE, args.experiment_id)
     print(f"\nFitting {args.symmetry_type} symmetry for {len(objects)} objects...")
     print(f"Point mode    : {args.point_mode}")
+    print(f"RANSAC        : {RANSAC_ITERS} iters, threshold={RANSAC_THRESH*100:.0f}% bbox diag")
+    print(f"SDE scoring   : {'enabled  (threshold=' + str(SDE_THRESHOLD) + ')' if objects_dir else 'disabled — pass --objects-root to enable'}")
     if args.experiment_id:
         print(f"Experiment ID : {args.experiment_id}  →  {output_file}")
-    if args.overwrite:
-        print(f"(--overwrite: existing {output_file} will be replaced)")
-    else:
-        print(f"(Existing {output_file} skipped — use --overwrite to replace)")
+    print(f"({'overwrite' if args.overwrite else 'skip existing'})")
 
     for obj_dir in tqdm(objects, unit="obj", dynamic_ncols=True):
         process_object(
@@ -340,6 +505,7 @@ def main() -> None:
             overwrite     = args.overwrite,
             experiment_id = args.experiment_id,
             point_mode    = args.point_mode,
+            objects_dir   = objects_dir,
         )
 
     print("Done.")
