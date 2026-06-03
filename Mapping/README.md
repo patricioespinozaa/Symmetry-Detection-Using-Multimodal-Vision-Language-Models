@@ -363,17 +363,20 @@ python Mapping/map_to_3d.py \
     --sizes 224 --lightings flat \
     --overwrite
 
-# 3. Fit predicted axis/plane from 3D points
+# 3. Fit predicted axis/plane from 3D points (RANSAC + SVD + SDE)
 python Mapping/estimate_symmetry.py \
     --renders-root ../data/renders \
+    --objects-root ../data/objects \
     --symmetry-type axis_sym \
-    --sizes 224 --lightings flat
+    --sizes 224 --lightings flat \
+    --overwrite
 
 # 4. Evaluate vs ground truth
 python Mapping/evaluate.py \
     --renders-root ../data/renders \
     --objects-root ../data/objects \
-    --symmetry-type axis_sym
+    --symmetry-type axis_sym \
+    --sizes 224 --lightings flat
 
 # --- Iterate on prompt ---
 

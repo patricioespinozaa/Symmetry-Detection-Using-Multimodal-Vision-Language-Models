@@ -1,8 +1,16 @@
 """
 evaluate.py
 -----------
-Compares predicted symmetry (from estimate_symmetry.py) against true labels
+Compares predicted symmetry (from estimate_symmetry_vf.py) against true labels
 (.txt files) and computes evaluation metrics aligned with the paper.
+
+Each predicted_symmetry.json contains FOUR estimates per n_views group (2×2 grid).
+Use --method to select which one to evaluate:
+
+    svd            — SVD on all points
+    ransac_svd     — RANSAC inlier selection + SVD
+    svd_sde        — SVD on all points  (SDE stored in JSON, not recomputed here)
+    ransac_svd_sde — RANSAC + SVD  (SDE stored in JSON, not recomputed here)
 
 Metrics
 -------
@@ -26,19 +34,20 @@ plane_sym:
 Output
 ------
 Results are saved under <renders_root>/<symmetry_type>/ with filenames that
-encode the experiment configuration (sizes + lightings):
+encode the experiment configuration (sizes + lightings + method):
 
-    eval_{sizes}_{lightings}_results.json   ← per-object, per-n_views metrics
-    eval_{sizes}_{lightings}_summary.csv    ← aggregated metrics per n_views group
+    eval_{sizes}_{lightings}_{method}_results.json   ← per-object, per-n_views metrics
+    eval_{sizes}_{lightings}_{method}_summary.csv    ← aggregated metrics per n_views group
 
 Example filenames:
-    eval_s224_flat_results.json
-    eval_s224_448_1136_flat_brighter_darker_results.json
+    eval_s224_flat_svd_results.json
+    eval_s224_448_1136_flat_brighter_darker_ransac_svd_sde_summary.csv
 
 JSON format
 -----------
 {
   "symmetry_type": "axis_sym",
+  "method": "ransac_svd",
   "sizes": [224],
   "lightings": ["flat"],
   "objects": {
@@ -66,19 +75,19 @@ For plane_sym, additional fields per object/n_views:
 
 Usage
 -----
-python Mapping/evaluate.py \
-    --renders-root ../data/renders \
-    --objects-root ../data/objects \
-    --symmetry-type axis_sym \
-    --sizes 224 \
-    --lightings flat
+    python Mapping/evaluate.py \\
+        --renders-root ../data/renders \\
+        --objects-root ../data/objects \\
+        --symmetry-type axis_sym \\
+        --sizes 224 --lightings flat \\
+        --method svd
 
     python Mapping/evaluate.py \\
         --renders-root ../data/renders \\
         --objects-root ../data/objects \\
         --symmetry-type plane_sym \\
-        --sizes 224 448 \\
-        --lightings flat brighter darker
+        --sizes 224 448 --lightings flat brighter darker \\
+        --method ransac_svd_sde
 """
 
 from __future__ import annotations
@@ -97,6 +106,8 @@ from tqdm import tqdm
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 PREDICTED_FILE = "predicted_symmetry.json"
+
+METHODS = ("svd", "ransac_svd", "svd_sde", "ransac_svd_sde")
 
 
 def _exp_filename(base: str, experiment_id: str | None) -> str:
@@ -233,7 +244,7 @@ def auc_from_errors(errors: list[float],
     thresholds = np.linspace(0, max_error, n_steps + 1)
     arr        = np.array(errors)
     precisions = [(arr < t).mean() for t in thresholds]
-    return float(np.trapz(precisions, thresholds) / max_error)
+    return float(np.trapezoid(precisions, thresholds) / max_error)
 
 
 # ── Per-object evaluation ─────────────────────────────────────────────────────
@@ -307,6 +318,7 @@ def evaluate_object(object_dir: Path,
                     true_label: dict,
                     symmetry_type: str,
                     vertices: np.ndarray | None,
+                    method: str,
                     predicted_file: str = PREDICTED_FILE) -> dict | None:
     pred_path = object_dir / predicted_file
     if not pred_path.exists():
@@ -316,7 +328,11 @@ def evaluate_object(object_dir: Path,
         predicted = json.load(f)
 
     results = {}
-    for n_views_key, pred in predicted.get("n_views_predictions", {}).items():
+    for n_views_key, method_preds in predicted.get("n_views_predictions", {}).items():
+        pred = method_preds.get(method) if isinstance(method_preds, dict) else None
+        if pred is None:
+            results[n_views_key] = {"status": f"method '{method}' not found"}
+            continue
         try:
             if symmetry_type == "axis_sym":
                 metrics = evaluate_axis(pred, true_label["elements"])
@@ -434,6 +450,8 @@ def parse_args() -> argparse.Namespace:
                        "writes eval_*_<ID>_results.json. Must match the --experiment-id "
                        "used in estimate_symmetry.py."
                    ))
+    p.add_argument("--method", required=True, choices=METHODS,
+                   help="Which estimation method to evaluate.")
     p.add_argument("--max-objects", type=int, default=None,
                    help="Limit to the first N objects (sorted order).")
     return p.parse_args()
@@ -452,8 +470,8 @@ def main() -> None:
 
     suffix         = experiment_suffix(args.sizes, args.lightings)
     exp_suffix     = f"_{args.experiment_id}" if args.experiment_id else ""
-    eval_json_path = symmetry_dir / f"eval_{suffix}{exp_suffix}_results.json"
-    eval_csv_path  = symmetry_dir / f"eval_{suffix}{exp_suffix}_summary.csv"
+    eval_json_path = symmetry_dir / f"eval_{suffix}{exp_suffix}_{args.method}_results.json"
+    eval_csv_path  = symmetry_dir / f"eval_{suffix}{exp_suffix}_{args.method}_summary.csv"
     predicted_file = _exp_filename(PREDICTED_FILE, args.experiment_id)
 
     all_object_dirs = sorted(d for d in symmetry_dir.iterdir() if d.is_dir())
@@ -461,6 +479,7 @@ def main() -> None:
         all_object_dirs = all_object_dirs[:args.max_objects]
 
     print(f"\nEvaluating {len(all_object_dirs)} objects  [{args.symmetry_type}]")
+    print(f"Method        : {args.method}")
     print(f"Experiment    : sizes={args.sizes}  lightings={args.lightings}")
     if args.experiment_id:
         print(f"Experiment ID : {args.experiment_id}  →  reads {predicted_file}")
@@ -483,6 +502,7 @@ def main() -> None:
 
         all_results[obj_dir.name] = evaluate_object(
             obj_dir, true_label, args.symmetry_type, vertices,
+            method=args.method,
             predicted_file=predicted_file,
         )
 
@@ -490,6 +510,7 @@ def main() -> None:
     with open(eval_json_path, "w", encoding="utf-8") as f:
         json.dump({
             "symmetry_type": args.symmetry_type,
+            "method":        args.method,
             "sizes":         args.sizes,
             "lightings":     args.lightings,
             "objects":       all_results,
