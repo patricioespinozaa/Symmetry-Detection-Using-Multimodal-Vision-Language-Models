@@ -295,7 +295,7 @@ python Mapping/compare_results.py \
     --csv-dir ../results
 ```
 
-El CSV se guarda en `../results/experiments_YYYYMMDD/<symmetry_type>_comparison.csv`.
+El CSV se guarda en `../results/experiments_DD_MM_YYYY/<symmetry_type>_comparison.csv`.
 
 ---
 

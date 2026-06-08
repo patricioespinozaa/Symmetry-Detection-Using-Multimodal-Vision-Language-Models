@@ -12,6 +12,18 @@ Usage
     python Mapping/compare_results.py --renders-root ../data/renders --symmetry-type axis_sym
     python Mapping/compare_results.py --renders-root ../data/renders --symmetry-type plane_sym --save-dir ../results/plots
     python Mapping/compare_results.py --renders-root ../data/renders --symmetry-type axis_sym --csv-dir ../results
+
+    python Mapping/compare_results.py \
+    --renders-root ../data/renders \
+    --symmetry-type plane_sym \
+    --save-dir ../results/plots \
+    --csv-dir ../results
+
+    python Mapping/compare_results.py \
+    --renders-root ../data/renders \
+    --symmetry-type axis_sym \
+    --save-dir ../results/plots \
+    --csv-dir ../results
 """
 
 from __future__ import annotations
@@ -235,7 +247,7 @@ def parse_args() -> argparse.Namespace:
                    help="Directorio donde guardar los plots. Si se omite, se muestran en pantalla.")
     p.add_argument("--csv-dir",   default=None,
                    help="Directorio base donde guardar el CSV combinado. "
-                        "Se crea la subcarpeta experiments_YYYYMMDD/ automáticamente. "
+                        "Se crea la subcarpeta experiments_DD_MM_YYYY/ automáticamente. "
                         "Ejemplo: ../results")
     p.add_argument("--no-plots",  action="store_true",
                    help="Solo imprime la tabla, sin generar gráficos.")
@@ -251,7 +263,7 @@ def main() -> None:
     print_table(df, args.symmetry_type)
 
     if args.csv_dir:
-        today   = date.today().strftime("%Y%m%d")
+        today   = date.today().strftime("%d_%m_%Y")
         out_dir = Path(args.csv_dir) / f"experiments_{today}"
         out_dir.mkdir(parents=True, exist_ok=True)
         csv_path = out_dir / f"{args.symmetry_type}_comparison.csv"
