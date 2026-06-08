@@ -285,14 +285,17 @@ python Mapping/compare_results.py \
     --symmetry-type plane_sym
 ```
 
-Guardar gráficos con `--save-dir`:
+Guardar gráficos con `--save-dir` y CSV con `--csv-dir`:
 
 ```bash
 python Mapping/compare_results.py \
     --renders-root ../data/renders \
     --symmetry-type axis_sym \
-    --save-dir ../results/plots
+    --save-dir ../results/plots \
+    --csv-dir ../results
 ```
+
+El CSV se guarda en `../results/experiments_YYYYMMDD/<symmetry_type>_comparison.csv`.
 
 ---
 

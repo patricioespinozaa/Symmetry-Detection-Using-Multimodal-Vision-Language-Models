@@ -11,11 +11,13 @@ Usage
 -----
     python Mapping/compare_results.py --renders-root ../data/renders --symmetry-type axis_sym
     python Mapping/compare_results.py --renders-root ../data/renders --symmetry-type plane_sym --save-dir ../results/plots
+    python Mapping/compare_results.py --renders-root ../data/renders --symmetry-type axis_sym --csv-dir ../results
 """
 
 from __future__ import annotations
 
 import argparse
+from datetime import date
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -231,6 +233,10 @@ def parse_args() -> argparse.Namespace:
                    choices=["flat", "darker", "brighter"])
     p.add_argument("--save-dir",  default=None,
                    help="Directorio donde guardar los plots. Si se omite, se muestran en pantalla.")
+    p.add_argument("--csv-dir",   default=None,
+                   help="Directorio base donde guardar el CSV combinado. "
+                        "Se crea la subcarpeta experiments_YYYYMMDD/ automáticamente. "
+                        "Ejemplo: ../results")
     p.add_argument("--no-plots",  action="store_true",
                    help="Solo imprime la tabla, sin generar gráficos.")
     return p.parse_args()
@@ -243,6 +249,14 @@ def main() -> None:
 
     df = load_csvs(root, args.symmetry_type, args.sizes, args.lightings)
     print_table(df, args.symmetry_type)
+
+    if args.csv_dir:
+        today   = date.today().strftime("%Y%m%d")
+        out_dir = Path(args.csv_dir) / f"experiments_{today}"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        csv_path = out_dir / f"{args.symmetry_type}_comparison.csv"
+        df.to_csv(csv_path, index=False)
+        print(f"Saved: {csv_path}")
 
     if args.no_plots:
         return
