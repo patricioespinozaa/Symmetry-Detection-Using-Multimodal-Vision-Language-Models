@@ -111,7 +111,7 @@ from transformers import AutoModelForImageTextToText, AutoProcessor
 sys.path.insert(0, str(Path(__file__).parent))
 from prompts_registry import PROMPTS, get_prompt, list_prompts
 
-# ── Default prompt texts (kept for backward compatibility) ────────────────────
+# ── Default prompt texts ────────────────────
 
 PROMPT_SINGLE = """You are given ONE image of a 3D object.
 
@@ -198,7 +198,7 @@ Return ONLY the <points ...> block."""
 
 PROMPT_MODES = ("global", "single", "multi", "auto")
 
-# ── Constants ─────────────────────────────────────────────────────────────────
+# Constants
 
 MODEL_ID      = "allenai/Molmo2-8B"
 OUTPUT_FILE   = "molmo_multiview.json"
@@ -208,23 +208,29 @@ DEFAULT_IMAGE_SIZES   = [224, 448, 1136]
 DEFAULT_ILLUMINATIONS = ["flat", "brighter", "darker"]
 
 
-# ── Filename helper ───────────────────────────────────────────────────────────
-
+# Filename helper
 def _exp_filename(base: str, experiment_id: str | None) -> str:
-    """Return base unchanged, or base_EXPID.ext when experiment_id is set."""
+    """
+    Return base unchanged, or base_EXPID.ext when experiment_id is set.
+    Args:
+    - base: e.g. "molmo_multiview.json"
+    - experiment_id: e.g. "axis_v01" or None
+    Returns:
+    - "molmo_multiview.json" when experiment_id is None
+    - "molmo_multiview_axis_v01.json" when experiment_id is "axis_v01"
+    """
     if not experiment_id:
         return base
     dot = base.rfind(".")
     return f"{base[:dot]}_{experiment_id}{base[dot:]}"
 
 
-# ── Model singleton ───────────────────────────────────────────────────────────
-
+# Model singleton
 _processor = None
 _model     = None
 
-
 def get_model():
+    """Load the model and processor if not already loaded. Returns (processor, model)."""
     global _processor, _model
     if _processor is None or _model is None:
         print(f"[model] Loading {MODEL_ID} ...")
@@ -242,9 +248,22 @@ def get_model():
     return _processor, _model
 
 
-# ── Metadata helpers ──────────────────────────────────────────────────────────
-
+# Metadata helpers
 def load_metadata(render_dir: Path) -> list[dict]:
+    """
+    Load metadata_all.json from render_dir. Raises FileNotFoundError if not found.
+    Args:
+    - render_dir: directory containing metadata_all.json
+    Returns:
+    - list of metadata entries, where each entry is a dict with keys:
+      - filename: str
+      - index: int
+      - azimuth: float
+      - elevation: float
+      - eye: str
+      - R: list (3x3 rotation matrix)
+      - T: list (3D translation vector)
+    """
     path = render_dir / "metadata_all.json"
     if not path.exists():
         raise FileNotFoundError(f"metadata_all.json not found: {render_dir}")
@@ -253,15 +272,28 @@ def load_metadata(render_dir: Path) -> list[dict]:
 
 
 def get_n_views_entries(metadata: list[dict], n_views: int) -> list[dict]:
-    """First n_views viewpoints, sorted by index."""
+    """
+    First n_views viewpoints, sorted by index.
+    Args:
+    - metadata: list of metadata entries (dicts with "index" key)
+    - n_views: number of views to select
+    Returns:
+    - list of metadata entries for the first n_views, sorted by index
+    """
     entries = [m for m in metadata if m["index"] < n_views]
     return sorted(entries, key=lambda e: e["index"])
 
 
-# ── Low-level model call ──────────────────────────────────────────────────────
-
+# Low-level model call
 def _call_model(images: list[Image.Image], prompt: str) -> str:
-    """Single model call with 1..N images. Returns raw decoded output."""
+    """
+    Single model call with 1..N images. Returns raw decoded output.
+    Args:
+    - images: list of PIL Images to send (1..N)
+    - prompt: prompt text to use for this call
+    Returns:
+    - raw decoded text output from the model (the <points ...> block)
+    """
     processor, model = get_model()
 
     content = [{"type": "text", "text": prompt}]
@@ -278,8 +310,7 @@ def _call_model(images: list[Image.Image], prompt: str) -> str:
     )
     inputs = {k: v.to(model.device) for k, v in inputs.items()}
 
-    # Output is a single <points coords="..."> tag: ~10 tokens per image + fixed overhead.
-    max_new_tokens = 80 + len(images) * 15
+    max_new_tokens = 2048
 
     with torch.inference_mode():
         output_ids = model.generate(**inputs, max_new_tokens=max_new_tokens)
@@ -295,13 +326,17 @@ def _call_model(images: list[Image.Image], prompt: str) -> str:
     return text
 
 
-# ── Coordinate parsers ────────────────────────────────────────────────────────
-
+# Coordinate parsers 
 def parse_single_coords(text: str) -> dict[str, list[dict]]:
     """
     Single-image Molmo2 format:
         <points coords="RADIO  ID X Y  ID X Y ...">
     Returns {"0": [{obj_id, x, y}, ...]}
+
+    Args:
+    - text: raw text output from the model containing the <points ...> block
+    Returns:
+    - dict with a single key "0" mapping to a list of points, where each point is a dict with keys.
     """
     match = re.search(r'coords=["\']([^"\']+)["\']', text)
     if not match:
@@ -322,6 +357,15 @@ def parse_multi_coords(text: str, n_images: int) -> dict[str, list[dict]]:
         <points coords="img_idx obj_id X Y; img_idx obj_id X Y ...">
     img_idx is 1-based; stored as 0-based string keys.
     Returns {"0": [...], "1": [...], ...}
+
+    Args:
+    - text: raw text output from the model containing the <points ...> block
+    - n_images: number of images that were sent to the model (for validation)
+    Returns:
+    - dict mapping image index (as string) to list of points, where each point is a dict with keys:
+      - obj_id: int
+      - x: float
+      - y: float
     """
     match = re.search(r'coords=["\']([^"\']+)["\']', text)
     if not match:
@@ -360,10 +404,16 @@ def parse_multi_coords(text: str, n_images: int) -> dict[str, list[dict]]:
     return result
 
 
-# ── Inference modes ───────────────────────────────────────────────────────────
-
+# Inference modes
 def run_global(images: list[Image.Image], prompt: str = PROMPT_GLOBAL) -> dict:
-    """One call with all images using the given prompt (global format)."""
+    """
+    One call with all images using the given prompt (global format).
+    Args:
+    - images: list of PIL Images to send (1..N)
+    - prompt: prompt text to use for this call
+    Returns:
+    - dict with keys: "prompt_used", "raw_output", "points_by_image"
+    """
     raw           = _call_model(images, prompt)
     points_by_img = parse_multi_coords(raw, n_images=len(images))
     return {
@@ -377,6 +427,11 @@ def run_single_mode(images: list[Image.Image], prompt: str = PROMPT_SINGLE) -> d
     """
     One call per image using the given single-image prompt.
     raw_output stored as list (one entry per image).
+    Args:
+    - images: list of PIL Images to send (1..N)
+    - prompt: prompt text to use for each call
+    Returns:
+    - dict with keys: "prompt_used", "raw_output", "points_by_image"
     """
     raw_outputs   = []
     points_by_img = {}
@@ -396,7 +451,14 @@ def run_single_mode(images: list[Image.Image], prompt: str = PROMPT_SINGLE) -> d
 
 
 def run_multi(images: list[Image.Image], prompt: str = PROMPT_MULTI) -> dict:
-    """One call with all images using the given multi-image prompt."""
+    """
+    One call with all images using the given multi-image prompt.
+    Args:
+    - images: list of PIL Images to send (1..N)
+    - prompt: prompt text to use for this call
+    Returns:
+    - dict with keys: "prompt_used", "raw_output", "points_by_image"
+    """
     raw           = _call_model(images, prompt)
     points_by_img = parse_multi_coords(raw, n_images=len(images))
     return {
@@ -437,9 +499,15 @@ def run_inference(
         raise ValueError(f"Unknown prompt_mode: {prompt_mode!r}")
 
 
-# ── JSON helpers ──────────────────────────────────────────────────────────────
-
+# JSON helpers
 def load_results(json_path: Path) -> dict:
+    """
+    Load existing results from json_path, or return empty dict if file doesn't exist.
+    Args:
+    - json_path: path to the JSON file to load
+    Returns:
+    - dict containing the loaded results, or empty dict if file doesn't exist
+    """
     if json_path.exists():
         with open(json_path, encoding="utf-8") as f:
             return json.load(f)
@@ -447,13 +515,20 @@ def load_results(json_path: Path) -> dict:
 
 
 def save_results(json_path: Path, data: dict) -> None:
+    """
+    Save results to json_path, creating parent directories if needed.
+    Args:
+    - json_path: path to the JSON file to save
+    - data: dict containing the results to save
+    Returns:
+    - None
+    """
     json_path.parent.mkdir(parents=True, exist_ok=True)
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
 
-# ── Per-object processor ──────────────────────────────────────────────────────
-
+# Per-object processor 
 def process_object(
     object_dir:    Path,
     view_groups:   list[int],
@@ -535,8 +610,7 @@ def process_object(
                 save_results(json_path, results)
 
 
-# ── CLI ───────────────────────────────────────────────────────────────────────
-
+# CLI
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="Batch Molmo2 multi-view pointing — cumulative JSON output.",

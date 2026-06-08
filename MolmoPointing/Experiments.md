@@ -274,10 +274,25 @@ Cada experimento produce 4 CSVs (uno por método):
 Comparar todos los experimentos y métodos a la vez:
 
 ```bash
-clear
+# Axis
+python Mapping/compare_results.py \
+    --renders-root ../data/renders \
+    --symmetry-type axis_sym
+
+# Plane
+python Mapping/compare_results.py \
+    --renders-root ../data/renders \
+    --symmetry-type plane_sym
 ```
 
-Same for plane (replace `axis_sym` and `axis_v` with `plane_sym` and `plane_v`).
+Guardar gráficos con `--save-dir`:
+
+```bash
+python Mapping/compare_results.py \
+    --renders-root ../data/renders \
+    --symmetry-type axis_sym \
+    --save-dir ../results/plots
+```
 
 ---
 

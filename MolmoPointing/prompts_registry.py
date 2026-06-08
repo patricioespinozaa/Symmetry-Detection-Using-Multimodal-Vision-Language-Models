@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-# ── Optional descriptions ─────────────────────────────────────────────────────
+# Optional descriptions:
 # Add an entry here to document what a specific variant tests.
 # If a prompt_id is not listed, description defaults to the filename.
 
@@ -53,10 +53,8 @@ DESCRIPTIONS: dict[str, str] = {
     "plane_v05": "Plane trace extremes — two most distant points along the visible plane trace",
 }
 
-# ── Auto-discovery ────────────────────────────────────────────────────────────
 
 _PROMPTS_DIR = Path(__file__).parent / "prompts"
-
 
 def _load_prompts() -> dict[str, dict[str, str]]:
     """
@@ -95,10 +93,15 @@ def _load_prompts() -> dict[str, dict[str, str]]:
 PROMPTS: dict[str, dict[str, str]] = _load_prompts()
 
 
-# ── Public API ────────────────────────────────────────────────────────────────
-
+# Public API
 def get_prompt(prompt_id: str) -> dict[str, str]:
-    """Return the registry entry for prompt_id. Raises KeyError if not found."""
+    """
+    Return the registry entry for prompt_id. Raises KeyError if not found.
+    Args:
+    - prompt_id: e.g. "axis_v00", "plane_v01"
+    Returns:
+    - dict with keys: "symmetry_type", "description", "single", "multi"
+    """
     if prompt_id not in PROMPTS:
         raise KeyError(
             f"Unknown prompt_id: {prompt_id!r}. "
