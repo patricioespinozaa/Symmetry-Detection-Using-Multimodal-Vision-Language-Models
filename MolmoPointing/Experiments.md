@@ -49,16 +49,23 @@ SVD for **axis detection** needs the cloud to have high variance *along* the axi
 | `--experiment-id EXP_ID` | all 4 | Output files get `_EXP_ID` suffix. Production files never touched. |
 | `--prompt-id PROMPT_ID` | runner only | Loads prompt text from `prompts_registry.py`. |
 | `--point-mode MODE` | estimate_symmetry | `independent` or `midpoint` (see table above). |
+| `--method METHOD` | evaluate | `svd`, `ransac_svd`, `svd_sde`, or `ransac_svd_sde` (required). |
 | `--max-objects N` | all 4 | Processes only the first N objects (same sorted order). |
 | `--yes` / `-y` | runner, map_to_3d | Skips interactive confirmation. Required for automated loops. |
 
-File chain per experiment:
+File chain per experiment (evaluate genera 4 pares, uno por método):
 ```
 molmo_multiview_<EXP_ID>.json
   → mapped_points_3d_<EXP_ID>.json
-  → predicted_symmetry_<EXP_ID>.json
-  → eval_s224_flat_<EXP_ID>_results.json
-  → eval_s224_flat_<EXP_ID>_summary.csv
+  → predicted_symmetry_<EXP_ID>.json  (contiene los 4 métodos)
+  → eval_s224_flat_<EXP_ID>_svd_results.json
+  → eval_s224_flat_<EXP_ID>_svd_summary.csv
+  → eval_s224_flat_<EXP_ID>_ransac_svd_results.json
+  → eval_s224_flat_<EXP_ID>_ransac_svd_summary.csv
+  → eval_s224_flat_<EXP_ID>_svd_sde_results.json
+  → eval_s224_flat_<EXP_ID>_svd_sde_summary.csv
+  → eval_s224_flat_<EXP_ID>_ransac_svd_sde_results.json
+  → eval_s224_flat_<EXP_ID>_ransac_svd_sde_summary.csv
 ```
 
 ---
@@ -105,10 +112,12 @@ run_axis_mapping() {
         --symmetry-type axis_sym --sizes 224 --lightings flat \
         --max-objects 50 --experiment-id $EXP --point-mode $MODE --overwrite
 
-    python Mapping/evaluate.py \
-        --renders-root $RENDERS --objects-root $OBJECTS \
-        --symmetry-type axis_sym --sizes 224 --lightings flat \
-        --max-objects 50 --experiment-id $EXP
+    for METHOD in svd ransac_svd svd_sde ransac_svd_sde; do
+        python Mapping/evaluate.py \
+            --renders-root $RENDERS --objects-root $OBJECTS \
+            --symmetry-type axis_sym --sizes 224 --lightings flat \
+            --max-objects 50 --experiment-id $EXP --method $METHOD
+    done
 }
 
 # Points directly on the axis → independent
@@ -148,10 +157,12 @@ run_axis_exp() {
         --symmetry-type axis_sym --sizes 224 --lightings flat \
         --max-objects 50 --experiment-id $EXP --point-mode $MODE --overwrite
 
-    python Mapping/evaluate.py \
-        --renders-root $RENDERS --objects-root $OBJECTS \
-        --symmetry-type axis_sym --sizes 224 --lightings flat \
-        --max-objects 50 --experiment-id $EXP
+    for METHOD in svd ransac_svd svd_sde ransac_svd_sde; do
+        python Mapping/evaluate.py \
+            --renders-root $RENDERS --objects-root $OBJECTS \
+            --symmetry-type axis_sym --sizes 224 --lightings flat \
+            --max-objects 50 --experiment-id $EXP --method $METHOD
+    done
 }
 
 for EXP in axis_v00 axis_v04 axis_v05; do run_axis_exp $EXP independent; done
@@ -201,10 +212,12 @@ run_plane_mapping() {
         --symmetry-type plane_sym --sizes 224 --lightings flat \
         --max-objects 50 --experiment-id $EXP --point-mode $MODE --overwrite
 
-    python Mapping/evaluate.py \
-        --renders-root $RENDERS --objects-root $OBJECTS \
-        --symmetry-type plane_sym --sizes 224 --lightings flat \
-        --max-objects 50 --experiment-id $EXP
+    for METHOD in svd ransac_svd svd_sde ransac_svd_sde; do
+        python Mapping/evaluate.py \
+            --renders-root $RENDERS --objects-root $OBJECTS \
+            --symmetry-type plane_sym --sizes 224 --lightings flat \
+            --max-objects 50 --experiment-id $EXP --method $METHOD
+    done
 }
 
 # Points directly on the plane → independent
@@ -238,42 +251,30 @@ python Mapping/estimate_symmetry.py \
     --symmetry-type axis_sym --sizes 224 --lightings flat \
     --max-objects 50 --experiment-id $EXP --point-mode $MODE --overwrite
 
-python Mapping/evaluate.py \
-    --renders-root ../data/renders --objects-root ../data/objects \
-    --symmetry-type axis_sym --sizes 224 --lightings flat \
-    --max-objects 50 --experiment-id $EXP
+for METHOD in svd ransac_svd svd_sde ransac_svd_sde; do
+    python Mapping/evaluate.py \
+        --renders-root ../data/renders --objects-root ../data/objects \
+        --symmetry-type axis_sym --sizes 224 --lightings flat \
+        --max-objects 50 --experiment-id $EXP --method $METHOD
+done
 ```
 
 ---
 
 ## Comparing results across experiments
 
-Each experiment produces a CSV at:
+Cada experimento produce 4 CSVs (uno por método):
 ```
-../data/renders/axis_sym/eval_s224_flat_<EXP_ID>_summary.csv
+../data/renders/axis_sym/eval_s224_flat_<EXP_ID>_svd_summary.csv
+../data/renders/axis_sym/eval_s224_flat_<EXP_ID>_ransac_svd_summary.csv
+../data/renders/axis_sym/eval_s224_flat_<EXP_ID>_svd_sde_summary.csv
+../data/renders/axis_sym/eval_s224_flat_<EXP_ID>_ransac_svd_sde_summary.csv
 ```
 
-Compare all axis experiments side by side:
+Comparar todos los experimentos y métodos a la vez:
 
 ```bash
-python - <<'EOF'
-import pandas as pd
-from pathlib import Path
-
-root   = Path("../data/renders/axis_sym")
-csvs   = sorted(root.glob("eval_s224_flat_axis_v*_summary.csv"))
-frames = []
-for csv in csvs:
-    df = pd.read_csv(csv)
-    df.insert(0, "experiment", csv.stem.replace("eval_s224_flat_", "").replace("_summary", ""))
-    frames.append(df)
-
-combined = pd.concat(frames, ignore_index=True)
-cols = ["experiment", "n_views", "n_objects",
-        "angular_error_mean", "angular_error_median",
-        "auc_angular", "precision_5deg", "precision_10deg"]
-print(combined[cols].to_string(index=False))
-EOF
+clear
 ```
 
 Same for plane (replace `axis_sym` and `axis_v` with `plane_sym` and `plane_v`).
@@ -305,6 +306,9 @@ python MolmoPointing/molmo_multiview_runner.py --list-prompts
 | `axis_v01` | `molmo_multiview_axis_v01.json` | `molmo_multiview.json` — untouched |
 | `axis_v01` | `mapped_points_3d_axis_v01.json` | `mapped_points_3d.json` — untouched |
 | `axis_v01` | `predicted_symmetry_axis_v01.json` | `predicted_symmetry.json` — untouched |
-| `axis_v01` | `eval_s224_flat_axis_v01_results.json` | `eval_s224_flat_results.json` — untouched |
+| `axis_v01` | `eval_s224_flat_axis_v01_svd_results.json` | `eval_s224_flat_svd_results.json` — untouched |
+| `axis_v01` | `eval_s224_flat_axis_v01_ransac_svd_results.json` | `eval_s224_flat_ransac_svd_results.json` — untouched |
+| `axis_v01` | `eval_s224_flat_axis_v01_svd_sde_results.json` | `eval_s224_flat_svd_sde_results.json` — untouched |
+| `axis_v01` | `eval_s224_flat_axis_v01_ransac_svd_sde_results.json` | `eval_s224_flat_ransac_svd_sde_results.json` — untouched |
 
 Running any script **without** `--experiment-id` always uses production filenames, unaffected by any experiment.

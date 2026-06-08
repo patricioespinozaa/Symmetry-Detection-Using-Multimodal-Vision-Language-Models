@@ -246,7 +246,9 @@ def collect_hit_points(
     Extract 3D points from a mapped_points_3d entry for a given n_views key.
 
     point_mode="independent":
-        Every hit point enters the cloud as-is.
+        For each image, both obj_id=1 and obj_id=2 must hit.
+        Images where only one point hit are discarded.
+        Both points enter the cloud as separate entries (not averaged).
         Use with prompts that return points directly on the axis/plane.
 
     point_mode="midpoint":
@@ -263,7 +265,17 @@ def collect_hit_points(
     raw_points = group.get("points_3d", [])
 
     if point_mode == "independent":
-        pts = [p["point_3d"] for p in raw_points if p["hit"] and p["point_3d"] is not None]
+        by_img: dict[int, dict[int, np.ndarray]] = {}
+        for p in raw_points:
+            if not p["hit"] or p["point_3d"] is None:
+                continue
+            by_img.setdefault(p["img_idx"], {})[p["obj_id"]] = np.array(
+                p["point_3d"], dtype=np.float64
+            )
+        pts = []
+        for img_pts in by_img.values():
+            if 1 in img_pts and 2 in img_pts:
+                pts.extend([img_pts[1], img_pts[2]])
         if len(pts) < 2:
             return None
         return np.array(pts, dtype=np.float64)
