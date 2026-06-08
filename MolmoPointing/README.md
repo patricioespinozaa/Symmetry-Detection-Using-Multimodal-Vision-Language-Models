@@ -238,11 +238,11 @@ python Mapping/cleanup_experiments.py \
 | Parameter | Value |
 |---|---|
 | Objects | 850 per symmetry type (1,700 total) |
-| View groups | 7 (1, 6, 14, 26, 42, 62, 86, 114) |
+| View groups | 8 (1, 6, 14, 26, 42, 62, 86, 114) |
 | Sizes | 3 (224, 448, 1136) |
 | Lightings | 3 (flat, darker, brighter) |
-| **Calls per object — all groups, all configs** | 7 × 3 × 3 = **63 calls** |
-| **Total calls — 1,700 objects** | ~**107,100 calls** |
+| **Calls per object — all groups, all configs** | 8 × 3 × 3 = **72 calls** |
+| **Total calls — 1,700 objects** | ~**122,400 calls** |
 
 For initial experiments, restrict to a single size and illumination to reduce by 9×:
 
