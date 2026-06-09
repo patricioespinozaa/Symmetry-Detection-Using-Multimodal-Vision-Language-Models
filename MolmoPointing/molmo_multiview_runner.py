@@ -235,13 +235,13 @@ def get_model():
     if _processor is None or _model is None:
         print(f"[model] Loading {MODEL_ID} ...")
         _processor = AutoProcessor.from_pretrained(
-            MODEL_ID, trust_remote_code=True, device_map="auto"
+            MODEL_ID, trust_remote_code=True, device_map="auto", use_fast=True
         )
         _model = AutoModelForImageTextToText.from_pretrained(
             MODEL_ID,
             trust_remote_code=True,
             device_map="auto",
-            torch_dtype=torch.bfloat16,
+            dtype=torch.bfloat16,
         )
         _model.eval()
         print("[model] Ready.")
