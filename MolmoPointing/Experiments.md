@@ -105,18 +105,18 @@ run_axis_mapping() {
     python Mapping/map_to_3d.py \
         --renders-root $RENDERS --objects-root $OBJECTS \
         --symmetry-type axis_sym --sizes 224 --lightings flat \
-        --max-objects 50 --experiment-id $EXP --overwrite --yes
+        --max-objects 100 --experiment-id $EXP --overwrite --yes
 
     python Mapping/estimate_symmetry.py \
         --renders-root $RENDERS --objects-root $OBJECTS \
         --symmetry-type axis_sym --sizes 224 --lightings flat \
-        --max-objects 50 --experiment-id $EXP --point-mode $MODE --overwrite
+        --max-objects 100 --experiment-id $EXP --point-mode $MODE --overwrite
 
     for METHOD in svd ransac_svd svd_sde ransac_svd_sde; do
         python Mapping/evaluate.py \
             --renders-root $RENDERS --objects-root $OBJECTS \
             --symmetry-type axis_sym --sizes 224 --lightings flat \
-            --max-objects 50 --experiment-id $EXP --method $METHOD
+            --max-objects 100 --experiment-id $EXP --method $METHOD
     done
 }
 
@@ -205,18 +205,18 @@ run_plane_mapping() {
     python Mapping/map_to_3d.py \
         --renders-root $RENDERS --objects-root $OBJECTS \
         --symmetry-type plane_sym --sizes 224 --lightings flat \
-        --max-objects 50 --experiment-id $EXP --overwrite --yes
+        --max-objects 100 --experiment-id $EXP --overwrite --yes
 
     python Mapping/estimate_symmetry.py \
         --renders-root $RENDERS --objects-root $OBJECTS \
         --symmetry-type plane_sym --sizes 224 --lightings flat \
-        --max-objects 50 --experiment-id $EXP --point-mode $MODE --overwrite
+        --max-objects 100 --experiment-id $EXP --point-mode $MODE --overwrite
 
     for METHOD in svd ransac_svd svd_sde ransac_svd_sde; do
         python Mapping/evaluate.py \
             --renders-root $RENDERS --objects-root $OBJECTS \
             --symmetry-type plane_sym --sizes 224 --lightings flat \
-            --max-objects 50 --experiment-id $EXP --method $METHOD
+            --max-objects 100 --experiment-id $EXP --method $METHOD
     done
 }
 
@@ -291,8 +291,8 @@ Guardar gráficos con `--save-dir` y CSV con `--csv-dir`:
 python Mapping/compare_results.py \
     --renders-root ../data/renders \
     --symmetry-type axis_sym \
-    --save-dir ../results/plots \
-    --csv-dir ../results
+    --save-dir ./results/plots \
+    --csv-dir ./results
 ```
 
 El CSV se guarda en `../results/experiments_DD_MM_YYYY/<symmetry_type>_comparison.csv`.
