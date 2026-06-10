@@ -7,34 +7,39 @@ This folder contains the pipeline to project Molmo2 pointing predictions onto th
 ## Pipeline overview
 
 ```
-molmo_multiview.json          metadata_all.json        .obj mesh
-(Molmo2 2D predictions)       (camera parameters)      (3D geometry)
+molmo_multiview[_EXP].json         .obj mesh + .txt labels
+(Molmo2 2D predictions +           (3D geometry + ground truth)
+ camera R, T, fov per view)
          └──────────────────────────┬───────────────────────┘
                                     ▼
                             map_to_3d.py
                      (ray casting: 2D coords → 3D points)
                                     │
                                     ▼
-                         mapped_points_3d.json
+                    mapped_points_3d[_EXP].json
                                     │
                                     ▼
                         estimate_symmetry.py
                     (SVD fit: 3D points → axis or plane)
+                    (4 methods: svd, ransac_svd, svd_sde, ransac_svd_sde)
                                     │
                                     ▼
-                       predicted_symmetry.json
+                    predicted_symmetry[_EXP].json
                                     │
-                    ┌───────────────┴──────────────────┐
-                    ▼                                  ▼
-              .txt true labels               predicted_symmetry.json
-                    └───────────────┬──────────────────┘
                                     ▼
                               evaluate.py
-                    (angular error, origin distance, ...)
+                    (angular error, translation error, AUC, precision@k)
                                     │
                                     ▼
-                evaluation_results.json + evaluation_summary.csv
+            eval_{sizes}_{lightings}[_EXP]_{method}_results.json
+            eval_{sizes}_{lightings}[_EXP]_{method}_summary.csv
+                                    │
+                                    ▼
+                          compare_results.py
+                    (table + plots across experiments/methods)
 ```
+
+Camera parameters (R, T, fov) are embedded inside `molmo_multiview.json` — no separate metadata file is needed.
 
 ---
 
@@ -43,9 +48,11 @@ molmo_multiview.json          metadata_all.json        .obj mesh
 ```
 Mapping/
 ├── map_to_3d.py             # Ray casting: Molmo 2D coords → 3D mesh surface
-├── estimate_symmetry.py     # SVD fit: 3D points → predicted axis or plane
+├── estimate_symmetry.py     # SVD fit: 3D points → predicted axis or plane (4 methods)
 ├── evaluate.py              # Metrics: predicted symmetry vs true labels
-└── cleanup_experiments.py   # Remove specific n_views keys from JSON results
+├── compare_results.py       # Aggregate and plot results across experiments/methods
+├── visualize_rays.py        # Debug tool: visualize camera rays and hit points in 3D
+└── cleanup_experiments.py   # Remove specific n_views keys from molmo JSON results
 ```
 
 ---
@@ -54,8 +61,7 @@ Mapping/
 
 | Source | Location |
 |---|---|
-| Molmo2 predictions | `<renders_root>/<symmetry_type>/<object_id>/<size>/<illumination>/molmo_multiview.json` |
-| Camera parameters | `<renders_root>/<symmetry_type>/<object_id>/<size>/<illumination>/metadata_all.json` |
+| Molmo2 predictions + camera params | `<renders_root>/<symmetry_type>/<object_id>/<size>/<lighting>/molmo_multiview[_EXP].json` |
 | 3D meshes | `<objects_root>/curated_axis_sym_obj/<object_id>.obj` |
 | True labels | `<objects_root>/curated_axis_sym_obj/<object_id>.txt` |
 
@@ -66,7 +72,7 @@ Mapping/
 1                                            ← number of axes
 axis DX DY DZ  OX OY OZ                     ← direction + origin
 N_ANGLES
-angles A1 A2 ...                             ← rotational symmetry angles (not used for evaluation)
+angles A1 A2 ...                             ← rotational symmetry angles (not used)
 ```
 
 **plane_sym** (supports 1–3 planes per object):
@@ -84,11 +90,11 @@ Direction/normal vectors are normalized automatically on load.
 
 | Space | Origin | Scale |
 |---|---|---|
-| Molmo2 output | Top-left | 0–1000 |
+| Molmo2 output | Top-left | 0–1000 (independent of image resolution) |
 | NDC (camera) | Center | −1 to +1 |
 | World / mesh | Mesh centroid ≈ origin | ShapeNet unit cube (~1.0) |
 
-ShapeNet meshes are pre-normalized to fit within a unit cube centered at the origin — no additional centering or scaling is needed.
+ShapeNet meshes are pre-normalized to fit within a unit cube centered at the origin.
 
 ---
 
@@ -96,33 +102,27 @@ ShapeNet meshes are pre-normalized to fit within a unit cube centered at the ori
 
 Projects each Molmo2 predicted point onto the 3D mesh surface via ray casting.
 
-**Method:** reconstructs the camera ray from `R`, `T`, and `fov=60°` stored in `metadata_all.json`, then intersects it with the mesh using `trimesh`. Only ROT_000 images are used (one view per viewpoint index, no 2D rotations).
+**Method:** reconstructs the camera ray from `R`, `T`, and `fov=60°` stored in `molmo_multiview.json`, then intersects it with the mesh using `trimesh`. Only ROT_000 images are used (one view per viewpoint index).
 
-**Output:** `mapped_points_3d.json` alongside the renders. Skips configs where the file already exists.
+**Output:** `mapped_points_3d[_EXP].json` alongside the renders. Skips objects that already have a result file (unless `--overwrite`).
 
 ### Usage
 
 ```bash
-# Single process
 python Mapping/map_to_3d.py \
     --renders-root ../data/renders \
     --objects-root ../data/objects \
     --symmetry-type axis_sym \
-    --sizes 224 \
-    --lightings flat
+    --sizes 224 --lightings flat \
+    --overwrite --yes
 
-# Two parallel processes (CPU-bound, splits objects round-robin)
+# Experiment variant
 python Mapping/map_to_3d.py \
     --renders-root ../data/renders \
     --objects-root ../data/objects \
     --symmetry-type axis_sym \
-    --gpu-id 0 --num-gpus 2
-
-python Mapping/map_to_3d.py \
-    --renders-root ../data/renders \
-    --objects-root ../data/objects \
-    --symmetry-type axis_sym \
-    --gpu-id 1 --num-gpus 2
+    --sizes 224 --lightings flat \
+    --experiment-id axis_v02 --overwrite --yes
 ```
 
 ### Arguments
@@ -135,6 +135,10 @@ python Mapping/map_to_3d.py \
 | `--sizes` | `224 448 1136` | Image sizes to process |
 | `--lightings` | `flat brighter darker` | Illumination modes |
 | `--fov` | `60.0` | Field of view in degrees |
+| `--experiment-id` | `None` | Reads `molmo_multiview_<ID>.json`, writes `mapped_points_3d_<ID>.json` |
+| `--max-objects` | `None` | Process only the first N objects |
+| `--overwrite` | `False` | Overwrite existing output files |
+| `--yes` / `-y` | `False` | Skip interactive confirmation |
 | `--gpu-id` | `0` | Process index for round-robin object splitting |
 | `--num-gpus` | `1` | Total parallel processes |
 
@@ -148,7 +152,7 @@ python Mapping/map_to_3d.py \
   "illumination": "flat",
   "fov_deg": 60.0,
   "n_views_results": {
-    "1": {
+    "6": {
       "images_sent": [...],
       "points_3d": [
         {
@@ -163,9 +167,7 @@ python Mapping/map_to_3d.py \
       ],
       "n_hits": 2,
       "n_misses": 0
-    },
-    "6":  { ... },
-    "14": { ... }
+    }
   }
 }
 ```
@@ -174,24 +176,40 @@ python Mapping/map_to_3d.py \
 
 ## 2. `estimate_symmetry.py`
 
-Fits a symmetry axis or plane from the 3D hit points using SVD (PCA).
+Fits a symmetry axis or plane from the 3D hit points using four methods: plain SVD, RANSAC+SVD, SVD+SDE selection, and RANSAC+SVD+SDE selection.
 
-**Method:**
-- `axis_sym`: first principal component of the centered hit points = axis direction. Origin = centroid.
-- `plane_sym`: last principal component (minimum variance direction) = plane normal. Origin = centroid.
+**SVD fit:**
+- `axis_sym`: first principal component of centered hit points = axis direction; origin = centroid.
+- `plane_sym`: last principal component (min-variance direction) = plane normal; origin = centroid.
 
-Points from all (size × illumination) configurations are pooled per `n_views` group before fitting — more configurations give a more robust estimate.
+**Point mode** (`--point-mode`) controls how Molmo2 point pairs are treated before SVD:
+- `independent`: each 3D hit point enters SVD directly.
+- `midpoint`: obj_id=1 and obj_id=2 per image are replaced by their 3D midpoint. Use this for bilateral-pair prompts (e.g., `axis_v01`, `plane_v01`) so that midpoints lie on the axis/plane instead of opposite sides.
 
-**Output:** `predicted_symmetry.json` at the object level (one file per object, not per size/illumination). Skips objects where the file already exists.
+**SDE variants** (`svd_sde`, `ransac_svd_sde`) compute the Symmetry Distance Error against the mesh and store it in the output. Requires `--objects-root`.
+
+Points from all (size × lighting) configurations are pooled per `n_views` group before fitting.
+
+**Output:** `predicted_symmetry[_EXP].json` at the object level. Skips objects where the file already exists (unless `--overwrite`).
 
 ### Usage
 
 ```bash
 python Mapping/estimate_symmetry.py \
     --renders-root ../data/renders \
+    --objects-root ../data/objects \
     --symmetry-type axis_sym \
-    --sizes 224 \
-    --lightings flat
+    --sizes 224 --lightings flat \
+    --point-mode independent \
+    --overwrite
+
+# Experiment variant (bilateral-pair prompt)
+python Mapping/estimate_symmetry.py \
+    --renders-root ../data/renders \
+    --objects-root ../data/objects \
+    --symmetry-type axis_sym \
+    --sizes 224 --lightings flat \
+    --experiment-id axis_v01 --point-mode midpoint --overwrite
 ```
 
 ### Arguments
@@ -199,38 +217,40 @@ python Mapping/estimate_symmetry.py \
 | Argument | Default | Description |
 |---|---|---|
 | `--renders-root` | *(required)* | Root folder of renders |
+| `--objects-root` | `None` | Root folder with `.obj` meshes (required for SDE computation) |
 | `--symmetry-type` | *(required)* | `axis_sym` or `plane_sym` |
 | `--sizes` | `224 448 1136` | Sizes to pool points from |
 | `--lightings` | `flat brighter darker` | Lightings to pool points from |
-| `--gpu-id` | `0` | Process index |
+| `--point-mode` | `independent` | `independent` or `midpoint` — see prompt table in `Experiments.md` |
+| `--experiment-id` | `None` | Reads `mapped_points_3d_<ID>.json`, writes `predicted_symmetry_<ID>.json` |
+| `--max-objects` | `None` | Process only the first N objects |
+| `--overwrite` | `False` | Overwrite existing output files |
+| `--gpu-id` | `0` | Process index for round-robin splitting |
 | `--num-gpus` | `1` | Total parallel processes |
 
 ### Output format (`predicted_symmetry.json`)
 
-**axis_sym:**
 ```json
 {
   "object_id": "1a9c1cbf...",
   "symmetry_type": "axis_sym",
+  "point_mode": "independent",
   "n_views_predictions": {
-    "1":  {"direction": [dx, dy, dz], "origin": [ox, oy, oz], "n_points": 2},
-    "6":  {"direction": [...], "origin": [...], "n_points": 6},
-    "14": { ... },
-    "26": { ... }
+    "6": {
+      "svd":            {"direction": [dx, dy, dz], "origin": [ox, oy, oz],
+                         "n_points": 12, "n_inliers": null, "sde": null,  "accepted": null},
+      "ransac_svd":     {"direction": [...],         "origin": [...],
+                         "n_points": 12, "n_inliers": 8,    "sde": null,  "accepted": null},
+      "svd_sde":        {"direction": [...],         "origin": [...],
+                         "n_points": 12, "n_inliers": null, "sde": 0.031, "accepted": true},
+      "ransac_svd_sde": {"direction": [...],         "origin": [...],
+                         "n_points": 12, "n_inliers": 8,    "sde": 0.021, "accepted": true}
+    }
   }
 }
 ```
 
-**plane_sym:**
-```json
-{
-  "object_id": "...",
-  "symmetry_type": "plane_sym",
-  "n_views_predictions": {
-    "1": {"normal": [nx, ny, nz], "origin": [ox, oy, oz], "n_points": 2}
-  }
-}
-```
+For `plane_sym`, `"direction"` is replaced by `"normal"`. When `--objects-root` is omitted, `sde` and `accepted` are `null`.
 
 ---
 
@@ -243,13 +263,14 @@ Compares the predicted symmetry element against the ground-truth label and compu
 | Metric | axis_sym | plane_sym |
 |---|---|---|
 | Angular error (°) | Angle between predicted and true axis directions | Angle between predicted and true plane normals |
-| Origin distance | Point-to-line distance from predicted origin to true axis | Point-to-plane distance from predicted origin to true plane |
+| Translation error | Point-to-line distance: predicted origin → true axis | Point-to-plane distance: predicted origin → true plane |
+| AUC angular | Area under precision-vs-threshold curve (0–90°) | Same |
+| Precision @ 5°/10°/15° | Fraction of objects with angular error < threshold | Same |
+| SDE mean / AUC SDE / Precision @ SDE | — | Symmetry Distance Error metrics |
 
-Both metrics are **sign-agnostic** (axis direction and plane normal are undetermined up to sign).
+All metrics are **sign-agnostic**. For `plane_sym` with multiple true planes (up to 3), the predicted plane is matched against the **closest true plane** by angular error.
 
-For `plane_sym` with multiple true planes (up to 3), the predicted plane is matched against the **closest true plane** (minimum angular error) — best-match strategy.
-
-**Output:** saves results at the symmetry type level, not per object. Skips nothing — always rewrites.
+**Output:** saves results under `<renders_root>/<symmetry_type>/`. Always rewrites.
 
 ### Usage
 
@@ -257,12 +278,27 @@ For `plane_sym` with multiple true planes (up to 3), the predicted plane is matc
 python Mapping/evaluate.py \
     --renders-root ../data/renders \
     --objects-root ../data/objects \
-    --symmetry-type axis_sym
+    --symmetry-type axis_sym \
+    --sizes 224 --lightings flat \
+    --method svd
 
+# All 4 methods (loop)
+for METHOD in svd ransac_svd svd_sde ransac_svd_sde; do
+    python Mapping/evaluate.py \
+        --renders-root ../data/renders \
+        --objects-root ../data/objects \
+        --symmetry-type axis_sym \
+        --sizes 224 --lightings flat \
+        --method $METHOD
+done
+
+# Experiment variant
 python Mapping/evaluate.py \
     --renders-root ../data/renders \
     --objects-root ../data/objects \
-    --symmetry-type plane_sym
+    --symmetry-type axis_sym \
+    --sizes 224 --lightings flat \
+    --experiment-id axis_v02 --method ransac_svd_sde
 ```
 
 ### Arguments
@@ -272,39 +308,88 @@ python Mapping/evaluate.py \
 | `--renders-root` | *(required)* | Root folder of renders |
 | `--objects-root` | *(required)* | Root folder with `.txt` labels |
 | `--symmetry-type` | *(required)* | `axis_sym` or `plane_sym` |
+| `--method` | *(required)* | `svd`, `ransac_svd`, `svd_sde`, or `ransac_svd_sde` |
+| `--sizes` | `224 448 1136` | Must match what was used in `estimate_symmetry.py` (affects output filename) |
+| `--lightings` | `flat brighter darker` | Must match what was used in `estimate_symmetry.py` |
+| `--experiment-id` | `None` | Reads `predicted_symmetry_<ID>.json`, writes `eval_*_<ID>_*` files |
+| `--max-objects` | `None` | Process only the first N objects |
 
 ### Output files
 
-Both saved under `<renders_root>/<symmetry_type>/`:
+Saved under `<renders_root>/<symmetry_type>/`:
 
-**`evaluation_results.json`** — per-object, per-n_views metrics:
+**`eval_{sizes}_{lightings}[_EXP]_{method}_results.json`** — per-object metrics:
 ```json
 {
   "symmetry_type": "axis_sym",
+  "method": "svd",
+  "experiment_id": "axis_v02",
   "objects": {
     "1a9c1cbf...": {
-      "1":  {"angular_error_deg": 12.4, "origin_dist": 0.041, "n_points": 2, "status": "ok"},
-      "6":  {"angular_error_deg":  5.1, "origin_dist": 0.018, "n_points": 6, "status": "ok"},
-      "14": { ... },
-      "26": { ... }
+      "6":  {"angular_error_deg": 5.1, "translation_error": 0.018,
+             "n_points": 6, "status": "ok"},
+      "14": { ... }
     }
   }
 }
 ```
 
-**`evaluation_summary.csv`** — aggregated statistics per n_views group:
+**`eval_{sizes}_{lightings}[_EXP]_{method}_summary.csv`** — aggregated per n_views group:
 
-| n_views | n_objects | angular_error_mean | angular_error_median | angular_error_std | origin_dist_mean | origin_dist_median | origin_dist_std | n_points_mean |
-|---|---|---|---|---|---|---|---|---|
-| 1 | 850 | 18.3 | 14.1 | 12.5 | 0.062 | 0.041 | 0.055 | 2.0 |
-| 6 | 850 | 11.2 | 8.4 | 9.3 | 0.038 | 0.024 | 0.041 | 5.8 |
-| ... | | | | | | | | |
+| n_views | n_objects | angular_error_mean | angular_error_median | angular_error_std | translation_error_mean | ... | auc_angular | n_points_mean | precision_5deg | precision_10deg | precision_15deg |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 6 | 850 | 11.2 | 8.4 | 9.3 | 0.038 | ... | 0.72 | 5.8 | 0.41 | 0.65 | 0.79 |
+
+For `plane_sym`, additional columns: `sde_mean`, `sde_median`, `sde_std`, `auc_sde`, `precision_sde_010`, `precision_sde_020`.
 
 ---
 
-## 4. `cleanup_experiments.py`
+## 4. `compare_results.py`
 
-Removes specific `n_views` keys from `molmo_multiview.json` files. Use this when iterating on prompts to delete only the results you want to rerun without affecting other keys.
+Reads all evaluation CSVs for a symmetry type and generates a console table, bar charts, line plots, and a heatmap comparing experiments and methods.
+
+### Usage
+
+```bash
+# Console table only
+python Mapping/compare_results.py \
+    --renders-root ../data/renders \
+    --symmetry-type axis_sym
+
+# Save plots and CSV
+python Mapping/compare_results.py \
+    --renders-root ../data/renders \
+    --symmetry-type axis_sym \
+    --save-dir ../results/plots \
+    --csv-dir ../results
+```
+
+The CSV is saved as `<csv-dir>/experiments_DD_MM_YYYY/<symmetry_type>_comparison.csv`.
+
+### Arguments
+
+| Argument | Default | Description |
+|---|---|---|
+| `--renders-root` | *(required)* | Root folder of renders |
+| `--symmetry-type` | *(required)* | `axis_sym` or `plane_sym` |
+| `--sizes` | `224` | Must match what was used to run evaluate.py |
+| `--lightings` | `flat` | Must match what was used to run evaluate.py |
+| `--save-dir` | `None` | Directory to save plots. If omitted, displays on screen |
+| `--csv-dir` | `None` | Base directory to save combined CSV |
+| `--no-plots` | `False` | Print table only, skip plots |
+
+### Outputs
+
+- **Console table:** experiment × method × n_views with key metrics
+- **`{sym}_n_objects.png`:** bar chart of valid-prediction counts per experiment/method
+- **`{sym}_{metric}.png`:** line plots of each metric vs n_views, one subplot per method
+- **`{sym}_heatmap_precision5.png`:** heatmap of precision@5° for each experiment × method
+
+---
+
+## 5. `cleanup_experiments.py`
+
+Removes specific `n_views` keys from `molmo_multiview[_EXP].json` files. Use this when iterating on prompts to delete only the results you want to rerun without affecting other keys in the same JSON.
 
 - If the JSON still has other keys after removal → rewritten without the removed keys
 - If the JSON becomes empty → file deleted entirely
@@ -318,18 +403,24 @@ Removes specific `n_views` keys from `molmo_multiview.json` files. Use this when
 python Mapping/cleanup_experiments.py \
     --renders-root ../data/renders \
     --symmetry-type axis_sym \
-    --sizes 224 \
-    --lightings flat \
+    --sizes 224 --lightings flat \
     --view-groups 1 6 14 26 \
     --dry-run
 
-# Execute
+# Execute (production file)
 python Mapping/cleanup_experiments.py \
     --renders-root ../data/renders \
     --symmetry-type axis_sym \
-    --sizes 224 \
-    --lightings flat \
+    --sizes 224 --lightings flat \
     --view-groups 1 6 14 26
+
+# Experiment file
+python Mapping/cleanup_experiments.py \
+    --renders-root ../data/renders \
+    --symmetry-type axis_sym \
+    --sizes 224 --lightings flat \
+    --view-groups 1 6 \
+    --experiment-id axis_v02
 ```
 
 ### Arguments
@@ -341,19 +432,83 @@ python Mapping/cleanup_experiments.py \
 | `--view-groups` | *(required)* | Keys to remove (e.g. `1 6 14 26`) |
 | `--sizes` | `224 448 1136` | Sizes to clean |
 | `--lightings` | `flat brighter darker` | Lightings to clean |
+| `--experiment-id` | `None` | Targets `molmo_multiview_<ID>.json` instead of `molmo_multiview.json` |
 | `--dry-run` | `False` | Preview without making changes |
+
+> **Note:** this script only cleans `molmo_multiview[_EXP].json`. Downstream files (`mapped_points_3d`, `predicted_symmetry`, `eval_*`) must be removed separately if needed.
+
+---
+
+## 6. `visualize_rays.py`
+
+Debugging tool that recomputes all camera rays from scratch and shows them in a 3D Polyscope viewer.
+
+**Requires:** `polyscope` (`pip install polyscope`)
+
+**Shows:**
+- Gray mesh (3D object)
+- Blue spheres (camera positions, one per view)
+- Green lines (hit rays: camera → mesh intersection)
+- Orange lines (miss rays: camera → extended endpoint)
+- Yellow spheres (hit points on mesh surface)
+- Ground-truth axis or plane when `--show-gt` is given
+
+### Usage
+
+```bash
+python Mapping/visualize_rays.py \
+    --object-id 1a9c1cbf1ca9ca24274623f5a5d0bcdc \
+    --renders-root ../data/renders \
+    --objects-root ../data/objects \
+    --symmetry-type axis_sym \
+    --n-views 6 \
+    --show-gt
+
+# Experiment variant
+python Mapping/visualize_rays.py \
+    --object-id 1a9c1cbf1ca9ca24274623f5a5d0bcdc \
+    --renders-root ../data/renders \
+    --objects-root ../data/objects \
+    --symmetry-type axis_sym \
+    --n-views 6 \
+    --experiment-id axis_v02 \
+    --show-gt
+```
+
+### Arguments
+
+| Argument | Default | Description |
+|---|---|---|
+| `--object-id` | *(required)* | Object ID to visualize |
+| `--renders-root` | *(required)* | Root folder of renders |
+| `--objects-root` | *(required)* | Root folder with `.obj` and `.txt` files |
+| `--symmetry-type` | *(required)* | `axis_sym` or `plane_sym` |
+| `--n-views` | *(required)* | n_views group to visualize (e.g. `6`) |
+| `--size` | `224` | Image size |
+| `--lighting` | `flat` | Illumination mode |
+| `--experiment-id` | `None` | Reads `molmo_multiview_<ID>.json` |
+| `--show-gt` | `False` | Overlay ground-truth symmetry element |
+| `--ray-length` | `2 × bbox diag` | Length of miss rays |
+| `--ray-radius` | `0.004` | Tube radius for all rays |
+| `--hit-radius` | `0.015` | Sphere radius for hit points |
+| `--cam-radius` | `0.020` | Sphere radius for camera positions |
 
 ---
 
 ## Full pipeline example
 
 ```bash
-# 1. Generate Molmo2 predictions (molmo_multiview_runner.py)
+EXP=axis_v02
+MODE=independent   # see Experiments.md for correct value per prompt
+
+# 1. Molmo2 inference
 CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
     --renders-root ../data/renders \
     --symmetry-type axis_sym \
     --sizes 224 --lightings flat \
-    --view-groups 1 6 14 26
+    --view-groups 1 6 14 26 \
+    --experiment-id $EXP --prompt-id $EXP \
+    --prompt-mode auto --yes
 
 # 2. Map 2D predictions to 3D mesh surface
 python Mapping/map_to_3d.py \
@@ -361,34 +516,32 @@ python Mapping/map_to_3d.py \
     --objects-root ../data/objects \
     --symmetry-type axis_sym \
     --sizes 224 --lightings flat \
-    --overwrite
+    --experiment-id $EXP --overwrite --yes
 
-# 3. Fit predicted axis/plane from 3D points (RANSAC + SVD + SDE)
+# 3. Fit symmetry from 3D points (4 methods)
 python Mapping/estimate_symmetry.py \
     --renders-root ../data/renders \
     --objects-root ../data/objects \
     --symmetry-type axis_sym \
     --sizes 224 --lightings flat \
-    --overwrite
+    --experiment-id $EXP --point-mode $MODE --overwrite
 
-# 4. Evaluate vs ground truth
-python Mapping/evaluate.py \
+# 4. Evaluate vs ground truth (one call per method)
+for METHOD in svd ransac_svd svd_sde ransac_svd_sde; do
+    python Mapping/evaluate.py \
+        --renders-root ../data/renders \
+        --objects-root ../data/objects \
+        --symmetry-type axis_sym \
+        --sizes 224 --lightings flat \
+        --experiment-id $EXP --method $METHOD
+done
+
+# 5. Compare all experiments
+python Mapping/compare_results.py \
     --renders-root ../data/renders \
-    --objects-root ../data/objects \
     --symmetry-type axis_sym \
-    --sizes 224 --lightings flat
-
-# --- Iterate on prompt ---
-
-# 5. Clean results for a specific experiment
-python Mapping/cleanup_experiments.py \
-    --renders-root ../data/renders \
-    --symmetry-type axis_sym \
-    --sizes 224 --lightings flat \
-    --view-groups 1 6 14 26 \
-    --dry-run   # remove --dry-run to execute
-
-# 6. Rerun from step 1 with new prompt
+    --save-dir ../results/plots \
+    --csv-dir ../results
 ```
 
 ---
@@ -397,14 +550,15 @@ python Mapping/cleanup_experiments.py \
 
 | Script | Skip condition |
 |---|---|
-| `map_to_3d.py` | Skips if `mapped_points_3d.json` already exists |
-| `estimate_symmetry.py` | Skips if `predicted_symmetry.json` already exists |
+| `map_to_3d.py` | Skips objects where `mapped_points_3d[_EXP].json` already exists (unless `--overwrite`) |
+| `estimate_symmetry.py` | Skips objects where `predicted_symmetry[_EXP].json` already exists (unless `--overwrite`) |
 | `evaluate.py` | Always rewrites (fast, CPU-only) |
-| `cleanup_experiments.py` | Skips configs with no JSON or no matching keys |
+| `compare_results.py` | Always rewrites |
+| `cleanup_experiments.py` | Skips configs with no matching JSON or keys |
 
-To rerun a specific object in `map_to_3d.py` or `estimate_symmetry.py`, delete the corresponding output file:
+To rerun a specific object, delete its output file:
 
 ```bash
-rm ../data/renders/axis_sym/<object_id>/224/flat/mapped_points_3d.json
-rm ../data/renders/axis_sym/<object_id>/predicted_symmetry.json
+rm ../data/renders/axis_sym/<object_id>/224/flat/mapped_points_3d_axis_v02.json
+rm ../data/renders/axis_sym/<object_id>/predicted_symmetry_axis_v02.json
 ```

@@ -106,10 +106,13 @@ OBJECTS_SUBDIR      = {"axis_sym": "curated_axis_sym_obj",
 
 # ── Camera helpers ────────────────────────────────────────────────────────────
 
-def molmo_to_ndc(x: float, y: float, image_size: int) -> tuple[float, float]:
+def molmo_to_ndc(x: float, y: float) -> tuple[float, float]:
     """
     Convert Molmo2 coords (0–1000, top-left origin) to
     NDC ([-1, 1], top-left = (-1, +1) in OpenGL convention).
+
+    Molmo coords are normalized to [0, 1000] independently of image resolution,
+    so image_size is not needed — the mapping to NDC is direct.
 
     Molmo x → NDC x:  (x / 1000) * 2 - 1        (left=-1, right=+1)
     Molmo y → NDC y:  1 - (y / 1000) * 2         (top=+1,  bottom=-1)
@@ -307,7 +310,7 @@ def process_object(
                         y       = pt["y"]
                         obj_id  = pt["obj_id"]
 
-                        ndc_x, ndc_y = molmo_to_ndc(x, y, image_size)
+                        ndc_x, ndc_y = molmo_to_ndc(x, y)
 
                         ray_origin, ray_dir = build_camera_rays(
                             ndc_x, ndc_y, R, T, fov, image_size
@@ -389,20 +392,23 @@ def parse_args() -> argparse.Namespace:
 
 
 def preview(args: argparse.Namespace, objects: list[Path]) -> None:
+    output_file = _exp_filename(OUTPUT_FILE, args.experiment_id)
     print("\n========== MAP TO 3D ==========")
     print(f"Renders root  : {args.renders_root}")
     print(f"Objects root  : {args.objects_root}")
     print(f"Symmetry type : {args.symmetry_type}")
+    if args.experiment_id:
+        print(f"Experiment ID : {args.experiment_id}  →  {output_file}")
     print(f"GPU id/total  : {args.gpu_id} / {args.num_gpus}")
     print(f"Objects       : {len(objects)}")
     print(f"Sizes         : {args.sizes}")
     print(f"Lightings     : {args.lightings}")
     print(f"FoV           : {args.fov}°")
-    print(f"Overwrite      : {args.overwrite}")
+    print(f"Overwrite     : {args.overwrite}")
     if not args.overwrite:
-        print(f"(Existing {OUTPUT_FILE} skipped — use --overwrite to replace)")
+        print(f"(Existing {output_file} skipped — use --overwrite to replace)")
     else:
-        print(f"(Existing {OUTPUT_FILE} will be overwritten)")
+        print(f"(Existing {output_file} will be overwritten)")
     print("================================\n")
     if not args.yes:
         if input("Type 'OK' to start: ").strip() != "OK":
