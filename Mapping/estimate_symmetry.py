@@ -1,6 +1,6 @@
 """
-estimate_symmetry_vf.py
------------------------
+estimate_symmetry.py
+--------------------
 Fits a symmetry axis (axis_sym) or plane (plane_sym) from the 3D points
 produced by map_to_3d.py.
 
@@ -281,7 +281,7 @@ def collect_hit_points(
         return np.array(pts, dtype=np.float64)
 
     elif point_mode == "midpoint":
-        by_img: dict[int, dict[int, np.ndarray]] = {}
+        by_img = {}
         for p in raw_points:
             if not p["hit"] or p["point_3d"] is None:
                 continue

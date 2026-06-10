@@ -64,7 +64,7 @@ def load_csvs(renders_root: Path, symmetry_type: str, sizes: list[int],
 
     frames = []
     for csv in sorted(root.glob(f"{prefix}{sym_prefix}*_summary.csv")):
-        stem   = csv.stem.replace(prefix, "").replace("_summary", "")
+        stem   = csv.stem.replace(prefix, "").removesuffix("_summary")
         method = next((m for m in METHODS if stem.endswith("_" + m)), "unknown")
         exp    = stem[: -(len(method) + 1)]
         df     = pd.read_csv(csv)
@@ -112,9 +112,10 @@ def plot_n_objects(df: pd.DataFrame, symmetry_type: str, save_dir: Path | None) 
 
     fig, ax = plt.subplots(figsize=(max(8, len(exps) * 1.5), 5))
     for i, method in enumerate(methods):
-        vals = [sub.loc[sub["experiment"] == e, "n_objects"]
-                    .values[0] if e in sub[sub["method"] == method]["experiment"].values else 0
-                for e in exps]
+        vals = []
+        for e in exps:
+            row = sub[(sub["experiment"] == e) & (sub["method"] == method)]
+            vals.append(int(row["n_objects"].values[0]) if not row.empty else 0)
         offset = (i - len(methods) / 2 + 0.5) * width
         ax.bar([xi + offset for xi in x], vals, width,
                label=METHOD_LABELS[method], color=METHOD_COLORS[method], alpha=0.85)

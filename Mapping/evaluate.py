@@ -1,7 +1,7 @@
 """
 evaluate.py
 -----------
-Compares predicted symmetry (from estimate_symmetry_vf.py) against true labels
+Compares predicted symmetry (from estimate_symmetry.py) against true labels
 (.txt files) and computes evaluation metrics aligned with the paper.
 
 Each predicted_symmetry.json contains FOUR estimates per n_views group (2×2 grid).
@@ -244,7 +244,7 @@ def auc_from_errors(errors: list[float],
     thresholds = np.linspace(0, max_error, n_steps + 1)
     arr        = np.array(errors)
     precisions = [(arr < t).mean() for t in thresholds]
-    return float(np.trapezoid(precisions, thresholds) / max_error)
+    return float(np.trapz(precisions, thresholds) / max_error)
 
 
 # ── Per-object evaluation ─────────────────────────────────────────────────────

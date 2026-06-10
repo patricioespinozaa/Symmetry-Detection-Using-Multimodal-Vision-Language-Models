@@ -64,8 +64,15 @@ OBJECTS_SUBDIR = {
     "axis_sym":  "curated_axis_sym_obj",
     "plane_sym": "curated_plane_sym_obj",
 }
-MOLMO_JSON = "molmo_multiview.json"
-FOV_DEG    = 60.0
+MOLMO_JSON_BASE = "molmo_multiview.json"
+FOV_DEG         = 60.0
+
+
+def _molmo_filename(experiment_id: str | None) -> str:
+    if not experiment_id:
+        return MOLMO_JSON_BASE
+    dot = MOLMO_JSON_BASE.rfind(".")
+    return f"{MOLMO_JSON_BASE[:dot]}_{experiment_id}{MOLMO_JSON_BASE[dot:]}"
 
 # Colors (RGB in [0,1])
 COLOR_MESH      = (0.75, 0.75, 0.75)
@@ -113,7 +120,7 @@ def cast_ray(
     locs, _, _ = mesh.ray.intersects_location(
         ray_origins=origin[None],
         ray_directions=direction[None],
-        multiple_hits=False,
+        multiple_hits=True,
     )
     if len(locs) == 0:
         return None
@@ -221,6 +228,9 @@ def parse_args():
                    choices=["flat", "darker", "brighter"])
     p.add_argument("--fov",       type=float, default=FOV_DEG)
     p.add_argument("--show-gt",   action="store_true")
+    p.add_argument("--experiment-id", default=None,
+                   help="Experiment ID. Reads molmo_multiview_<ID>.json instead of "
+                        "molmo_multiview.json. Must match the --experiment-id used in the runner.")
     p.add_argument("--ray-length",  type=float, default=None,
                    help="Length of miss rays. Default: 2 × bbox diagonal.")
     p.add_argument("--ray-radius",  type=float, default=0.004,
@@ -246,9 +256,10 @@ def main():
     render_dir = renders_root / sym_type / object_id / str(args.size) / args.lighting
     obj_path   = objects_root / OBJECTS_SUBDIR[sym_type] / f"{object_id}.obj"
     txt_path   = objects_root / OBJECTS_SUBDIR[sym_type] / f"{object_id}.txt"
-    molmo_path = render_dir / MOLMO_JSON
+    molmo_name = _molmo_filename(args.experiment_id)
+    molmo_path = render_dir / molmo_name
 
-    for p, lbl in [(obj_path, ".obj"), (molmo_path, MOLMO_JSON)]:
+    for p, lbl in [(obj_path, ".obj"), (molmo_path, molmo_name)]:
         if not p.exists():
             sys.exit(f"[error] {lbl} not found: {p}")
 
@@ -391,9 +402,10 @@ def main():
     print(f"  Green lines   : hit rays  ({len(hit_segments)} rays → mesh surface)")
     print(f"  Orange lines  : miss rays ({len(miss_segments)} rays → no intersection)")
     print(f"  Yellow spheres: hit points on mesh surface")
-    if gt_symmetries:
-        print(f"  Blue line     : GT axis" if any(g["type"]=="axis"  for g in gt_symmetries) else "")
-        print(f"  Green plane   : GT plane" if any(g["type"]=="plane" for g in gt_symmetries) else "")
+    if any(g["type"] == "axis"  for g in gt_symmetries):
+        print(f"  Blue line     : GT axis")
+    if any(g["type"] == "plane" for g in gt_symmetries):
+        print(f"  Green plane   : GT plane")
     print()
     print("Launching Polyscope — close the window to exit.")
 
