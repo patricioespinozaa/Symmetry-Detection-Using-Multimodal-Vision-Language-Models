@@ -4,8 +4,12 @@ compare_results.py
 Lee todos los CSVs de evaluación para un symmetry_type y genera:
   1. Tabla de consola: experiment × method × n_views
   2. Gráfico de barras: n_objects detectados por experimento/método
-  3. Líneas: métricas clave vs n_views, desglosadas por método
-  4. Para plane_sym: también métricas SDE
+     (con porcentaje sobre cada barra si se pasa --total-objects)
+  3. Líneas: angular error mean, translation error mean, AUC angular,
+     precision@5°, precision@10° vs n_views (eje X discreto), por método
+  4. Curva de precisión angular continua (precision@θ, θ ∈ [0°,90°]) para el mayor n_views
+  5. Tasa de aceptación SDE (% accepted=True) para métodos svd_sde y ransac_svd_sde
+  6. Para plane_sym: también métricas SDE
 
 Usage
 -----
@@ -29,10 +33,12 @@ Usage
 from __future__ import annotations
 
 import argparse
+import json
 from datetime import date
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 METHODS = ["ransac_svd_sde", "svd_sde", "ransac_svd", "svd"]
@@ -98,17 +104,16 @@ def print_table(df: pd.DataFrame, symmetry_type: str) -> None:
 
 # ── Plot 1: n_objects detectados ──────────────────────────────────────────────
 
-def plot_n_objects(df: pd.DataFrame, symmetry_type: str, save_dir: Path | None) -> None:
+def plot_n_objects(df: pd.DataFrame, symmetry_type: str, save_dir: Path | None,
+                   total_objects: int | None = None) -> None:
     exps    = sorted(df["experiment"].unique())
     methods = [m for m in METHODS if m in df["method"].unique()]
     n_views = sorted(df["n_views"].unique())
 
-    # Use the n_views with max objects (typically the last/largest group)
-    nv      = max(n_views)
-    sub     = df[df["n_views"] == nv]
-
-    x       = range(len(exps))
-    width   = 0.8 / len(methods)
+    nv    = max(n_views)
+    sub   = df[df["n_views"] == nv]
+    x     = range(len(exps))
+    width = 0.8 / len(methods)
 
     fig, ax = plt.subplots(figsize=(max(8, len(exps) * 1.5), 5))
     for i, method in enumerate(methods):
@@ -117,13 +122,26 @@ def plot_n_objects(df: pd.DataFrame, symmetry_type: str, save_dir: Path | None) 
             row = sub[(sub["experiment"] == e) & (sub["method"] == method)]
             vals.append(int(row["n_objects"].values[0]) if not row.empty else 0)
         offset = (i - len(methods) / 2 + 0.5) * width
-        ax.bar([xi + offset for xi in x], vals, width,
-               label=METHOD_LABELS[method], color=METHOD_COLORS[method], alpha=0.85)
+        bars = ax.bar([xi + offset for xi in x], vals, width,
+                      label=METHOD_LABELS[method], color=METHOD_COLORS[method], alpha=0.85)
+
+        if total_objects:
+            for bar, val in zip(bars, vals):
+                pct = val / total_objects * 100
+                ax.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    bar.get_height() + 0.3,
+                    f"{pct:.0f}%",
+                    ha="center", va="bottom", fontsize=7,
+                )
 
     ax.set_xticks(list(x))
     ax.set_xticklabels(exps, rotation=20, ha="right")
     ax.set_ylabel("n_objects detectados")
-    ax.set_title(f"{symmetry_type} — Objetos con predicción válida (n_views={nv})")
+    title = f"{symmetry_type} — Objetos con predicción válida (n_views={nv})"
+    if total_objects:
+        title += f"  [N={total_objects}]"
+    ax.set_title(title)
     ax.legend(loc="lower right")
     ax.grid(axis="y", alpha=0.3)
     fig.tight_layout()
@@ -139,9 +157,11 @@ def plot_metrics_by_nviews(df: pd.DataFrame, symmetry_type: str,
     n_cols  = len(methods)
 
     metrics = [
-        ("precision_5deg",       "Precision @ 5°",         True),
-        ("auc_angular",          "AUC angular",             True),
-        ("angular_error_mean",   "Angular error mean (°)",  False),
+        ("angular_error_mean",      "Angular error mean (°)",       False),
+        ("translation_error_mean",  "Translation error mean",       False),
+        ("auc_angular",             "AUC angular",                  True),
+        ("precision_5deg",          "Precision @ 5°",               True),
+        ("precision_10deg",         "Precision @ 10°",              True),
     ]
     if symmetry_type == "plane_sym":
         if "sde_mean" in df.columns:
@@ -149,8 +169,9 @@ def plot_metrics_by_nviews(df: pd.DataFrame, symmetry_type: str,
         if "auc_sde" in df.columns:
             metrics.append(("auc_sde",  "AUC SDE",  True))
 
-    cmap   = plt.get_cmap("tab10")
-    colors = {e: cmap(i) for i, e in enumerate(exps)}
+    cmap        = plt.get_cmap("tab10")
+    colors      = {e: cmap(i) for i, e in enumerate(exps)}
+    n_views_all = sorted(df["n_views"].unique())
 
     for metric, ylabel, higher_better in metrics:
         if metric not in df.columns:
@@ -170,6 +191,7 @@ def plot_metrics_by_nviews(df: pd.DataFrame, symmetry_type: str,
                         marker="o", label=exp, color=colors[exp])
             ax.set_title(METHOD_LABELS[method], fontsize=10)
             ax.set_xlabel("n_views")
+            ax.set_xticks(n_views_all)
             ax.grid(alpha=0.3)
             if ax is axes[0]:
                 ax.set_ylabel(ylabel)
@@ -183,40 +205,190 @@ def plot_metrics_by_nviews(df: pd.DataFrame, symmetry_type: str,
         _save_or_show(fig, save_dir, f"{symmetry_type}_{metric}.png")
 
 
-# ── Plot 3: mejor método por experimento ──────────────────────────────────────
+# ── Plot 3: curva de precisión continua ──────────────────────────────────────
 
-def plot_best_method(df: pd.DataFrame, symmetry_type: str, save_dir: Path | None) -> None:
-    """Heatmap: precision@5° por experimento × método, para el mayor n_views."""
-    nv   = df["n_views"].max()
-    sub  = df[df["n_views"] == nv]
-    exps = sorted(sub["experiment"].unique())
-    mths = [m for m in METHODS if m in sub["method"].unique()]
+def _results_json_path(renders_root: Path, symmetry_type: str,
+                       sizes: list[int], lightings: list[str],
+                       exp: str, method: str) -> Path:
+    size_tag  = "s" + "_".join(str(s) for s in sizes)
+    light_tag = "_".join(lightings)
+    return renders_root / symmetry_type / f"eval_{size_tag}_{light_tag}_{exp}_{method}_results.json"
 
-    matrix = pd.DataFrame(index=exps, columns=mths, dtype=float)
-    for exp in exps:
-        for m in mths:
-            row = sub[(sub["experiment"] == exp) & (sub["method"] == m)]
-            matrix.loc[exp, m] = row["precision_5deg"].values[0] if not row.empty else float("nan")
 
-    fig, ax = plt.subplots(figsize=(len(mths) * 1.8 + 1, len(exps) * 0.7 + 1.5))
-    im = ax.imshow(matrix.values.astype(float), cmap="RdYlGn", vmin=0, vmax=1, aspect="auto")
-    plt.colorbar(im, ax=ax, label="Precision @ 5°")
+def plot_precision_curve(df: pd.DataFrame, renders_root: Path, symmetry_type: str,
+                         sizes: list[int], lightings: list[str],
+                         save_dir: Path | None) -> None:
+    """Curva de precisión angular continua (precision@θ para θ ∈ [0°, 90°]).
+    Se usa el mayor n_views disponible (resultado final del sistema).
+    Un subplot por método, curvas coloreadas por experimento."""
+    exps    = sorted(df["experiment"].unique())
+    methods = [m for m in METHODS if m in df["method"].unique()]
+    nv_max  = int(df["n_views"].max())
+    nv_key  = str(nv_max)
 
-    ax.set_xticks(range(len(mths)))
-    ax.set_xticklabels([METHOD_LABELS[m] for m in mths], rotation=20, ha="right", fontsize=9)
-    ax.set_yticks(range(len(exps)))
-    ax.set_yticklabels(exps, fontsize=9)
+    cmap        = plt.get_cmap("tab10")
+    colors      = {e: cmap(i) for i, e in enumerate(exps)}
+    thresholds  = np.linspace(0, 90, 181)   # 0° a 90° en pasos de 0.5°
 
-    for i, exp in enumerate(exps):
-        for j, m in enumerate(mths):
-            val = matrix.loc[exp, m]
-            if not pd.isna(val):
-                ax.text(j, i, f"{val:.2f}", ha="center", va="center", fontsize=8,
-                        color="black" if 0.3 < val < 0.8 else "white")
+    n_cols = len(methods)
+    fig, axes = plt.subplots(1, n_cols, figsize=(5 * n_cols, 4.5), sharey=True)
+    if n_cols == 1:
+        axes = [axes]
 
-    ax.set_title(f"{symmetry_type} — Precision@5° (n_views={nv})")
+    for ax, method in zip(axes, methods):
+        for exp in exps:
+            path = _results_json_path(renders_root, symmetry_type, sizes, lightings, exp, method)
+            if not path.exists():
+                continue
+            with open(path, encoding="utf-8") as f:
+                data = json.load(f)
+
+            errors = [
+                obj[nv_key]["angular_error_deg"]
+                for obj in data.get("objects", {}).values()
+                if obj is not None
+                and nv_key in obj
+                and obj[nv_key].get("status") == "ok"
+            ]
+            if not errors:
+                continue
+
+            arr        = np.array(errors)
+            precisions = [(arr < t).mean() for t in thresholds]
+            ax.plot(thresholds, precisions, label=exp, color=colors[exp])
+
+        ax.set_title(METHOD_LABELS[method], fontsize=10)
+        ax.set_xlabel("Umbral angular (°)")
+        ax.set_xticks([0, 15, 30, 45, 60, 75, 90])
+        ax.set_ylim(0, 1.05)
+        ax.grid(alpha=0.3)
+        if ax is axes[0]:
+            ax.set_ylabel("Precision")
+
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="lower center", ncol=min(len(exps), 4),
+               bbox_to_anchor=(0.5, -0.02), fontsize=8)
+    fig.suptitle(
+        f"{symmetry_type} — Curva de Precisión Angular  (n_views={nv_max})  ↑ mejor",
+        y=1.01,
+    )
     fig.tight_layout()
-    _save_or_show(fig, save_dir, f"{symmetry_type}_heatmap_precision5.png")
+    _save_or_show(fig, save_dir, f"{symmetry_type}_precision_curve_nv{nv_max}.png")
+
+
+# ── Plot 4: tasa de aceptación SDE ───────────────────────────────────────────
+
+def plot_acceptance_rate(df: pd.DataFrame, renders_root: Path, symmetry_type: str,
+                         save_dir: Path | None) -> None:
+    """% de predicciones con accepted=True (SDE ≤ umbral) por experimento y n_views.
+    Solo se grafican los métodos SDE (svd_sde, ransac_svd_sde).
+    Lee predicted_symmetry_<EXP>.json directamente de cada objeto."""
+    sde_methods = [m for m in ["svd_sde", "ransac_svd_sde"] if m in df["method"].unique()]
+    if not sde_methods:
+        return
+
+    exps        = sorted(df["experiment"].unique())
+    n_views_all = sorted(df["n_views"].unique())
+    sym_dir     = renders_root / symmetry_type
+    cmap        = plt.get_cmap("tab10")
+    colors      = {e: cmap(i) for i, e in enumerate(exps)}
+
+    n_cols = len(sde_methods)
+    fig, axes = plt.subplots(1, n_cols, figsize=(5 * n_cols, 4.5), sharey=True)
+    if n_cols == 1:
+        axes = [axes]
+
+    for ax, method in zip(axes, sde_methods):
+        for exp in exps:
+            json_name      = f"predicted_symmetry_{exp}.json"
+            total_by_nv    = {nv: 0 for nv in n_views_all}
+            accepted_by_nv = {nv: 0 for nv in n_views_all}
+
+            for obj_dir in sym_dir.iterdir():
+                if not obj_dir.is_dir():
+                    continue
+                pth = obj_dir / json_name
+                if not pth.exists():
+                    continue
+                try:
+                    with open(pth, encoding="utf-8") as f:
+                        pred = json.load(f)
+                except Exception:
+                    continue
+
+                preds = pred.get("n_views_predictions", {})
+                for nv in n_views_all:
+                    entry = preds.get(str(nv), {}).get(method)
+                    if entry is None or entry.get("accepted") is None:
+                        continue   # SDE no computado para este objeto
+                    total_by_nv[nv] += 1
+                    if entry["accepted"] is True:
+                        accepted_by_nv[nv] += 1
+
+            rates = [
+                accepted_by_nv[nv] / total_by_nv[nv] * 100
+                if total_by_nv[nv] > 0 else float("nan")
+                for nv in n_views_all
+            ]
+            ax.plot(n_views_all, rates, marker="o", label=exp, color=colors[exp])
+
+        ax.set_title(METHOD_LABELS[method], fontsize=10)
+        ax.set_xlabel("n_views")
+        ax.set_xticks(n_views_all)
+        ax.set_ylim(0, 105)
+        ax.grid(alpha=0.3)
+        if ax is axes[0]:
+            ax.set_ylabel("% predicciones aceptadas (SDE ≤ umbral)")
+
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="lower center", ncol=min(len(exps), 4),
+               bbox_to_anchor=(0.5, -0.02), fontsize=8)
+    fig.suptitle(f"{symmetry_type} — Tasa de aceptación SDE  ↑ mejor", y=1.01)
+    fig.tight_layout()
+    _save_or_show(fig, save_dir, f"{symmetry_type}_acceptance_rate.png")
+
+
+# ── Plot 5: % objetos válidos por prompt (un gráfico por prompt) ──────────────
+
+def plot_valid_by_prompt(df: pd.DataFrame, symmetry_type: str,
+                         save_dir: Path | None,
+                         total_objects: int | None = None) -> None:
+    """Un único gráfico de líneas con una curva por experimento/prompt.
+    Eje X: n_views (discreto). Eje Y: % objetos con predicción válida.
+    Como todos los métodos dan el mismo n_objects, se agrupan y se toma el primer valor.
+    Se guarda en save_dir/valid/."""
+    exps        = sorted(df["experiment"].unique())
+    n_views_all = sorted(df["n_views"].unique())
+    valid_dir   = (save_dir / "valid") if save_dir else None
+
+    cmap   = plt.get_cmap("tab10")
+    colors = {e: cmap(i) for i, e in enumerate(exps)}
+
+    agg = (df.groupby(["experiment", "n_views"])["n_objects"]
+             .first()
+             .reset_index())
+    denom = total_objects or int(agg["n_objects"].max())
+
+    fig, ax = plt.subplots(figsize=(7, 4))
+
+    for exp in exps:
+        edf  = agg[agg["experiment"] == exp].sort_values("n_views")
+        if edf.empty:
+            continue
+        pcts = edf["n_objects"] / denom * 100
+        ax.plot(edf["n_views"].tolist(), pcts.tolist(),
+                marker="o", label=exp, color=colors[exp])
+
+    ax.set_xticks(n_views_all)
+    ax.set_xlabel("n_views")
+    ax.set_ylabel("% objetos válidos")
+    ax.set_ylim(0, 105)
+    title_n = f"  [N={denom}]" if total_objects else ""
+    ax.set_title(f"{symmetry_type}  —  Objetos con predicción válida{title_n}")
+    ax.legend(fontsize=8, loc="lower right")
+    ax.grid(alpha=0.3)
+    fig.tight_layout()
+    _save_or_show(fig, valid_dir, f"{symmetry_type}_valid.png")
 
 
 # ── Helper ────────────────────────────────────────────────────────────────────
@@ -250,6 +422,9 @@ def parse_args() -> argparse.Namespace:
                    help="Directorio base donde guardar el CSV combinado. "
                         "Se crea la subcarpeta experiments_DD_MM_YYYY/ automáticamente. "
                         "Ejemplo: ../results")
+    p.add_argument("--total-objects", type=int, default=None,
+                   help="Total de objetos evaluados. Si se indica, muestra el porcentaje "
+                        "sobre cada barra en el gráfico n_objects (e.g. 100).")
     p.add_argument("--no-plots",  action="store_true",
                    help="Solo imprime la tabla, sin generar gráficos.")
     return p.parse_args()
@@ -274,9 +449,11 @@ def main() -> None:
     if args.no_plots:
         return
 
-    plot_n_objects(df, args.symmetry_type, save_dir)
+    plot_n_objects(df, args.symmetry_type, save_dir, total_objects=args.total_objects)
     plot_metrics_by_nviews(df, args.symmetry_type, save_dir)
-    plot_best_method(df, args.symmetry_type, save_dir)
+    plot_precision_curve(df, root, args.symmetry_type, args.sizes, args.lightings, save_dir)
+    plot_acceptance_rate(df, root, args.symmetry_type, save_dir)
+    plot_valid_by_prompt(df, args.symmetry_type, save_dir, total_objects=args.total_objects)
 
 
 if __name__ == "__main__":
