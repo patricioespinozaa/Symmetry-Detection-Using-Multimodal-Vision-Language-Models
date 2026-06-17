@@ -102,6 +102,7 @@ import re
 import sys
 from pathlib import Path
 
+import numpy as np
 import torch
 from PIL import Image
 from tqdm import tqdm
@@ -273,14 +274,24 @@ def load_metadata(render_dir: Path) -> list[dict]:
 
 def get_n_views_entries(metadata: list[dict], n_views: int) -> list[dict]:
     """
-    First n_views viewpoints, sorted by index.
+    Select n_views entries evenly spaced across the full metadata sequence.
+
+    Uses linspace to guarantee uniform angular coverage regardless of n_views.
+    Taking the first n_views entries from a 114-point Fibonacci sequence would
+    concentrate all cameras near the north pole (elevation +66° to +90° for
+    n_views=6, and +33° to +90° for n_views=26).
+
     Args:
     - metadata: list of metadata entries (dicts with "index" key)
     - n_views: number of views to select
     Returns:
-    - list of metadata entries for the first n_views, sorted by index
+    - list of n_views metadata entries with uniform index spacing, sorted by index
     """
-    entries = [m for m in metadata if m["index"] < n_views]
+    total = len(metadata)
+    if n_views >= total:
+        return sorted(metadata, key=lambda e: e["index"])
+    indices = {int(round(i)) for i in np.linspace(0, total - 1, n_views)}
+    entries = [m for m in metadata if m["index"] in indices]
     return sorted(entries, key=lambda e: e["index"])
 
 
