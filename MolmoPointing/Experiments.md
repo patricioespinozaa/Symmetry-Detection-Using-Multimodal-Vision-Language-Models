@@ -83,7 +83,7 @@ for EXP in axis_v00 axis_v01 axis_v02 axis_v03 axis_v04 axis_v05; do
     CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
         --renders-root $RENDERS --symmetry-type axis_sym \
         --sizes 224 --lightings flat --view-groups 1 6 14 26 \
-        --max-objects 50 --prompt-id $EXP --experiment-id $EXP \
+        --max-objects 100 --prompt-id $EXP --experiment-id $EXP \
         --prompt-mode auto --yes
 done
 ```
@@ -144,24 +144,24 @@ run_axis_exp() {
     CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
         --renders-root $RENDERS --symmetry-type axis_sym \
         --sizes 224 --lightings flat --view-groups 1 6 14 26 \
-        --max-objects 50 --prompt-id $EXP --experiment-id $EXP \
+        --max-objects 100 --prompt-id $EXP --experiment-id $EXP \
         --prompt-mode auto --yes
 
     python Mapping/map_to_3d.py \
         --renders-root $RENDERS --objects-root $OBJECTS \
         --symmetry-type axis_sym --sizes 224 --lightings flat \
-        --max-objects 50 --experiment-id $EXP --overwrite --yes
+        --max-objects 100 --experiment-id $EXP --overwrite --yes
 
     python Mapping/estimate_symmetry.py \
         --renders-root $RENDERS --objects-root $OBJECTS \
         --symmetry-type axis_sym --sizes 224 --lightings flat \
-        --max-objects 50 --experiment-id $EXP --point-mode $MODE --overwrite
+        --max-objects 100 --experiment-id $EXP --point-mode $MODE --overwrite
 
     for METHOD in svd ransac_svd svd_sde ransac_svd_sde; do
         python Mapping/evaluate.py \
             --renders-root $RENDERS --objects-root $OBJECTS \
             --symmetry-type axis_sym --sizes 224 --lightings flat \
-            --max-objects 50 --experiment-id $EXP --method $METHOD
+            --max-objects 100 --experiment-id $EXP --method $METHOD
     done
 }
 
@@ -183,7 +183,7 @@ for EXP in plane_v00 plane_v01 plane_v02 plane_v03 plane_v04 plane_v05; do
     CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
         --renders-root $RENDERS --symmetry-type plane_sym \
         --sizes 224 --lightings flat --view-groups 1 6 14 26 \
-        --max-objects 50 --prompt-id $EXP --experiment-id $EXP \
+        --max-objects 100 --prompt-id $EXP --experiment-id $EXP \
         --prompt-mode auto --yes
 done
 ```
@@ -238,24 +238,24 @@ MODE=midpoint   # see table above for correct value per prompt
 CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
     --renders-root ../data/renders --symmetry-type axis_sym \
     --sizes 224 --lightings flat --view-groups 1 6 14 26 \
-    --max-objects 50 --prompt-id $EXP --experiment-id $EXP \
+    --max-objects 100 --prompt-id $EXP --experiment-id $EXP \
     --prompt-mode auto --yes
 
 python Mapping/map_to_3d.py \
     --renders-root ../data/renders --objects-root ../data/objects \
     --symmetry-type axis_sym --sizes 224 --lightings flat \
-    --max-objects 50 --experiment-id $EXP --overwrite --yes
+    --max-objects 100 --experiment-id $EXP --overwrite --yes
 
 python Mapping/estimate_symmetry.py \
     --renders-root ../data/renders --objects-root ../data/objects \
     --symmetry-type axis_sym --sizes 224 --lightings flat \
-    --max-objects 50 --experiment-id $EXP --point-mode $MODE --overwrite
+    --max-objects 100 --experiment-id $EXP --point-mode $MODE --overwrite
 
 for METHOD in svd ransac_svd svd_sde ransac_svd_sde; do
     python Mapping/evaluate.py \
         --renders-root ../data/renders --objects-root ../data/objects \
         --symmetry-type axis_sym --sizes 224 --lightings flat \
-        --max-objects 50 --experiment-id $EXP --method $METHOD
+        --max-objects 100 --experiment-id $EXP --method $METHOD
 done
 ```
 
