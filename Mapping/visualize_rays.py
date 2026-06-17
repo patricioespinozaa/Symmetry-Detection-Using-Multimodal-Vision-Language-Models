@@ -64,24 +64,35 @@ OBJECTS_SUBDIR = {
     "axis_sym":  "curated_axis_sym_obj",
     "plane_sym": "curated_plane_sym_obj",
 }
-MOLMO_JSON_BASE = "molmo_multiview.json"
-FOV_DEG         = 60.0
+MOLMO_JSON_BASE  = "molmo_multiview.json"
+MAPPED_JSON_BASE = "mapped_points_3d.json"
+PRED_JSON_BASE   = "predicted_symmetry.json"
+FOV_DEG          = 60.0
+
+METHODS = ["svd", "ransac_svd", "svd_sde", "ransac_svd_sde"]
+
+
+def _exp_filename(base: str, experiment_id: str | None) -> str:
+    if not experiment_id:
+        return base
+    dot = base.rfind(".")
+    return f"{base[:dot]}_{experiment_id}{base[dot:]}"
 
 
 def _molmo_filename(experiment_id: str | None) -> str:
-    if not experiment_id:
-        return MOLMO_JSON_BASE
-    dot = MOLMO_JSON_BASE.rfind(".")
-    return f"{MOLMO_JSON_BASE[:dot]}_{experiment_id}{MOLMO_JSON_BASE[dot:]}"
+    return _exp_filename(MOLMO_JSON_BASE, experiment_id)
 
 # Colors (RGB in [0,1])
-COLOR_MESH      = (0.75, 0.75, 0.75)
-COLOR_CAMERA    = (0.20, 0.40, 0.90)   # blue
-COLOR_HIT_RAY   = (0.15, 0.80, 0.25)   # green
-COLOR_MISS_RAY  = (1.00, 0.55, 0.10)   # orange
-COLOR_HIT_PT    = (1.00, 0.95, 0.10)   # yellow
-COLOR_GT_AXIS   = (0.15, 0.40, 0.90)   # blue
-COLOR_GT_PLANE  = (0.10, 0.80, 0.35)   # green
+COLOR_MESH        = (0.75, 0.75, 0.75)
+COLOR_CAMERA      = (0.20, 0.40, 0.90)   # blue
+COLOR_HIT_RAY     = (0.15, 0.80, 0.25)   # green
+COLOR_MISS_RAY    = (1.00, 0.55, 0.10)   # orange
+COLOR_HIT_PT      = (1.00, 0.95, 0.10)   # yellow
+COLOR_CLUSTER_PT  = (0.95, 0.30, 0.15)   # red-orange  (cluster centroids)
+COLOR_GT_AXIS     = (0.15, 0.40, 0.90)   # blue
+COLOR_GT_PLANE    = (0.10, 0.80, 0.35)   # green
+COLOR_PRED_AXIS   = (0.90, 0.15, 0.15)   # red
+COLOR_PRED_PLANE  = (0.85, 0.10, 0.85)   # magenta
 
 
 # ── Camera / ray helpers ──────────────────────────────────────────────────────
@@ -158,6 +169,61 @@ def load_gt(txt_path: Path) -> list[dict]:
     return symmetries
 
 
+# ── Clustering helpers (inline — mirrors estimate_symmetry.cluster_points) ────
+
+def _collect_hit_points(mapped_json: dict, nv_key: str,
+                        point_mode: str = "independent") -> np.ndarray | None:
+    """Extract 3D hit points from mapped_points_3d.json for one n_views group."""
+    group = mapped_json.get("n_views_results", {}).get(nv_key)
+    if group is None:
+        return None
+    raw = group.get("points_3d", [])
+
+    by_img: dict[int, dict[int, np.ndarray]] = {}
+    for p in raw:
+        if not p["hit"] or p["point_3d"] is None:
+            continue
+        by_img.setdefault(p["img_idx"], {})[p["obj_id"]] = np.array(
+            p["point_3d"], dtype=np.float64
+        )
+
+    if point_mode == "midpoint":
+        pts = [
+            (d[1] + d[2]) / 2.0
+            for d in by_img.values()
+            if 1 in d and 2 in d
+        ]
+    else:
+        pts = []
+        for d in by_img.values():
+            if 1 in d and 2 in d:
+                pts.extend([d[1], d[2]])
+
+    return np.array(pts, dtype=np.float64) if len(pts) >= 2 else None
+
+
+def _cluster_points(points: np.ndarray, bbox_diag: float,
+                    threshold_fraction: float = 0.05) -> np.ndarray:
+    """Greedy centroid-based clustering (mirrors estimate_symmetry.cluster_points)."""
+    threshold = threshold_fraction * bbox_diag
+    if threshold < 1e-8 or len(points) < 2:
+        return points
+    centroids: list[np.ndarray] = []
+    counts: list[int] = []
+    for pt in points:
+        placed = False
+        for k, c in enumerate(centroids):
+            if np.linalg.norm(pt - c) < threshold:
+                counts[k] += 1
+                centroids[k] = c + (pt - c) / counts[k]
+                placed = True
+                break
+        if not placed:
+            centroids.append(pt.copy())
+            counts.append(1)
+    return np.array(centroids, dtype=np.float64)
+
+
 # ── Geometry helpers (plane quad, axis segment) ───────────────────────────────
 
 def _translate_mat(tx, ty, tz):
@@ -227,7 +293,19 @@ def parse_args():
     p.add_argument("--lighting",  default="flat",
                    choices=["flat", "darker", "brighter"])
     p.add_argument("--fov",       type=float, default=FOV_DEG)
-    p.add_argument("--show-gt",   action="store_true")
+    p.add_argument("--show-gt",   action="store_true",
+                   help="Overlay ground-truth axis/plane (reads <object_id>.txt).")
+    p.add_argument("--show-predicted", action="store_true",
+                   help="Overlay predicted axis/plane from predicted_symmetry[_EXP].json.")
+    p.add_argument("--pred-method", default="svd", choices=METHODS,
+                   help="Which fitting method to visualize when --show-predicted is set.")
+    p.add_argument("--show-clusters", action="store_true",
+                   help="Show cluster centroids (red) from mapped_points_3d[_EXP].json "
+                        "alongside raw hit points (yellow). Requires map_to_3d.py to have run.")
+    p.add_argument("--point-mode", default="independent",
+                   choices=["independent", "midpoint"],
+                   help="Point collection mode for --show-clusters. Must match the mode "
+                        "used in estimate_symmetry.py.")
     p.add_argument("--experiment-id", default=None,
                    help="Experiment ID. Reads molmo_multiview_<ID>.json instead of "
                         "molmo_multiview.json. Must match the --experiment-id used in the runner.")
@@ -253,11 +331,15 @@ def main():
     object_id    = args.object_id
     nv_key       = str(args.n_views)
 
-    render_dir = renders_root / sym_type / object_id / str(args.size) / args.lighting
-    obj_path   = objects_root / OBJECTS_SUBDIR[sym_type] / f"{object_id}.obj"
-    txt_path   = objects_root / OBJECTS_SUBDIR[sym_type] / f"{object_id}.txt"
-    molmo_name = _molmo_filename(args.experiment_id)
-    molmo_path = render_dir / molmo_name
+    render_dir   = renders_root / sym_type / object_id / str(args.size) / args.lighting
+    obj_path     = objects_root / OBJECTS_SUBDIR[sym_type] / f"{object_id}.obj"
+    txt_path     = objects_root / OBJECTS_SUBDIR[sym_type] / f"{object_id}.txt"
+    molmo_name   = _exp_filename(MOLMO_JSON_BASE,  args.experiment_id)
+    mapped_name  = _exp_filename(MAPPED_JSON_BASE, args.experiment_id)
+    pred_name    = _exp_filename(PRED_JSON_BASE,   args.experiment_id)
+    molmo_path   = render_dir / molmo_name
+    mapped_path  = render_dir / mapped_name
+    pred_path    = renders_root / sym_type / object_id / pred_name
 
     for p, lbl in [(obj_path, ".obj"), (molmo_path, molmo_name)]:
         if not p.exists():
@@ -333,6 +415,38 @@ def main():
     if args.show_gt and txt_path.exists():
         gt_symmetries = load_gt(txt_path)
 
+    # ── Clusters (from mapped_points_3d.json) ──────────────────────────────────
+    cluster_centroids: np.ndarray | None = None
+    n_raw_pts = 0
+    if args.show_clusters:
+        if not mapped_path.exists():
+            print(f"[warn] --show-clusters: {mapped_name} not found, skipping.")
+        else:
+            with open(mapped_path, encoding="utf-8") as f:
+                mapped_data = json.load(f)
+            raw_pts = _collect_hit_points(mapped_data, nv_key, args.point_mode)
+            if raw_pts is not None and len(raw_pts) >= 2:
+                n_raw_pts = len(raw_pts)
+                bd = float(np.linalg.norm(raw_pts.max(0) - raw_pts.min(0)))
+                if bd < 1e-6:
+                    bd = bbox_diag
+                cluster_centroids = _cluster_points(raw_pts, bd)
+
+    # ── Predicted symmetry (from predicted_symmetry.json) ─────────────────────
+    pred_symmetry: dict | None = None
+    if args.show_predicted:
+        if not pred_path.exists():
+            print(f"[warn] --show-predicted: {pred_name} not found, skipping.")
+        else:
+            with open(pred_path, encoding="utf-8") as f:
+                pred_data = json.load(f)
+            nv_preds   = pred_data.get("n_views_predictions", {}).get(nv_key, {})
+            method_out = nv_preds.get(args.pred_method)
+            if method_out is None:
+                print(f"[warn] --pred-method {args.pred_method} not found for n_views={nv_key}.")
+            else:
+                pred_symmetry = method_out
+
     # ── Summary ────────────────────────────────────────────────────────────────
     print(f"\nObject       : {object_id}  ({sym_type})")
     print(f"n_views group: {nv_key}  ({len(images_sent)} images sent)")
@@ -343,6 +457,11 @@ def main():
     print(f"Ray length   : {ray_length:.4f}  (miss rays)")
     if args.show_gt:
         print(f"GT elements  : {len(gt_symmetries)}")
+    if args.show_clusters and cluster_centroids is not None:
+        print(f"Raw pts      : {n_raw_pts}  →  {len(cluster_centroids)} cluster centroids")
+    if args.show_predicted and pred_symmetry is not None:
+        vec_key = "direction" if sym_type == "axis_sym" else "normal"
+        print(f"Pred [{args.pred_method}]: {vec_key}={np.round(pred_symmetry[vec_key], 3).tolist()}")
 
     # ── Polyscope ──────────────────────────────────────────────────────────────
     ps.init()
@@ -378,6 +497,27 @@ def main():
         ps.register_point_cloud("hit_points", pts,
                                 radius=args.hit_radius).set_color(COLOR_HIT_PT)
 
+    # Cluster centroids
+    if cluster_centroids is not None and len(cluster_centroids) > 0:
+        ps.register_point_cloud("cluster_centroids", cluster_centroids,
+                                radius=args.hit_radius * 1.4).set_color(COLOR_CLUSTER_PT)
+
+    # Predicted symmetry
+    if pred_symmetry is not None:
+        p_origin = np.array(pred_symmetry["origin"], dtype=np.float64)
+        if sym_type == "axis_sym":
+            pts   = axis_endpoints(pred_symmetry["direction"], p_origin, half_len * 1.1)
+            edges = np.array([[0, 1]], dtype=np.int32)
+            net   = ps.register_curve_network("pred_axis", pts, edges,
+                                              radius=args.ray_radius * 2.5)
+            net.set_color(COLOR_PRED_AXIS)
+        else:
+            verts = plane_quad(pred_symmetry["normal"], p_origin, plane_sc * 1.05)
+            faces = plane_faces()
+            m     = ps.register_surface_mesh("pred_plane", verts, faces)
+            m.set_color(COLOR_PRED_PLANE)
+            m.set_transparency(0.35)
+
     # GT symmetry
     for i, gt in enumerate(gt_symmetries):
         origin = np.array(gt["origin"], dtype=np.float64)
@@ -397,15 +537,22 @@ def main():
     # Legend
     print()
     print("Legend")
-    print(f"  Gray mesh     : 3D object")
-    print(f"  Blue spheres  : camera positions ({len(cam_positions)} views)")
-    print(f"  Green lines   : hit rays  ({len(hit_segments)} rays → mesh surface)")
-    print(f"  Orange lines  : miss rays ({len(miss_segments)} rays → no intersection)")
-    print(f"  Yellow spheres: hit points on mesh surface")
+    print(f"  Gray mesh       : 3D object")
+    print(f"  Blue spheres    : camera positions ({len(cam_positions)} views)")
+    print(f"  Green lines     : hit rays  ({len(hit_segments)} rays → mesh surface)")
+    print(f"  Orange lines    : miss rays ({len(miss_segments)} rays → no intersection)")
+    print(f"  Yellow spheres  : hit points on mesh surface")
+    if cluster_centroids is not None:
+        print(f"  Red-orange sph  : cluster centroids ({len(cluster_centroids)} from {n_raw_pts} raw pts)")
+    if pred_symmetry is not None:
+        label = "axis" if sym_type == "axis_sym" else "plane"
+        sde   = pred_symmetry.get("sde")
+        sde_s = f"  SDE={sde:.4f}" if sde is not None else ""
+        print(f"  Red {'line' if sym_type == 'axis_sym' else 'plane'}       : predicted {label} [{args.pred_method}]{sde_s}")
     if any(g["type"] == "axis"  for g in gt_symmetries):
-        print(f"  Blue line     : GT axis")
+        print(f"  Blue line       : GT axis")
     if any(g["type"] == "plane" for g in gt_symmetries):
-        print(f"  Green plane   : GT plane")
+        print(f"  Green plane     : GT plane")
     print()
     print("Launching Polyscope — close the window to exit.")
 
