@@ -235,6 +235,43 @@ def sde_plane(v_sample: np.ndarray, plane_origin: np.ndarray, plane_normal: np.n
     return float(dists.mean() / bbox_diag)
 
 
+# ── Spatial clustering ────────────────────────────────────────────────────────
+
+def cluster_points(points: np.ndarray, bbox_diag: float,
+                   threshold_fraction: float = 0.05) -> np.ndarray:
+    """
+    Greedy centroid-based spatial clustering.
+
+    Points within threshold_fraction * bbox_diag of an existing centroid are
+    merged into it (centroid updated incrementally). Reduces spatial redundancy
+    when multiple views observe the same surface region.
+
+    Returns an array of cluster centroids (one per group), preserving order of
+    first encounter. If threshold is too small or fewer than 2 points exist,
+    returns the original array unchanged.
+    """
+    threshold = threshold_fraction * bbox_diag
+    if threshold < 1e-8 or len(points) < 2:
+        return points
+
+    centroids: list[np.ndarray] = []
+    counts: list[int] = []
+
+    for pt in points:
+        placed = False
+        for k, c in enumerate(centroids):
+            if np.linalg.norm(pt - c) < threshold:
+                counts[k] += 1
+                centroids[k] = c + (pt - c) / counts[k]   # incremental mean
+                placed = True
+                break
+        if not placed:
+            centroids.append(pt.copy())
+            counts.append(1)
+
+    return np.array(centroids, dtype=np.float64)
+
+
 # ── Point collection ──────────────────────────────────────────────────────────
 
 def collect_hit_points(
@@ -335,6 +372,7 @@ def process_object(
     experiment_id: str | None = None,
     point_mode:    str = "independent",
     objects_dir:   Path | None = None,
+    clustering:    bool = False,
 ) -> None:
     """
     Generates 4 estimates per n_views group (2×2 grid):
@@ -344,9 +382,16 @@ def process_object(
       ransac_svd_sde — RANSAC + SVD + SDE (full pipeline)
 
     SDE requires objects_dir (mesh). If not provided, sde=null for all methods.
+
+    When clustering=True, applies greedy centroid-based spatial clustering
+    (threshold = 5% bbox diagonal) before fitting. Output is written to a
+    separate file with "_cluster" appended to the experiment suffix, allowing
+    direct comparison via --experiment-id.
     """
+    # Derive output experiment suffix: append "_cluster" when clustering is on
+    exp_out     = ((experiment_id + "_cluster") if experiment_id else "cluster") if clustering else experiment_id
     input_file  = _exp_filename(INPUT_FILE,  experiment_id)
-    output_file = _exp_filename(OUTPUT_FILE, experiment_id)
+    output_file = _exp_filename(OUTPUT_FILE, exp_out)
 
     output_path = object_dir / output_file
     if output_path.exists() and not overwrite:
@@ -396,14 +441,25 @@ def process_object(
         if len(all_points) < 2:
             continue
 
-        n_pts = len(all_points)
-
-        # Bbox diagonal of the point cloud (RANSAC threshold)
+        # Bbox diagonal of the point cloud (RANSAC threshold and clustering)
         bbox_diag_pts = float(
             np.linalg.norm(all_points.max(axis=0) - all_points.min(axis=0))
         )
         if bbox_diag_pts < 1e-6:
             bbox_diag_pts = 1.0
+
+        if clustering:
+            all_points = cluster_points(all_points, bbox_diag_pts)
+            if len(all_points) < 2:
+                continue
+            # Recompute bbox after clustering (centroids may be closer together)
+            bbox_diag_pts = float(
+                np.linalg.norm(all_points.max(axis=0) - all_points.min(axis=0))
+            )
+            if bbox_diag_pts < 1e-6:
+                bbox_diag_pts = 1.0
+
+        n_pts = len(all_points)
 
         # ── RANSAC → inliers ──────────────────────────────────────────────────
         if symmetry_type == "axis_sym":
@@ -433,6 +489,8 @@ def process_object(
 
         # ── 4 estimates ───────────────────────────────────────────────────────
         n_views_predictions[n_views_key] = {
+            "n_points_raw":   len(np.concatenate(arrays, axis=0)),
+            "n_points_fit":   n_pts,
             "svd":            _make_entry(symmetry_type, vec_svd,    origin_svd,    n_pts, None,      None),
             "ransac_svd":     _make_entry(symmetry_type, vec_ransac, origin_ransac, n_pts, n_inliers, None),
             "svd_sde":        _make_entry(symmetry_type, vec_svd,    origin_svd,    n_pts, None,      sde_svd),
@@ -446,6 +504,7 @@ def process_object(
         "object_id":           object_dir.name,
         "symmetry_type":       symmetry_type,
         "point_mode":          point_mode,
+        "clustering":          clustering,
         "n_views_predictions": n_views_predictions,
     }
     with open(output_path, "w", encoding="utf-8") as f:
@@ -479,6 +538,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--point-mode", default="independent", choices=POINT_MODES,
                    help="independent = each 3D point goes to SVD directly. "
                         "midpoint = bilateral pairs (obj_id=1, obj_id=2) replaced by 3D midpoint.")
+    p.add_argument("--clustering", action="store_true",
+                   help="Apply greedy centroid-based spatial clustering (threshold=5%% bbox diagonal) "
+                        "before fitting. Output is written to predicted_symmetry[_EXP]_cluster.json, "
+                        "enabling direct comparison with the non-clustered run via --experiment-id.")
     return p.parse_args()
 
 
@@ -502,6 +565,7 @@ def main() -> None:
     output_file = _exp_filename(OUTPUT_FILE, args.experiment_id)
     print(f"\nFitting {args.symmetry_type} symmetry for {len(objects)} objects...")
     print(f"Point mode    : {args.point_mode}")
+    print(f"Clustering    : {'enabled (threshold=' + str(int(RANSAC_THRESH*100)) + '% bbox diag)' if args.clustering else 'disabled'}")
     print(f"RANSAC        : {RANSAC_ITERS} iters, threshold={RANSAC_THRESH*100:.0f}% bbox diag")
     print(f"SDE scoring   : {'enabled  (threshold=' + str(SDE_THRESHOLD) + ')' if objects_dir else 'disabled — pass --objects-root to enable'}")
     if args.experiment_id:
@@ -518,6 +582,7 @@ def main() -> None:
             experiment_id = args.experiment_id,
             point_mode    = args.point_mode,
             objects_dir   = objects_dir,
+            clustering    = args.clustering,
         )
 
     print("Done.")
