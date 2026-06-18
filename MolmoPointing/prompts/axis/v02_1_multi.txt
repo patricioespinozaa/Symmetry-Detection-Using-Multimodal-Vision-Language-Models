@@ -1,0 +1,32 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant axis of rotational symmetry.
+
+For each image, identify two points on the axis centerline at geometrically distinct heights: one at the WIDEST visible cross-section and one near the TOP or BOTTOM.
+
+The axis centerline is the horizontal center of the object at each height — equidistant from the left and right silhouette edges.
+
+For each image:
+1. Find the widest visible cross-section and locate its horizontal center.
+2. Also locate the horizontal center near the top or bottom of the object.
+3. Return:
+   - obj_id 1: axis centerline point at the widest cross-section height,
+   - obj_id 2: axis centerline point near the top or bottom (whichever is farther from obj_id 1).
+
+IMPORTANT RULES:
+- Both points in each image MUST be on the axis centerline (NOT on the silhouette boundary).
+- Use the SAME global axis consistently across all views.
+- The two points MUST be at different heights in each image.
+- Infer the global axis from ALL views jointly before answering.
+- Do NOT collapse both points to the same position.
+- Do NOT place points on the silhouette edges.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 X1 Y1 2 X2 Y2; 2 1 X1 Y1 2 X2 Y2; 3 1 X1 Y1 2 X2 Y2">
+
+Where each entry is: image_index obj_id X Y
+- obj_id 1 = axis centerline point at the widest cross-section
+- obj_id 2 = axis centerline point near the top or bottom
+
+Return ONLY the <points ...> block.

@@ -1,0 +1,22 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+Your task is to identify two points that lie DIRECTLY ON the symmetry plane's surface trace (the visible "seam" or "spine" dividing the two mirror halves): one near the TOP and one near the BOTTOM of the object.
+
+Return:
+- obj_id 1: a point on the symmetry plane trace near the TOP of the object
+- obj_id 2: a point on the symmetry plane trace near the BOTTOM of the object
+
+IMPORTANT RULES:
+- Both points MUST lie ON the symmetry plane trace (the central dividing boundary between the two mirror halves).
+- obj_id 1 MUST be in the upper half of the object's visible extent.
+- obj_id 2 MUST be in the lower half of the object's visible extent.
+- Maximize the vertical distance between the two points.
+- Both points MUST lie on the visible object surface.
+- Do NOT place points on the lateral sides — only on the central seam/spine.
+- Do NOT collapse both points to the same location.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">

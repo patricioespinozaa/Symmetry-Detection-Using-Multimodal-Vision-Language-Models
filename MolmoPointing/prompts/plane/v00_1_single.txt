@@ -1,0 +1,24 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+Your task is to locate the visible trace of the symmetry plane on the object's surface and mark ONE point near the TOP of the object and ONE point near the BOTTOM.
+
+Return:
+- obj_id 1: a point on the symmetry plane trace near the TOP of the object
+- obj_id 2: a point on the symmetry plane trace near the BOTTOM of the object
+
+The symmetry plane trace is the visible boundary dividing the object into two mirror-image halves. For objects with a vertical symmetry plane, this trace passes through the horizontal center of the object at each height.
+
+IMPORTANT RULES:
+- Both points MUST lie on the visible symmetry plane trace.
+- obj_id 1 MUST be in the upper half of the object's visible extent.
+- obj_id 2 MUST be in the lower half of the object's visible extent.
+- Maximize the vertical distance between the two points.
+- Both points MUST lie on the visible object surface.
+- Do NOT place both points at the image center.
+- Use the object's bilateral structure to identify which line divides the two mirror halves.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">

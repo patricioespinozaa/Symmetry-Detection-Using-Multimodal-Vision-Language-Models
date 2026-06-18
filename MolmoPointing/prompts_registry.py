@@ -51,6 +51,20 @@ DESCRIPTIONS: dict[str, str] = {
     "plane_v03": "Structural feature pairs — corresponding symmetric elements across the plane",
     "plane_v04": "Silhouette midpoints — horizontal center of left-right extent at top and bottom",
     "plane_v05": "Plane trace extremes — two most distant points along the visible plane trace",
+    # Axis v1 variants (improved with centerline definition + upper/lower split + fallbacks)
+    "axis_v00_1": "Axis projection v1 — upper/lower split, centerline definition, no silhouette edges",
+    "axis_v01_1": "Bilateral pair v1 — height diversity across views, midpoint on centerline verified",
+    "axis_v02_1": "Widest cross-section v1 — returns centerline midpoints at widest + top/bottom heights",
+    "axis_v03_1": "Structural pairs v1 — midpoint verification + widest cross-section fallback",
+    "axis_v04_1": "Polar extremes v1 — horizontal center verification + flat-surface fallback",
+    "axis_v05_1": "Axis centerline v1 — explicit step-0 global axis identification, consistency check",
+    # Plane v1 variants (improved with top/bottom split + midpoint verification + height diversity)
+    "plane_v00_1": "Plane trace v1 — explicit top/bottom split + horizontal center guidance",
+    "plane_v01_1": "Bilateral pair v1 — height diversity across views, midpoint on trace verified",
+    "plane_v02_1": "Plane seam v1 — global plane step-0, consistency across views, top/bottom enforced",
+    "plane_v03_1": "Structural pairs v1 — midpoint verification + widest cross-section fallback",
+    "plane_v04_1": "Silhouette midpoints v1 — step-0 global plane ID + cross-view consistency check",
+    "plane_v05_1": "Plane trace v1 — topmost/bottommost on trace, vertical separation explicit",
 }
 
 

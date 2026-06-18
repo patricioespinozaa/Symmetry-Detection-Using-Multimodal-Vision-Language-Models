@@ -1,0 +1,32 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+For each image, find ONE pair of bilaterally symmetric points: two surface points equidistant from and on opposite sides of the global symmetry plane.
+
+For each image:
+1. Identify the global symmetry plane's projection in that view.
+2. Return:
+   - obj_id 1: a point on the LEFT half of the object in that view,
+   - obj_id 2: its exact mirror on the RIGHT half (same height, equidistant from the plane).
+
+The midpoint between each pair lies on the symmetry plane's trace in that view.
+
+IMPORTANT RULES:
+- Within each image, the two points MUST be at approximately the same height.
+- The midpoint between each pair MUST lie on the plane's trace — equidistant from both silhouette edges at that height.
+- Use the SAME global symmetry plane consistently across all views.
+- Across DIFFERENT views, vary the height of the bilateral pair — prefer UPPER heights in some views and LOWER heights in others, so the combined midpoints cover the plane along its full extent.
+- Both points MUST lie on the visible object surface.
+- Infer the global plane from ALL views jointly before answering.
+- Do NOT collapse both points to the same location or to the image center.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 Xleft Yleft 2 Xright Yright; 2 1 Xleft Yleft 2 Xright Yright; 3 1 Xleft Yleft 2 Xright Yright">
+
+Where each entry is: image_index obj_id X Y
+- obj_id 1 = LEFT symmetric point
+- obj_id 2 = RIGHT symmetric point (mirror of obj_id 1)
+
+Return ONLY the <points ...> block.

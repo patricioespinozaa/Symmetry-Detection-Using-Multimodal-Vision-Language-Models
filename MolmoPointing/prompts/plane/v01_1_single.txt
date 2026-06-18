@@ -1,0 +1,22 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+Your task is to find ONE pair of bilaterally symmetric points: two surface points that are exact mirror images of each other across the symmetry plane.
+
+Return:
+- obj_id 1: a point on the LEFT half of the object
+- obj_id 2: its exact mirror on the RIGHT half (same height, reflected across the symmetry plane)
+
+The midpoint between these two points lies on the symmetry plane's trace (the horizontal center of the object at that height for a vertical symmetry plane).
+
+IMPORTANT RULES:
+- Both points MUST lie on the visible object surface.
+- The two points MUST be at approximately the same height (same Y coordinate).
+- The midpoint between obj_id 1 and obj_id 2 MUST lie on the symmetry plane trace — verify that it is at the horizontal center of the object at that height, equidistant from both silhouette edges.
+- Choose a height where bilateral symmetry is MOST CLEARLY VISIBLE.
+- Do NOT collapse both points to the same location or to the image center.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">

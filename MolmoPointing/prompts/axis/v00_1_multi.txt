@@ -1,0 +1,33 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant axis of rotational symmetry.
+
+Your task is to estimate the SAME global symmetry axis across all views and project it into each image, marking ONE point in the upper half and ONE point in the lower half.
+
+For each image:
+1. Project the global symmetry axis into that view.
+2. Return:
+   - obj_id 1: a point on the projected axis in the UPPER half of the object,
+   - obj_id 2: a point on the projected axis in the LOWER half of the object.
+
+The axis appears as the horizontal centerline of the object — equidistant from the left and right silhouette edges at every height.
+
+IMPORTANT RULES:
+- Both points MUST lie on the projected axis (NOT on the silhouette edges).
+- obj_id 1 MUST be in the upper 50% of the object's visible extent in each image.
+- obj_id 2 MUST be in the lower 50% of the object's visible extent in each image.
+- Use the SAME global axis consistently across ALL views.
+- Both points MUST lie on or near the visible object surface.
+- Do NOT place points on the silhouette boundary.
+- Infer the global axis from ALL views jointly before answering.
+- If the axis runs vertically, the two points per image should share approximately the same X coordinate.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 Xupper Yupper 2 Xlower Ylower; 2 1 Xupper Yupper 2 Xlower Ylower; 3 1 Xupper Yupper 2 Xlower Ylower">
+
+Where each entry is: image_index obj_id X Y
+- obj_id 1 = point on projected axis in the UPPER half
+- obj_id 2 = point on projected axis in the LOWER half
+
+Return ONLY the <points ...> block.

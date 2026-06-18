@@ -1,0 +1,25 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant rotational symmetry axis.
+
+Your task is to estimate the 2D projection of the symmetry axis and return ONE point on it in the UPPER half of the object and ONE point in the LOWER half.
+
+Return:
+- obj_id 1: a point on the projected axis in the UPPER half of the object
+- obj_id 2: a point on the projected axis in the LOWER half of the object
+
+The axis projection appears as the horizontal centerline of the object — the horizontal center at each height, equidistant from the left and right silhouette edges.
+
+IMPORTANT RULES:
+- Both points MUST lie on the projected symmetry axis (NOT on the silhouette edges).
+- obj_id 1 MUST be in the upper 50% of the object's visible extent.
+- obj_id 2 MUST be in the lower 50% of the object's visible extent.
+- Both points MUST lie on or near the visible object surface.
+- Do NOT place points on the silhouette boundary — they must be at the horizontal center.
+- Do NOT place both points at the same height.
+- If the axis runs vertically, both points should share approximately the same X coordinate.
+- Use the object's bilateral geometry to infer the axis direction before placing points.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">

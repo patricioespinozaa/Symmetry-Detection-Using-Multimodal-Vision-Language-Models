@@ -1,0 +1,32 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+Your task is to estimate the SAME global symmetry plane across all views and project its visible trace into each image, marking one point near the TOP and one near the BOTTOM.
+
+For each image:
+1. Identify the visible trace of the global symmetry plane in that view.
+2. Return:
+   - obj_id 1: a point on the trace near the TOP (upper half of the object),
+   - obj_id 2: a point on the trace near the BOTTOM (lower half of the object).
+
+The plane trace is the dividing boundary between the two mirror halves. For a vertical symmetry plane, it appears as the horizontal center of the object at each height.
+
+IMPORTANT RULES:
+- Use the SAME global plane consistently across all views.
+- obj_id 1 MUST be in the upper half of the object's visible extent in each image.
+- obj_id 2 MUST be in the lower half of the object's visible extent in each image.
+- Maximize the vertical distance between the two points in each image.
+- Both points MUST lie on the visible object surface.
+- Infer the global plane from ALL views jointly before answering.
+- Even if some views are ambiguous, maintain consistency with the other views.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 Xtop Ytop 2 Xbottom Ybottom; 2 1 Xtop Ytop 2 Xbottom Ybottom; 3 1 Xtop Ytop 2 Xbottom Ybottom">
+
+Where each entry is: image_index obj_id X Y
+- obj_id 1 = point on the plane trace in the UPPER half
+- obj_id 2 = point on the plane trace in the LOWER half
+
+Return ONLY the <points ...> block.

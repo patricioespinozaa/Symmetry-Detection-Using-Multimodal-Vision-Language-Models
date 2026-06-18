@@ -1,0 +1,24 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+Your task is to identify the symmetry plane's visible trace on the object's surface and mark its TOPMOST and BOTTOMMOST points — maximizing their vertical separation.
+
+Return:
+- obj_id 1: the TOPMOST point on the visible symmetry plane trace
+- obj_id 2: the BOTTOMMOST point on the visible symmetry plane trace
+
+The symmetry plane trace is the central dividing boundary between the two mirror halves. For a vertical symmetry plane, it appears as the horizontal center of the object at each height.
+
+IMPORTANT RULES:
+- Both points MUST lie ON the symmetry plane trace.
+- obj_id 1 MUST have a smaller Y value (higher in the image) than obj_id 2.
+- Maximize the VERTICAL distance between the two points specifically (not diagonal distance).
+- Both points MUST lie on the visible object surface.
+- Use the horizontal center of the object as a guide for where the trace runs.
+- Do NOT choose extremal points in arbitrary diagonal directions.
+- Do NOT collapse both points to the same location.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">

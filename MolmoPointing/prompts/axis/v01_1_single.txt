@@ -1,0 +1,24 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant rotational symmetry axis.
+
+Your task is to find ONE pair of bilaterally symmetric points: two surface points that are exact mirror images of each other about the symmetry axis.
+
+Return:
+- obj_id 1: a point on the LEFT side of the object
+- obj_id 2: its exact mirror on the RIGHT side (same height, equidistant from the axis)
+
+The midpoint between these two points lies on the projected symmetry axis (the horizontal center of the object at that height).
+
+IMPORTANT RULES:
+- The two points MUST be at approximately the same height (same Y coordinate).
+- The two points MUST be equidistant from the symmetry axis.
+- The midpoint between obj_id 1 and obj_id 2 MUST be at the horizontal center of the object at that height — verify this is equidistant from both silhouette edges.
+- Both points MUST lie on the visible object surface.
+- Prefer a height where bilateral symmetry is MOST CLEARLY VISIBLE — avoid highly irregular or occluded regions.
+- Do NOT pick the very topmost or bottommost point of the object.
+- Do NOT collapse both points to the same location or to the image center.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">

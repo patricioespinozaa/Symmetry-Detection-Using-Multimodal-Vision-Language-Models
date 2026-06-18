@@ -1,0 +1,26 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+Your task is to identify the horizontal midpoints of the object's left-right extent at two different heights: one near the TOP and one near the BOTTOM of the object.
+
+These midpoints lie on the symmetry plane's projected trace.
+
+Return:
+- obj_id 1: the horizontal midpoint of the left-right extent near the TOP of the object
+- obj_id 2: the horizontal midpoint of the left-right extent near the BOTTOM of the object
+
+The horizontal midpoint at height Y = (X_left_edge + X_right_edge) / 2 at that height.
+
+IMPORTANT RULES:
+- Both points MUST lie on the symmetry plane trace (horizontal center of the object at that height).
+- obj_id 1 MUST be in the upper half of the object's visible extent.
+- obj_id 2 MUST be in the lower half of the object's visible extent.
+- Both points MUST lie on or within the visible object.
+- Do NOT place points on the silhouette edges — place them at the HORIZONTAL CENTER between the edges.
+- Do NOT collapse both points to the same height.
+- Use the object's bilateral geometry to verify that the chosen midpoints are consistent with the symmetry plane direction.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">
