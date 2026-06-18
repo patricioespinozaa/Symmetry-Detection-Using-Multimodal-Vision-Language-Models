@@ -18,6 +18,12 @@ Complete reference table — use this to decide which `--point-mode` to pass to 
 | `axis_v03` | Structural feature pairs | Symmetric structural elements (handles, holes, ribs) on each side | `midpoint` |
 | `axis_v04` | Polar extremes | Topmost + bottommost points where the axis **exits** the surface | `independent` |
 | `axis_v05` | Axis centerline | One point on the centerline in the **upper half** + one in the **lower half** | `independent` |
+| `axis_v00_1` | Axis projection v1 | Upper/lower split enforced + centerline definition + no silhouette edges | `independent` |
+| `axis_v01_1` | Bilateral pair v1 | Bilateral pair + midpoint-on-centerline verification + height diversity across views | `midpoint` |
+| `axis_v02_1` | Widest cross-section v1 | Centerline midpoint at widest height + centerline midpoint at top/bottom (**changed: independent**) | `independent` |
+| `axis_v03_1` | Structural pairs v1 | Structural pair + midpoint verification + widest cross-section fallback | `midpoint` |
+| `axis_v04_1` | Polar extremes v1 | Polar extremes + horizontal center verification + flat-surface fallback | `independent` |
+| `axis_v05_1` | Axis centerline v1 | Explicit step-0 global axis identification + cross-view consistency check | `independent` |
 
 ### Plane symmetry (`--symmetry-type plane_sym`)
 
@@ -29,6 +35,12 @@ Complete reference table — use this to decide which `--point-mode` to pass to 
 | `plane_v03` | Structural feature pairs | Corresponding symmetric elements (legs, wheels, arms) across the plane | `midpoint` |
 | `plane_v04` | Silhouette midpoints | Horizontal center of the object's width near the **top** + near the **bottom** | `independent` |
 | `plane_v05` | Plane trace extremes | Two most **distant** points along the visible plane trace | `independent` |
+| `plane_v00_1` | Plane trace v1 | Top/bottom split enforced + horizontal center guidance | `independent` |
+| `plane_v01_1` | Bilateral pair v1 | Bilateral pair + midpoint-on-trace verification + height diversity across views | `midpoint` |
+| `plane_v02_1` | Plane seam v1 | Step-0 global plane ID + seam consistency across views + top/bottom enforced | `independent` |
+| `plane_v03_1` | Structural pairs v1 | Structural pair + midpoint verification + widest cross-section fallback | `midpoint` |
+| `plane_v04_1` | Silhouette midpoints v1 | Step-0 global plane ID + explicit midpoint formula + cross-view consistency | `independent` |
+| `plane_v05_1` | Plane trace v1 | Topmost/bottommost on trace (vertical separation explicit, not diagonal) | `independent` |
 
 ### Why `--point-mode` matters
 
@@ -225,6 +237,159 @@ for EXP in plane_v00 plane_v02 plane_v04 plane_v05; do run_plane_mapping $EXP in
 
 # Bilateral symmetric pairs → midpoint
 for EXP in plane_v01 plane_v03; do run_plane_mapping $EXP midpoint; done
+```
+
+---
+
+## Run ALL v1 experiments (improved prompts batch)
+
+> Nota: `axis_v02_1` usa `independent` (cambio respecto a `axis_v02` que usaba `midpoint`), porque v02_1 ya devuelve puntos directamente en el centerline.
+
+### Fase 1 — Molmo (GPU)
+
+```bash
+RENDERS=../data/renders
+
+# Axis v1
+for EXP in axis_v00_1 axis_v01_1 axis_v02_1 axis_v03_1 axis_v04_1 axis_v05_1; do
+    echo "===== Molmo: $EXP ====="
+    CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
+        --renders-root $RENDERS --symmetry-type axis_sym \
+        --sizes 224 --lightings flat --view-groups 1 6 14 26 \
+        --max-objects 100 --prompt-id $EXP --experiment-id $EXP \
+        --prompt-mode auto --yes
+done
+
+# Plane v1
+for EXP in plane_v00_1 plane_v01_1 plane_v02_1 plane_v03_1 plane_v04_1 plane_v05_1; do
+    echo "===== Molmo: $EXP ====="
+    CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
+        --renders-root $RENDERS --symmetry-type plane_sym \
+        --sizes 224 --lightings flat --view-groups 1 6 14 26 \
+        --max-objects 100 --prompt-id $EXP --experiment-id $EXP \
+        --prompt-mode auto --yes
+done
+```
+
+### Fase 2 — Mapeo + estimación + evaluación (CPU)
+
+```bash
+RENDERS=../data/renders
+OBJECTS=../data/objects
+
+run_axis_mapping() {
+    local EXP=$1
+    local MODE=$2
+    echo ""
+    echo "============================================="
+    echo "  axis mapping: $EXP  (point-mode=$MODE)"
+    echo "============================================="
+
+    python Mapping/map_to_3d.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type axis_sym --sizes 224 --lightings flat \
+        --max-objects 100 --experiment-id $EXP --overwrite --yes
+
+    python Mapping/estimate_symmetry.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type axis_sym --sizes 224 --lightings flat \
+        --max-objects 100 --experiment-id $EXP --point-mode $MODE --overwrite
+
+    for METHOD in svd ransac_svd svd_sde ransac_svd_sde; do
+        python Mapping/evaluate.py \
+            --renders-root $RENDERS --objects-root $OBJECTS \
+            --symmetry-type axis_sym --sizes 224 --lightings flat \
+            --max-objects 100 --experiment-id $EXP --method $METHOD
+    done
+}
+
+run_plane_mapping() {
+    local EXP=$1
+    local MODE=$2
+    echo ""
+    echo "=============================================="
+    echo "  plane mapping: $EXP  (point-mode=$MODE)"
+    echo "=============================================="
+
+    python Mapping/map_to_3d.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type plane_sym --sizes 224 --lightings flat \
+        --max-objects 100 --experiment-id $EXP --overwrite --yes
+
+    python Mapping/estimate_symmetry.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type plane_sym --sizes 224 --lightings flat \
+        --max-objects 100 --experiment-id $EXP --point-mode $MODE --overwrite
+
+    for METHOD in svd ransac_svd svd_sde ransac_svd_sde; do
+        python Mapping/evaluate.py \
+            --renders-root $RENDERS --objects-root $OBJECTS \
+            --symmetry-type plane_sym --sizes 224 --lightings flat \
+            --max-objects 100 --experiment-id $EXP --method $METHOD
+    done
+}
+
+# Axis v1 — point modes
+for EXP in axis_v00_1 axis_v02_1 axis_v04_1 axis_v05_1; do run_axis_mapping $EXP independent; done
+for EXP in axis_v01_1 axis_v03_1;                        do run_axis_mapping $EXP midpoint;   done
+
+# Plane v1 — point modes
+for EXP in plane_v00_1 plane_v02_1 plane_v04_1 plane_v05_1; do run_plane_mapping $EXP independent; done
+for EXP in plane_v01_1 plane_v03_1;                          do run_plane_mapping $EXP midpoint;   done
+```
+
+### Guardar resultados en results/
+
+```bash
+RENDERS=../data/renders
+OBJECTS=../data/objects
+RESULTS=../results
+
+python Mapping/compare_results.py \
+    --renders-root $RENDERS --symmetry-type axis_sym \
+    --sizes 224 --lightings flat --total-objects 100 \
+    --save-dir $RESULTS/axis_sym/plots --csv-dir $RESULTS
+
+python Mapping/compare_results.py \
+    --renders-root $RENDERS --symmetry-type plane_sym \
+    --sizes 224 --lightings flat --total-objects 100 \
+    --save-dir $RESULTS/plane_sym/plots --csv-dir $RESULTS
+
+for EXP in axis_v00_1 axis_v01_1 axis_v02_1 axis_v03_1 axis_v04_1 axis_v05_1; do
+    python Mapping/export_viz_samples.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type axis_sym --sizes 224 --lightings flat \
+        --experiment-id $EXP --method svd --n-views 14 \
+        --n-samples 10 --results-dir $RESULTS
+done
+
+for EXP in plane_v00_1 plane_v01_1 plane_v02_1 plane_v03_1 plane_v04_1 plane_v05_1; do
+    python Mapping/export_viz_samples.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type plane_sym --sizes 224 --lightings flat \
+        --experiment-id $EXP --method svd --n-views 14 \
+        --n-samples 10 --results-dir $RESULTS
+done
+```
+
+### Limpiar experimentos v1 si necesitas re-ejecutar
+
+```bash
+RENDERS=../data/renders
+
+# Axis v1
+for EXP in axis_v00_1 axis_v01_1 axis_v02_1 axis_v03_1 axis_v04_1 axis_v05_1; do
+    find $RENDERS/axis_sym -name "*_${EXP}.json" -delete
+    rm -f $RENDERS/axis_sym/eval_*_${EXP}_*.{json,csv}
+    echo "Limpiado: $EXP"
+done
+
+# Plane v1
+for EXP in plane_v00_1 plane_v01_1 plane_v02_1 plane_v03_1 plane_v04_1 plane_v05_1; do
+    find $RENDERS/plane_sym -name "*_${EXP}.json" -delete
+    rm -f $RENDERS/plane_sym/eval_*_${EXP}_*.{json,csv}
+    echo "Limpiado: $EXP"
+done
 ```
 
 ---
