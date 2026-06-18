@@ -1,0 +1,32 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+For each image, identify the symmetry plane's visible trace and mark its topmost and bottommost points — maximizing their vertical separation.
+
+For each image:
+1. Locate the global symmetry plane's trace in that view.
+2. Return:
+   - obj_id 1: the TOPMOST point on the trace (highest in the image),
+   - obj_id 2: the BOTTOMMOST point on the trace (lowest in the image).
+
+The trace is the central dividing boundary between the two mirror halves. It often appears as the horizontal center of the object — use this to guide placement.
+
+IMPORTANT RULES:
+- Both points MUST lie ON the symmetry plane's visible surface trace.
+- Use the SAME global symmetry plane consistently across all views.
+- obj_id 1 MUST have a smaller Y value (higher) than obj_id 2 in each image.
+- Maximize VERTICAL distance between the two points (not diagonal).
+- Both points MUST lie on the visible object surface.
+- Infer the global plane from ALL views jointly before answering.
+- Do NOT collapse both points to the same location.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 X1 Y1 2 X2 Y2; 2 1 X1 Y1 2 X2 Y2; 3 1 X1 Y1 2 X2 Y2">
+
+Where each entry is: image_index obj_id X Y
+- obj_id 1 = TOPMOST point on the symmetry plane trace
+- obj_id 2 = BOTTOMMOST point on the symmetry plane trace
+
+Return ONLY the <points ...> block.

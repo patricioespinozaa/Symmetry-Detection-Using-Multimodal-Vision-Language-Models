@@ -299,6 +299,73 @@ El CSV se guarda en `../results/experiments_DD_MM_YYYY/<symmetry_type>_compariso
 
 ---
 
+## Cleaning past experiments
+
+El runner omite objetos cuya clave ya existe en `molmo_multiview_<EXP_ID>.json`:
+
+```
+(Existing JSON keys are skipped automatically)
+GPU 0  ████ 100/100 [00:02<00:00]   ← 2 segundos = no corrió nada
+```
+
+Si ves esto, los archivos del experimento anterior siguen en disco. Bórralos antes de re-ejecutar (por ejemplo, tras corregir un bug o cambiar el prompt).
+
+### Verificar qué archivos existen para un experimento
+
+```bash
+EXP=axis_v00
+RENDERS=../data/renders
+
+# Archivos por objeto (molmo, mapped, predicted)
+find $RENDERS/axis_sym -name "*_${EXP}.json" | head -20
+find $RENDERS/axis_sym -name "*_${EXP}.json" | wc -l
+
+# Archivos de evaluación en la raíz del tipo
+ls $RENDERS/axis_sym/eval_*_${EXP}_*.{json,csv} 2>/dev/null
+```
+
+### Limpiar un experimento concreto
+
+```bash
+EXP=axis_v00
+RENDERS=../data/renders
+
+# Archivos por objeto: molmo_multiview, mapped_points_3d, predicted_symmetry
+find $RENDERS/axis_sym -name "*_${EXP}.json" -delete
+
+# Archivos de evaluación en la raíz
+rm -f $RENDERS/axis_sym/eval_*_${EXP}_*.json
+rm -f $RENDERS/axis_sym/eval_*_${EXP}_*.csv
+
+echo "Limpiado: $EXP"
+```
+
+### Limpiar todos los experimentos de un tipo de simetría
+
+```bash
+RENDERS=../data/renders
+SYM=axis_sym   # o plane_sym
+
+# Todos los archivos con sufijo _vXX
+find $RENDERS/$SYM -name "*_v[0-9][0-9].json" -delete
+rm -f $RENDERS/$SYM/eval_*_v[0-9][0-9]_*.json
+rm -f $RENDERS/$SYM/eval_*_v[0-9][0-9]_*.csv
+
+echo "Limpiados todos los experimentos de $SYM"
+```
+
+### No borrar
+
+| Archivo | Motivo |
+|---|---|
+| `metadata_all.json` | Índice de renders generado por ImagesGenerator — costoso de regenerar |
+| `manifest.json` | Lista de objetos curados — se usa en todos los scripts |
+| `molmo_multiview.json` (sin sufijo) | Archivos de producción — aislados de los experimentos |
+| `mapped_points_3d.json` (sin sufijo) | Ídem |
+| `predicted_symmetry.json` (sin sufijo) | Ídem |
+
+---
+
 ## Adding a new prompt
 
 1. Create two `.txt` files in the appropriate folder:
@@ -330,3 +397,39 @@ python MolmoPointing/molmo_multiview_runner.py --list-prompts
 | `axis_v01` | `eval_s224_flat_axis_v01_ransac_svd_sde_results.json` | `eval_s224_flat_ransac_svd_sde_results.json` — untouched |
 
 Running any script **without** `--experiment-id` always uses production filenames, unaffected by any experiment.
+
+RENDERS=../data/renders
+OBJECTS=../data/objects
+RESULTS=../results
+
+# ── Gráficos de comparación (todos los experimentos juntos) ───────────────────
+
+python Mapping/compare_results.py \
+    --renders-root $RENDERS --symmetry-type axis_sym \
+    --sizes 224 --lightings flat --total-objects 100 \
+    --save-dir $RESULTS/axis_sym/plots \
+    --csv-dir $RESULTS
+
+python Mapping/compare_results.py \
+    --renders-root $RENDERS --symmetry-type plane_sym \
+    --sizes 224 --lightings flat --total-objects 100 \
+    --save-dir $RESULTS/plane_sym/plots \
+    --csv-dir $RESULTS
+
+# ── JSONs de objetos buenos/malos por experimento ─────────────────────────────
+
+for EXP in axis_v00 axis_v01 axis_v02 axis_v03 axis_v04 axis_v05; do
+    python Mapping/export_viz_samples.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type axis_sym --sizes 224 --lightings flat \
+        --experiment-id $EXP --method svd --n-views 14 \
+        --n-samples 10 --results-dir $RESULTS
+done
+
+for EXP in plane_v00 plane_v01 plane_v02 plane_v03 plane_v04 plane_v05; do
+    python Mapping/export_viz_samples.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type plane_sym --sizes 224 --lightings flat \
+        --experiment-id $EXP --method svd --n-views 14 \
+        --n-samples 10 --results-dir $RESULTS
+done

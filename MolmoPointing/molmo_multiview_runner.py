@@ -334,7 +334,7 @@ def _call_model(images: list[Image.Image], prompt: str) -> str:
     )
     del output_ids
     torch.cuda.empty_cache()
-    return text
+    return text, n_input
 
 
 # Coordinate parsers 
@@ -423,14 +423,15 @@ def run_global(images: list[Image.Image], prompt: str = PROMPT_GLOBAL) -> dict:
     - images: list of PIL Images to send (1..N)
     - prompt: prompt text to use for this call
     Returns:
-    - dict with keys: "prompt_used", "raw_output", "points_by_image"
+    - dict with keys: "prompt_used", "raw_output", "points_by_image", "n_input_tokens"
     """
-    raw           = _call_model(images, prompt)
+    raw, n_tok    = _call_model(images, prompt)
     points_by_img = parse_multi_coords(raw, n_images=len(images))
     return {
         "prompt_used":     prompt,
         "raw_output":      raw,
         "points_by_image": points_by_img,
+        "n_input_tokens":  n_tok,
     }
 
 
@@ -442,14 +443,16 @@ def run_single_mode(images: list[Image.Image], prompt: str = PROMPT_SINGLE) -> d
     - images: list of PIL Images to send (1..N)
     - prompt: prompt text to use for each call
     Returns:
-    - dict with keys: "prompt_used", "raw_output", "points_by_image"
+    - dict with keys: "prompt_used", "raw_output", "points_by_image", "n_input_tokens"
     """
     raw_outputs   = []
     points_by_img = {}
+    total_tokens  = 0
 
     for i, img in enumerate(images):
-        raw = _call_model([img], prompt)
+        raw, n_tok = _call_model([img], prompt)
         raw_outputs.append(raw)
+        total_tokens += n_tok
         pts = parse_single_coords(raw)
         if "0" in pts:
             points_by_img[str(i)] = pts["0"]
@@ -458,6 +461,7 @@ def run_single_mode(images: list[Image.Image], prompt: str = PROMPT_SINGLE) -> d
         "prompt_used":     prompt,
         "raw_output":      raw_outputs,
         "points_by_image": points_by_img,
+        "n_input_tokens":  total_tokens,
     }
 
 
@@ -468,14 +472,15 @@ def run_multi(images: list[Image.Image], prompt: str = PROMPT_MULTI) -> dict:
     - images: list of PIL Images to send (1..N)
     - prompt: prompt text to use for this call
     Returns:
-    - dict with keys: "prompt_used", "raw_output", "points_by_image"
+    - dict with keys: "prompt_used", "raw_output", "points_by_image", "n_input_tokens"
     """
-    raw           = _call_model(images, prompt)
+    raw, n_tok    = _call_model(images, prompt)
     points_by_img = parse_multi_coords(raw, n_images=len(images))
     return {
         "prompt_used":     prompt,
         "raw_output":      raw,
         "points_by_image": points_by_img,
+        "n_input_tokens":  n_tok,
     }
 
 
@@ -550,10 +555,12 @@ def process_object(
     prompt_id:     str | None = None,
     prompt_single: str = PROMPT_SINGLE,
     prompt_multi:  str = PROMPT_MULTI,
+    token_log:     dict | None = None,
 ) -> None:
     """
     Process one object across all (size, illumination, n_views) combinations.
     Skips any (size, illumination, n_views) already present in the JSON.
+    token_log: optional dict {n_views: [token_counts]} to accumulate across objects.
     """
     output_file = _exp_filename(OUTPUT_FILE, experiment_id)
 
@@ -592,6 +599,10 @@ def process_object(
                 )
                 points_by_img = inference["points_by_image"]
                 n_pts         = sum(len(v) for v in points_by_img.values())
+                n_tok         = inference.get("n_input_tokens", 0)
+
+                if token_log is not None:
+                    token_log.setdefault(n_views, []).append(n_tok)
 
                 results[str(n_views)] = {
                     "experiment_id":         experiment_id,
@@ -615,6 +626,7 @@ def process_object(
                     ],
                     "n_points":             n_pts,
                     "n_images_with_points": len(points_by_img),
+                    "n_input_tokens":       n_tok,
                 }
 
                 # Write after every n_views to survive interruptions
@@ -747,6 +759,8 @@ def main() -> None:
 
     preview(args, objects, prompt_single, prompt_multi)
 
+    token_log: dict[int, list[int]] = {}
+
     for obj_dir in tqdm(
         objects,
         desc=f"GPU {args.gpu_id}",
@@ -764,9 +778,26 @@ def main() -> None:
             prompt_id     = args.prompt_id,
             prompt_single = prompt_single,
             prompt_multi  = prompt_multi,
+            token_log     = token_log,
         )
 
     print(f"\n[GPU {args.gpu_id}] Done.")
+
+    if token_log:
+        exp_tag   = f"_{args.experiment_id}" if args.experiment_id else ""
+        tok_path  = symmetry_dir / f"token_counts{exp_tag}.txt"
+        with open(tok_path, "w", encoding="utf-8") as f:
+            f.write(f"# Token counts per n_views — experiment: {args.experiment_id or '(none)'}\n")
+            f.write(f"# prompt_mode: {args.prompt_mode}  sizes: {args.sizes}  lightings: {args.lightings}\n")
+            f.write(f"{'n_views':>8}  {'n_objects':>9}  {'mean':>8}  {'min':>8}  {'max':>8}\n")
+            for nv in sorted(token_log):
+                counts = token_log[nv]
+                f.write(
+                    f"{nv:>8}  {len(counts):>9}  "
+                    f"{sum(counts)/len(counts):>8.0f}  "
+                    f"{min(counts):>8}  {max(counts):>8}\n"
+                )
+
 
 
 if __name__ == "__main__":

@@ -3,12 +3,11 @@ compare_results.py
 ------------------
 Lee todos los CSVs de evaluación para un symmetry_type y genera:
   1. Tabla de consola: experiment × method × n_views
-  2. Gráfico de barras: n_objects detectados por experimento/método
-     (con porcentaje sobre cada barra si se pasa --total-objects)
-  3. Líneas: angular error mean, translation error mean, AUC angular,
+  2. Líneas: angular error mean, translation error mean, AUC angular,
      precision@5°, precision@10° vs n_views (eje X discreto), por método
-  4. Curva de precisión angular continua (precision@θ, θ ∈ [0°,90°]) para el mayor n_views
-  5. Tasa de aceptación SDE (% accepted=True) para métodos svd_sde y ransac_svd_sde
+  3. Curva de precisión angular continua (precision@θ, θ ∈ [0°,90°]) para el mayor n_views
+  4. Tasa de aceptación SDE (% accepted=True) para métodos svd_sde y ransac_svd_sde
+  5. % objetos válidos por prompt vs n_views
   6. Para plane_sym: también métricas SDE
 
 Usage
@@ -57,6 +56,27 @@ METHOD_LABELS = {
     "ransac_svd_sde": "RANSAC+SVD+SDE",
 }
 
+# Academic style suitable for thesis / conference papers
+_ACADEMIC_STYLE: dict = {
+    "font.size":         11,
+    "axes.titlesize":    12,
+    "axes.labelsize":    11,
+    "xtick.labelsize":   10,
+    "ytick.labelsize":   10,
+    "legend.fontsize":   9,
+    "legend.framealpha": 0.92,
+    "legend.edgecolor":  "0.75",
+    "lines.linewidth":   1.8,
+    "lines.markersize":  6,
+    "patch.linewidth":   0.6,
+    "axes.spines.top":   False,
+    "axes.spines.right": False,
+    "axes.grid":         True,
+    "grid.alpha":        0.35,
+    "grid.linewidth":    0.6,
+    "figure.dpi":        150,
+}
+
 
 # ── Data loading ──────────────────────────────────────────────────────────────
 
@@ -102,53 +122,7 @@ def print_table(df: pd.DataFrame, symmetry_type: str) -> None:
                                .to_string(index=False))
 
 
-# ── Plot 1: n_objects detectados ──────────────────────────────────────────────
-
-def plot_n_objects(df: pd.DataFrame, symmetry_type: str, save_dir: Path | None,
-                   total_objects: int | None = None) -> None:
-    exps    = sorted(df["experiment"].unique())
-    methods = [m for m in METHODS if m in df["method"].unique()]
-    n_views = sorted(df["n_views"].unique())
-
-    nv    = max(n_views)
-    sub   = df[df["n_views"] == nv]
-    x     = range(len(exps))
-    width = 0.8 / len(methods)
-
-    fig, ax = plt.subplots(figsize=(max(8, len(exps) * 1.5), 5))
-    for i, method in enumerate(methods):
-        vals = []
-        for e in exps:
-            row = sub[(sub["experiment"] == e) & (sub["method"] == method)]
-            vals.append(int(row["n_objects"].values[0]) if not row.empty else 0)
-        offset = (i - len(methods) / 2 + 0.5) * width
-        bars = ax.bar([xi + offset for xi in x], vals, width,
-                      label=METHOD_LABELS[method], color=METHOD_COLORS[method], alpha=0.85)
-
-        if total_objects:
-            for bar, val in zip(bars, vals):
-                pct = val / total_objects * 100
-                ax.text(
-                    bar.get_x() + bar.get_width() / 2,
-                    bar.get_height() + 0.3,
-                    f"{pct:.0f}%",
-                    ha="center", va="bottom", fontsize=7,
-                )
-
-    ax.set_xticks(list(x))
-    ax.set_xticklabels(exps, rotation=20, ha="right")
-    ax.set_ylabel("n_objects detectados")
-    title = f"{symmetry_type} — Objetos con predicción válida (n_views={nv})"
-    if total_objects:
-        title += f"  [N={total_objects}]"
-    ax.set_title(title)
-    ax.legend(loc="lower right")
-    ax.grid(axis="y", alpha=0.3)
-    fig.tight_layout()
-    _save_or_show(fig, save_dir, f"{symmetry_type}_n_objects.png")
-
-
-# ── Plot 2: métricas vs n_views por método ────────────────────────────────────
+# ── Plot 1: métricas vs n_views por método ────────────────────────────────────
 
 def plot_metrics_by_nviews(df: pd.DataFrame, symmetry_type: str,
                            save_dir: Path | None) -> None:
@@ -189,19 +163,19 @@ def plot_metrics_by_nviews(df: pd.DataFrame, symmetry_type: str,
                     continue
                 ax.plot(edf["n_views"], edf[metric],
                         marker="o", label=exp, color=colors[exp])
-            ax.set_title(METHOD_LABELS[method], fontsize=10)
+            ax.set_title(METHOD_LABELS[method])
             ax.set_xlabel("n_views")
             ax.set_xticks(n_views_all)
-            ax.grid(alpha=0.3)
+            ax.grid()
             if ax is axes[0]:
                 ax.set_ylabel(ylabel)
 
         handles, labels = axes[0].get_legend_handles_labels()
-        fig.legend(handles, labels, loc="lower center", ncol=min(len(exps), 4),
-                   bbox_to_anchor=(0.5, -0.02), fontsize=8)
+        fig.legend(handles, labels, loc="lower center", ncol=min(len(exps), 6),
+                   bbox_to_anchor=(0.5, -0.10))
         direction = "↑ mejor" if higher_better else "↓ mejor"
-        fig.suptitle(f"{symmetry_type} — {ylabel}  ({direction})", y=1.01)
-        fig.tight_layout()
+        fig.suptitle(f"{symmetry_type} — {ylabel}  ({direction})", y=1.02)
+        fig.tight_layout(rect=[0, 0.08, 1, 1])
         _save_or_show(fig, save_dir, f"{symmetry_type}_{metric}.png")
 
 
@@ -266,13 +240,13 @@ def plot_precision_curve(df: pd.DataFrame, renders_root: Path, symmetry_type: st
             ax.set_ylabel("Precision")
 
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=min(len(exps), 4),
-               bbox_to_anchor=(0.5, -0.02), fontsize=8)
+    fig.legend(handles, labels, loc="lower center", ncol=min(len(exps), 6),
+               bbox_to_anchor=(0.5, -0.10))
     fig.suptitle(
         f"{symmetry_type} — Curva de Precisión Angular  (n_views={nv_max})  ↑ mejor",
-        y=1.01,
+        y=1.02,
     )
-    fig.tight_layout()
+    fig.tight_layout(rect=[0, 0.08, 1, 1])
     _save_or_show(fig, save_dir, f"{symmetry_type}_precision_curve_nv{nv_max}.png")
 
 
@@ -341,10 +315,10 @@ def plot_acceptance_rate(df: pd.DataFrame, renders_root: Path, symmetry_type: st
             ax.set_ylabel("% predicciones aceptadas (SDE ≤ umbral)")
 
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=min(len(exps), 4),
-               bbox_to_anchor=(0.5, -0.02), fontsize=8)
-    fig.suptitle(f"{symmetry_type} — Tasa de aceptación SDE  ↑ mejor", y=1.01)
-    fig.tight_layout()
+    fig.legend(handles, labels, loc="lower center", ncol=min(len(exps), 6),
+               bbox_to_anchor=(0.5, -0.10))
+    fig.suptitle(f"{symmetry_type} — Tasa de aceptación SDE  ↑ mejor", y=1.02)
+    fig.tight_layout(rect=[0, 0.08, 1, 1])
     _save_or_show(fig, save_dir, f"{symmetry_type}_acceptance_rate.png")
 
 
@@ -381,12 +355,12 @@ def plot_valid_by_prompt(df: pd.DataFrame, symmetry_type: str,
 
     ax.set_xticks(n_views_all)
     ax.set_xlabel("n_views")
-    ax.set_ylabel("% objetos válidos")
+    ax.set_ylabel("Objetos con predicción válida (%)")
     ax.set_ylim(0, 105)
     title_n = f"  [N={denom}]" if total_objects else ""
     ax.set_title(f"{symmetry_type}  —  Objetos con predicción válida{title_n}")
-    ax.legend(fontsize=8, loc="lower right")
-    ax.grid(alpha=0.3)
+    ax.legend(bbox_to_anchor=(1.02, 1), loc="upper left", borderaxespad=0)
+    ax.grid()
     fig.tight_layout()
     _save_or_show(fig, valid_dir, f"{symmetry_type}_valid.png")
 
@@ -435,6 +409,8 @@ def main() -> None:
     root     = Path(args.renders_root)
     save_dir = Path(args.save_dir) if args.save_dir else None
 
+    plt.rcParams.update(_ACADEMIC_STYLE)
+
     df = load_csvs(root, args.symmetry_type, args.sizes, args.lightings)
     print_table(df, args.symmetry_type)
 
@@ -449,7 +425,6 @@ def main() -> None:
     if args.no_plots:
         return
 
-    plot_n_objects(df, args.symmetry_type, save_dir, total_objects=args.total_objects)
     plot_metrics_by_nviews(df, args.symmetry_type, save_dir)
     plot_precision_curve(df, root, args.symmetry_type, args.sizes, args.lightings, save_dir)
     plot_acceptance_rate(df, root, args.symmetry_type, save_dir)

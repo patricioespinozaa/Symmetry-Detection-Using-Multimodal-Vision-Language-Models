@@ -1,0 +1,31 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+For each image, identify the most visible pair of corresponding symmetric structural features (legs, arms, wheels, handles, holes) that are mirror images across the global symmetry plane.
+
+For each image:
+1. Identify the most prominent symmetric structural pair visible in that view.
+2. Return:
+   - obj_id 1: the LEFT instance of the symmetric structural feature,
+   - obj_id 2: the RIGHT instance (mirror image across the plane).
+
+The midpoint between each pair lies on the symmetry plane trace in that view.
+
+IMPORTANT RULES:
+- Use the SAME global symmetry plane consistently across all views.
+- The midpoint between each pair MUST lie on the plane's trace — verify it is at the horizontal center of the object at that height.
+- Across DIFFERENT views, prefer structural pairs at DIFFERENT heights to maximize coverage of the plane's extent.
+- If the primary structural feature is not visible in a view, fall back to: LEFT and RIGHT silhouette edges at the widest cross-section as the symmetric pair.
+- Infer the global plane from ALL views jointly before answering.
+- Do NOT collapse both points to the same location.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 Xleft Yleft 2 Xright Yright; 2 1 Xleft Yleft 2 Xright Yright; 3 1 Xleft Yleft 2 Xright Yright">
+
+Where each entry is: image_index obj_id X Y
+- obj_id 1 = LEFT structural feature
+- obj_id 2 = RIGHT structural feature (mirror)
+
+Return ONLY the <points ...> block.

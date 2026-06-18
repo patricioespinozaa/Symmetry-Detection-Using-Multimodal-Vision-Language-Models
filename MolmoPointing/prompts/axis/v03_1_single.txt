@@ -1,0 +1,22 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant rotational symmetry axis.
+
+Your task is to identify the most visible pair of symmetric structural features (handles, holes, protrusions, ribs, edges) that are bilateral mirror images of each other about the symmetry axis.
+
+Return:
+- obj_id 1: the LEFT instance of the symmetric structural feature
+- obj_id 2: the RIGHT instance of the same feature (mirror image)
+
+The midpoint between these two points lies on the projected symmetry axis (the horizontal center of the object at that height).
+
+IMPORTANT RULES:
+- Both points MUST lie on the visible object surface.
+- The two features MUST be visually equivalent on opposite sides of the axis.
+- The midpoint between obj_id 1 and obj_id 2 MUST be at the horizontal center of the object at that height — verify it is equidistant from both silhouette edges before finalizing.
+- If no obvious structural feature pair exists, fall back to: place obj_id 1 on the LEFT silhouette and obj_id 2 on the RIGHT silhouette at the widest visible cross-section height.
+- Do NOT collapse both points to the same location.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">

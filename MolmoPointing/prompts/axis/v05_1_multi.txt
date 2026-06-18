@@ -1,0 +1,32 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant axis of rotational symmetry.
+
+Step 1: Identify the global axis direction from ALL views together — it is the line about which the object looks identical after any rotation.
+
+Step 2: For each image, project the global axis and place two points on the visible axis centerline: one in the upper half and one in the lower half.
+
+For each image:
+1. Project the global axis into that view (appears as the horizontal center at every height).
+2. Return:
+   - obj_id 1: a point on the axis centerline in the UPPER half of the visible object,
+   - obj_id 2: a point on the axis centerline in the LOWER half of the visible object.
+
+IMPORTANT RULES:
+- Use the SAME global axis consistently across ALL views.
+- In each image, obj_id 1 MUST be above obj_id 2.
+- Both points must be at the horizontal center of the object at that height (equidistant from both silhouette edges).
+- Both points MUST lie on or near the visible object surface.
+- Do NOT place points on the silhouette edges.
+- Do NOT place both points at the same height in any image.
+- Consistency check: the axis direction between obj_id 1 and obj_id 2 in image 2 must match the direction in image 1, accounting for different viewpoints.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 Xupper Yupper 2 Xlower Ylower; 2 1 Xupper Yupper 2 Xlower Ylower; 3 1 Xupper Yupper 2 Xlower Ylower">
+
+Where each entry is: image_index obj_id X Y
+- obj_id 1 = point on axis centerline in the UPPER half
+- obj_id 2 = point on axis centerline in the LOWER half
+
+Return ONLY the <points ...> block.

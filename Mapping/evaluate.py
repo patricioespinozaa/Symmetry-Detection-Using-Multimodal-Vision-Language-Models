@@ -244,7 +244,7 @@ def auc_from_errors(errors: list[float],
     thresholds = np.linspace(0, max_error, n_steps + 1)
     arr        = np.array(errors)
     precisions = [(arr < t).mean() for t in thresholds]
-    return float(np.trapz(precisions, thresholds) / max_error)
+    return float(np.trapezoid(precisions, thresholds) / max_error)
 
 
 # ── Per-object evaluation ─────────────────────────────────────────────────────
@@ -347,12 +347,32 @@ def evaluate_object(object_dir: Path,
 
 # ── Summary ───────────────────────────────────────────────────────────────────
 
-def compute_summary(all_results: dict, symmetry_type: str) -> dict[str, dict]:
+def compute_summary(all_results: dict, symmetry_type: str,
+                    n_total: int | None = None) -> dict[str, dict]:
+    """
+    Aggregate per-object results into per-n_views summary statistics.
+
+    Angular metrics (angular_error, precision@k, AUC) are computed over ALL
+    n_total objects: objects without a valid prediction contribute angular_error=90°
+    and precision=0, reflecting total failure rather than being silently excluded.
+
+    Translation and SDE metrics are computed only over objects with valid
+    predictions — there is no principled worst-case value to impute.
+
+    n_total defaults to len(all_results) when not provided.
+    """
+    _n_total = n_total if n_total is not None else len(all_results)
+
+    # Collect valid-prediction data per n_views group
     grouped: dict[str, dict[str, list]] = defaultdict(lambda: defaultdict(list))
+
+    # Also discover every n_views key seen across any object
+    all_nv: set[str] = set()
 
     for obj_results in all_results.values():
         if obj_results is None:
             continue
+        all_nv.update(obj_results.keys())
         for nv, m in obj_results.items():
             if m.get("status") != "ok":
                 continue
@@ -369,28 +389,45 @@ def compute_summary(all_results: dict, symmetry_type: str) -> dict[str, dict]:
                     g[key].append(m.get(key, 0))
 
     summary = {}
-    for nv, data in sorted(grouped.items(), key=lambda x: int(x[0])):
-        ang  = np.array(data["angular_error_deg"])
-        dist = np.array(data["translation_error"])
-        pts  = np.array(data["n_points"])
+    for nv in sorted(all_nv, key=int):
+        data    = grouped.get(nv, defaultdict(list))
+        n_valid = len(data.get("angular_error_deg", []))
+        n_no_pred = _n_total - n_valid   # objects that failed or were never processed
 
-        s = {
-            "n_objects":                len(ang),
-            "angular_error_mean":       round(float(ang.mean()),        4),
-            "angular_error_median":     round(float(np.median(ang)),    4),
-            "angular_error_std":        round(float(ang.std()),         4),
-            "translation_error_mean":   round(float(dist.mean()),       6),
-            "translation_error_median": round(float(np.median(dist)),   6),
-            "translation_error_std":    round(float(dist.std()),        6),
-            "n_points_mean":            round(float(pts.mean()),        2),
-            "auc_angular":              round(auc_from_errors(
-                                            data["angular_error_deg"],
-                                            AUC_ANGULAR_MAX), 4),
+        # ── Angular metrics: all N objects (no-pred → 90°) ────────────────────
+        all_ang  = data.get("angular_error_deg", []) + [90.0] * n_no_pred
+        ang_arr  = np.array(all_ang)
+
+        s: dict = {
+            "n_total":              _n_total,
+            "n_objects":            n_valid,   # kept for backward compat
+            "angular_error_mean":   round(float(ang_arr.mean()),     4),
+            "angular_error_median": round(float(np.median(ang_arr)), 4),
+            "angular_error_std":    round(float(ang_arr.std()),      4),
+            "auc_angular":          round(auc_from_errors(all_ang, AUC_ANGULAR_MAX), 4),
         }
-        for t in ANGULAR_THRESHOLDS:
-            vals = np.array(data[f"precision_{t}deg"])
-            s[f"precision_{t}deg"] = round(float(vals.mean()), 4)
 
+        for t in ANGULAR_THRESHOLDS:
+            valid_p = data.get(f"precision_{t}deg", [])
+            all_p   = valid_p + [0] * n_no_pred
+            s[f"precision_{t}deg"] = round(float(np.mean(all_p)), 4)
+
+        # ── Translation metrics: valid objects only (no imputation) ───────────
+        dist = data.get("translation_error", [])
+        if dist:
+            dist_arr = np.array(dist)
+            s["translation_error_mean"]   = round(float(dist_arr.mean()),       6)
+            s["translation_error_median"] = round(float(np.median(dist_arr)),   6)
+            s["translation_error_std"]    = round(float(dist_arr.std()),        6)
+        else:
+            s["translation_error_mean"]   = None
+            s["translation_error_median"] = None
+            s["translation_error_std"]    = None
+
+        pts = data.get("n_points", [])
+        s["n_points_mean"] = round(float(np.mean(pts)), 2) if pts else 0.0
+
+        # ── SDE metrics: valid objects only ───────────────────────────────────
         if symmetry_type == "plane_sym" and data.get("sde"):
             sde_arr = np.array(data["sde"])
             s["sde_mean"]   = round(float(sde_arr.mean()),      6)
@@ -399,8 +436,8 @@ def compute_summary(all_results: dict, symmetry_type: str) -> dict[str, dict]:
             s["auc_sde"]    = round(auc_from_errors(data["sde"], AUC_SDE_MAX), 4)
             for t in SDE_THRESHOLDS:
                 key  = f"precision_sde_{int(t * 1000):03d}"
-                vals = np.array(data[key])
-                s[key] = round(float(vals.mean()), 4)
+                vals = data.get(key, [])
+                s[key] = round(float(np.mean(vals)), 4) if vals else 0.0
 
         summary[nv] = s
     return summary
@@ -408,7 +445,7 @@ def compute_summary(all_results: dict, symmetry_type: str) -> dict[str, dict]:
 
 def write_csv(summary: dict, csv_path: Path, symmetry_type: str) -> None:
     base = [
-        "n_views", "n_objects",
+        "n_views", "n_total", "n_objects",
         "angular_error_mean", "angular_error_median", "angular_error_std",
         "translation_error_mean", "translation_error_median", "translation_error_std",
         "auc_angular", "n_points_mean",
@@ -421,7 +458,8 @@ def write_csv(summary: dict, csv_path: Path, symmetry_type: str) -> None:
 
     fieldnames = base + plane_extra
     with open(csv_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
+        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore",
+                                restval="")
         writer.writeheader()
         for nv, stats in summary.items():
             writer.writerow({"n_views": nv, **stats})
@@ -478,7 +516,8 @@ def main() -> None:
     if args.max_objects:
         all_object_dirs = all_object_dirs[:args.max_objects]
 
-    print(f"\nEvaluating {len(all_object_dirs)} objects  [{args.symmetry_type}]")
+    n_attempted = len(all_object_dirs)   # denominator for all metrics
+    print(f"\nEvaluating {n_attempted} objects  [{args.symmetry_type}]")
     print(f"Method        : {args.method}")
     print(f"Experiment    : sizes={args.sizes}  lightings={args.lightings}")
     if args.experiment_id:
@@ -518,25 +557,30 @@ def main() -> None:
     print(f"Saved: {eval_json_path}")
 
     # Save CSV + print table
-    summary = compute_summary(all_results, args.symmetry_type)
+    summary = compute_summary(all_results, args.symmetry_type, n_total=n_attempted)
     write_csv(summary, eval_csv_path, args.symmetry_type)
     print(f"Saved: {eval_csv_path}\n")
 
     # Console summary table
-    cols = (f"{'n_views':<8} {'n_obj':<6} {'ang_mean':>9} {'ang_med':>8} "
+    # n_obj = valid predictions; n_total = all attempted (denominator for angular metrics)
+    cols = (f"{'n_views':<8} {'n_obj/tot':<10} {'ang_mean':>9} {'ang_med':>8} "
             f"{'AUC_ang':>8} {'p@5°':>7} {'p@10°':>7} {'trans_mean':>11}")
     if args.symmetry_type == "plane_sym":
         cols += f"  {'sde_mean':>9} {'AUC_sde':>8} {'p@SDE1%':>8}"
     print(cols)
     print("─" * len(cols))
     for nv, s in summary.items():
-        row = (f"{nv:<8} {s['n_objects']:<6} "
+        n_valid = s["n_objects"]
+        n_tot   = s.get("n_total", n_valid)
+        t_mean  = s.get("translation_error_mean")
+        t_str   = f"{t_mean:>11.5f}" if t_mean is not None else f"{'—':>11}"
+        row = (f"{nv:<8} {f'{n_valid}/{n_tot}':<10} "
                f"{s['angular_error_mean']:>9.2f} "
                f"{s['angular_error_median']:>8.2f} "
                f"{s['auc_angular']:>8.4f} "
                f"{s.get('precision_5deg', 0):>7.3f} "
                f"{s.get('precision_10deg', 0):>7.3f} "
-               f"{s['translation_error_mean']:>11.5f}")
+               f"{t_str}")
         if args.symmetry_type == "plane_sym":
             row += (f"  {s.get('sde_mean', 0):>9.5f} "
                     f"{s.get('auc_sde', 0):>8.4f} "
