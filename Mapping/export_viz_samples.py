@@ -59,24 +59,14 @@ import argparse
 import json
 import os
 import shutil
+import sys
 from datetime import date
 from pathlib import Path
 
-OBJECTS_SUBDIR = {
-    "axis_sym":  "curated_axis_sym_obj",
-    "plane_sym": "curated_plane_sym_obj",
-}
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from pipeline_common.naming import exp_filename
 
 METHODS = ["svd", "ransac_svd", "svd_sde", "ransac_svd_sde"]
-
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-def _exp_filename(base: str, experiment_id: str | None) -> str:
-    if not experiment_id:
-        return base
-    dot = base.rfind(".")
-    return f"{base[:dot]}_{experiment_id}{base[dot:]}"
 
 
 def _results_json_path(renders_root: Path, symmetry_type: str,
@@ -138,7 +128,7 @@ def _copy_object_jsons(
 
     # Object-level JSON: predicted_symmetry[_EXP].json
     for base in ["predicted_symmetry.json"]:
-        src = obj_dir / _exp_filename(base, experiment_id)
+        src = obj_dir / exp_filename(base, experiment_id)
         if src.exists():
             shutil.copy2(src, dest_dir / src.name)
 
@@ -150,12 +140,12 @@ def _copy_object_jsons(
             size_light_dst.mkdir(parents=True, exist_ok=True)
             for base in ["molmo_multiview.json", "mapped_points_3d.json"]:
                 # Copy this experiment's version (may not exist for cluster variants)
-                src = size_light_src / _exp_filename(base, experiment_id)
+                src = size_light_src / exp_filename(base, experiment_id)
                 if src.exists():
                     shutil.copy2(src, size_light_dst / src.name)
                 # Copy base experiment's version when provided
                 if base_exp_id and base_exp_id != experiment_id:
-                    base_src = size_light_src / _exp_filename(base, base_exp_id)
+                    base_src = size_light_src / exp_filename(base, base_exp_id)
                     if base_src.exists():
                         shutil.copy2(base_src, size_light_dst / base_src.name)
 

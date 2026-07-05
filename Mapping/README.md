@@ -52,8 +52,13 @@ Mapping/
 ├── evaluate.py              # Metrics: predicted symmetry vs true labels
 ├── compare_results.py       # Aggregate and plot results across experiments/methods
 ├── visualize_rays.py        # Debug tool: visualize camera rays and hit points in 3D
-└── cleanup_experiments.py   # Remove specific n_views keys from molmo JSON results
+├── cleanup_experiments.py   # Remove specific n_views keys from molmo JSON results
+└── export_viz_samples.py    # Export best/worst-N objects + ready-to-run viz commands
 ```
+
+Camera-ray math, mesh loading, `--experiment-id` filename suffixing, and point-cloud
+clustering (greedy + HDBSCAN) are shared helpers in `../pipeline_common/`, imported by
+every script above.
 
 ---
 
@@ -104,6 +109,8 @@ Projects each Molmo2 predicted point onto the 3D mesh surface via ray casting.
 
 **Method:** reconstructs the camera ray from `R`, `T`, and `fov=60°` stored in `molmo_multiview.json`, then intersects it with the mesh using `trimesh`. Only ROT_000 images are used (one view per viewpoint index).
 
+**Patch-based backprojection** (`--patch-size 3`/`5`): instead of a single exact ray, averages the 3D hit points of a `patch_size x patch_size` grid of sub-rays around each point. Stabilizes the result against grazing-angle localization noise (small pixel errors near-tangent to the surface otherwise produce large 3D jumps). Default `--patch-size 1` is the original exact single-ray behavior, unchanged. Output goes to a separate `mapped_points_3d_p{patch_size}[_EXP].json` file.
+
 **Output:** `mapped_points_3d[_EXP].json` alongside the renders. Skips objects that already have a result file (unless `--overwrite`).
 
 ### Usage
@@ -123,6 +130,14 @@ python Mapping/map_to_3d.py \
     --symmetry-type axis_sym \
     --sizes 224 --lightings flat \
     --experiment-id axis_v02 --overwrite --yes
+
+# Patch-based backprojection (h=3)
+python Mapping/map_to_3d.py \
+    --renders-root ../data/renders \
+    --objects-root ../data/objects \
+    --symmetry-type axis_sym \
+    --sizes 224 --lightings flat \
+    --patch-size 3 --overwrite --yes
 ```
 
 ### Arguments
@@ -135,6 +150,7 @@ python Mapping/map_to_3d.py \
 | `--sizes` | `224 448 1136` | Image sizes to process |
 | `--lightings` | `flat brighter darker` | Illumination modes |
 | `--fov` | `60.0` | Field of view in degrees |
+| `--patch-size` | `1` | `1` (exact), `3`, or `5` (averaged sub-ray patch) |
 | `--experiment-id` | `None` | Reads `molmo_multiview_<ID>.json`, writes `mapped_points_3d_<ID>.json` |
 | `--max-objects` | `None` | Process only the first N objects |
 | `--overwrite` | `False` | Overwrite existing output files |
@@ -151,6 +167,7 @@ python Mapping/map_to_3d.py \
   "image_size": 224,
   "illumination": "flat",
   "fov_deg": 60.0,
+  "patch_size": 1,
   "n_views_results": {
     "6": {
       "images_sent": [...],
@@ -172,6 +189,9 @@ python Mapping/map_to_3d.py \
 }
 ```
 
+> When `--patch-size` is `3` or `5`, each point entry above gains `"patch_size"`,
+> `"n_patch_hits"`, and `"n_patch_total"` fields (how many of the `patch_size²` sub-rays hit).
+
 ---
 
 ## 2. `estimate_symmetry.py`
@@ -189,6 +209,11 @@ Fits a symmetry axis or plane from the 3D hit points using four methods: plain S
 **SDE variants** (`svd_sde`, `ransac_svd_sde`) compute the Symmetry Distance Error against the mesh and store it in the output. Requires `--objects-root`.
 
 Points from all (size × lighting) configurations are pooled per `n_views` group before fitting.
+
+**Clustering** (`--clustering-method`) consolidates the pooled point cloud before fitting, to reduce spatial redundancy when multiple views observe the same surface region:
+- `none` (default) — no clustering.
+- `greedy` — centroid-based; every point is always assigned to some cluster (threshold = 5% of the point-cloud bbox diagonal). Output suffix `_cluster`. (`--clustering`, without a value, is a back-compat alias for this.)
+- `hdbscan` — density-based (`--hdbscan-min-samples`, sweep 2/3/5); explicitly drops sparse/isolated points as noise before fitting, unlike greedy. Output suffix `_hdbscan_ms{N}`.
 
 **Output:** `predicted_symmetry[_EXP].json` at the object level. Skips objects where the file already exists (unless `--overwrite`).
 
@@ -210,6 +235,14 @@ python Mapping/estimate_symmetry.py \
     --symmetry-type axis_sym \
     --sizes 224 --lightings flat \
     --experiment-id axis_v01 --point-mode midpoint --overwrite
+
+# HDBSCAN clustering sweep
+python Mapping/estimate_symmetry.py \
+    --renders-root ../data/renders \
+    --objects-root ../data/objects \
+    --symmetry-type axis_sym \
+    --sizes 224 --lightings flat \
+    --clustering-method hdbscan --hdbscan-min-samples 3
 ```
 
 ### Arguments
@@ -222,6 +255,9 @@ python Mapping/estimate_symmetry.py \
 | `--sizes` | `224 448 1136` | Sizes to pool points from |
 | `--lightings` | `flat brighter darker` | Lightings to pool points from |
 | `--point-mode` | `independent` | `independent` or `midpoint` — see prompt table in `Experiments.md` |
+| `--clustering-method` | `none` | `none`, `greedy`, or `hdbscan` |
+| `--hdbscan-min-samples` | `3` | `min_samples` for `--clustering-method hdbscan` (sweep 2, 3, 5) |
+| `--clustering` | `False` | Deprecated alias for `--clustering-method greedy` |
 | `--experiment-id` | `None` | Reads `mapped_points_3d_<ID>.json`, writes `predicted_symmetry_<ID>.json` |
 | `--max-objects` | `None` | Process only the first N objects |
 | `--overwrite` | `False` | Overwrite existing output files |
@@ -235,6 +271,8 @@ python Mapping/estimate_symmetry.py \
   "object_id": "1a9c1cbf...",
   "symmetry_type": "axis_sym",
   "point_mode": "independent",
+  "clustering_method": "none",
+  "hdbscan_min_samples": null,
   "n_views_predictions": {
     "6": {
       "svd":            {"direction": [dx, dy, dz], "origin": [ox, oy, oz],
@@ -473,6 +511,17 @@ python Mapping/visualize_rays.py \
     --n-views 6 \
     --experiment-id axis_v02 \
     --show-gt
+
+# Inspect a patch-backprojected / HDBSCAN-clustered run (flags must match
+# whatever produced that experiment via map_to_3d.py / estimate_symmetry.py)
+python Mapping/visualize_rays.py \
+    --object-id 1a9c1cbf1ca9ca24274623f5a5d0bcdc \
+    --renders-root ../data/renders \
+    --objects-root ../data/objects \
+    --symmetry-type axis_sym \
+    --n-views 26 \
+    --patch-size 3 \
+    --show-clusters --clustering-method hdbscan --hdbscan-min-samples 3
 ```
 
 ### Arguments
@@ -487,11 +536,56 @@ python Mapping/visualize_rays.py \
 | `--size` | `224` | Image size |
 | `--lighting` | `flat` | Illumination mode |
 | `--experiment-id` | `None` | Reads `molmo_multiview_<ID>.json` |
+| `--patch-size` | `1` | `1`, `3`, or `5` — must match `map_to_3d.py`'s `--patch-size` to inspect the same output |
 | `--show-gt` | `False` | Overlay ground-truth symmetry element |
+| `--show-predicted` | `False` | Overlay predicted axis/plane from `predicted_symmetry[_EXP].json` |
+| `--pred-method` | `svd` | Which of the 4 fitting methods to visualize with `--show-predicted` |
+| `--show-clusters` | `False` | Overlay cluster centroids from `mapped_points_3d[_EXP].json` (requires `map_to_3d.py` to have run) |
+| `--clustering-method` | `greedy` | `greedy` or `hdbscan` — clustering method for `--show-clusters` |
+| `--hdbscan-min-samples` | `3` | `min_samples` for `--clustering-method hdbscan` |
+| `--point-mode` | `independent` | `independent` or `midpoint` — must match `estimate_symmetry.py`'s point mode |
 | `--ray-length` | `2 × bbox diag` | Length of miss rays |
 | `--ray-radius` | `0.004` | Tube radius for all rays |
 | `--hit-radius` | `0.015` | Sphere radius for hit points |
 | `--cam-radius` | `0.020` | Sphere radius for camera positions |
+
+---
+
+## 7. `export_viz_samples.py`
+
+Selects the N objects with the best and worst angular error for a given experiment/method,
+copies their pipeline JSONs into `<results_dir>/<experiment_id>/viz_samples/{good,bad}/`, and
+generates a `README.md` with ready-to-run `visualize_rays.py` commands per object (including a
+before/after comparison table when `--base-experiment-id` is given, e.g. comparing a clustered
+run against its non-clustered base).
+
+```bash
+python Mapping/export_viz_samples.py \
+    --renders-root ../data/renders \
+    --objects-root ../data/objects \
+    --symmetry-type axis_sym \
+    --experiment-id axis_v00 \
+    --method svd \
+    --results-dir ../results \
+    --sizes 224 --lightings flat \
+    --n-samples 10
+```
+
+### Arguments
+
+| Argument | Default | Description |
+|---|---|---|
+| `--renders-root` | *(required)* | Root folder of renders |
+| `--objects-root` | *(required)* | Root folder with `.obj` meshes |
+| `--symmetry-type` | *(required)* | `axis_sym` or `plane_sym` |
+| `--results-dir` | *(required)* | Output root; writes to `<results_dir>/<experiment_id>/` |
+| `--method` | `svd` | Which fitting method to rank good/bad objects by |
+| `--experiment-id` | `None` | Reads `eval_*_<ID>_*_results.json` |
+| `--base-experiment-id` | `None` | Base experiment to compare against (e.g. `axis_v00` when exporting `axis_v00_cluster`) |
+| `--sizes` | `224` | Sizes to copy JSONs for |
+| `--lightings` | `flat` | Lightings to copy JSONs for |
+| `--n-views` | max available | n_views group used for ranking |
+| `--n-samples` | `10` | Number of good + bad objects to export |
 
 ---
 

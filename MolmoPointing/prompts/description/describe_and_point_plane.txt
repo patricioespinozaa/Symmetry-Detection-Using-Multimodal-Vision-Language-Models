@@ -1,0 +1,22 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+First, briefly describe what this object is and its main geometric structure (1-2 sentences).
+
+Then, locate the visible trace of the symmetry plane on the object's surface. Return TWO distant points lying on that trace.
+
+Return:
+- obj_id 1: a point on the visible symmetry plane trace
+- obj_id 2: a second point on the trace, as far as possible from obj_id 1
+
+IMPORTANT RULES:
+- The two points MUST be different and as far apart as possible along the visible plane trace.
+- The points MUST lie on the visible object surface.
+- Use the object's bilateral structure, informed by your own description, to identify which line divides the two mirror halves.
+- Do NOT place both points at the image center.
+
+Output format (in this exact order -- description first, then the points tag on its own line):
+
+<1-2 sentence description>
+<points coords="1 1 X1 Y1 2 X2 Y2">

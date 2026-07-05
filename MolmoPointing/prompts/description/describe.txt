@@ -1,0 +1,8 @@
+You are given ONE image of a 3D object.
+
+Describe briefly what object this is and its main geometric structure (overall shape, and any parts, limbs, or features relevant to its structure).
+
+IMPORTANT RULES:
+- Output 1-3 sentences of plain description only.
+- Do NOT output any points, coordinates, or a <points ...> tag.
+- Do NOT mention symmetry, axes, or planes -- just describe the object itself.

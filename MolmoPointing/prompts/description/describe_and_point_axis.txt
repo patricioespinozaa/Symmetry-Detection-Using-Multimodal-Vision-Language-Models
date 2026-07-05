@@ -1,0 +1,23 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant rotational symmetry axis.
+
+First, briefly describe what this object is and its main geometric structure (1-2 sentences).
+
+Then, estimate the 2D projection of the object's main symmetry axis. Return TWO distant points lying on that projected axis line.
+
+Return:
+- obj_id 1: a point on the projected axis
+- obj_id 2: a second point on the projected axis, as far as possible from obj_id 1
+
+IMPORTANT RULES:
+- The two points MUST be different and as far apart as possible along the symmetry axis.
+- The points MUST lie on the visible object.
+- Use the object's silhouette and geometry, informed by your own description, to infer the axis.
+- If the object is approximately vertical, the axis should also be approximately vertical.
+- Do NOT place both points at the image center.
+
+Output format (in this exact order -- description first, then the points tag on its own line):
+
+<1-2 sentence description>
+<points coords="1 1 X1 Y1 2 X2 Y2">

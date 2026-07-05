@@ -3,3 +3,8 @@ venv/
 
 # cache
 *.pyc
+__pycache__/
+
+# editor / tool UI state
+imgui.ini
+.polyscope.ini

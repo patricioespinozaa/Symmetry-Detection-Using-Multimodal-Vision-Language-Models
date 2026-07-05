@@ -11,8 +11,10 @@ RENDERS=~/data/renders
 DRY_RUN=true
 [[ "$1" == "--delete" ]] && DRY_RUN=false
 
-AXIS_EXPS=(axis_v00 axis_v01 axis_v02 axis_v03 axis_v04 axis_v05)
-PLANE_EXPS=(plane_v00 plane_v01 plane_v02 plane_v03 plane_v04 plane_v05)
+AXIS_EXPS=(axis_v00 axis_v01 axis_v02 axis_v03 axis_v04 axis_v05
+           axis_v00_1 axis_v01_1 axis_v02_1 axis_v03_1 axis_v04_1 axis_v05_1)
+PLANE_EXPS=(plane_v00 plane_v01 plane_v02 plane_v03 plane_v04 plane_v05
+            plane_v00_1 plane_v01_1 plane_v02_1 plane_v03_1 plane_v04_1 plane_v05_1)
 
 total=0
 

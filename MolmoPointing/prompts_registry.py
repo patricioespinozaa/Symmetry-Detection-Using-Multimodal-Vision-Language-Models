@@ -135,5 +135,34 @@ def list_prompts() -> None:
         print(f"{pid:<20} {entry['symmetry_type']:<12} {entry['description']}")
 
 
+# Flow B/C prompt plumbing
+#
+# Separate from the PROMPTS/_load_prompts() variant-testing registry above
+# (which is keyed on single/multi pairs per prompt_id, one axis of A/B
+# testing). These are flow plumbing -- fixed prompt text used to run the
+# single-view description (Flow B) and description+point (Flow C) pre-pass,
+# not experimental variants themselves.
+
+_FLOW_PROMPTS_DIR = _PROMPTS_DIR / "description"
+
+
+def load_flow_prompt(name: str) -> str:
+    """
+    Load a Flow B/C prompt file from prompts/description/<name>.txt.
+
+    Args:
+    - name: one of "describe", "describe_and_point_axis", "describe_and_point_plane"
+    Returns:
+    - the prompt text (stripped)
+    """
+    path = _FLOW_PROMPTS_DIR / f"{name}.txt"
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Flow prompt {name!r} not found: {path}. "
+            f"Expected files in {_FLOW_PROMPTS_DIR}."
+        )
+    return path.read_text(encoding="utf-8").rstrip()
+
+
 if __name__ == "__main__":
     list_prompts()

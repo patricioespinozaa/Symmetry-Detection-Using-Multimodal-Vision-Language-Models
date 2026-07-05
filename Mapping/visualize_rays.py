@@ -41,6 +41,17 @@ python Mapping/visualize_rays.py \
     --n-views 14 \
     --ray-length 3.0 \
     --ray-radius 0.006
+
+# Inspect a patch-backprojected / HDBSCAN-clustered run (must match the flags
+# used when map_to_3d.py / estimate_symmetry.py produced that experiment)
+python Mapping/visualize_rays.py \
+    --object-id 1a9c1cbf1ca9ca24274623f5a5d0bcdc \
+    --renders-root ../data/renders \
+    --objects-root ../data/objects \
+    --symmetry-type axis_sym \
+    --n-views 26 \
+    --patch-size 3 \
+    --show-clusters --clustering-method hdbscan --hdbscan-min-samples 3
 """
 from __future__ import annotations
 
@@ -57,30 +68,22 @@ try:
 except ImportError:
     sys.exit("[error] polyscope not installed — pip install polyscope")
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from pipeline_common.naming import exp_filename
+from pipeline_common.datasets import OBJECTS_SUBDIR, load_mesh
+from pipeline_common.camera import molmo_to_ndc, build_camera_rays, cast_ray, cast_ray_patch
+from pipeline_common.clustering import cluster_points, cluster_hdbscan
+
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
-OBJECTS_SUBDIR = {
-    "axis_sym":  "curated_axis_sym_obj",
-    "plane_sym": "curated_plane_sym_obj",
-}
 MOLMO_JSON_BASE  = "molmo_multiview.json"
 MAPPED_JSON_BASE = "mapped_points_3d.json"
 PRED_JSON_BASE   = "predicted_symmetry.json"
 FOV_DEG          = 60.0
+PATCH_SIZES      = (1, 3, 5)
 
 METHODS = ["svd", "ransac_svd", "svd_sde", "ransac_svd_sde"]
-
-
-def _exp_filename(base: str, experiment_id: str | None) -> str:
-    if not experiment_id:
-        return base
-    dot = base.rfind(".")
-    return f"{base[:dot]}_{experiment_id}{base[dot:]}"
-
-
-def _molmo_filename(experiment_id: str | None) -> str:
-    return _exp_filename(MOLMO_JSON_BASE, experiment_id)
 
 # Colors (RGB in [0,1])
 COLOR_MESH        = (0.75, 0.75, 0.75)
@@ -93,62 +96,6 @@ COLOR_GT_AXIS     = (0.15, 0.40, 0.90)   # blue
 COLOR_GT_PLANE    = (0.10, 0.80, 0.35)   # green
 COLOR_PRED_AXIS   = (0.90, 0.15, 0.15)   # red
 COLOR_PRED_PLANE  = (0.85, 0.10, 0.85)   # magenta
-
-
-# ── Camera / ray helpers ──────────────────────────────────────────────────────
-
-def molmo_to_ndc(x: float, y: float) -> tuple[float, float]:
-    return (x / 1000.0) * 2.0 - 1.0, 1.0 - (y / 1000.0) * 2.0
-
-
-def camera_ray(
-    ndc_x: float,
-    ndc_y: float,
-    R: list,
-    T: list,
-    fov_deg: float,
-) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Returns (origin, unit_direction) in world space.
-    PyTorch3D row convention: p_cam = p_world @ R + T  →  origin = −R @ T
-    """
-    R_np = np.array(R, dtype=np.float64)
-    T_np = np.array(T, dtype=np.float64)
-    origin   = -(R_np @ T_np)
-    half_tan = np.tan(np.deg2rad(fov_deg) / 2.0)
-    dir_cam  = np.array([ndc_x * half_tan, ndc_y * half_tan, 1.0])
-    dir_world = R_np @ dir_cam
-    dir_world /= np.linalg.norm(dir_world)
-    return origin, dir_world
-
-
-def cast_ray(
-    mesh: trimesh.Trimesh,
-    origin: np.ndarray,
-    direction: np.ndarray,
-) -> np.ndarray | None:
-    """Returns the closest hit point or None."""
-    locs, _, _ = mesh.ray.intersects_location(
-        ray_origins=origin[None],
-        ray_directions=direction[None],
-        multiple_hits=True,
-    )
-    if len(locs) == 0:
-        return None
-    dists = np.linalg.norm(locs - origin, axis=1)
-    return locs[np.argmin(dists)]
-
-
-# ── Mesh loading ──────────────────────────────────────────────────────────────
-
-def load_mesh(obj_path: Path) -> trimesh.Trimesh:
-    loaded = trimesh.load(str(obj_path), force="mesh", process=False)
-    if isinstance(loaded, trimesh.Scene):
-        loaded = trimesh.util.concatenate(
-            [g for g in loaded.geometry.values()
-             if isinstance(g, trimesh.Trimesh)]
-        )
-    return loaded
 
 
 # ── Ground-truth parser ───────────────────────────────────────────────────────
@@ -200,28 +147,6 @@ def _collect_hit_points(mapped_json: dict, nv_key: str,
                 pts.extend([d[1], d[2]])
 
     return np.array(pts, dtype=np.float64) if len(pts) >= 2 else None
-
-
-def _cluster_points(points: np.ndarray, bbox_diag: float,
-                    threshold_fraction: float = 0.05) -> np.ndarray:
-    """Greedy centroid-based clustering (mirrors estimate_symmetry.cluster_points)."""
-    threshold = threshold_fraction * bbox_diag
-    if threshold < 1e-8 or len(points) < 2:
-        return points
-    centroids: list[np.ndarray] = []
-    counts: list[int] = []
-    for pt in points:
-        placed = False
-        for k, c in enumerate(centroids):
-            if np.linalg.norm(pt - c) < threshold:
-                counts[k] += 1
-                centroids[k] = c + (pt - c) / counts[k]
-                placed = True
-                break
-        if not placed:
-            centroids.append(pt.copy())
-            counts.append(1)
-    return np.array(centroids, dtype=np.float64)
 
 
 # ── Geometry helpers (plane quad, axis segment) ───────────────────────────────
@@ -302,10 +227,17 @@ def parse_args():
     p.add_argument("--show-clusters", action="store_true",
                    help="Show cluster centroids (red) from mapped_points_3d[_EXP].json "
                         "alongside raw hit points (yellow). Requires map_to_3d.py to have run.")
+    p.add_argument("--clustering-method", default="greedy", choices=["greedy", "hdbscan"],
+                   help="Clustering method used for --show-clusters.")
+    p.add_argument("--hdbscan-min-samples", type=int, default=3,
+                   help="min_samples for --clustering-method hdbscan.")
     p.add_argument("--point-mode", default="independent",
                    choices=["independent", "midpoint"],
                    help="Point collection mode for --show-clusters. Must match the mode "
                         "used in estimate_symmetry.py.")
+    p.add_argument("--patch-size", type=int, default=1, choices=PATCH_SIZES,
+                   help="Ray-cast patch size for hit/miss computation (must match the "
+                        "--patch-size used by map_to_3d.py to inspect the same output).")
     p.add_argument("--experiment-id", default=None,
                    help="Experiment ID. Reads molmo_multiview_<ID>.json instead of "
                         "molmo_multiview.json. Must match the --experiment-id used in the runner.")
@@ -334,9 +266,9 @@ def main():
     render_dir   = renders_root / sym_type / object_id / str(args.size) / args.lighting
     obj_path     = objects_root / OBJECTS_SUBDIR[sym_type] / f"{object_id}.obj"
     txt_path     = objects_root / OBJECTS_SUBDIR[sym_type] / f"{object_id}.txt"
-    molmo_name   = _exp_filename(MOLMO_JSON_BASE,  args.experiment_id)
-    mapped_name  = _exp_filename(MAPPED_JSON_BASE, args.experiment_id)
-    pred_name    = _exp_filename(PRED_JSON_BASE,   args.experiment_id)
+    molmo_name   = exp_filename(MOLMO_JSON_BASE,  args.experiment_id)
+    mapped_name  = exp_filename(MAPPED_JSON_BASE, args.experiment_id)
+    pred_name    = exp_filename(PRED_JSON_BASE,   args.experiment_id)
     molmo_path   = render_dir / molmo_name
     mapped_path  = render_dir / mapped_name
     pred_path    = renders_root / sym_type / object_id / pred_name
@@ -362,7 +294,7 @@ def main():
 
     if nv_key not in molmo_data:
         avail = list(molmo_data.keys())
-        sys.exit(f"[error] n_views={nv_key} not in {MOLMO_JSON}. Available: {avail}")
+        sys.exit(f"[error] n_views={nv_key} not in {molmo_name}. Available: {avail}")
 
     group           = molmo_data[nv_key]
     images_sent     = group.get("images_sent", [])
@@ -399,11 +331,16 @@ def main():
 
         for pt in pts:
             ndc_x, ndc_y = molmo_to_ndc(pt["x"], pt["y"])
-            origin, direction = camera_ray(ndc_x, ndc_y, R, T, args.fov)
+            origin, direction = build_camera_rays(ndc_x, ndc_y, R, T, args.fov, args.size)
 
-            hit_pt = cast_ray(mesh, origin, direction)
+            if args.patch_size == 1:
+                result = cast_ray(mesh, origin, direction)
+            else:
+                result = cast_ray_patch(mesh, R, T, pt["x"], pt["y"], args.patch_size,
+                                        args.size, args.size, args.fov)
 
-            if hit_pt is not None:
+            if result["hit"]:
+                hit_pt = np.array(result["point_3d"], dtype=np.float64)
                 hit_segments.append((origin, hit_pt))
                 hit_points.append(hit_pt)
             else:
@@ -430,7 +367,10 @@ def main():
                 bd = float(np.linalg.norm(raw_pts.max(0) - raw_pts.min(0)))
                 if bd < 1e-6:
                     bd = bbox_diag
-                cluster_centroids = _cluster_points(raw_pts, bd)
+                if args.clustering_method == "hdbscan":
+                    cluster_centroids = cluster_hdbscan(raw_pts, min_samples=args.hdbscan_min_samples)
+                else:
+                    cluster_centroids = cluster_points(raw_pts, bd)
 
     # ── Predicted symmetry (from predicted_symmetry.json) ─────────────────────
     pred_symmetry: dict | None = None
@@ -455,10 +395,12 @@ def main():
     print(f"Miss rays    : {len(miss_segments)}")
     print(f"Bbox diagonal: {bbox_diag:.4f}")
     print(f"Ray length   : {ray_length:.4f}  (miss rays)")
+    print(f"Patch size   : {args.patch_size}" + (" (exact)" if args.patch_size == 1 else " (averaged)"))
     if args.show_gt:
         print(f"GT elements  : {len(gt_symmetries)}")
     if args.show_clusters and cluster_centroids is not None:
-        print(f"Raw pts      : {n_raw_pts}  →  {len(cluster_centroids)} cluster centroids")
+        print(f"Raw pts      : {n_raw_pts}  →  {len(cluster_centroids)} cluster centroids  "
+              f"[{args.clustering_method}]")
     if args.show_predicted and pred_symmetry is not None:
         vec_key = "direction" if sym_type == "axis_sym" else "normal"
         print(f"Pred [{args.pred_method}]: {vec_key}={np.round(pred_symmetry[vec_key], 3).tolist()}")

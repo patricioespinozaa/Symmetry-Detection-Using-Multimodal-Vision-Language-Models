@@ -100,28 +100,17 @@ from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
-import trimesh
 from tqdm import tqdm
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from pipeline_common.naming import exp_filename
+from pipeline_common.datasets import OBJECTS_SUBDIR, load_mesh_vertices
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 PREDICTED_FILE = "predicted_symmetry.json"
 
 METHODS = ("svd", "ransac_svd", "svd_sde", "ransac_svd_sde")
-
-
-def _exp_filename(base: str, experiment_id: str | None) -> str:
-    """Return base unchanged, or base_EXPID.ext when experiment_id is set."""
-    if not experiment_id:
-        return base
-    dot = base.rfind(".")
-    return f"{base[:dot]}_{experiment_id}{base[dot:]}"
-
-
-OBJECTS_SUBDIR = {
-    "axis_sym":  "curated_axis_sym_obj",
-    "plane_sym": "curated_plane_sym_obj",
-}
 
 # Thresholds
 ANGULAR_THRESHOLDS = [5, 10, 15]           # degrees
@@ -167,24 +156,6 @@ def parse_true_label(txt_path: Path) -> dict:
             elements.append({"normal": vec.tolist(), "origin": orig})
 
     return {"type": sym_type, "elements": elements}
-
-
-# ── Mesh loading ──────────────────────────────────────────────────────────────
-
-def load_mesh_vertices(obj_path: Path) -> np.ndarray | None:
-    """Load .obj and return (N, 3) vertex array. Returns None on failure."""
-    try:
-        scene_or_mesh = trimesh.load(str(obj_path), force="mesh", process=False)
-        if isinstance(scene_or_mesh, trimesh.Scene):
-            mesh = trimesh.util.concatenate(
-                [g for g in scene_or_mesh.geometry.values()
-                 if isinstance(g, trimesh.Trimesh)]
-            )
-        else:
-            mesh = scene_or_mesh
-        return np.array(mesh.vertices, dtype=np.float64)
-    except Exception:
-        return None
 
 
 def bbox_diagonal(vertices: np.ndarray) -> float:
@@ -510,7 +481,7 @@ def main() -> None:
     exp_suffix     = f"_{args.experiment_id}" if args.experiment_id else ""
     eval_json_path = symmetry_dir / f"eval_{suffix}{exp_suffix}_{args.method}_results.json"
     eval_csv_path  = symmetry_dir / f"eval_{suffix}{exp_suffix}_{args.method}_summary.csv"
-    predicted_file = _exp_filename(PREDICTED_FILE, args.experiment_id)
+    predicted_file = exp_filename(PREDICTED_FILE, args.experiment_id)
 
     all_object_dirs = sorted(d for d in symmetry_dir.iterdir() if d.is_dir())
     if args.max_objects:

@@ -44,6 +44,16 @@ JSON format
 Para plane_sym "direction" se reemplaza por "normal".
 Cuando no se pasa --objects-root, los campos sde y accepted son null.
 
+Clustering
+----------
+--clustering-method controls point-cloud consolidation before fitting:
+  none    (default) — no clustering
+  greedy  — centroid-based, threshold=5% bbox diagonal, output suffix "_cluster"
+  hdbscan — density-based, drops noise points, output suffix "_hdbscan_ms{N}"
+            (see pipeline_common.clustering.cluster_hdbscan; requires scikit-learn)
+--clustering (legacy boolean flag) is a back-compat alias for
+--clustering-method greedy.
+
 Usage
 -----
 python Mapping/estimate_symmetry.py \
@@ -57,6 +67,14 @@ python Mapping/estimate_symmetry.py \
 python Mapping/estimate_symmetry.py \
     --renders-root ../data/renders \
     --symmetry-type axis_sym
+
+# HDBSCAN clustering sweep
+python Mapping/estimate_symmetry.py \
+    --renders-root ../data/renders \
+    --objects-root ../data/objects \
+    --symmetry-type axis_sym \
+    --sizes 224 --lightings flat \
+    --clustering-method hdbscan --hdbscan-min-samples 3
 """
 
 from __future__ import annotations
@@ -71,6 +89,11 @@ import numpy as np
 from scipy.spatial import KDTree
 from tqdm import tqdm
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from pipeline_common.naming import exp_filename
+from pipeline_common.datasets import OBJECTS_SUBDIR, load_mesh_vertices
+from pipeline_common.clustering import cluster_points, cluster_hdbscan
+
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 INPUT_FILE   = "mapped_points_3d.json"
@@ -80,11 +103,7 @@ DEFAULT_SIZES     = [224, 448, 1136]
 DEFAULT_LIGHTINGS = ["flat", "brighter", "darker"]
 
 POINT_MODES = ("independent", "midpoint")
-
-OBJECTS_SUBDIR = {
-    "axis_sym":  "curated_axis_sym_obj",
-    "plane_sym": "curated_plane_sym_obj",
-}
+CLUSTERING_METHODS = ("none", "greedy", "hdbscan")
 
 RANSAC_ITERS  = 1000
 RANSAC_THRESH = 0.05   # inlier threshold as fraction of bbox diagonal
@@ -92,33 +111,6 @@ SDE_THRESHOLD = 0.05   # accepted if SDE ≤ this value
 N_SDE_SAMPLE  = 1000   # max vertices sampled for SDE
 
 METHODS = ("svd", "ransac_svd", "svd_sde", "ransac_svd_sde")
-
-
-# ── Filename helper ───────────────────────────────────────────────────────────
-
-def _exp_filename(base: str, experiment_id: str | None) -> str:
-    """Return base unchanged, or base_EXPID.ext when experiment_id is set."""
-    if not experiment_id:
-        return base
-    dot = base.rfind(".")
-    return f"{base[:dot]}_{experiment_id}{base[dot:]}"
-
-
-# ── Mesh loading ──────────────────────────────────────────────────────────────
-
-def load_mesh_vertices(obj_path: Path) -> np.ndarray | None:
-    """Load .obj and return (N, 3) vertex array. Returns None on failure."""
-    try:
-        import trimesh
-        loaded = trimesh.load(str(obj_path), force="mesh", process=False)
-        if isinstance(loaded, trimesh.Scene):
-            loaded = trimesh.util.concatenate(
-                [g for g in loaded.geometry.values()
-                 if isinstance(g, trimesh.Trimesh)]
-            )
-        return np.array(loaded.vertices, dtype=np.float64)
-    except Exception:
-        return None
 
 
 # ── SVD fitting ───────────────────────────────────────────────────────────────
@@ -235,43 +227,6 @@ def sde_plane(v_sample: np.ndarray, plane_origin: np.ndarray, plane_normal: np.n
     return float(dists.mean() / bbox_diag)
 
 
-# ── Spatial clustering ────────────────────────────────────────────────────────
-
-def cluster_points(points: np.ndarray, bbox_diag: float,
-                   threshold_fraction: float = 0.05) -> np.ndarray:
-    """
-    Greedy centroid-based spatial clustering.
-
-    Points within threshold_fraction * bbox_diag of an existing centroid are
-    merged into it (centroid updated incrementally). Reduces spatial redundancy
-    when multiple views observe the same surface region.
-
-    Returns an array of cluster centroids (one per group), preserving order of
-    first encounter. If threshold is too small or fewer than 2 points exist,
-    returns the original array unchanged.
-    """
-    threshold = threshold_fraction * bbox_diag
-    if threshold < 1e-8 or len(points) < 2:
-        return points
-
-    centroids: list[np.ndarray] = []
-    counts: list[int] = []
-
-    for pt in points:
-        placed = False
-        for k, c in enumerate(centroids):
-            if np.linalg.norm(pt - c) < threshold:
-                counts[k] += 1
-                centroids[k] = c + (pt - c) / counts[k]   # incremental mean
-                placed = True
-                break
-        if not placed:
-            centroids.append(pt.copy())
-            counts.append(1)
-
-    return np.array(centroids, dtype=np.float64)
-
-
 # ── Point collection ──────────────────────────────────────────────────────────
 
 def collect_hit_points(
@@ -364,15 +319,16 @@ def _make_entry(
 # ── Per-object estimation ─────────────────────────────────────────────────────
 
 def process_object(
-    object_dir:    Path,
-    symmetry_type: str,
-    sizes:         list[int],
-    lightings:     list[str],
-    overwrite:     bool = False,
-    experiment_id: str | None = None,
-    point_mode:    str = "independent",
-    objects_dir:   Path | None = None,
-    clustering:    bool = False,
+    object_dir:         Path,
+    symmetry_type:      str,
+    sizes:              list[int],
+    lightings:          list[str],
+    overwrite:          bool = False,
+    experiment_id:      str | None = None,
+    point_mode:         str = "independent",
+    objects_dir:        Path | None = None,
+    clustering_method:  str = "none",
+    hdbscan_min_samples: int = 3,
 ) -> None:
     """
     Generates 4 estimates per n_views group (2×2 grid):
@@ -383,15 +339,27 @@ def process_object(
 
     SDE requires objects_dir (mesh). If not provided, sde=null for all methods.
 
-    When clustering=True, applies greedy centroid-based spatial clustering
-    (threshold = 5% bbox diagonal) before fitting. Output is written to a
-    separate file with "_cluster" appended to the experiment suffix, allowing
-    direct comparison via --experiment-id.
+    clustering_method:
+      "none"    — no clustering (default)
+      "greedy"  — greedy centroid-based spatial clustering (threshold = 5%
+                  bbox diagonal); every point is always assigned to a cluster
+      "hdbscan" — density-based clustering; explicitly drops noise/outlier
+                  points (see pipeline_common.clustering.cluster_hdbscan)
+
+    Clustered output is written to a separate file (experiment suffix
+    "_cluster" for greedy, "_hdbscan_ms{N}" for hdbscan), allowing direct
+    comparison against the non-clustered run via --experiment-id.
     """
-    # Derive output experiment suffix: append "_cluster" when clustering is on
-    exp_out     = ((experiment_id + "_cluster") if experiment_id else "cluster") if clustering else experiment_id
-    input_file  = _exp_filename(INPUT_FILE,  experiment_id)
-    output_file = _exp_filename(OUTPUT_FILE, exp_out)
+    # Derive output experiment suffix: append a clustering tag when enabled
+    if clustering_method == "greedy":
+        cluster_tag = "cluster"
+    elif clustering_method == "hdbscan":
+        cluster_tag = f"hdbscan_ms{hdbscan_min_samples}"
+    else:
+        cluster_tag = None
+    exp_out     = (f"{experiment_id}_{cluster_tag}" if experiment_id else cluster_tag) if cluster_tag else experiment_id
+    input_file  = exp_filename(INPUT_FILE,  experiment_id)
+    output_file = exp_filename(OUTPUT_FILE, exp_out)
 
     output_path = object_dir / output_file
     if output_path.exists() and not overwrite:
@@ -448,8 +416,12 @@ def process_object(
         if bbox_diag_pts < 1e-6:
             bbox_diag_pts = 1.0
 
-        if clustering:
+        if clustering_method == "greedy":
             all_points = cluster_points(all_points, bbox_diag_pts)
+        elif clustering_method == "hdbscan":
+            all_points = cluster_hdbscan(all_points, min_samples=hdbscan_min_samples)
+
+        if clustering_method != "none":
             if len(all_points) < 2:
                 continue
             # Recompute bbox after clustering (centroids may be closer together)
@@ -501,11 +473,12 @@ def process_object(
         return
 
     output = {
-        "object_id":           object_dir.name,
-        "symmetry_type":       symmetry_type,
-        "point_mode":          point_mode,
-        "clustering":          clustering,
-        "n_views_predictions": n_views_predictions,
+        "object_id":            object_dir.name,
+        "symmetry_type":        symmetry_type,
+        "point_mode":           point_mode,
+        "clustering_method":    clustering_method,
+        "hdbscan_min_samples":  hdbscan_min_samples if clustering_method == "hdbscan" else None,
+        "n_views_predictions":  n_views_predictions,
     }
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2)
@@ -539,14 +512,25 @@ def parse_args() -> argparse.Namespace:
                    help="independent = each 3D point goes to SVD directly. "
                         "midpoint = bilateral pairs (obj_id=1, obj_id=2) replaced by 3D midpoint.")
     p.add_argument("--clustering", action="store_true",
-                   help="Apply greedy centroid-based spatial clustering (threshold=5%% bbox diagonal) "
-                        "before fitting. Output is written to predicted_symmetry[_EXP]_cluster.json, "
-                        "enabling direct comparison with the non-clustered run via --experiment-id.")
+                   help="Deprecated alias for --clustering-method greedy. Kept for backward "
+                        "compatibility with existing scripts/docs.")
+    p.add_argument("--clustering-method", default=None, choices=CLUSTERING_METHODS,
+                   help="Spatial consolidation strategy before fitting: "
+                        "none (default), greedy (centroid-based, threshold=5%% bbox diagonal, "
+                        "output suffix '_cluster'), or hdbscan (density-based, drops noise points, "
+                        "output suffix '_hdbscan_ms{N}'). Overrides --clustering if both are given.")
+    p.add_argument("--hdbscan-min-samples", type=int, default=3,
+                   help="min_samples for --clustering-method hdbscan. Sweep values: 2, 3, 5.")
     return p.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+
+    if args.clustering_method is not None:
+        clustering_method = args.clustering_method
+    else:
+        clustering_method = "greedy" if args.clustering else "none"
 
     symmetry_dir = Path(args.renders_root) / args.symmetry_type
     if not symmetry_dir.exists():
@@ -562,27 +546,42 @@ def main() -> None:
         all_objects = all_objects[:args.max_objects]
     objects = all_objects[args.gpu_id :: args.num_gpus]
 
-    output_file = _exp_filename(OUTPUT_FILE, args.experiment_id)
+    if clustering_method == "greedy":
+        cluster_tag = "cluster"
+    elif clustering_method == "hdbscan":
+        cluster_tag = f"hdbscan_ms{args.hdbscan_min_samples}"
+    else:
+        cluster_tag = None
+    exp_out     = (f"{args.experiment_id}_{cluster_tag}" if args.experiment_id else cluster_tag) if cluster_tag else args.experiment_id
+    output_file = exp_filename(OUTPUT_FILE, exp_out)
+
     print(f"\nFitting {args.symmetry_type} symmetry for {len(objects)} objects...")
     print(f"Point mode    : {args.point_mode}")
-    print(f"Clustering    : {'enabled (threshold=' + str(int(RANSAC_THRESH*100)) + '% bbox diag)' if args.clustering else 'disabled'}")
+    if clustering_method == "none":
+        print(f"Clustering    : disabled")
+    elif clustering_method == "greedy":
+        print(f"Clustering    : greedy centroid (threshold={int(RANSAC_THRESH*100)}% bbox diag)")
+    else:
+        print(f"Clustering    : hdbscan (min_samples={args.hdbscan_min_samples})")
     print(f"RANSAC        : {RANSAC_ITERS} iters, threshold={RANSAC_THRESH*100:.0f}% bbox diag")
     print(f"SDE scoring   : {'enabled  (threshold=' + str(SDE_THRESHOLD) + ')' if objects_dir else 'disabled — pass --objects-root to enable'}")
+    print(f"Output file   : {output_file}")
     if args.experiment_id:
-        print(f"Experiment ID : {args.experiment_id}  →  {output_file}")
+        print(f"Experiment ID : {args.experiment_id}")
     print(f"({'overwrite' if args.overwrite else 'skip existing'})")
 
     for obj_dir in tqdm(objects, unit="obj", dynamic_ncols=True):
         process_object(
-            object_dir    = obj_dir,
-            symmetry_type = args.symmetry_type,
-            sizes         = args.sizes,
-            lightings     = args.lightings,
-            overwrite     = args.overwrite,
-            experiment_id = args.experiment_id,
-            point_mode    = args.point_mode,
-            objects_dir   = objects_dir,
-            clustering    = args.clustering,
+            object_dir          = obj_dir,
+            symmetry_type       = args.symmetry_type,
+            sizes               = args.sizes,
+            lightings           = args.lightings,
+            overwrite           = args.overwrite,
+            experiment_id       = args.experiment_id,
+            point_mode          = args.point_mode,
+            objects_dir         = objects_dir,
+            clustering_method   = clustering_method,
+            hdbscan_min_samples = args.hdbscan_min_samples,
         )
 
     print("Done.")

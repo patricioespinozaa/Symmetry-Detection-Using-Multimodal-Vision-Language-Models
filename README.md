@@ -13,6 +13,7 @@ Symmetry-Detection-Using-Multimodal-Vision-Language-Models/
 │
 ├── ImagesGenerator/               # Render .obj files to multi-view images
 │   ├── export_fibonacci_views.py  # Fibonacci-sphere sampling; renders one object
+│   ├── data_render.py             # Batch renderer (calls export_fibonacci_views.py)
 │   └── README.md
 │
 ├── MolmoPointing/                 # Molmo2-8B inference over rendered images
@@ -44,9 +45,12 @@ Symmetry-Detection-Using-Multimodal-Vision-Language-Models/
 │   ├── objects/
 │   └── renders/
 │
-├── utils/                         # Shared utilities
-│   ├── data_render.py             # Batch renderer (calls export_fibonacci_views.py)
-│   └── ...
+├── pipeline_common/                # Shared helpers used across all stages
+│   ├── naming.py                   # --experiment-id filename suffixing
+│   ├── datasets.py                 # OBJECTS_SUBDIR + mesh loading
+│   ├── camera.py                   # NDC/ray math, ray casting (exact + patch)
+│   ├── clustering.py                # Greedy centroid + HDBSCAN clustering
+│   └── view_selection.py           # Seeded description-view selection (Flow B/C)
 │
 ├── cleanup_all_experiments.sh     # Delete all experiment files for all prompts
 └── find_extra_renders.sh          # Audit render directories vs source .obj files
@@ -109,8 +113,14 @@ pip install transformers==4.57.1 accelerate==1.10.1 \
 # Mapping pipeline
 pip install trimesh scipy pandas matplotlib
 
-# Optional: 3D visualization (visualize_rays.py, InteractiveViewer/)
+# HDBSCAN clustering (estimate_symmetry.py --clustering-method hdbscan)
+pip install scikit-learn
+
+# Optional: 3D visualization (visualize_rays.py)
 pip install polyscope
+
+# Optional: 3D visualization (InteractiveViewer/)
+pip install open3d
 ```
 
 ---
@@ -121,7 +131,7 @@ pip install polyscope
 
 ```bash
 # GPU 0: axis symmetry
-CUDA_VISIBLE_DEVICES=0 python3 -m utils.data_render \
+CUDA_VISIBLE_DEVICES=0 python3 -m ImagesGenerator.data_render \
   --input-folder ../data/objects/curated_axis_sym_obj \
   --output-folder ../data/renders \
   --symmetry-type axis_sym \
@@ -130,7 +140,7 @@ CUDA_VISIBLE_DEVICES=0 python3 -m utils.data_render \
   --lightings flat darker brighter
 
 # GPU 1: plane symmetry
-CUDA_VISIBLE_DEVICES=1 python3 -m utils.data_render \
+CUDA_VISIBLE_DEVICES=1 python3 -m ImagesGenerator.data_render \
   --input-folder ../data/objects/curated_plane_sym_obj \
   --output-folder ../data/renders \
   --symmetry-type plane_sym \
@@ -248,6 +258,23 @@ bash cleanup_all_experiments.sh --delete # execute
 
 ---
 
+## Experimental matrix: flows, clustering, backprojection
+
+Beyond the base Flow-A prompt experiments above, the methodology defines three
+orthogonal axes of variation:
+
+| Axis | Options | Where |
+|---|---|---|
+| **Flow** (VLM prompting) | `a` direct pointing, `b` pointing + description, `c` description + pointing integrados | `--flow` in `molmo_multiview_runner.py` — see `MolmoPointing/README.md` |
+| **Clustering** | `none`, `greedy`, `hdbscan` (`min_samples` 2/3/5) | `--clustering-method` in `estimate_symmetry.py` — see `Mapping/README.md` |
+| **Backprojection** | `1` (exact), `3`, `5` (averaged patch) | `--patch-size` in `map_to_3d.py` — see `Mapping/README.md` |
+
+These compose with the existing `--experiment-id` isolation pattern (a distinct
+ID per flow keeps artifacts separate; clustering/patch-size append their own
+tag to the output filename automatically).
+
+---
+
 ## Key design choices
 
 | Choice | Detail |
@@ -260,6 +287,9 @@ bash cleanup_all_experiments.sh --delete # execute
 | **SDE** | `mean(2 × |signed distance to plane|) / bbox_diag` — normalized Symmetry Distance Error |
 | **Evaluation** | Sign-agnostic angular error [0°, 90°]; best-match for plane_sym (up to 3 GT planes) |
 | **Dataset** | ShapeNet, 850 objects per symmetry type, normalized to unit cube |
+| **Description-view selection** (Flow B/C) | Seeded random pick per object (`MD5(object_id) mod 2^31`), filtered to elevation in (-60°, +60°) |
+| **Clustering** | Greedy centroid (5% bbox diag, always assigns) or HDBSCAN (`min_samples` 2/3/5, drops noise) |
+| **Patch backprojection** | Average 3D hits of a `h x h` sub-ray grid (`h` in {1, 3, 5}) around each point |
 
 ---
 
@@ -285,3 +315,4 @@ tmux ls                      # list sessions
 | Molmo2 inference + experiments | [MolmoPointing/README.md](MolmoPointing/README.md) |
 | Mapping + evaluation | [Mapping/README.md](Mapping/README.md) |
 | Interactive viewer | [InteractiveViewer/README.md](InteractiveViewer/README.md) |
+| **What experiments are left to run, in order** | [EXPERIMENT_ROADMAP.md](EXPERIMENT_ROADMAP.md) |
