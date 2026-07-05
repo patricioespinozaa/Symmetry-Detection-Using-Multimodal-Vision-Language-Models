@@ -33,6 +33,28 @@ Four modes controlled by --prompt-mode:
            n_views  > 1  → PROMPT_MULTI  (one call, multi-image format)
            This is the recommended mode.
 
+Flows
+-----
+Three flows controlled by --flow (orthogonal to --prompt-mode/--prompt-id,
+which still control the *main* N-view pointing call in all three flows):
+
+  a   Direct pointing (default). No semantic context, no extra model call.
+      Byte-for-byte identical to the original single-flow behavior.
+  b   Pointing con descripcion. One extra single-view call on a seeded
+      description view (elevation in (-60°, 60°), per-object deterministic
+      seed) asks the model to describe the object; that description is
+      prepended to the base pointing prompt before the normal N-view call.
+  c   Descripcion y pointing integrados. Same seeded description view, but
+      the extra call asks the model to describe the object AND point to two
+      seed points on the axis/plane in that single image; both the
+      description and seed points are prepended to the base pointing prompt
+      before the normal N-view call.
+
+--flow b/c only affect --prompt-mode single/multi/auto (whichever
+prompt_single/prompt_multi ends up used); --prompt-mode global does not
+support prompt overrides at all (not even via --prompt-id), so --flow b/c
+has no effect when combined with it.
+
 Output structure
 ----------------
 <renders_root>/<symmetry_type>/<object_id>/<image_size>/<illumination>/
@@ -55,6 +77,12 @@ JSON format
     "images_sent": [...],
     "n_points": 4,
     "n_images_with_points": 3
+    # present only when --flow b or c (absent for flow a):
+    "flow": "b",
+    "description_used": "A wooden chair with four legs and a slatted back.",
+    "description_view_idx": 47,
+    "description_view_filename": "IND_47_AZ_020_EL_+59.png",
+    "seed_points": null   # flow c only: [{"obj_id":1,"x":430.0,"y":210.0}, ...]
   },
   ...
 }
@@ -62,7 +90,11 @@ JSON format
 Resumability
 ------------
 Each (object, resolution, illumination, n_views) combination is skipped if
-its key already exists in the JSON.
+its key already exists in the JSON *for the current --flow* (a stored key's
+flow defaults to "a" when absent, so re-running with --flow a never
+reprocesses anything, and re-running the same --experiment-id under a
+different --flow reprocesses rather than silently reusing another flow's
+result). Use a distinct --experiment-id per flow to keep artifacts separate.
 
 Usage
 -----
@@ -82,6 +114,26 @@ Usage
         --max-objects 50 \\
         --prompt-id axis_v01 \\
         --experiment-id axis_v01 \\
+        --prompt-mode auto
+
+    # Flow B (pointing con descripcion), using the best Flow-A prompt as base
+    CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \\
+        --renders-root ../data/renders \\
+        --symmetry-type axis_sym \\
+        --sizes 224 --lightings flat \\
+        --view-groups 1 6 14 26 \\
+        --prompt-id axis_v05_1 \\
+        --flow b --experiment-id axis_v05_1_flowB \\
+        --prompt-mode auto
+
+    # Flow C (descripcion y pointing integrados)
+    CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \\
+        --renders-root ../data/renders \\
+        --symmetry-type axis_sym \\
+        --sizes 224 --lightings flat \\
+        --view-groups 1 6 14 26 \\
+        --prompt-id axis_v05_1 \\
+        --flow c --experiment-id axis_v05_1_flowC \\
         --prompt-mode auto
 
     # Two GPUs
@@ -110,7 +162,11 @@ from transformers import AutoModelForImageTextToText, AutoProcessor
 
 # Allow importing prompts_registry from this directory
 sys.path.insert(0, str(Path(__file__).parent))
-from prompts_registry import PROMPTS, get_prompt, list_prompts
+from prompts_registry import PROMPTS, get_prompt, list_prompts, load_flow_prompt
+
+# Allow importing pipeline_common from the repo root
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from pipeline_common.view_selection import select_description_view
 
 # ── Default prompt texts ────────────────────
 
@@ -198,6 +254,8 @@ Return ONLY the <points ...> block."""
 
 
 PROMPT_MODES = ("global", "single", "multi", "auto")
+FLOW_MODES   = ("a", "b", "c")
+DESCRIPTION_ELEVATION_RANGE = (-60.0, 60.0)
 
 # Constants
 
@@ -415,6 +473,149 @@ def parse_multi_coords(text: str, n_images: int) -> dict[str, list[dict]]:
     return result
 
 
+def parse_describe_and_points(text: str) -> dict:
+    """
+    Flow C's single-view combined describe+point response: free text followed
+    by a single-image <points coords="RADIO ID X Y ID X Y ..."> block (same
+    shape PROMPT_SINGLE produces).
+
+    Strips the <points ...> tag span out of text to recover the description,
+    then reuses parse_single_coords on the full text for the points.
+
+    Args:
+    - text: raw text output from the model
+    Returns:
+    - {"description": str, "points": list[{obj_id, x, y}]} -- points is an
+      empty list if the model didn't produce a parseable <points ...> block
+      (graceful fallback: the whole response is treated as the description).
+    """
+    match = re.search(r'<points\b[^>]*>', text)
+    description = (text[:match.start()] + text[match.end():]).strip() if match else text.strip()
+    points = parse_single_coords(text).get("0", [])
+    return {"description": description, "points": points}
+
+
+def augment_prompt_with_description(base_prompt: str, description: str) -> str:
+    """
+    Flow B: prepend a semantic description of the object (generated from a
+    single reference view) ahead of the base pointing prompt's instructions.
+    """
+    return (
+        f"Context: the object being shown is described as follows:\n"
+        f"\"{description}\"\n\n"
+        f"Use this context to inform where the structurally relevant points are.\n\n"
+        f"{base_prompt}"
+    )
+
+
+def augment_prompt_with_seed_points(
+    base_prompt: str,
+    description: str,
+    seed_points: list[dict],
+    symmetry_type: str,
+) -> str:
+    """
+    Flow C: prepend the description AND the seed points found on the single
+    reference view ahead of the base pointing prompt's instructions. The seed
+    points come from a DIFFERENT image than the ones about to be pointed at,
+    so the prompt explicitly caveats that they are not directly reusable
+    pixel coordinates -- only a geometric hint of where the axis/plane runs.
+    """
+    label = "axis" if symmetry_type == "axis_sym" else "plane"
+    if seed_points:
+        pts_str = "; ".join(f"({p['x']:.0f}, {p['y']:.0f})" for p in seed_points)
+        seed_line = (
+            f"On a separate reference view of this SAME object, points roughly on the "
+            f"symmetry {label} were found at pixel coordinates: {pts_str}. "
+            f"Those coordinates are from a DIFFERENT image and are NOT directly reusable "
+            f"here -- they only hint at the general location and orientation of the {label}."
+        )
+    else:
+        seed_line = ""
+    return (
+        f"Context: the object being shown is described as follows:\n"
+        f"\"{description}\"\n"
+        f"{seed_line}\n\n"
+        f"Use this context to inform where the structurally relevant points are.\n\n"
+        f"{base_prompt}"
+    )
+
+
+def prepare_flow_context(
+    flow:                      str,
+    render_dir:                Path,
+    object_id:                 str,
+    metadata:                  list[dict],
+    describe_prompt:           str | None,
+    describe_and_point_prompt: str | None,
+) -> dict:
+    """
+    Runs the Flow B/C single-view pre-pass: selects a description view (seeded
+    per-object, filtered to non-degenerate elevations) and makes exactly one
+    extra model call on that single image.
+
+    Flow "b": calls with describe_prompt, free-text output only.
+    Flow "c": calls with describe_and_point_prompt, parses both a description
+              and seed points from the combined response.
+
+    Args:
+    - flow: "b" or "c"
+    - render_dir: directory containing the rendered images for this
+      (object, size, illumination) config
+    - object_id: used to derive the per-object view-selection seed
+    - metadata: full list of metadata entries (as returned by load_metadata)
+    - describe_prompt: prompt text for flow "b"
+    - describe_and_point_prompt: prompt text for flow "c"
+
+    Returns:
+    - {"description": str, "view_index": int, "view_filename": str,
+       "seed_points": list[dict] | None, "extra_tokens": int}
+      seed_points is None for flow "b" (no pointing done in the pre-pass).
+    """
+    view = select_description_view(object_id, metadata, DESCRIPTION_ELEVATION_RANGE)
+    image = Image.open(render_dir / view["filename"]).convert("RGB")
+
+    if flow == "b":
+        raw, n_tok = _call_model([image], describe_prompt)
+        description, seed_points = raw.strip(), None
+    else:  # flow == "c"
+        raw, n_tok = _call_model([image], describe_and_point_prompt)
+        parsed = parse_describe_and_points(raw)
+        description, seed_points = parsed["description"], parsed["points"]
+
+    return {
+        "description":   description,
+        "view_index":    view["index"],
+        "view_filename": view["filename"],
+        "seed_points":   seed_points,
+        "extra_tokens":  n_tok,
+    }
+
+
+def build_augmented_prompts(
+    flow_context:  dict,
+    prompt_single: str,
+    prompt_multi:  str,
+    symmetry_type: str,
+) -> tuple[str, str]:
+    """
+    Builds the Flow B/C-augmented single/multi prompts from a flow_context
+    (see prepare_flow_context). Falls back to description-only augmentation
+    when seed_points is empty (Flow C's pre-pass produced no parseable
+    <points ...> block).
+
+    Returns (augmented_prompt_single, augmented_prompt_multi).
+    """
+    seed_points = flow_context.get("seed_points")
+    if seed_points:
+        augment = lambda p: augment_prompt_with_seed_points(
+            p, flow_context["description"], seed_points, symmetry_type
+        )
+    else:
+        augment = lambda p: augment_prompt_with_description(p, flow_context["description"])
+    return augment(prompt_single), augment(prompt_multi)
+
+
 # Inference modes
 def run_global(images: list[Image.Image], prompt: str = PROMPT_GLOBAL) -> dict:
     """
@@ -556,13 +757,25 @@ def process_object(
     prompt_single: str = PROMPT_SINGLE,
     prompt_multi:  str = PROMPT_MULTI,
     token_log:     dict | None = None,
+    flow:          str = "a",
+    describe_prompt:           str | None = None,
+    describe_and_point_prompt: str | None = None,
 ) -> None:
     """
     Process one object across all (size, illumination, n_views) combinations.
-    Skips any (size, illumination, n_views) already present in the JSON.
-    token_log: optional dict {n_views: [token_counts]} to accumulate across objects.
+    Skips any (size, illumination, n_views) already present in the JSON for
+    the current flow. token_log: optional dict {n_views: [token_counts]} to
+    accumulate across objects.
+
+    flow == "a" (default) is byte-for-byte identical to the original
+    single-flow behavior: no extra model call, no extra JSON keys. flow in
+    ("b", "c") runs one extra single-view description/describe+point call
+    per (size, lighting) config (see prepare_flow_context) and augments
+    prompt_single/prompt_multi with its result before the normal N-view
+    pointing call.
     """
-    output_file = _exp_filename(OUTPUT_FILE, experiment_id)
+    output_file   = _exp_filename(OUTPUT_FILE, experiment_id)
+    symmetry_type = object_dir.parent.name
 
     for size in sizes:
         for lighting in lightings:
@@ -578,9 +791,31 @@ def process_object(
             json_path = render_dir / output_file
             results   = load_results(json_path)
 
-            pending = [n for n in view_groups if str(n) not in results]
+            pending = [
+                n for n in view_groups
+                if str(n) not in results or results[str(n)].get("flow", "a") != flow
+            ]
             if not pending:
                 continue
+
+            flow_context = None
+            if flow != "a":
+                for existing in results.values():
+                    if (isinstance(existing, dict) and existing.get("flow") == flow
+                            and "description_used" in existing):
+                        flow_context = {
+                            "description":   existing["description_used"],
+                            "view_index":    existing.get("description_view_idx"),
+                            "view_filename": existing.get("description_view_filename"),
+                            "seed_points":   existing.get("seed_points"),
+                            "extra_tokens":  0,
+                        }
+                        break
+                if flow_context is None:
+                    flow_context = prepare_flow_context(
+                        flow, render_dir, object_dir.name, metadata,
+                        describe_prompt, describe_and_point_prompt,
+                    )
 
             for n_views in pending:
                 entries = get_n_views_entries(metadata, n_views)
@@ -592,10 +827,17 @@ def process_object(
                     for e in entries
                 ]
 
+                if flow == "a":
+                    call_prompt_single, call_prompt_multi = prompt_single, prompt_multi
+                else:
+                    call_prompt_single, call_prompt_multi = build_augmented_prompts(
+                        flow_context, prompt_single, prompt_multi, symmetry_type
+                    )
+
                 inference     = run_inference(
                     images, prompt_mode,
-                    prompt_single=prompt_single,
-                    prompt_multi=prompt_multi,
+                    prompt_single=call_prompt_single,
+                    prompt_multi=call_prompt_multi,
                 )
                 points_by_img = inference["points_by_image"]
                 n_pts         = sum(len(v) for v in points_by_img.values())
@@ -629,6 +871,15 @@ def process_object(
                     "n_input_tokens":       n_tok,
                 }
 
+                if flow != "a":
+                    results[str(n_views)]["flow"]                     = flow
+                    results[str(n_views)]["description_used"]         = flow_context["description"]
+                    results[str(n_views)]["description_view_idx"]     = flow_context["view_index"]
+                    results[str(n_views)]["description_view_filename"] = flow_context["view_filename"]
+                    if flow == "c":
+                        results[str(n_views)]["seed_points"] = flow_context["seed_points"]
+                    results[str(n_views)]["n_input_tokens"] += flow_context["extra_tokens"]
+
                 # Write after every n_views to survive interruptions
                 save_results(json_path, results)
 
@@ -651,6 +902,17 @@ def parse_args() -> argparse.Namespace:
                        "multi  = PROMPT_MULTI for all groups (1 call/group, "
                        "fallback to single when n_views==1); "
                        "auto   = single if n_views==1, multi otherwise [recommended]"
+                   ))
+    p.add_argument("--flow", default="a", choices=FLOW_MODES,
+                   help=(
+                       "a = direct pointing, no semantic context [default, unchanged behavior]; "
+                       "b = pointing con descripcion -- one extra single-view describe call "
+                       "prepended to the pointing prompt; "
+                       "c = descripcion y pointing integrados -- one extra single-view "
+                       "describe+point call, whose result seeds the pointing prompt. "
+                       "Both b/c pick a seeded description view per object "
+                       "(elevation in (-60, 60)) and only affect --prompt-mode single/multi/auto "
+                       "(not global, which does not support prompt overrides)."
                    ))
 
     # Experiment flags
@@ -701,8 +963,12 @@ def preview(args: argparse.Namespace, objects: list[Path],
     print("\n========== MOLMO MULTIVIEW RUNNER ==========")
     print(f"Renders root  : {args.renders_root}")
     print(f"Symmetry type : {args.symmetry_type}")
+    print(f"Flow          : {args.flow}")
     print(f"Prompt mode   : {args.prompt_mode}")
     print(f"              : {mode_desc[args.prompt_mode]}")
+    if args.flow != "a" and args.prompt_mode == "global":
+        print(f"[warn] --flow {args.flow} has no effect under --prompt-mode global "
+              f"(global mode doesn't support prompt overrides)")
     if args.experiment_id:
         print(f"Experiment ID : {args.experiment_id}")
         print(f"Prompt ID     : {args.prompt_id or '(default hardcoded)'}")
@@ -742,6 +1008,18 @@ def main() -> None:
         prompt_single = entry["single"]
         prompt_multi  = entry["multi"]
 
+    # Load Flow B/C prompts, failing fast if the expected files are missing
+    describe_prompt = describe_and_point_prompt = None
+    if args.flow != "a":
+        try:
+            describe_prompt = load_flow_prompt("describe")
+            if args.flow == "c":
+                point_variant = "axis" if args.symmetry_type == "axis_sym" else "plane"
+                describe_and_point_prompt = load_flow_prompt(f"describe_and_point_{point_variant}")
+        except FileNotFoundError as e:
+            print(f"[error] {e}")
+            sys.exit(1)
+
     symmetry_dir = Path(args.renders_root) / args.symmetry_type
     if not symmetry_dir.exists():
         print(f"[error] Not found: {symmetry_dir}")
@@ -779,6 +1057,9 @@ def main() -> None:
             prompt_single = prompt_single,
             prompt_multi  = prompt_multi,
             token_log     = token_log,
+            flow          = args.flow,
+            describe_prompt           = describe_prompt,
+            describe_and_point_prompt = describe_and_point_prompt,
         )
 
     print(f"\n[GPU {args.gpu_id}] Done.")

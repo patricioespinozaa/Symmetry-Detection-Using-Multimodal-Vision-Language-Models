@@ -10,7 +10,14 @@ Supports multi-GPU parallelism (one process per GPU), full resumability at the
 
 ```
 MolmoPointing/
-└── molmo_multiview_runner.py   # Entry point — all-in-one batch runner
+├── molmo_multiview_runner.py   # Entry point — all-in-one batch runner
+├── prompts_registry.py         # Auto-discovers prompt variants from prompts/
+├── prompts/
+│   ├── axis/                   # axis_v00-v05, axis_v00_1-v05_1 (original + improved)
+│   ├── plane/                  # plane_v00-v05, plane_v00_1-v05_1
+│   └── description/            # Flow B/C prompts (describe.txt, describe_and_point_{axis,plane}.txt)
+├── Experiments.md               # Prompt table + full experiment loops
+└── PROMPT_IMPROVEMENTS_v1.md    # Rationale for v0 -> v_1 prompt changes
 ```
 
 ---
@@ -75,6 +82,9 @@ Results are written alongside the renders as a **cumulative JSON** file:
 > **Note:** when `prompt_mode` is `single`, `raw_output` is a **list of strings**
 > (one per image) instead of a single string, since N separate model calls are made.
 
+> **Note:** when `--flow b` or `--flow c` is used, each n_views entry gains extra keys
+> not present under the default `--flow a` — see [Flows](#flows) below.
+
 ### Coordinate format
 
 Coordinates are in **0–1000 scale**, origin **top-left** (no Y inversion needed).
@@ -109,6 +119,50 @@ project it into each image, returning top and bottom endpoints per image.
 **`PROMPT_GLOBAL`** — handles 1 or N images with the same prompt. Useful as a
 baseline but empirically performs worse than `auto` on both single and multi-image
 cases.
+
+---
+
+## Flows
+
+Three flows are available via `--flow`, orthogonal to `--prompt-mode`/`--prompt-id`
+(those still control the *main* N-view pointing call in all three flows):
+
+| Flow | Description | Extra model calls |
+|---|---|---|
+| `a` (default) | Direct pointing, no semantic context. Identical to the original single-flow behavior. | 0 |
+| `b` | Pointing con descripción — a seeded single-view call asks the model to describe the object; the description is prepended to the base pointing prompt. | 1 per (size, lighting) config |
+| `c` | Descripción y pointing integrados — a seeded single-view call asks the model to describe the object AND point to seed points on the axis/plane; both are prepended to the base pointing prompt. | 1 per (size, lighting) config |
+
+The description view is picked per object with a **deterministic seed**
+(`MD5(object_id) mod 2^31`), filtered to elevation in `(-60°, +60°)` to avoid
+near-pole views that project an axis to a point or a plane to a line. See
+`pipeline_common/view_selection.py`.
+
+`--flow b`/`c` only affect `--prompt-mode single/multi/auto`; `--prompt-mode global`
+does not support prompt overrides at all (not even via `--prompt-id`), so `--flow`
+has no effect when combined with it (a warning is printed).
+
+```bash
+# Flow B, using the best Flow-A prompt as base
+CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
+    --renders-root ../data/renders --symmetry-type axis_sym \
+    --sizes 224 --lightings flat --view-groups 1 6 14 26 \
+    --prompt-id axis_v05_1 --flow b --experiment-id axis_v05_1_flowB \
+    --prompt-mode auto
+
+# Flow C
+CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
+    --renders-root ../data/renders --symmetry-type axis_sym \
+    --sizes 224 --lightings flat --view-groups 1 6 14 26 \
+    --prompt-id axis_v05_1 --flow c --experiment-id axis_v05_1_flowC \
+    --prompt-mode auto
+```
+
+Resumability is flow-aware: a stored entry's `flow` defaults to `"a"` when
+absent, so `--flow a` reruns never reprocess anything, but switching `--flow`
+under the same `--experiment-id` reprocesses rather than silently reusing the
+other flow's result. Use a distinct `--experiment-id` per flow to keep
+artifacts separate.
 
 ---
 
@@ -199,6 +253,7 @@ CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
 | `--renders-root` | *(required)* | Root folder from `data_render.py` |
 | `--symmetry-type` | *(required)* | `axis_sym` or `plane_sym` |
 | `--prompt-mode` | `auto` | `auto`, `single`, `multi`, or `global` |
+| `--flow` | `a` | `a` (direct), `b` (pointing + description), `c` (description + pointing integrados) |
 | `--gpu-id` | `0` | Index of this process (0-based) |
 | `--num-gpus` | `1` | Total parallel processes |
 | `--sizes` | `224 448 1136` | Image sizes to process |

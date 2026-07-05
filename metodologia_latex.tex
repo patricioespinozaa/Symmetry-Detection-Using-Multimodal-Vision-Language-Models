@@ -1,0 +1,670 @@
+% ============================================================
+%  Capítulo: Metodología
+% ============================================================
+
+\chapter{Metodología}
+
+\section{Métodos}
+\subsection{Datos y generación de vistas}
+
+El conjunto de datos utilizado corresponde a un subconjunto proveniente de
+ShapeNet~\cite{chang2015shapenet}, compuesto por 1.700 objetos divididos en
+dos categorías de simetría: 850 objetos con simetría axial (\texttt{axis\_sym})
+y 850 con simetría planar (\texttt{plane\_sym}) (ver Figura~\ref{fig:tipos_simetria}).
+
+Cada objeto se representa mediante una malla poligonal en formato \texttt{.obj},
+centrada en el origen y normalizada a escala unitaria, junto con un archivo de
+anotación \texttt{.txt} que contiene los parámetros de referencia de su simetría.
+Para objetos axiales se especifica un vector de dirección $\hat{\mathbf{d}}$ y un
+punto de origen $\mathbf{o}$ del eje, mientras que para los objetos planares se
+especifican entre uno y tres planos, cada uno definido por su vector normal
+$\hat{\mathbf{n}}$ y un punto de origen $\mathbf{o}$.
+
+\begin{figure}[ht]
+    \centering
+    \begin{subfigure}{0.3\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{axis_sym_no_visual.png}
+        \caption{Objeto con simetría axial, simetría no visualizable.}
+        \label{fig:axis_no_visual}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.3\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{axys_sym_visual.png}
+        \caption{Objeto con simetría axial, simetría visualizable.}
+        \label{fig:axis_visual}
+    \end{subfigure}
+
+    \vspace{0.5cm}
+
+    \begin{subfigure}{0.3\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{planar_sym_visual.png}
+        \caption{Objeto con simetría planar, simetría no visualizable.}
+        \label{fig:planar_no_visual}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.3\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{planar_sym_no_visual.png}
+        \caption{Objeto con simetría planar, simetría visualizable.}
+        \label{fig:planar_visual}
+    \end{subfigure}
+
+    \caption{Ejemplos de objetos con simetría axial y planar.}
+    \label{fig:tipos_simetria}
+\end{figure}
+
+\newpage
+
+Para cada uno de los objetos se genera un conjunto de 114 vistas mediante
+renderizado multivista basado en muestreo de Fibonacci sobre la superficie de
+una esfera (véase Figura~\ref{fig:fibonacci}). Este método distribuye los puntos
+de vista de manera aproximadamente uniforme, evitando concentraciones angulares
+y, por tanto, sesgos en la cobertura del objeto.
+
+Cada punto de la esfera define la posición de una cámara virtual orientada hacia
+el origen, con un campo de visión de $\text{FoV} = 60°$. El renderizado se
+realiza mediante PyTorch3D empleando una cámara de perspectiva
+(\texttt{FoVPerspectiveCamera}), y para cada vista se almacenan en
+\texttt{metadata\_all.json}:
+
+\begin{itemize}
+    \item la matriz de rotación $R \in \mathbb{R}^{3\times 3}$ (convenio
+          PyTorch3D de vector-fila: $p_{\text{cam}} = p_{\text{world}}\,R + T$),
+    \item el vector de traslación $T \in \mathbb{R}^{3}$,
+    \item la posición de la cámara en coordenadas mundiales $\mathbf{C} = -R\,T$,
+    \item los ángulos de azimut y elevación correspondientes.
+\end{itemize}
+
+Las variables experimentales consideradas en esta etapa son:
+
+\begin{itemize}
+    \item \textbf{Número de vistas} ($N$): configuraciones de 1, 6, 14 y 26
+          vistas para la evaluación base, con extensiones a 42, 62, 86 y 114
+          vistas para análisis de saturación.
+    \item \textbf{Resolución de imagen}: 224, 448 y 1136 píxeles, para evaluar
+          el efecto sobre la precisión de la retroproyección 2D$\rightarrow$3D.
+    \item \textbf{Iluminación}: tres condiciones de iluminación uniforme
+          (\textit{flat}, valor de gris 0,7; \textit{darker}, 0,3;
+          \textit{brighter}, 0,95), que permiten evaluar la robustez del modelo
+          ante variaciones en el contraste sin introducir complejidad adicional
+          por sombras direccionales.
+\end{itemize}
+
+Para garantizar reproducibilidad y ejecución incremental, cada combinación de
+objeto, tamaño e iluminación se almacena en una estructura de directorios
+independiente junto con \texttt{metadata\_all.json}.
+
+\newpage
+\subsection{Extracción de puntos geométricos mediante VLM}
+\label{sec:extraccion_vlm}
+
+Cada conjunto de vistas se procesa mediante \textit{Molmo2-8B}~\cite{clark2026molmo2},
+que opera como una caja negra sin \textit{fine-tuning} adicional para esta tarea.
+El modelo recibe las $N$ imágenes de un objeto junto con el \textit{prompt}
+correspondiente y devuelve coordenadas 2D en un formato estructurado.
+
+Las coordenadas de Molmo2 utilizan una escala normalizada de $[0, 1000]$ con
+origen en la esquina superior izquierda de la imagen, independientemente de la
+resolución efectiva de la imagen enviada. El formato de salida del modelo es:
+
+\begin{equation}
+    \texttt{<points\ coords="$f$\ $o$\ $X$\ $Y$;\ \ldots">\ \textit{descripción}\ </points>}
+\end{equation}
+
+donde los valores están separados por espacios y los puntos correspondientes a
+imágenes distintas se separan por punto y coma. Cada punto queda especificado por
+cuatro campos:
+
+\begin{itemize}
+    \item $f$: índice de la imagen (\textit{frame}) dentro del conjunto enviado,
+          comenzando en 1.
+    \item $o$: índice de objeto (\textit{object index}), único por objeto distinto
+          señalado. Los índices son secuenciales a partir de 1, de modo que el
+          último índice representa el conteo total de objetos señalados.
+    \item $X, Y$: coordenadas normalizadas en $[0, 1000]$.
+\end{itemize}
+
+Los puntos se ordenan primero por índice de imagen y luego por coordenadas $X, Y$.
+Para el caso multivista, la salida incluye un par de puntos por imagen, con
+\texttt{obj\_id} $\in \{1, 2\}$ identificando cada uno. A modo de ejemplo, la
+siguiente salida indica que en la imagen~1 se señaló el objeto en $(555, 169)$,
+en la imagen~2 se señalaron dos objetos distintos en $(649, 154)$ y $(709, 162)$,
+y en la imagen~5 se señalaron tres:
+
+\begin{verbatim}
+<points coords="1 1 555 169;2 1 649 154 2 709 162;5 1 758 175 2 808 183 3 852 187">
+\end{verbatim}
+
+Este formato compacto —en lugar de JSON u otros esquemas estructurados— reduce
+significativamente el número de \textit{tokens} necesarios para representar las
+predicciones~\cite{clark2026molmo2}.
+
+\subsubsection{Estrategias de prompt (Flujo A — pointing directo)}
+
+En la estrategia base, el modelo recibe directamente las $N$ vistas del objeto
+junto con un prompt que especifica qué puntos estructurales señalar. Para obtener
+los prompts con mejor rendimiento se diseñaron pruebas iterativas sobre conjuntos
+de 100 objetos axiales y planares, cuyo detalle se explica en la
+sección~\ref{Experimentos}.
+
+\paragraph{Variantes de prompt para simetría axial:}
+proyección directa del eje (puntos sobre la proyección del eje cerca de los
+extremos superior e inferior), pares bilaterales (un punto y su espejo respecto
+al eje), extremos de la silueta más ancha, pares de características estructurales
+simétricas (asas, orificios, nervaduras), polos del eje de rotación, y puntos
+sobre la línea central del eje.
+
+\paragraph{Variantes de prompt para simetría planar:}
+traza del plano sobre la superficie, pares bilaterales respecto al plano, traza
+visible de la ``costura'' entre las dos mitades especulares, pares de elementos
+estructurales correspondientes (patas, ruedas, brazos), puntos medios horizontales
+de la silueta, y extremos de la traza visible del plano.
+
+Cada variante incluye instrucciones explícitas de consistencia global a través de
+todas las vistas, solicitando al modelo que infiera una hipótesis de simetría
+conjunta antes de proyectar los puntos individualmente en cada imagen.
+
+\subsubsection{Descripción del objeto como contexto (Flujo B — pointing con descripción)}
+
+Una limitación del Flujo A es que el modelo recibe únicamente instrucciones
+geométricas abstractas sin ningún conocimiento previo del tipo de objeto que está
+analizando. Para mitigar esto, se propone un flujo aumentado en el que una
+descripción semántica del objeto se incorpora al prompt antes de las instrucciones
+de pointing:
+
+\begin{enumerate}
+    \item \textbf{Selección de vista de descripción}: se selecciona una vista
+          representativa de las 114 disponibles (criterio detallado en la
+          sección~\ref{sec:seleccion_vista}).
+    \item \textbf{Generación de descripción}: esa vista única se envía a Molmo2
+          con un prompt de descripción libre (\textit{``Describe briefly what
+          object this is and its main geometric structure''}).
+    \item \textbf{Prompt aumentado}: la descripción generada se prepende al prompt
+          de pointing habitual, de modo que el modelo recibe las $N$ vistas junto
+          con el contexto semántico del objeto.
+\end{enumerate}
+
+La hipótesis es que el contexto semántico permite al modelo orientar mejor sus
+predicciones hacia las características estructuralmente relevantes del objeto
+específico (e.g., saber que es una silla orienta los puntos hacia el respaldo y
+patas, no hacia el borde del asiento).
+
+\subsubsection{Descripción y pointing integrados (Flujo C)}
+
+Como tercer flujo se propone mantener la solicitud de una descripción del objeto
+mediante una vista de la 114, sin embargo el prompt a usar es distinto al del
+Flujo A, y en cambio, se busca detectar todos los puntos señalados como
+importantes:
+
+\begin{enumerate}
+    \item Se selecciona una vista representativa con el criterio de la
+          sección~\ref{sec:seleccion_vista}.
+    \item Se envía esa única imagen a Molmo2 con un prompt que solicita
+          describir el objeto, y señalar puntos sobre el eje o plano de
+          simetría en esa misma imagen.
+    \item En base a la descripción del objeto y la indicación de los puntos
+          de interés, se realiza un envío multivista en donde se pide hacer
+          pointing a cada imagen.
+\end{enumerate}
+
+A diferencia de una lectura inicial de este flujo como línea base de cobertura
+mínima, el paso 3 lo integra al mismo marco multivista que los Flujos A y B
+($N \in \{1, 6, 14, 26\}$): la descripción y los puntos semilla obtenidos en el
+paso 2 se usan como contexto para un prompt multivista aumentado, análogo al
+del Flujo B pero informado además por ubicaciones concretas de puntos —no solo
+por texto descriptivo.
+
+\subsubsection{Selección de la vista de descripción}
+\label{sec:seleccion_vista}
+
+La selección aleatoria pura de entre las 114 vistas disponibles presenta un riesgo
+concreto: vistas con elevación extrema ($|\text{el}| > 70°$) son
+geométricamente degeneradas para la mayoría de objetos. Una vista cenital
+($\text{el} \approx +89°$) proyecta el eje vertical de un objeto axial como un
+punto y el plano de un objeto planar como una línea, produciendo descripciones
+pobres que contaminarían el prompt de pointing.
+
+Con 114 vistas distribuidas uniformemente en la esfera de Fibonacci,
+aproximadamente el 10--15\% caen en elevaciones extremas ($|\text{el}| > 70°$),
+lo que supone un riesgo no despreciable con muestreo aleatorio puro.
+
+\paragraph{Estrategia adoptada: aleatoriedad filtrada por elevación.}
+Se restringe el muestreo a las vistas con elevación en el rango
+$\text{el} \in (-60°, +60°)$, que en la distribución Fibonacci corresponden a
+aproximadamente 90--95 candidatas. Dentro de ese subconjunto se muestrea de forma
+aleatoria con semilla fija derivada del identificador del objeto:
+
+\begin{equation}
+    s_{\text{obj}} = \mathrm{MD5}(\texttt{object\_id}) \bmod 2^{31}
+    \label{eq:seed}
+\end{equation}
+
+El uso de una semilla por objeto (en lugar de una semilla global) garantiza que:
+(i) la vista de descripción sea reproducible para cada objeto específico, (ii)
+distintos objetos usen vistas distintas —evitando que todos sean descritos desde
+la misma perspectiva—, y (iii) el experimento sea exactamente replicable.
+
+\newpage
+\subsection{Proyección 3D por \textit{ray casting}}
+\label{sec:raycasting}
+
+Las coordenadas 2D devueltas por Molmo2 se proyectan al espacio 3D mediante
+\textit{ray casting} sobre la malla del objeto.
+
+\paragraph{Paso 1: Conversión de coordenadas Molmo2 a NDC.}
+Las coordenadas $(x, y) \in [0, 1000]^2$ se convierten a coordenadas normalizadas
+de dispositivo (NDC, rango $[-1,1]$):
+
+\begin{align}
+    \text{ndc}_x &= \frac{x}{1000}\cdot 2 - 1 \label{eq:ndc_x} \\[4pt]
+    \text{ndc}_y &= 1 - \frac{y}{1000}\cdot 2 \label{eq:ndc_y}
+\end{align}
+
+donde $\text{ndc}_x = -1$ es el borde izquierdo, $+1$ el derecho,
+$\text{ndc}_y = +1$ el borde superior y $-1$ el inferior. Esta conversión es
+independiente de la resolución efectiva de la imagen.
+
+\paragraph{Paso 2: Construcción del rayo en espacio mundial.}
+Bajo la convención de PyTorch3D ($p_{\text{cam}} = p_{\text{world}}\,R + T$),
+el centro de la cámara en coordenadas mundiales es $\mathbf{O} = -R\,T$.
+La dirección del rayo en espacio de cámara es:
+
+\begin{equation}
+    \mathbf{d}_{\text{cam}} =
+    \begin{pmatrix}
+        \text{ndc}_x \cdot \tan\!\left(\tfrac{\text{FoV}}{2}\right) \\[3pt]
+        \text{ndc}_y \cdot \tan\!\left(\tfrac{\text{FoV}}{2}\right) \\[3pt]
+        1
+    \end{pmatrix}
+    \label{eq:dir_cam}
+\end{equation}
+
+transformada a coordenadas mundiales y normalizada:
+
+\begin{equation}
+    \mathbf{d} = \frac{R\,\mathbf{d}_{\text{cam}}}{\|R\,\mathbf{d}_{\text{cam}}\|}
+    \label{eq:dir_world}
+\end{equation}
+
+\paragraph{Paso 3: Intersección con la malla.}
+El rayo $(\mathbf{O}, \mathbf{d})$ se intersecta contra la malla mediante Trimesh.
+Se retiene la intersección más cercana; si no existe, el punto se descarta
+(\textit{miss}).
+
+\subsubsection{Variante: retroproyección por parche}
+\label{sec:patchified}
+
+La retroproyección píxel a píxel exacta es sensible a ángulos rasantes: cuando el
+rayo llega casi tangente a la superficie, pequeños errores de localización en
+píxeles producen grandes saltos en el punto 3D resultante. Como alternativa, se
+propone evaluar una retroproyección por parche de $h \times h$ píxeles centrado
+en el punto predicho:
+
+\begin{equation}
+    \mathbf{p}_{3D}^{\text{patch}} =
+    \frac{1}{|S_{h}|}
+    \sum_{(p,q)\,\in\, S_{h}}
+    \mathrm{Intersect}\!\bigl(r_{p,q},\, \mathcal{M}\bigr)
+    \label{eq:patch}
+\end{equation}
+
+donde $S_{h}$ es el conjunto de píxeles del parche $h\times h$ cuyos rayos
+intersectan la malla $\mathcal{M}$, y el resultado es el promedio de todos esos
+puntos 3D. El promediado estabiliza el resultado ante variaciones locales de
+curvatura y errores de localización del VLM.
+
+Se evaluará $h \in \{3, 5\}$ como tamaños de parche, comparando contra la
+retroproyección exacta ($h=1$).
+
+\subsection{Consolidación de la nube de puntos}
+\label{sec:clustering}
+
+Múltiples vistas pueden generar puntos 3D que corresponden a la misma región
+física del objeto. Para reducir esa redundancia espacial se evalúan dos
+estrategias de fusión:
+
+\subsubsection{Clustering greedy por centroide (método actual)}
+
+Los puntos se procesan en orden de llegada. Cada punto nuevo se asigna al primer
+cluster cuyo centroide se encuentre dentro de un umbral $\tau_c = 0{,}05 \cdot
+\delta_{\text{bbox}}$ (diagonal de la caja delimitadora de la nube de puntos);
+si no existe tal cluster, se crea uno nuevo. El centroide se actualiza como media
+incremental:
+
+\begin{equation}
+    \mathbf{c}_k \leftarrow \mathbf{c}_k +
+    \frac{\mathbf{p} - \mathbf{c}_k}{n_k + 1}
+\end{equation}
+
+El método es $\mathcal{O}(n \cdot K)$ en número de clusters $K$ y asigna
+\textit{siempre} cada punto a algún cluster —no existe concepto de outlier.
+
+\subsubsection{HDBSCAN}
+
+Como alternativa basada en densidad, se propone evaluar HDBSCAN
+(\textit{Hierarchical Density-Based Spatial Clustering of Applications with
+Noise})~\cite{campello2013hdbscan}. A diferencia del método greedy, HDBSCAN:
+
+\begin{itemize}
+    \item Detecta clusters como regiones de alta densidad sin requerir el número
+          de clusters como parámetro.
+    \item Clasifica explícitamente como \textit{ruido} los puntos que no
+          pertenecen a ningún cluster denso, eliminándolos antes del ajuste SVD.
+    \item Su parámetro principal es \texttt{min\_samples}: el número mínimo de
+          puntos para que una región sea considerada densa.
+\end{itemize}
+
+La diferencia más relevante para este pipeline es el \textbf{manejo de outliers}:
+mientras el clustering greedy siempre asigna cada punto a algún cluster (y delega
+el rechazo de outliers al RANSAC posterior), HDBSCAN puede descartar
+explícitamente puntos aislados —como los producidos por alucinaciones de Molmo2
+que superan el \textit{hit} del ray casting pero caen en posiciones alejadas del
+resto de la nube. Ambos métodos son estrategias distintas aplicadas en etapas
+distintas: la combinación RANSAC + clustering greedy no es necesariamente inferior
+a HDBSCAN solo.
+
+Se evaluará \texttt{min\_samples} $\in \{2, 3, 5\}$ comparando contra el
+clustering greedy y contra el caso sin clustering.
+
+\newpage
+\subsection{Detección y validación de simetrías}
+
+Sobre la nube de puntos 3D consolidada se aplica un procedimiento de tres etapas
+para estimar los parámetros de la simetría dominante del objeto.
+
+\paragraph{Etapa 1 — Filtro de consenso (RANSAC).}
+Se aplica RANSAC para descartar puntos atípicos (\textit{outliers}) provenientes
+de detecciones erróneas del VLM. El umbral de inlier se fija en:
+
+\begin{equation}
+    \tau = 0{,}05 \cdot \delta_{\text{bbox}}
+\end{equation}
+
+donde $\delta_{\text{bbox}}$ es la diagonal de la caja delimitadora de la nube
+de puntos 3D.
+
+\begin{itemize}
+    \item \textbf{Simetría axial}: cada iteración muestrea 2 puntos y define
+          una recta candidata. La distancia de $\mathbf{q}$ a la recta es:
+          \begin{equation}
+              \delta = \left\|\,(\mathbf{q} - \mathbf{p}_i)
+                          - \bigl[(\mathbf{q}-\mathbf{p}_i)\cdot\hat{\mathbf{d}}\bigr]
+                          \hat{\mathbf{d}}\,\right\|
+          \end{equation}
+
+    \item \textbf{Simetría planar}: cada iteración muestrea 3 puntos y define un
+          plano candidato con normal
+          $\hat{\mathbf{n}} = (\mathbf{p}_2-\mathbf{p}_1)\times(\mathbf{p}_3-\mathbf{p}_1)$.
+          La distancia de $\mathbf{q}$ al plano es:
+          \begin{equation}
+              \delta = \bigl|(\mathbf{q} - \mathbf{p}_1)\cdot\hat{\mathbf{n}}\bigr|
+          \end{equation}
+\end{itemize}
+
+En ambos casos se clasifican como inliers los puntos con $\delta < \tau$. Tras
+\textbf{1.000 iteraciones}, se selecciona el modelo candidato con mayor número de
+inliers; si el conjunto ganador contiene menos de 2 inliers, se devuelven todos
+los puntos como fallback.
+
+\paragraph{Etapa 2 — Ajuste SVD.}
+Sobre el conjunto de puntos seleccionado, centrado en su centroide $\bar{\mathbf{p}}$,
+se aplica SVD: $P - \bar{\mathbf{p}} = U\,\Sigma\,V^\top$.
+
+\begin{itemize}
+    \item \textbf{Simetría axial}: $\hat{\mathbf{d}} = V^\top[0,:]$
+          (primera componente principal, máxima varianza).
+    \item \textbf{Simetría planar}: $\hat{\mathbf{n}} = V^\top[-1,:]$
+          (última componente principal, mínima varianza).
+\end{itemize}
+
+El centroide $\bar{\mathbf{p}}$ se adopta como punto de origen de la simetría.
+
+\paragraph{Etapa 3 — Verificación geométrica (SDE).}
+Se muestrea una submuestra de hasta $N_{\text{SDE}} = 1.000$ vértices de la malla
+y se aplica la transformación de simetría estimada.
+
+Para \textbf{simetría axial} (reflexión de $180°$ respecto al eje):
+\begin{equation}
+    \mathbf{v}' = 2\Bigl(\mathbf{o} +
+        \bigl[(\mathbf{v} - \mathbf{o})\cdot\hat{\mathbf{d}}\bigr]
+        \hat{\mathbf{d}}\Bigr) - \mathbf{v}
+    \label{eq:sde_axis}
+\end{equation}
+
+Para \textbf{simetría planar} (reflexión respecto al plano):
+\begin{equation}
+    \mathbf{v}' = \mathbf{v} -
+        2\bigl[(\mathbf{v} - \mathbf{o})\cdot\hat{\mathbf{n}}\bigr]\hat{\mathbf{n}}
+    \label{eq:sde_plane}
+\end{equation}
+
+Para cada vértice transformado $\mathbf{v}'$ se busca su vecino más cercano en la
+submuestra mediante un árbol KD:
+\begin{equation}
+    \text{SDE} = \frac{1}{|V|}\sum_{\mathbf{v} \in V}
+        \frac{\|\mathbf{v}' - \mathrm{NN}(\mathbf{v}')\|}{\delta_{\text{mesh}}}
+    \label{eq:sde}
+\end{equation}
+
+\textbf{Criterio de aceptación}: $\text{SDE} > 0{,}05 \Rightarrow$
+\texttt{accepted = false} (umbral fijado empíricamente).
+
+La combinación de estas etapas produce cuatro estimaciones por objeto y número
+de vistas:
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+ & Sin SDE & Con SDE \\
+\midrule
+Sin RANSAC & \texttt{svd} & \texttt{svd\_sde} \\
+Con RANSAC & \texttt{ransac\_svd} & \texttt{ransac\_svd\_sde} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\newpage
+\subsection{Evaluación cuantitativa}
+
+El desempeño del sistema se evalúa comparando los parámetros predichos contra las
+anotaciones de referencia:
+
+\paragraph{Error angular.}
+\begin{equation}
+    \varepsilon_\theta = \arccos\!\bigl(\,|\hat{\mathbf{d}}_{\text{pred}}
+        \cdot \hat{\mathbf{d}}_{\text{gt}}|\,\bigr) \in [0°,\,90°]
+\end{equation}
+
+Para simetría planar: \textit{best-match} contra todos los planos de referencia
+disponibles.
+
+\paragraph{Error de traslación.}
+Distancia punto-recta (axial) o punto-plano (planar) del origen predicho al GT,
+normalizadas por $\delta_{\text{mesh}}$.
+
+\paragraph{Precisión bajo umbral angular.}
+Fracción de objetos con $\varepsilon_\theta < \{5°, 10°, 15°\}$.
+
+\paragraph{AUC angular.}
+\begin{equation}
+    \text{AUC}_\theta =
+    \frac{1}{45}\int_0^{45}\text{Precision}(t)\,dt
+\end{equation}
+
+Los objetos sin predicción reciben imputación $\varepsilon_\theta = 90°$.
+
+\paragraph{SDE de evaluación — exclusivo simetría planar.}
+Calculado sobre la totalidad de los vértices de la malla:
+\begin{equation}
+    \text{SDE}_{\text{eval}} =
+    \frac{1}{|V|}\sum_{\mathbf{v}\in V}
+    \frac{2\,\bigl|(\mathbf{v}-\mathbf{o})\cdot\hat{\mathbf{n}}\bigr|}
+         {\delta_{\text{mesh}}}
+    \label{eq:sde_eval}
+\end{equation}
+
+\paragraph{Precisión y AUC bajo SDE.}
+\begin{equation}
+    \text{AUC}_{\text{SDE}} =
+    \frac{1}{0{,}10}\int_0^{0{,}10}
+        \text{Precision}_{\text{SDE}}(t)\,dt
+\end{equation}
+
+con umbrales de $\{0{,}01,\, 0{,}02\}$.
+
+Las métricas angulares se calculan sobre los 100 objetos evaluados (imputando
+$90°$ a los sin predicción); el error de traslación y el SDE solo sobre los
+$n_{\text{obj}}$ objetos con predicción aceptada.
+
+\newpage
+\subsection{Diseño experimental}
+\label{Experimentos}
+
+Los experimentos se organizan en tres flujos de procesamiento independientes,
+dos variantes de clustering y dos variantes de retroproyección. Las comparaciones
+se realizan siempre bajo las mismas métricas (§3.6) y sobre el mismo subconjunto
+de 100 objetos, a fin de mantener la interpretabilidad de los resultados.
+
+\subsubsection{Flujo A — Pointing directo (línea base)}
+
+El modelo recibe las $N$ vistas y un prompt de pointing sin contexto adicional.
+Este flujo replica y extiende los experimentos ya realizados:
+
+\begin{itemize}
+    \item \textbf{Prompts evaluados}: 6 diseños originales (v00--v05) $\times$
+          2 tipos de simetría, ya completados.
+    \item \textbf{Prompts mejorados}: 6 versiones v\_1 (v00\_1--v05\_1) $\times$
+          2 tipos de simetría, ya completados.
+    \item \textbf{Condiciones}: resolución 224~px, iluminación \textit{flat},
+          $N \in \{1, 6, 14, 26\}$ vistas, 4 métodos de ajuste.
+\end{itemize}
+
+\subsubsection{Flujo B — Pointing con descripción (descripción prepend)}
+
+El modelo recibe la misma configuración multivista que en el Flujo A, pero el
+prompt se aumenta con una descripción semántica del objeto generada previamente
+desde una vista de descripción seleccionada según el criterio de la
+sección~\ref{sec:seleccion_vista}:
+
+\begin{itemize}
+    \item \textbf{Vista de descripción}: aleatoria con semilla por objeto
+          (ecuación~\eqref{eq:seed}), filtrada a elevación
+          $\text{el} \in (-60°, +60°)$.
+    \item \textbf{Prompt}: descripción libre de Molmo2 + prompt de pointing base
+          (best performer del Flujo A).
+    \item \textbf{Condiciones}: resolución 224~px, iluminación \textit{flat},
+          $N \in \{1, 6, 14, 26\}$ vistas, 4 métodos de ajuste.
+\end{itemize}
+
+Este flujo permite evaluar si el contexto semántico mejora la localización de
+los puntos de simetría respecto al Flujo A.
+
+\subsubsection{Flujo C — Descripción y pointing integrados}
+
+El modelo recibe inicialmente una sola vista para la descripción del objeto y
+de los puntos a encontrar. Posteriormente se le pasan $N$ vistas y un prompt
+general para simetría axial y planar que solicita el pointing para los puntos
+señalados:
+
+\begin{itemize}
+    \item \textbf{Vista}: misma selección que en Flujo B (aleatoria filtrada por
+          elevación, semilla por objeto).
+    \item \textbf{Prompt}: un único mensaje inicial que solicita describir el
+          objeto y señalar los puntos sobre el eje/plano de simetría en esa
+          imagen. Posteriormente se incluye dicha información en otro prompt
+          general que tiene como objetivo realizar pointing.
+    \item \textbf{Resultado}: múltiples puntos 3D por objeto.
+    \item \textbf{Condiciones}: resolución 224~px, iluminación \textit{flat},
+          $N \in \{1, 6, 14, 26\}$ vistas, 4 métodos de ajuste.
+\end{itemize}
+
+Este flujo cuantifica cuánto aporta, sobre la base multivista común a los tres
+flujos, el contexto adicional de una descripción y puntos semilla obtenidos de
+una única vista de referencia.
+
+\subsubsection{Variantes de clustering}
+
+Para cada flujo se evaluarán dos estrategias de consolidación de la nube de
+puntos (§\ref{sec:clustering}):
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Variante & Método & Parámetros \\
+\midrule
+C1 & Sin clustering & — \\
+C2 & Greedy por centroide & $\tau_c = 0{,}05 \cdot \delta_{\text{bbox}}$ \\
+C3 & HDBSCAN & \texttt{min\_samples} $\in \{2, 3, 5\}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsubsection{Variantes de retroproyección}
+
+Para el mejor prompt de los Flujos A y B se evaluará la retroproyección por
+parche (§\ref{sec:patchified}) como alternativa a la retroproyección exacta:
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Variante & Método & Parámetros \\
+\midrule
+R1 & Ray casting exacto & $h = 1$ (píxel único) \\
+R2 & Retroproyección por parche & $h \in \{3, 5\}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsubsection{Resumen del plan experimental}
+
+\begin{center}
+\begin{tabular}{llccc}
+\toprule
+Flujo & Descripción & Prompts & $N$ vistas & Clustering \\
+\midrule
+A & Pointing directo — originales      & v00--v05   & 1,6,14,26 & C1, C2 \\
+A & Pointing directo — mejorados       & v00\_1--v05\_1 & 1,6,14,26 & C1, C2 \\
+B & Pointing + descripción             & best(A)    & 1,6,14,26 & C1, C2, C3 \\
+C & Descripción y pointing integrados   & nuevo      & 1,6,14,26 & C1, C2, C3 \\
+\midrule
+  & Retroproyección por parche (best)  & best(A/B)  & best($N$) & best(C) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Los experimentos de Flujo A con prompts originales y mejorados están completados
+($\checkmark$). Los Flujos B y C, las variantes HDBSCAN (C3) y la retroproyección
+por parche (R2) constituyen el trabajo experimental pendiente.
+
+\subsection{Comparación con métodos tradicionales basados en geometría}
+
+Los resultados obtenidos se contrastarán con el método propuesto por Aguirre y
+Sipiran~\cite{aguirre_sipiran}, que aborda la detección de simetría 3D mediante
+retroproyección de características visuales con acceso directo a la geometría del
+objeto. La comparación se realiza bajo las mismas métricas (§3.6) y sobre el
+mismo subconjunto de objetos de ShapeNet, permitiendo cuantificar el costo, en
+términos de precisión geométrica, de prescindir del acceso a la malla 3D durante
+la extracción de puntos —sustituyéndola por un VLM operando exclusivamente sobre
+observaciones 2D.
+
+\newpage
+\subsection*{Entorno de implementación}
+
+El sistema fue implementado en Python~3.10 con las siguientes dependencias
+principales: PyTorch~2.6 (CUDA~12.4), PyTorch3D~0.7.9 para el renderizado y la
+cámara perspectiva, Trimesh para \textit{ray casting}, Transformers~4.57 +
+Molmo2-8B para la inferencia del VLM, y NumPy/SciPy para álgebra lineal y
+construcción del árbol KD. Los experimentos de inferencia se ejecutaron en GPU;
+las etapas de \textit{ray casting}, ajuste SVD y evaluación son tareas de CPU
+ejecutadas en paralelo mediante segmentación por objeto.
+
+La correspondencia entre el sistema de coordenadas del renderizado y el del
+archivo \texttt{.obj} original está garantizada por diseño: los parámetros $R$,
+$T$ almacenados en \texttt{metadata\_all.json} son los mismos que se usan tanto
+para el renderizado como para la reconstrucción del rayo en
+\texttt{map\_to\_3d.py}, y la posición de cámara $\mathbf{C} = -RT$ fue validada
+numéricamente verificando su coincidencia con el parámetro \textit{eye} de
+\texttt{look\_at\_view\_transform}.

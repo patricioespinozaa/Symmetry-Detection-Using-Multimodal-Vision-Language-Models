@@ -18,10 +18,21 @@ Coordinate convention
 - Pixel coords:  (px, py) normalized to [-1, 1] NDC (top-left = (-1, -1))
 - Ray casting:   trimesh, world space (same as .obj)
 
+Patch-based backprojection
+--------------------------
+--patch-size 1 (default) casts one ray per Molmo point, unchanged from the
+original behavior. --patch-size 3/5 instead averages the 3D hit points of a
+patch_size x patch_size grid of sub-rays around the point (see
+pipeline_common.camera.cast_ray_patch), which stabilizes the result against
+grazing-angle localization noise. Output goes to a separate
+mapped_points_3d_p{patch_size}[_EXP].json file so it never collides with the
+exact-mode output.
+
 Output
 ------
 <renders_root>/<symmetry_type>/<object_id>/<image_size>/<illumination>/
-    mapped_points_3d.json
+    mapped_points_3d.json                    (--patch-size 1, default)
+    mapped_points_3d_p3.json                 (--patch-size 3)
 
 JSON format
 -----------
@@ -31,6 +42,7 @@ JSON format
   "image_size": 224,
   "illumination": "flat",
   "fov_deg": 60.0,
+  "patch_size": 1,
   "n_views_results": {
     "1": {
       "images_sent": [...],          # from molmo_multiview.json
@@ -43,6 +55,10 @@ JSON format
           "hit":        true,        # whether ray intersected the mesh
           "point_3d":   [x, y, z],  # 3D intersection point (null if no hit)
           "face_id":    42,          # mesh face index (null if no hit)
+          # present only when --patch-size > 1:
+          "patch_size":    3,
+          "n_patch_hits":  7,
+          "n_patch_total": 9
         },
         ...
       ],
@@ -70,6 +86,14 @@ Usage
         --objects-root ../data/objects \\
         --symmetry-type axis_sym \\
         --gpu-id 0 --num-gpus 2
+
+    # Patch-based backprojection (h=3)
+    python Mapping/map_to_3d.py \\
+        --renders-root ../data/renders \\
+        --objects-root ../data/objects \\
+        --symmetry-type axis_sym \\
+        --sizes 224 --lightings flat \\
+        --patch-size 3
 """
 
 from __future__ import annotations
@@ -80,8 +104,12 @@ import sys
 from pathlib import Path
 
 import numpy as np
-import trimesh
 from tqdm import tqdm
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from pipeline_common.naming import exp_filename
+from pipeline_common.datasets import OBJECTS_SUBDIR, load_mesh
+from pipeline_common.camera import molmo_to_ndc, build_camera_rays, cast_ray, cast_ray_patch
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -90,143 +118,9 @@ OUTPUT_FILE    = "mapped_points_3d.json"
 MOLMO_JSON     = "molmo_multiview.json"
 MANIFEST_FILE  = "manifest.json"
 
-
-def _exp_filename(base: str, experiment_id: str | None) -> str:
-    """Return base unchanged, or base_EXPID.ext when experiment_id is set."""
-    if not experiment_id:
-        return base
-    dot = base.rfind(".")
-    return f"{base[:dot]}_{experiment_id}{base[dot:]}"
-
 DEFAULT_SIZES       = [224, 448, 1136]
 DEFAULT_LIGHTINGS   = ["flat", "brighter", "darker"]
-OBJECTS_SUBDIR      = {"axis_sym": "curated_axis_sym_obj",
-                       "plane_sym": "curated_plane_sym_obj"}
-
-
-# ── Camera helpers ────────────────────────────────────────────────────────────
-
-def molmo_to_ndc(x: float, y: float) -> tuple[float, float]:
-    """
-    Convert Molmo2 coords (0–1000, top-left origin) to
-    NDC ([-1, 1], top-left = (-1, +1) in OpenGL convention).
-
-    Molmo coords are normalized to [0, 1000] independently of image resolution,
-    so image_size is not needed — the mapping to NDC is direct.
-
-    Molmo x → NDC x:  (x / 1000) * 2 - 1        (left=-1, right=+1)
-    Molmo y → NDC y:  1 - (y / 1000) * 2         (top=+1,  bottom=-1)
-    """
-    ndc_x = (x / 1000.0) * 2.0 - 1.0
-    ndc_y = 1.0 - (y / 1000.0) * 2.0
-    return ndc_x, ndc_y
-
-
-def build_camera_rays(
-    ndc_x: float,
-    ndc_y: float,
-    R: list[list[float]],
-    T: list[float],
-    fov_deg: float,
-    image_size: int,
-) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Build a camera ray in world space for a given NDC point.
-
-    PyTorch3D convention (row-vector):
-      - Camera looks along +Z in camera space
-      - R, T transform world → camera:  p_cam = p_world @ R + T
-      - Camera centre in world:         C = -T @ R^{-1}  →  -(R @ T) in col-vec numpy
-
-    The ray origin is the camera centre in world space.
-    The ray direction is computed from the NDC point using the FoV.
-
-    Args:
-        ndc_x, ndc_y: NDC coordinates in [-1, 1]
-        R:            3×3 rotation matrix (world → camera), row-major
-        T:            translation vector (world → camera)
-        fov_deg:      field of view in degrees (full angle)
-        image_size:   image width = height in pixels
-
-    Returns:
-        ray_origin:    (3,) world-space camera centre
-        ray_direction: (3,) normalized world-space ray direction
-    """
-    R_np = np.array(R, dtype=np.float64)       # (3, 3)
-    T_np = np.array(T, dtype=np.float64)       # (3,)
-
-    # Camera centre in world space: C = -R @ T  (PyTorch3D row convention)
-    ray_origin = -(R_np @ T_np)                # (3,)
-
-    # Half-tangent for the full FoV
-    half_tan = np.tan(np.deg2rad(fov_deg) / 2.0)
-
-    # Direction in camera space (looking along +Z)
-    # x scales with ndc_x, y scales with ndc_y (aspect=1 → same scale)
-    dir_cam = np.array([
-        ndc_x * half_tan,
-        ndc_y * half_tan,
-        1.0,
-    ], dtype=np.float64)
-
-    # Rotate to world space: dir_world = R @ dir_cam  (PyTorch3D row convention)
-    dir_world = R_np @ dir_cam
-    dir_world /= np.linalg.norm(dir_world)
-
-    return ray_origin, dir_world
-
-
-# ── Mesh loading ──────────────────────────────────────────────────────────────
-
-def load_mesh(obj_path: Path) -> trimesh.Trimesh:
-    """Load .obj as a trimesh, merging geometry if the file has multiple meshes."""
-    scene_or_mesh = trimesh.load(str(obj_path), force="mesh", process=False)
-    if isinstance(scene_or_mesh, trimesh.Scene):
-        mesh = trimesh.util.concatenate(
-            [g for g in scene_or_mesh.geometry.values()
-             if isinstance(g, trimesh.Trimesh)]
-        )
-    else:
-        mesh = scene_or_mesh
-    return mesh
-
-
-# ── Ray casting ───────────────────────────────────────────────────────────────
-
-def cast_ray(
-    mesh: trimesh.Trimesh,
-    ray_origin: np.ndarray,
-    ray_direction: np.ndarray,
-) -> dict:
-    """
-    Cast a single ray against the mesh.
-
-    Returns dict with:
-        hit       (bool)
-        point_3d  (list[float] | None)
-        face_id   (int | None)
-    """
-    origins    = ray_origin[None, :]      # (1, 3)
-    directions = ray_direction[None, :]   # (1, 3)
-
-    locations, index_ray, index_tri = mesh.ray.intersects_location(
-        ray_origins=origins,
-        ray_directions=directions,
-        multiple_hits=False,
-    )
-
-    if len(locations) == 0:
-        return {"hit": False, "point_3d": None, "face_id": None}
-
-    # Take the closest hit
-    distances = np.linalg.norm(locations - ray_origin, axis=1)
-    closest   = np.argmin(distances)
-
-    return {
-        "hit":      True,
-        "point_3d": locations[closest].tolist(),
-        "face_id":  int(index_tri[closest]),
-    }
+PATCH_SIZES         = (1, 3, 5)
 
 
 # ── Per-object mapping ────────────────────────────────────────────────────────
@@ -239,16 +133,25 @@ def process_object(
     fov_deg:       float,
     overwrite:     bool = False,
     experiment_id: str | None = None,
+    patch_size:    int = 1,
 ) -> None:
     """
     Map Molmo2 predictions to 3D for all (size, illumination) configs of one object.
     Skips configs where the output JSON already exists unless --overwrite.
     When experiment_id is set, reads molmo_multiview_<ID>.json and writes
     mapped_points_3d_<ID>.json instead of the default filenames.
+
+    patch_size == 1 (default) reproduces exact single-ray backprojection,
+    unchanged from the original behavior. patch_size in (3, 5) averages a
+    patch_size x patch_size grid of sub-rays per point (see
+    pipeline_common.camera.cast_ray_patch) and writes to a separate
+    p{patch_size}-tagged output file.
     """
-    object_id  = object_dir.name
-    molmo_json = _exp_filename(MOLMO_JSON,   experiment_id)
-    output_file = _exp_filename(OUTPUT_FILE, experiment_id)
+    object_id   = object_dir.name
+    molmo_json  = exp_filename(MOLMO_JSON, experiment_id)
+    patch_tag   = f"p{patch_size}" if patch_size != 1 else None
+    exp_out     = (f"{experiment_id}_{patch_tag}" if experiment_id else patch_tag) if patch_tag else experiment_id
+    output_file = exp_filename(OUTPUT_FILE, exp_out)
 
     # Load mesh once per object (shared across all size/lighting configs)
     try:
@@ -310,13 +213,16 @@ def process_object(
                         y       = pt["y"]
                         obj_id  = pt["obj_id"]
 
-                        ndc_x, ndc_y = molmo_to_ndc(x, y)
-
-                        ray_origin, ray_dir = build_camera_rays(
-                            ndc_x, ndc_y, R, T, fov, image_size
-                        )
-
-                        hit_result = cast_ray(mesh, ray_origin, ray_dir)
+                        if patch_size == 1:
+                            ndc_x, ndc_y = molmo_to_ndc(x, y)
+                            ray_origin, ray_dir = build_camera_rays(
+                                ndc_x, ndc_y, R, T, fov, image_size
+                            )
+                            hit_result = cast_ray(mesh, ray_origin, ray_dir)
+                        else:
+                            hit_result = cast_ray_patch(
+                                mesh, R, T, x, y, patch_size, image_size, image_size, fov
+                            )
 
                         entry = {
                             "img_idx":  img_idx,
@@ -327,6 +233,10 @@ def process_object(
                             "point_3d": hit_result["point_3d"],
                             "face_id":  hit_result["face_id"],
                         }
+                        if patch_size != 1:
+                            entry["patch_size"]   = hit_result["patch_size"]
+                            entry["n_patch_hits"] = hit_result["n_patch_hits"]
+                            entry["n_patch_total"] = hit_result["n_patch_total"]
                         points_3d_all.append(entry)
 
                         if hit_result["hit"]:
@@ -347,6 +257,7 @@ def process_object(
                 "image_size":      image_size,
                 "illumination":    lighting,
                 "fov_deg":         fov,
+                "patch_size":      patch_size,
                 "n_views_results": n_views_results,
             }
 
@@ -387,12 +298,20 @@ def parse_args() -> argparse.Namespace:
                    help="Limit to the first N objects (sorted order).")
     p.add_argument("--yes", "-y", action="store_true",
                    help="Skip the confirmation prompt (useful for automated loops).")
+    p.add_argument("--patch-size", type=int, default=1, choices=PATCH_SIZES,
+                   help=(
+                       "1 = exact single-ray backprojection (default, unchanged output). "
+                       "3 or 5 = average a patch_size x patch_size grid of sub-rays per "
+                       "point, written to a separate p{patch_size}-tagged output file."
+                   ))
 
     return p.parse_args()
 
 
 def preview(args: argparse.Namespace, objects: list[Path]) -> None:
-    output_file = _exp_filename(OUTPUT_FILE, args.experiment_id)
+    patch_tag   = f"p{args.patch_size}" if args.patch_size != 1 else None
+    exp_out     = (f"{args.experiment_id}_{patch_tag}" if args.experiment_id else patch_tag) if patch_tag else args.experiment_id
+    output_file = exp_filename(OUTPUT_FILE, exp_out)
     print("\n========== MAP TO 3D ==========")
     print(f"Renders root  : {args.renders_root}")
     print(f"Objects root  : {args.objects_root}")
@@ -404,6 +323,8 @@ def preview(args: argparse.Namespace, objects: list[Path]) -> None:
     print(f"Sizes         : {args.sizes}")
     print(f"Lightings     : {args.lightings}")
     print(f"FoV           : {args.fov}°")
+    print(f"Patch size    : {args.patch_size}" + (" (exact, single ray)" if args.patch_size == 1 else f" ({args.patch_size}x{args.patch_size} averaged sub-rays)"))
+    print(f"Output file   : {output_file}")
     print(f"Overwrite     : {args.overwrite}")
     if not args.overwrite:
         print(f"(Existing {output_file} skipped — use --overwrite to replace)")
@@ -454,6 +375,7 @@ def main() -> None:
             fov_deg       = args.fov,
             overwrite     = args.overwrite,
             experiment_id = args.experiment_id,
+            patch_size    = args.patch_size,
         )
 
     print(f"\nDone.")

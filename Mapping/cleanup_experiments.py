@@ -52,21 +52,15 @@ from pathlib import Path
 
 from tqdm import tqdm
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from pipeline_common.naming import exp_filename
+
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 MOLMO_JSON_BASE = "molmo_multiview.json"
 
 DEFAULT_SIZES       = [224, 448, 1136]
 DEFAULT_ILLUMINATIONS = ["flat", "brighter", "darker"]
-
-
-# ── Core logic ────────────────────────────────────────────────────────────────
-
-def _molmo_filename(experiment_id: str | None) -> str:
-    if not experiment_id:
-        return MOLMO_JSON_BASE
-    dot = MOLMO_JSON_BASE.rfind(".")
-    return f"{MOLMO_JSON_BASE[:dot]}_{experiment_id}{MOLMO_JSON_BASE[dot:]}"
 
 
 def cleanup_object(
@@ -86,7 +80,7 @@ def cleanup_object(
     modified  = 0
     deleted   = 0
     skipped   = 0
-    json_name = _molmo_filename(experiment_id)
+    json_name = exp_filename(MOLMO_JSON_BASE, experiment_id)
 
     for size in sizes:
         for lighting in lightings:
@@ -155,7 +149,7 @@ def parse_args() -> argparse.Namespace:
 
 def preview(args: argparse.Namespace, n_objects: int) -> None:
     mode      = "DRY RUN — no changes will be made" if args.dry_run else "LIVE — files will be modified/deleted"
-    json_name = _molmo_filename(args.experiment_id)
+    json_name = exp_filename(MOLMO_JSON_BASE, args.experiment_id)
     print("\n========== CLEANUP EXPERIMENTS ==========")
     print(f"Renders root  : {args.renders_root}")
     print(f"Symmetry type : {args.symmetry_type}")

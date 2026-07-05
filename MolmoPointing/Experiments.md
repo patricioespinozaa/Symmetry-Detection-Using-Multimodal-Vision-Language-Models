@@ -64,6 +64,9 @@ SVD for **axis detection** needs the cloud to have high variance *along* the axi
 | `--method METHOD` | evaluate | `svd`, `ransac_svd`, `svd_sde`, or `ransac_svd_sde` (required). |
 | `--max-objects N` | all 4 | Processes only the first N objects (same sorted order). |
 | `--yes` / `-y` | runner, map_to_3d | Skips interactive confirmation. Required for automated loops. |
+| `--flow {a,b,c}` | runner only | See "Flows B/C" below. Default `a` reproduces this document's experiments exactly. |
+| `--patch-size {1,3,5}` | map_to_3d | See "Backprojection variants" below. |
+| `--clustering-method {none,greedy,hdbscan}` | estimate_symmetry | See "Clustering variants" below. |
 
 File chain per experiment (evaluate genera 4 pares, uno por método):
 ```
@@ -79,6 +82,51 @@ molmo_multiview_<EXP_ID>.json
   → eval_s224_flat_<EXP_ID>_ransac_svd_sde_results.json
   → eval_s224_flat_<EXP_ID>_ransac_svd_sde_summary.csv
 ```
+
+---
+
+## Flows B/C, clustering variants, backprojection variants
+
+Everything below this point (v00–v05, v00_1–v05_1) exercises **Flow A** (direct
+pointing) against the greedy-clustering / exact-backprojection defaults. The
+methodology defines two more experimental axes, layered on top of the best
+Flow-A prompt rather than replacing these loops.
+
+**For the full ordered checklist of what's still pending (Flow B, Flow C,
+HDBSCAN sweep, patch backprojection) with a worked `--experiment-id` chaining
+example, see [`EXPERIMENT_ROADMAP.md`](../EXPERIMENT_ROADMAP.md) at the repo
+root.** The quick-reference below is just the raw flag syntax.
+
+**Flows B/C** — run the best-performing Flow-A prompt (`--prompt-id`) under
+`--flow b` or `--flow c` instead of the default `--flow a`:
+```bash
+CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
+    --renders-root ../data/renders --symmetry-type axis_sym \
+    --sizes 224 --lightings flat --view-groups 1 6 14 26 \
+    --prompt-id axis_v05_1 --flow b --experiment-id axis_v05_1_flowB \
+    --prompt-mode auto --yes
+```
+Then run `map_to_3d.py` / `estimate_symmetry.py` / `evaluate.py` exactly as in the
+loops below, substituting `axis_v05_1_flowB` for `--experiment-id`. See
+`MolmoPointing/README.md` § Flows.
+
+**Clustering variants** — sweep `--clustering-method hdbscan --hdbscan-min-samples {2,3,5}`
+in `estimate_symmetry.py` against an existing `mapped_points_3d[_EXP].json` (no
+re-run of Molmo/map_to_3d needed):
+```bash
+for MS in 2 3 5; do
+    python Mapping/estimate_symmetry.py \
+        --renders-root ../data/renders --objects-root ../data/objects \
+        --symmetry-type axis_sym --sizes 224 --lightings flat \
+        --experiment-id axis_v05_1 --clustering-method hdbscan --hdbscan-min-samples $MS
+done
+```
+See `Mapping/README.md` § 2.
+
+**Backprojection variants** — sweep `--patch-size {3,5}` in `map_to_3d.py` for the
+best Flow-A/B prompt and best `N` (re-run `estimate_symmetry.py`/`evaluate.py`
+afterward, reading the `_p3`/`_p5`-tagged `mapped_points_3d` file). See
+`Mapping/README.md` § 1.
 
 ---
 
