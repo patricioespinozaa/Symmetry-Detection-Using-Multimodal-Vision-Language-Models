@@ -36,7 +36,17 @@ them as the base for Flow B/C).
 
 ## 1. Prerequisites
 
+None of the commands in this roadmap pass `--max-objects`, so every script
+processes all objects it finds under `<renders_root>/<symmetry_type>/` — this
+roadmap targets the full 850-object dataset per symmetry type, not the
+100-object subset used for the original prompt experiments. Confirm both are
+fully rendered before starting (a partial `renders_root` just silently gives a
+partial run, not an error):
+
 ```bash
+find ../data/renders/axis_sym  -maxdepth 1 -mindepth 1 -type d | wc -l   # expect 850
+find ../data/renders/plane_sym -maxdepth 1 -mindepth 1 -type d | wc -l   # expect 850
+
 # HDBSCAN clustering needs scikit-learn (not required for Flow B/C themselves)
 pip install scikit-learn
 
@@ -231,12 +241,12 @@ Identical to §3b/§3c — copy those two loops, replacing `_flowB` with `_flowC
 ```bash
 python Mapping/compare_results.py \
     --renders-root ../data/renders --symmetry-type axis_sym \
-    --sizes 224 --lightings flat \
+    --sizes 224 --lightings flat --total-objects 850 \
     --save-dir ../results/plots --csv-dir ../results
 
 python Mapping/compare_results.py \
     --renders-root ../data/renders --symmetry-type plane_sym \
-    --sizes 224 --lightings flat \
+    --sizes 224 --lightings flat --total-objects 850 \
     --save-dir ../results/plots --csv-dir ../results
 ```
 
@@ -301,8 +311,8 @@ done
 ## 7. Final consolidation
 
 ```bash
-python Mapping/compare_results.py --renders-root ../data/renders --symmetry-type axis_sym  --sizes 224 --lightings flat --save-dir ../results/plots --csv-dir ../results
-python Mapping/compare_results.py --renders-root ../data/renders --symmetry-type plane_sym --sizes 224 --lightings flat --save-dir ../results/plots --csv-dir ../results
+python Mapping/compare_results.py --renders-root ../data/renders --symmetry-type axis_sym  --sizes 224 --lightings flat --total-objects 850 --save-dir ../results/plots --csv-dir ../results
+python Mapping/compare_results.py --renders-root ../data/renders --symmetry-type plane_sym --sizes 224 --lightings flat --total-objects 850 --save-dir ../results/plots --csv-dir ../results
 ```
 
 At this point `<symmetry>_comparison.csv` has every row needed for the thesis
