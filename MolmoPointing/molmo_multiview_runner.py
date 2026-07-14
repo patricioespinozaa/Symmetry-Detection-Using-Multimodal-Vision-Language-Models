@@ -45,17 +45,18 @@ which still control the *main* N-view pointing call in all three flows):
       seed) asks the model to describe the object; that description is
       prepended to the base pointing prompt before the normal N-view call.
   c   Descripcion y pointing integrados. Same seeded description view, but
-      the extra call asks the model to describe the object AND label every
-      distinctive structural landmark it can find near the symmetry
-      axis/plane -- count decided by the model itself, not a fixed pair,
-      and deliberately NO pixel coordinates (see parse_describe_and_points /
-      describe_and_point_{axis,plane}.txt). Those labels replace the base
-      --prompt-id prompt entirely for the main N-view call: the model is
-      asked to locate each named landmark, by name (same obj_id numbering),
-      in every view -- ALL localization happens there (see
-      build_flow_c_prompts). Falls back to Flow B-style description-only
-      augmentation of the base prompt if the pre-pass yields no parseable
-      landmarks.
+      the extra call asks the model to describe the object AND give a
+      short qualitative hint of where the symmetry axis/plane is located
+      (e.g. "runs vertically from the spout tip to the base center") --
+      no landmark list, no pixel coordinates (see
+      parse_describe_and_location / describe_and_point_{axis,plane}.txt).
+      That description + location hint replace the base --prompt-id prompt
+      entirely for the main N-view call: the model is explicitly asked to
+      find points ON the symmetry axis/plane in each image (obj_id just
+      enumerates however many points that image has, up to a small cap --
+      no cross-view identity tracking, see build_flow_c_prompts). Falls
+      back to Flow B-style description-only augmentation of the base
+      prompt if the pre-pass yields no parseable location hint.
 
 --flow b/c only affect --prompt-mode single/multi/auto (whichever
 prompt_single/prompt_multi ends up used); --prompt-mode global does not
@@ -89,7 +90,7 @@ JSON format
     "description_used": "A wooden chair with four legs and a slatted back.",
     "description_view_idx": 47,
     "description_view_filename": "IND_47_AZ_020_EL_+59.png",
-    "seed_points": null   # flow c only: [{"obj_id":1,"label":"top of backrest"}, ...] -- no coords
+    "location_hint": null   # flow c only: e.g. "runs vertically through the lid and base"
   },
   ...
 }
@@ -480,41 +481,36 @@ def parse_multi_coords(text: str, n_images: int) -> dict[str, list[dict]]:
     return result
 
 
-def parse_describe_and_points(text: str) -> dict:
+def parse_describe_and_location(text: str) -> dict:
     """
-    Flow C's single-view combined describe+label response: free text
-    description followed by a numbered "Points:" legend of named landmarks
-    -- deliberately NO pixel coordinates (see prompts/description/
-    describe_and_point_{axis,plane}.txt). Localization is deferred entirely
-    to the main N-view pointing call, which uses only these semantic labels
-    (see build_flow_c_prompts).
+    Flow C's single-view combined describe+locate response: free text
+    description followed by a one-line qualitative hint of where the
+    symmetry axis/plane is located -- no landmark list, no labels, no pixel
+    coordinates (see prompts/description/describe_and_point_{axis,plane}.txt).
+    Localization of actual points happens entirely in the main N-view
+    pointing call (see build_flow_c_prompts), using only the description and
+    this location hint as context.
 
-    Splits the text on the "Points:" legend line to recover the free-text
-    description separately from the numbered labels. Any stray
-    <points coords="..."> tag the model might still emit despite the
-    "no coordinates" instruction is simply ignored (never parsed) -- Flow C
-    never uses pre-pass coordinates, by design.
+    Splits the text on the "Axis location:" / "Plane location:" marker line
+    (either wording accepted, case-insensitively) to recover the free-text
+    description separately from the location hint.
 
     Args:
     - text: raw text output from the model
     Returns:
-    - {"description": str, "points": list[{obj_id, label}]} -- points is an
-      empty list if the model didn't produce a parseable "Points:" legend
-      (graceful fallback: the whole response is treated as the description).
+    - {"description": str, "location_hint": str} -- location_hint is "" if
+      the model didn't produce a parseable marker line (graceful fallback:
+      the whole response is treated as the description, location hint left
+      empty -- callers then fall back to Flow B-style behavior).
     """
-    legend_match = re.search(r'\n\s*Points:\s*\n(.*)', text, re.DOTALL | re.IGNORECASE)
-    if legend_match:
-        description = text[:legend_match.start()].strip()
-        legend_text = legend_match.group(1)
+    match = re.search(r'\n\s*(?:Axis|Plane) location:\s*(.*)', text, re.DOTALL | re.IGNORECASE)
+    if match:
+        description   = text[:match.start()].strip()
+        location_hint = match.group(1).strip()
     else:
-        description, legend_text = text.strip(), ""
+        description, location_hint = text.strip(), ""
 
-    points = [
-        {"obj_id": int(m.group(1)), "label": m.group(2).strip()}
-        for m in re.finditer(r'^\s*(\d+)[.):]\s*(.+?)\s*$', legend_text, re.MULTILINE)
-    ]
-
-    return {"description": description, "points": points}
+    return {"description": description, "location_hint": location_hint}
 
 
 def augment_prompt_with_description(base_prompt: str, description: str) -> str:
@@ -530,87 +526,95 @@ def augment_prompt_with_description(base_prompt: str, description: str) -> str:
     )
 
 
-MAX_SEED_POINTS = 12   # safety cap on how many pre-pass points feed the Flow C multiview prompt
-
-
-def _seed_point_label(p: dict) -> str:
-    """Labeled points use their parsed label; unlabeled ones fall back to a generic name."""
-    return p.get("label") or f"point {p['obj_id']}"
+MAX_POINTS_PER_IMAGE = 3   # hard cap on points/image for Flow C's main pointing call
 
 
 def build_flow_c_prompts(
     description:   str,
-    seed_points:   list[dict],
+    location_hint: str,
     symmetry_type: str,
 ) -> tuple[str, str]:
     """
-    Flow C: build dedicated point-relocation prompts from the single-view
-    pre-pass's labeled landmarks -- NOT an augmentation of the base Flow-A
-    prompt (that prompt's format is hardcoded to a fixed obj_id 1/2 pair and
-    can't express "find these named points"). The pre-pass never produces
-    pixel coordinates (see parse_describe_and_points /
-    describe_and_point_{axis,plane}.txt) -- ALL localization happens here,
-    in the main N-view call: each of the (up to MAX_SEED_POINTS) labeled
-    landmarks becomes an obj_id the model must locate, by name, in every one
-    of the N views -- extending the existing multi-image
-    "img_idx obj_id X Y" output format from a fixed 2 obj_ids to K.
+    Flow C: build the main N-view pointing prompts from the single-view
+    pre-pass's free-text description and qualitative axis/plane location
+    hint (see parse_describe_and_location /
+    describe_and_point_{axis,plane}.txt) -- NOT an augmentation of the base
+    Flow-A prompt (kept separate so the wording below can explicitly
+    reinstate the "find points ON the axis/plane" goal and the
+    anti-degenerate rules).
 
-    Deliberately does NOT prescribe how/where to place each point (no
-    silhouette-center construction, no point-count guidance) -- that
-    geometric and quantitative judgment is left entirely to the model, since
-    this experiment's goal is testing Molmo2's own detection/pointing
-    reasoning rather than a hand-engineered geometric recipe.
-
-    Points without a parsed label (see parse_describe_and_points) fall back
-    to a generic "point N" name -- should not normally happen, since the
-    pre-pass only ever returns labeled entries.
+    Unlike an earlier iteration of this design, points are NOT tracked by
+    persistent cross-view identity: obj_id here just enumerates however many
+    points (up to MAX_POINTS_PER_IMAGE) a given image independently returns
+    -- the model is not asked to "re-find" a specific named landmark, only
+    to locate points on the symmetry axis/plane using the description and
+    location hint as context. This is simpler and, per empirical testing,
+    more reliable: asking Molmo to track K named landmarks across many
+    views (in one batched multi-image call) was observed to degenerate into
+    mechanically evenly-spaced grid/line patterns of points and duplicated
+    coordinates instead of genuine per-point reasoning -- the same failure
+    mode noted for multi-point prompting in the ZeroKey paper. The IMPORTANT
+    RULES below explicitly target those observed failures.
 
     Returns (prompt_single, prompt_multi).
     """
-    label        = "axis" if symmetry_type == "axis_sym" else "plane"
-    label_plural = "axes" if symmetry_type == "axis_sym" else "planes"
-    pts    = seed_points[:MAX_SEED_POINTS]
-    legend = "\n".join(f"{p['obj_id']}. {_seed_point_label(p)}" for p in pts)
+    label = "axis" if symmetry_type == "axis_sym" else "plane"
+
+    if symmetry_type == "axis_sym":
+        task_single = "find points that lie ON the object's symmetry axis in THIS image"
+        task_multi  = "find points that lie ON the object's symmetry axis"
+        consistency = "The symmetry axis is the SAME across all views -- keep it consistent."
+    else:
+        task_single = (
+            "find points that lie ON the visible trace of the object's symmetry plane "
+            "(the line/seam dividing it into two mirror halves) in THIS image"
+        )
+        task_multi = (
+            "find points that lie ON the visible trace of the object's symmetry plane "
+            "(the line/seam dividing it into two mirror halves)"
+        )
+        consistency = "The symmetry plane is the SAME across all views -- keep it consistent."
 
     context = (
         f"Context: the object being shown is described as follows:\n"
         f"\"{description}\"\n\n"
-        f"On a separate reference view of this SAME object, the following distinctive "
-        f"landmarks were identified, all near the object's symmetry {label}:\n{legend}\n\n"
-        f"These are semantic labels only -- no pixel coordinates were recorded for them. You "
-        f"must locate each one visually in the image(s) below using the object's structure.\n\n"
+        f"A separate reference view of this SAME object was used to estimate where the "
+        f"symmetry {label} is located: \"{location_hint}\"\n\n"
+    )
+
+    anti_degenerate_rules = (
+        f"IMPORTANT RULES:\n"
+        f"- Return AT MOST {MAX_POINTS_PER_IMAGE} points (fewer is fine if that's all you can "
+        f"confidently identify).\n"
+        f"- Every point MUST be independently reasoned from the object's visible geometry -- do "
+        f"NOT output a sequence of evenly-spaced points forming a line or grid pattern, and do "
+        f"NOT repeat the same (X, Y) coordinate for more than one point.\n"
+        f"- Do NOT invent points beyond what you can actually identify -- if you are unsure, "
+        f"return fewer points rather than guessing.\n"
+        f"- Do NOT force a point at the image center.\n"
     )
 
     prompt_multi = context + (
         f"You are given multiple views of the SAME 3D object.\n\n"
-        f"This object may have one or more symmetry {label_plural}. The landmarks above all "
-        f"belong to the single most visually dominant one.\n\n"
-        f"Your task: for EACH image below, locate as many of the landmarks above as you can "
-        f"recognize. Use the SAME numbering (obj_id) as the list above -- obj_id N must always "
-        f"refer to the same named landmark in every image.\n\n"
-        f"IMPORTANT RULES:\n"
-        f"- If a landmark is not visible or not identifiable in a given image, omit it and do "
-        f"NOT guess or force a point at the image center.\n"
-        f"- All points, across all images, must remain consistent with the SAME global symmetry "
-        f"{label}.\n\n"
-        f"Output format (one entry per image, separated by semicolons; omit obj_ids not found "
-        f"in a given image):\n\n"
-        f'<points coords="1 1 X1 Y1 2 X2 Y2 ...; 2 1 X1 Y1 3 X3 Y3 ...">\n\n'
+        f"Your task: for EACH image below, {task_multi}, using the description and the "
+        f"{label} location above as context. {consistency}\n\n"
+        f"{anti_degenerate_rules}"
+        f"- Number the points 1, 2, 3 (at most) within each image -- these numbers do NOT need "
+        f"to refer to the same physical feature across different images, they just enumerate "
+        f"however many points that image has.\n\n"
+        f"Output format (one entry per image, separated by semicolons):\n\n"
+        f'<points coords="1 1 X1 Y1 2 X2 Y2; 2 1 X1 Y1; 3 1 X1 Y1 2 X2 Y2 3 X3 Y3">\n\n'
         f"Where each entry is: image_index obj_id X Y\n\n"
         f"Return ONLY the <points ...> block."
     )
 
     prompt_single = context + (
         f"You are given ONE image of the SAME 3D object.\n\n"
-        f"This object may have one or more symmetry {label_plural}. The landmarks above all "
-        f"belong to the single most visually dominant one.\n\n"
-        f"Your task: locate as many of the landmarks above as you can recognize in THIS "
-        f"image, using the SAME numbering (obj_id) as the list above.\n\n"
-        f"IMPORTANT RULES:\n"
-        f"- If a landmark is not visible or not identifiable in this image, omit it and do NOT "
-        f"guess or force a point at the image center.\n\n"
+        f"Your task: {task_single}, using the description and the {label} location above as "
+        f"context.\n\n"
+        f"{anti_degenerate_rules}\n"
         f"Output ONLY:\n\n"
-        f'<points coords="1 1 X1 Y1 2 X2 Y2 ...">'
+        f'<points coords="1 1 X1 Y1 2 X2 Y2 3 X3 Y3">'
     )
 
     return prompt_single, prompt_multi
@@ -631,7 +635,8 @@ def prepare_flow_context(
 
     Flow "b": calls with describe_prompt, free-text output only.
     Flow "c": calls with describe_and_point_prompt, parses both a description
-              and seed points from the combined response.
+              and a qualitative axis/plane location hint from the combined
+              response.
 
     Args:
     - flow: "b" or "c"
@@ -644,25 +649,25 @@ def prepare_flow_context(
 
     Returns:
     - {"description": str, "view_index": int, "view_filename": str,
-       "seed_points": list[dict] | None, "extra_tokens": int}
-      seed_points is None for flow "b" (no pointing done in the pre-pass).
+       "location_hint": str | None, "extra_tokens": int}
+      location_hint is None for flow "b" (no locating done in the pre-pass).
     """
     view = select_description_view(object_id, metadata, DESCRIPTION_ELEVATION_RANGE)
     image = Image.open(render_dir / view["filename"]).convert("RGB")
 
     if flow == "b":
         raw, n_tok = _call_model([image], describe_prompt)
-        description, seed_points = raw.strip(), None
+        description, location_hint = raw.strip(), None
     else:  # flow == "c"
         raw, n_tok = _call_model([image], describe_and_point_prompt)
-        parsed = parse_describe_and_points(raw)
-        description, seed_points = parsed["description"], parsed["points"]
+        parsed = parse_describe_and_location(raw)
+        description, location_hint = parsed["description"], parsed["location_hint"]
 
     return {
         "description":   description,
         "view_index":    view["index"],
         "view_filename": view["filename"],
-        "seed_points":   seed_points,
+        "location_hint": location_hint,
         "extra_tokens":  n_tok,
     }
 
@@ -673,9 +678,10 @@ def build_augmented_prompts(
     prompt_multi:  str,
 ) -> tuple[str, str]:
     """
-    Flow B (and Flow C's fallback when its pre-pass yields no seed points):
-    augments the base prompt_single/prompt_multi with the flow_context's
-    free-text description only, ahead of the base prompt's own instructions.
+    Flow B (and Flow C's fallback when its pre-pass yields no location
+    hint): augments the base prompt_single/prompt_multi with the
+    flow_context's free-text description only, ahead of the base prompt's
+    own instructions.
 
     Returns (augmented_prompt_single, augmented_prompt_multi).
     """
@@ -874,7 +880,7 @@ def process_object(
                             "description":   existing["description_used"],
                             "view_index":    existing.get("description_view_idx"),
                             "view_filename": existing.get("description_view_filename"),
-                            "seed_points":   existing.get("seed_points"),
+                            "location_hint": existing.get("location_hint"),
                             "extra_tokens":  0,
                         }
                         break
@@ -896,9 +902,9 @@ def process_object(
 
                 if flow == "a":
                     call_prompt_single, call_prompt_multi = prompt_single, prompt_multi
-                elif flow == "c" and flow_context.get("seed_points"):
+                elif flow == "c" and flow_context.get("location_hint"):
                     call_prompt_single, call_prompt_multi = build_flow_c_prompts(
-                        flow_context["description"], flow_context["seed_points"], symmetry_type
+                        flow_context["description"], flow_context["location_hint"], symmetry_type
                     )
                 else:
                     call_prompt_single, call_prompt_multi = build_augmented_prompts(
@@ -948,7 +954,7 @@ def process_object(
                     results[str(n_views)]["description_view_idx"]     = flow_context["view_index"]
                     results[str(n_views)]["description_view_filename"] = flow_context["view_filename"]
                     if flow == "c":
-                        results[str(n_views)]["seed_points"] = flow_context["seed_points"]
+                        results[str(n_views)]["location_hint"] = flow_context["location_hint"]
                     results[str(n_views)]["n_input_tokens"] += flow_context["extra_tokens"]
 
                 # Write after every n_views to survive interruptions

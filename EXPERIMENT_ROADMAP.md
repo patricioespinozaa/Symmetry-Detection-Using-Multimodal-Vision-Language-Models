@@ -202,25 +202,31 @@ done
 
 **Different point geometry from Flow B — read before copying §3's loops.**
 Flow C's single-view pre-pass (`describe_and_point_axis.txt` /
-`describe_and_point_plane.txt`) asks Molmo to *name* every distinctive
-landmark it can find near the axis/plane, in plain text — it decides how
-many itself and returns **no pixel coordinates at all** in this step.
-Localization happens entirely in the second request: those labels replace
-the `--prompt-id` base prompt for the N-view call, where the model is asked
-to actually locate each named landmark, by name, in every view — see
-`build_flow_c_prompts` in `molmo_multiview_runner.py`. `--prompt-id` is still
-required as the fallback prompt for the (rare) case where the pre-pass
-produces no parseable labels for a given object.
+`describe_and_point_plane.txt`) asks Molmo for a description PLUS a short
+qualitative hint of where the symmetry axis/plane is located (e.g. "runs
+vertically from the spout tip to the base center") — plain text, **no
+pixel coordinates, no landmark list**. The main N-view call then uses that
+description + location hint as context and explicitly asks Molmo to find
+points that lie ON the symmetry axis/plane in each image — see
+`build_flow_c_prompts` in `molmo_multiview_runner.py`. `--prompt-id` is
+still required as the fallback prompt for the (rare) case where the
+pre-pass produces no parseable location hint for a given object.
 
-Because each image can now yield anywhere from 0 to ~10+ points instead of
-exactly 2, `estimate_symmetry.py` needs **`--point-mode all`** (not
-`independent`) — `independent` requires obj_id 1 AND 2 to both hit and
-silently discards every other obj_id, which would drop most of Flow C's
-points. Given the higher, noisier point count per object (Molmo can return
-inconsistent points across views for the same named landmark, same failure
-mode reported for multi-point prompting in the ZeroKey paper), the C3
-(HDBSCAN) sweep in §4c is more likely to matter for Flow C than it was for
-Flow A/B — don't skip it.
+*(An earlier iteration of this design asked the pre-pass to name several
+labeled landmarks and had the main call re-locate each one by identity
+across views. Empirically this degenerated into mechanically evenly-spaced
+grid/line patterns of points instead of genuine per-point reasoning — the
+angular error came out ~90°, i.e. chance level. The current design drops
+per-landmark identity tracking entirely and caps points/image at 3 with
+explicit anti-degenerate rules to avoid that failure mode.)*
+
+Because each image can now yield up to 3 points instead of exactly 2,
+`estimate_symmetry.py` needs **`--point-mode all`** (not `independent`) —
+`independent` requires obj_id 1 AND 2 to both hit and silently discards
+every other obj_id, which would drop Flow C's 3rd point whenever it exists.
+Given the extra points per object, the C3 (HDBSCAN) sweep in §4c may still
+matter more for Flow C than it did for Flow A/B — worth checking rather
+than skipping.
 
 ### 4a. Molmo inference (GPU)
 

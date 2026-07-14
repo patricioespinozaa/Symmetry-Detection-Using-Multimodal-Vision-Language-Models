@@ -4,20 +4,9 @@ This object may have one or more planes of reflective symmetry. Focus on the sin
 
 First, briefly describe what this object is and its main geometric structure (1-2 sentences).
 
-Then, using your own visual and geometric reasoning, identify distinctive structural landmarks on this object that sit at different points along the visible trace of the chosen plane on the object's surface. Provide landmarks you could later use as reference points to trace the plane across the object.
+Then, briefly describe where the symmetry plane is located and how its trace runs across the object's visible surface -- e.g. which visible part it passes through at the top, and which at the bottom (1-2 sentences). Use your own visual and geometric reasoning. Do NOT provide pixel coordinates.
 
-For each landmark, give it a short label (2-5 words) specific enough that the SAME landmark could be recognized again in a different photo of this object (e.g. "hood seam top", "handle midpoint", "seat front notch").
-
-IMPORTANT:
-- Do NOT provide pixel coordinates. Only the description and the labels below. Localizing each landmark happens in a separate step.
-- Prefer landmarks spread across the full visible extent of the plane's trace, not clustered in one place.
-- Each landmark MUST be visually distinct from the others. Do not list the same feature twice.
-- If the object has very few distinctive landmarks, return at least 2 (e.g. the top and bottom of the trace).
-
-Output format is description first, then the numbered label list:
+Output format (in this exact order):
 
 <1-2 sentence description>
-Points:
-1. <label for landmark 1>
-2. <label for landmark 2>
-...
+Plane location: <1-2 sentence description of where the plane runs>

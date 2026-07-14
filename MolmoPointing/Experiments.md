@@ -111,14 +111,14 @@ loops below, substituting `axis_v05_1_flowB` for `--experiment-id`. See
 `MolmoPointing/README.md` § Flows.
 
 **Flow C only — `--point-mode` differs from every other flow/prompt in the
-table above.** Flow C's pre-pass only *names* landmarks (plain text, no
-coordinates, count decided by the model); the actual N-view pointing call
-then returns a variable number of points per object (not a fixed obj_id 1/2
-pair), so `estimate_symmetry.py` must be run with **`--point-mode all`**
-(every hit point goes to SVD directly, any obj_id count, no pairing
-requirement) — `independent` and `midpoint` both assume exactly obj_id 1
-and 2 and would silently discard the rest. See `EXPERIMENT_ROADMAP.md` §4
-for the full command sequence.
+table above.** Flow C's pre-pass only gives a description + a qualitative
+hint of where the axis/plane is located (plain text, no coordinates); the
+actual N-view pointing call then returns up to 3 points per image (not a
+fixed obj_id 1/2 pair), so `estimate_symmetry.py` must be run with
+**`--point-mode all`** (every hit point goes to SVD directly, any obj_id
+count, no pairing requirement) — `independent` and `midpoint` both assume
+exactly obj_id 1 and 2 and would silently discard the rest. See
+`EXPERIMENT_ROADMAP.md` §4 for the full command sequence.
 
 **Clustering variants** — sweep `--clustering-method hdbscan --hdbscan-min-samples {2,3,5}`
 in `estimate_symmetry.py` against an existing `mapped_points_3d[_EXP].json` (no
