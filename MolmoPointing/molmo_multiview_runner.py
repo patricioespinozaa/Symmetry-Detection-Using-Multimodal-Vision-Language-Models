@@ -547,7 +547,7 @@ def build_flow_c_prompts(
     Flow C: build dedicated point-relocation prompts from the single-view
     pre-pass's labeled landmarks -- NOT an augmentation of the base Flow-A
     prompt (that prompt's format is hardcoded to a fixed obj_id 1/2 pair and
-    can't express "find these K named points"). The pre-pass never produces
+    can't express "find these named points"). The pre-pass never produces
     pixel coordinates (see parse_describe_and_points /
     describe_and_point_{axis,plane}.txt) -- ALL localization happens here,
     in the main N-view call: each of the (up to MAX_SEED_POINTS) labeled
@@ -555,12 +555,11 @@ def build_flow_c_prompts(
     of the N views -- extending the existing multi-image
     "img_idx obj_id X Y" output format from a fixed 2 obj_ids to K.
 
-    Because there are no reference coordinates to lean on, the prompt is
-    explicit about HOW to place each point so it actually lands on the
-    symmetry axis/plane rather than literally on the named landmark (e.g. a
-    handle sits off to one side in 3D even though it's a fine landmark name)
-    -- see _placement_rule, which mirrors the silhouette-based construction
-    already validated by the Flow A prompts.
+    Deliberately does NOT prescribe how/where to place each point (no
+    silhouette-center construction, no point-count guidance) -- that
+    geometric and quantitative judgment is left entirely to the model, since
+    this experiment's goal is testing Molmo2's own detection/pointing
+    reasoning rather than a hand-engineered geometric recipe.
 
     Points without a parsed label (see parse_describe_and_points) fall back
     to a generic "point N" name -- should not normally happen, since the
@@ -571,29 +570,12 @@ def build_flow_c_prompts(
     label        = "axis" if symmetry_type == "axis_sym" else "plane"
     label_plural = "axes" if symmetry_type == "axis_sym" else "planes"
     pts    = seed_points[:MAX_SEED_POINTS]
-    k      = len(pts)
     legend = "\n".join(f"{p['obj_id']}. {_seed_point_label(p)}" for p in pts)
-
-    if symmetry_type == "axis_sym":
-        placement_rule = (
-            f"For each landmark, place its point at the HORIZONTAL CENTER of the object's "
-            f"visible silhouette at that landmark's height (equidistant from the left and "
-            f"right silhouette edges) -- this is where the projected symmetry axis actually "
-            f"falls at that height, even when the landmark itself (e.g. a handle or spout) "
-            f"sits off to one side in 3D."
-        )
-    else:
-        placement_rule = (
-            f"For each landmark, place its point on the visible trace of the symmetry plane "
-            f"-- the seam/line dividing the object into its two mirror halves -- at that "
-            f"landmark's approximate position, even when the landmark itself (e.g. a handle) "
-            f"sits off to one side of the plane in 3D."
-        )
 
     context = (
         f"Context: the object being shown is described as follows:\n"
         f"\"{description}\"\n\n"
-        f"On a separate reference view of this SAME object, the following {k} distinctive "
+        f"On a separate reference view of this SAME object, the following distinctive "
         f"landmarks were identified, all near the object's symmetry {label}:\n{legend}\n\n"
         f"These are semantic labels only -- no pixel coordinates were recorded for them. You "
         f"must locate each one visually in the image(s) below using the object's structure.\n\n"
@@ -601,19 +583,16 @@ def build_flow_c_prompts(
 
     prompt_multi = context + (
         f"You are given multiple views of the SAME 3D object.\n\n"
-        f"This object may have one or more symmetry {label_plural}. The {k} landmarks above all "
-        f"belong to the single most visually dominant one -- keep using that same one.\n\n"
-        f"Your task: for EACH image below, locate as many of the {k} landmarks above as you can "
+        f"This object may have one or more symmetry {label_plural}. The landmarks above all "
+        f"belong to the single most visually dominant one.\n\n"
+        f"Your task: for EACH image below, locate as many of the landmarks above as you can "
         f"recognize. Use the SAME numbering (obj_id) as the list above -- obj_id N must always "
         f"refer to the same named landmark in every image.\n\n"
-        f"{placement_rule}\n\n"
         f"IMPORTANT RULES:\n"
-        f"- If a landmark is not visible or not identifiable in a given image, omit it -- do NOT "
-        f"guess or force a point at the image center.\n"
+        f"- If a landmark is not visible or not identifiable in a given image, omit it and do "
+        f"NOT guess or force a point at the image center.\n"
         f"- All points, across all images, must remain consistent with the SAME global symmetry "
-        f"{label}.\n"
-        f"- Do NOT place points on the silhouette edges.\n"
-        f"- Each image may return anywhere from 0 to {k} points, depending on visibility.\n\n"
+        f"{label}.\n\n"
         f"Output format (one entry per image, separated by semicolons; omit obj_ids not found "
         f"in a given image):\n\n"
         f'<points coords="1 1 X1 Y1 2 X2 Y2 ...; 2 1 X1 Y1 3 X3 Y3 ...">\n\n'
@@ -623,16 +602,13 @@ def build_flow_c_prompts(
 
     prompt_single = context + (
         f"You are given ONE image of the SAME 3D object.\n\n"
-        f"This object may have one or more symmetry {label_plural}. The {k} landmarks above all "
-        f"belong to the single most visually dominant one -- keep using that same one.\n\n"
-        f"Your task: locate as many of the {k} landmarks above as you can recognize in THIS "
+        f"This object may have one or more symmetry {label_plural}. The landmarks above all "
+        f"belong to the single most visually dominant one.\n\n"
+        f"Your task: locate as many of the landmarks above as you can recognize in THIS "
         f"image, using the SAME numbering (obj_id) as the list above.\n\n"
-        f"{placement_rule}\n\n"
         f"IMPORTANT RULES:\n"
-        f"- If a landmark is not visible or not identifiable in this image, omit it -- do NOT "
-        f"guess or force a point at the image center.\n"
-        f"- Do NOT place points on the silhouette edges.\n"
-        f"- Return anywhere from 0 to {k} points, depending on visibility.\n\n"
+        f"- If a landmark is not visible or not identifiable in this image, omit it and do NOT "
+        f"guess or force a point at the image center.\n\n"
         f"Output ONLY:\n\n"
         f'<points coords="1 1 X1 Y1 2 X2 Y2 ...">'
     )
