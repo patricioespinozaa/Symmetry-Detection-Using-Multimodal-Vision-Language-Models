@@ -233,13 +233,29 @@ def main():
     else:
         print(f"No symmetry file found at: {sym_path}  (mesh only)")
 
-    vis = o3d.visualization.Visualizer()
+    sym_geoms   = [g for g in geometries if g is not mesh]
+    sym_visible = [True]
+
+    def toggle_symmetries(vis):
+        if sym_visible[0]:
+            for g in sym_geoms:
+                vis.remove_geometry(g, reset_bounding_box=False)
+        else:
+            for g in sym_geoms:
+                vis.add_geometry(g, reset_bounding_box=False)
+        sym_visible[0] = not sym_visible[0]
+        vis.update_renderer()
+        return False
+
+    vis = o3d.visualization.VisualizerWithKeyCallback()
     vis.create_window(window_name=f"3D Viewer: {mesh_path.name}", width=1200, height=800)
     for geom in geometries:
         vis.add_geometry(geom)
-    vis.get_render_option().point_size          = 1.0
+    vis.register_key_callback(ord("S"), toggle_symmetries)
+    vis.get_render_option().point_size            = 1.0
     vis.get_render_option().show_coordinate_frame = True
     vis.get_view_control().set_zoom(0.8)
+    print("  Press S to toggle symmetry visibility")
     vis.run()
     vis.destroy_window()
     print("\nViewer closed.")
