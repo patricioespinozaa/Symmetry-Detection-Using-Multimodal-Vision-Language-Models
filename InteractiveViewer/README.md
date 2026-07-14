@@ -97,6 +97,7 @@ Loading symmetries: Examples\objects\plane_sym_obj.txt
 | **Left click + drag** | Rotate object |
 | **Mouse scroll** | Zoom in/out |
 | **Right click + drag** | Pan (translation) |
+| **S** | Toggle symmetry visibility (show/hide) |
 | **R** | Reset view |
 | **Q** | Close viewer |
 
