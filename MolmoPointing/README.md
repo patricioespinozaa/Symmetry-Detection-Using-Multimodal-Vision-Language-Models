@@ -131,21 +131,31 @@ Three flows are available via `--flow`, orthogonal to `--prompt-mode`/`--prompt-
 |---|---|---|
 | `a` (default) | Direct pointing, no semantic context. Identical to the original single-flow behavior. | 0 |
 | `b` | Pointing con descripción — a seeded single-view call asks the model to describe the object; the description is prepended to the base pointing prompt. | 1 per (size, lighting) config |
-| `c` | Descripción y pointing integrados — a seeded single-view call asks the model to describe the object AND name (in plain text, no coordinates) every distinctive structural landmark it can find near the axis/plane — count is the model's own choice, not a fixed pair. Those labels replace the base `--prompt-id` prompt for the main N-view call: the model actually locates each named landmark, by name (same obj_id numbering), in every view — all localization happens there. | 1 per (size, lighting) config |
+| `c` | Descripción y pointing integrados — a seeded single-view call asks the model to describe the object AND give a short qualitative hint of where the axis/plane is located (plain text, no coordinates). That description + location hint replace the base `--prompt-id` prompt for the main N-view call: the model is explicitly asked to find points ON the symmetry axis/plane in each image (up to 3 points/image, no cross-view identity tracking). | 1 per (size, lighting) config |
 
 The description view is picked per object with a **deterministic seed**
 (`MD5(object_id) mod 2^31`), filtered to elevation in `(-60°, +60°)` to avoid
 near-pole views that project an axis to a point or a plane to a line. See
 `pipeline_common/view_selection.py`.
 
-**Flow C point count is variable, not fixed at 2** — `Mapping/estimate_symmetry.py`
-must be run with **`--point-mode all`** for Flow C experiments (not
-`independent`, which requires obj_id 1 AND 2 to both hit per image and
-silently drops every other obj_id). See `build_flow_c_prompts` and
-`parse_describe_and_points` in `molmo_multiview_runner.py`, and
-`EXPERIMENT_ROADMAP.md` §4 for the full command sequence. `--prompt-id` is
-still required for `--flow c` as the fallback base prompt for the rare case
-where the pre-pass produces no parseable points for an object.
+**Flow C point count is variable (up to 3/image), not fixed at 2** —
+`Mapping/estimate_symmetry.py` must be run with **`--point-mode all`** for
+Flow C experiments (not `independent`, which requires obj_id 1 AND 2 to
+both hit per image and silently drops every other obj_id). See
+`build_flow_c_prompts` and `parse_describe_and_location` in
+`molmo_multiview_runner.py`, and `EXPERIMENT_ROADMAP.md` §4 for the full
+command sequence. `--prompt-id` is still required for `--flow c` as the
+fallback base prompt for the rare case where the pre-pass produces no
+parseable location hint for an object.
+
+Note: an earlier iteration asked the pre-pass to name several labeled
+landmarks and had the main call re-locate each one by identity across
+views (obj_id tracked a specific named feature). Empirically this
+degenerated into mechanically evenly-spaced grid/line patterns instead of
+genuine per-point reasoning (angular error ~90°, chance level). The current
+design drops per-landmark identity tracking, caps points/image at 3, and
+adds explicit anti-degenerate rules (no grid/line patterns, no duplicate
+coordinates, no inventing points) targeting that failure mode.
 
 `--flow b`/`c` only affect `--prompt-mode single/multi/auto`; `--prompt-mode global`
 does not support prompt overrides at all (not even via `--prompt-id`), so `--flow`
