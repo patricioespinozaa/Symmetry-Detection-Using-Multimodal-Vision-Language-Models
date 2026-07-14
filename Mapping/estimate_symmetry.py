@@ -102,7 +102,7 @@ OUTPUT_FILE  = "predicted_symmetry.json"
 DEFAULT_SIZES     = [224, 448, 1136]
 DEFAULT_LIGHTINGS = ["flat", "brighter", "darker"]
 
-POINT_MODES = ("independent", "midpoint")
+POINT_MODES = ("independent", "midpoint", "all")
 CLUSTERING_METHODS = ("none", "greedy", "hdbscan")
 
 RANSAC_ITERS  = 1000
@@ -248,6 +248,15 @@ def collect_hit_points(
         Images where either point missed are discarded.
         Use with bilateral symmetric pair prompts.
 
+    point_mode="all":
+        Every point that hits (any obj_id, any count per image) is added to
+        the cloud independently -- no pairing requirement, and no image is
+        discarded because a sibling obj_id in the same image missed. Use with
+        prompts that return a variable number of points per image (e.g. Flow
+        C's per-keypoint multiview pointing, see build_flow_c_prompts in
+        molmo_multiview_runner.py), where requiring a fixed obj_id 1+2 pair
+        would silently drop every point beyond the first two.
+
     Returns (N, 3) float64 array, or None if fewer than 2 usable points.
     """
     group = mapped_json.get("n_views_results", {}).get(n_views_key)
@@ -256,7 +265,17 @@ def collect_hit_points(
 
     raw_points = group.get("points_3d", [])
 
-    if point_mode == "independent":
+    if point_mode == "all":
+        pts = [
+            np.array(p["point_3d"], dtype=np.float64)
+            for p in raw_points
+            if p["hit"] and p["point_3d"] is not None
+        ]
+        if len(pts) < 2:
+            return None
+        return np.array(pts, dtype=np.float64)
+
+    elif point_mode == "independent":
         by_img: dict[int, dict[int, np.ndarray]] = {}
         for p in raw_points:
             if not p["hit"] or p["point_3d"] is None:
@@ -509,8 +528,11 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--max-objects", type=int, default=None,
                    help="Limit to the first N objects (sorted order).")
     p.add_argument("--point-mode", default="independent", choices=POINT_MODES,
-                   help="independent = each 3D point goes to SVD directly. "
-                        "midpoint = bilateral pairs (obj_id=1, obj_id=2) replaced by 3D midpoint.")
+                   help="independent = each 3D point goes to SVD directly (requires exactly "
+                        "obj_id 1 AND 2 to hit per image). "
+                        "midpoint = bilateral pairs (obj_id=1, obj_id=2) replaced by 3D midpoint. "
+                        "all = every hit point (any obj_id count per image) goes to SVD directly, "
+                        "no pairing requirement -- use for Flow C.")
     p.add_argument("--clustering", action="store_true",
                    help="Deprecated alias for --clustering-method greedy. Kept for backward "
                         "compatibility with existing scripts/docs.")

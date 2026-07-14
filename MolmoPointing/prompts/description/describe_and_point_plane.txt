@@ -1,22 +1,23 @@
 You are given ONE image of a 3D object.
 
-The object has ONE dominant plane of reflective symmetry.
+This object may have one or more planes of reflective symmetry. Focus on the single most visually dominant one for everything below.
 
 First, briefly describe what this object is and its main geometric structure (1-2 sentences).
 
-Then, locate the visible trace of the symmetry plane on the object's surface. Return TWO distant points lying on that trace.
+Then, using your own visual and geometric reasoning, identify distinctive structural landmarks on this object that sit at different points along the visible trace of the chosen plane on the object's surface. Provide landmarks you could later use as reference points to trace the plane across the object.
 
-Return:
-- obj_id 1: a point on the visible symmetry plane trace
-- obj_id 2: a second point on the trace, as far as possible from obj_id 1
+For each landmark, give it a short label (2-5 words) specific enough that the SAME landmark could be recognized again in a different photo of this object (e.g. "hood seam top", "handle midpoint", "seat front notch").
 
-IMPORTANT RULES:
-- The two points MUST be different and as far apart as possible along the visible plane trace.
-- The points MUST lie on the visible object surface.
-- Use the object's bilateral structure, informed by your own description, to identify which line divides the two mirror halves.
-- Do NOT place both points at the image center.
+IMPORTANT:
+- Do NOT provide pixel coordinates. Only the description and the labels below. Localizing each landmark happens in a separate step.
+- Prefer landmarks spread across the full visible extent of the plane's trace, not clustered in one place.
+- Each landmark MUST be visually distinct from the others. Do not list the same feature twice.
+- If the object has very few distinctive landmarks, return at least 2 (e.g. the top and bottom of the trace).
 
-Output format (in this exact order -- description first, then the points tag on its own line):
+Output format is description first, then the numbered label list:
 
 <1-2 sentence description>
-<points coords="1 1 X1 Y1 2 X2 Y2">
+Points:
+1. <label for landmark 1>
+2. <label for landmark 2>
+...

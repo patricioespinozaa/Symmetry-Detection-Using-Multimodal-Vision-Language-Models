@@ -45,10 +45,17 @@ which still control the *main* N-view pointing call in all three flows):
       seed) asks the model to describe the object; that description is
       prepended to the base pointing prompt before the normal N-view call.
   c   Descripcion y pointing integrados. Same seeded description view, but
-      the extra call asks the model to describe the object AND point to two
-      seed points on the axis/plane in that single image; both the
-      description and seed points are prepended to the base pointing prompt
-      before the normal N-view call.
+      the extra call asks the model to describe the object AND label every
+      distinctive structural landmark it can find near the symmetry
+      axis/plane -- count decided by the model itself, not a fixed pair,
+      and deliberately NO pixel coordinates (see parse_describe_and_points /
+      describe_and_point_{axis,plane}.txt). Those labels replace the base
+      --prompt-id prompt entirely for the main N-view call: the model is
+      asked to locate each named landmark, by name (same obj_id numbering),
+      in every view -- ALL localization happens there (see
+      build_flow_c_prompts). Falls back to Flow B-style description-only
+      augmentation of the base prompt if the pre-pass yields no parseable
+      landmarks.
 
 --flow b/c only affect --prompt-mode single/multi/auto (whichever
 prompt_single/prompt_multi ends up used); --prompt-mode global does not
@@ -82,7 +89,7 @@ JSON format
     "description_used": "A wooden chair with four legs and a slatted back.",
     "description_view_idx": 47,
     "description_view_filename": "IND_47_AZ_020_EL_+59.png",
-    "seed_points": null   # flow c only: [{"obj_id":1,"x":430.0,"y":210.0}, ...]
+    "seed_points": null   # flow c only: [{"obj_id":1,"label":"top of backrest"}, ...] -- no coords
   },
   ...
 }
@@ -475,23 +482,38 @@ def parse_multi_coords(text: str, n_images: int) -> dict[str, list[dict]]:
 
 def parse_describe_and_points(text: str) -> dict:
     """
-    Flow C's single-view combined describe+point response: free text followed
-    by a single-image <points coords="RADIO ID X Y ID X Y ..."> block (same
-    shape PROMPT_SINGLE produces).
+    Flow C's single-view combined describe+label response: free text
+    description followed by a numbered "Points:" legend of named landmarks
+    -- deliberately NO pixel coordinates (see prompts/description/
+    describe_and_point_{axis,plane}.txt). Localization is deferred entirely
+    to the main N-view pointing call, which uses only these semantic labels
+    (see build_flow_c_prompts).
 
-    Strips the <points ...> tag span out of text to recover the description,
-    then reuses parse_single_coords on the full text for the points.
+    Splits the text on the "Points:" legend line to recover the free-text
+    description separately from the numbered labels. Any stray
+    <points coords="..."> tag the model might still emit despite the
+    "no coordinates" instruction is simply ignored (never parsed) -- Flow C
+    never uses pre-pass coordinates, by design.
 
     Args:
     - text: raw text output from the model
     Returns:
-    - {"description": str, "points": list[{obj_id, x, y}]} -- points is an
-      empty list if the model didn't produce a parseable <points ...> block
+    - {"description": str, "points": list[{obj_id, label}]} -- points is an
+      empty list if the model didn't produce a parseable "Points:" legend
       (graceful fallback: the whole response is treated as the description).
     """
-    match = re.search(r'<points\b[^>]*>', text)
-    description = (text[:match.start()] + text[match.end():]).strip() if match else text.strip()
-    points = parse_single_coords(text).get("0", [])
+    legend_match = re.search(r'\n\s*Points:\s*\n(.*)', text, re.DOTALL | re.IGNORECASE)
+    if legend_match:
+        description = text[:legend_match.start()].strip()
+        legend_text = legend_match.group(1)
+    else:
+        description, legend_text = text.strip(), ""
+
+    points = [
+        {"obj_id": int(m.group(1)), "label": m.group(2).strip()}
+        for m in re.finditer(r'^\s*(\d+)[.):]\s*(.+?)\s*$', legend_text, re.MULTILINE)
+    ]
+
     return {"description": description, "points": points}
 
 
@@ -508,37 +530,114 @@ def augment_prompt_with_description(base_prompt: str, description: str) -> str:
     )
 
 
-def augment_prompt_with_seed_points(
-    base_prompt: str,
-    description: str,
-    seed_points: list[dict],
+MAX_SEED_POINTS = 12   # safety cap on how many pre-pass points feed the Flow C multiview prompt
+
+
+def _seed_point_label(p: dict) -> str:
+    """Labeled points use their parsed label; unlabeled ones fall back to a generic name."""
+    return p.get("label") or f"point {p['obj_id']}"
+
+
+def build_flow_c_prompts(
+    description:   str,
+    seed_points:   list[dict],
     symmetry_type: str,
-) -> str:
+) -> tuple[str, str]:
     """
-    Flow C: prepend the description AND the seed points found on the single
-    reference view ahead of the base pointing prompt's instructions. The seed
-    points come from a DIFFERENT image than the ones about to be pointed at,
-    so the prompt explicitly caveats that they are not directly reusable
-    pixel coordinates -- only a geometric hint of where the axis/plane runs.
+    Flow C: build dedicated point-relocation prompts from the single-view
+    pre-pass's labeled landmarks -- NOT an augmentation of the base Flow-A
+    prompt (that prompt's format is hardcoded to a fixed obj_id 1/2 pair and
+    can't express "find these K named points"). The pre-pass never produces
+    pixel coordinates (see parse_describe_and_points /
+    describe_and_point_{axis,plane}.txt) -- ALL localization happens here,
+    in the main N-view call: each of the (up to MAX_SEED_POINTS) labeled
+    landmarks becomes an obj_id the model must locate, by name, in every one
+    of the N views -- extending the existing multi-image
+    "img_idx obj_id X Y" output format from a fixed 2 obj_ids to K.
+
+    Because there are no reference coordinates to lean on, the prompt is
+    explicit about HOW to place each point so it actually lands on the
+    symmetry axis/plane rather than literally on the named landmark (e.g. a
+    handle sits off to one side in 3D even though it's a fine landmark name)
+    -- see _placement_rule, which mirrors the silhouette-based construction
+    already validated by the Flow A prompts.
+
+    Points without a parsed label (see parse_describe_and_points) fall back
+    to a generic "point N" name -- should not normally happen, since the
+    pre-pass only ever returns labeled entries.
+
+    Returns (prompt_single, prompt_multi).
     """
-    label = "axis" if symmetry_type == "axis_sym" else "plane"
-    if seed_points:
-        pts_str = "; ".join(f"({p['x']:.0f}, {p['y']:.0f})" for p in seed_points)
-        seed_line = (
-            f"On a separate reference view of this SAME object, points roughly on the "
-            f"symmetry {label} were found at pixel coordinates: {pts_str}. "
-            f"Those coordinates are from a DIFFERENT image and are NOT directly reusable "
-            f"here -- they only hint at the general location and orientation of the {label}."
+    label        = "axis" if symmetry_type == "axis_sym" else "plane"
+    label_plural = "axes" if symmetry_type == "axis_sym" else "planes"
+    pts    = seed_points[:MAX_SEED_POINTS]
+    k      = len(pts)
+    legend = "\n".join(f"{p['obj_id']}. {_seed_point_label(p)}" for p in pts)
+
+    if symmetry_type == "axis_sym":
+        placement_rule = (
+            f"For each landmark, place its point at the HORIZONTAL CENTER of the object's "
+            f"visible silhouette at that landmark's height (equidistant from the left and "
+            f"right silhouette edges) -- this is where the projected symmetry axis actually "
+            f"falls at that height, even when the landmark itself (e.g. a handle or spout) "
+            f"sits off to one side in 3D."
         )
     else:
-        seed_line = ""
-    return (
+        placement_rule = (
+            f"For each landmark, place its point on the visible trace of the symmetry plane "
+            f"-- the seam/line dividing the object into its two mirror halves -- at that "
+            f"landmark's approximate position, even when the landmark itself (e.g. a handle) "
+            f"sits off to one side of the plane in 3D."
+        )
+
+    context = (
         f"Context: the object being shown is described as follows:\n"
-        f"\"{description}\"\n"
-        f"{seed_line}\n\n"
-        f"Use this context to inform where the structurally relevant points are.\n\n"
-        f"{base_prompt}"
+        f"\"{description}\"\n\n"
+        f"On a separate reference view of this SAME object, the following {k} distinctive "
+        f"landmarks were identified, all near the object's symmetry {label}:\n{legend}\n\n"
+        f"These are semantic labels only -- no pixel coordinates were recorded for them. You "
+        f"must locate each one visually in the image(s) below using the object's structure.\n\n"
     )
+
+    prompt_multi = context + (
+        f"You are given multiple views of the SAME 3D object.\n\n"
+        f"This object may have one or more symmetry {label_plural}. The {k} landmarks above all "
+        f"belong to the single most visually dominant one -- keep using that same one.\n\n"
+        f"Your task: for EACH image below, locate as many of the {k} landmarks above as you can "
+        f"recognize. Use the SAME numbering (obj_id) as the list above -- obj_id N must always "
+        f"refer to the same named landmark in every image.\n\n"
+        f"{placement_rule}\n\n"
+        f"IMPORTANT RULES:\n"
+        f"- If a landmark is not visible or not identifiable in a given image, omit it -- do NOT "
+        f"guess or force a point at the image center.\n"
+        f"- All points, across all images, must remain consistent with the SAME global symmetry "
+        f"{label}.\n"
+        f"- Do NOT place points on the silhouette edges.\n"
+        f"- Each image may return anywhere from 0 to {k} points, depending on visibility.\n\n"
+        f"Output format (one entry per image, separated by semicolons; omit obj_ids not found "
+        f"in a given image):\n\n"
+        f'<points coords="1 1 X1 Y1 2 X2 Y2 ...; 2 1 X1 Y1 3 X3 Y3 ...">\n\n'
+        f"Where each entry is: image_index obj_id X Y\n\n"
+        f"Return ONLY the <points ...> block."
+    )
+
+    prompt_single = context + (
+        f"You are given ONE image of the SAME 3D object.\n\n"
+        f"This object may have one or more symmetry {label_plural}. The {k} landmarks above all "
+        f"belong to the single most visually dominant one -- keep using that same one.\n\n"
+        f"Your task: locate as many of the {k} landmarks above as you can recognize in THIS "
+        f"image, using the SAME numbering (obj_id) as the list above.\n\n"
+        f"{placement_rule}\n\n"
+        f"IMPORTANT RULES:\n"
+        f"- If a landmark is not visible or not identifiable in this image, omit it -- do NOT "
+        f"guess or force a point at the image center.\n"
+        f"- Do NOT place points on the silhouette edges.\n"
+        f"- Return anywhere from 0 to {k} points, depending on visibility.\n\n"
+        f"Output ONLY:\n\n"
+        f'<points coords="1 1 X1 Y1 2 X2 Y2 ...">'
+    )
+
+    return prompt_single, prompt_multi
 
 
 def prepare_flow_context(
@@ -596,23 +695,15 @@ def build_augmented_prompts(
     flow_context:  dict,
     prompt_single: str,
     prompt_multi:  str,
-    symmetry_type: str,
 ) -> tuple[str, str]:
     """
-    Builds the Flow B/C-augmented single/multi prompts from a flow_context
-    (see prepare_flow_context). Falls back to description-only augmentation
-    when seed_points is empty (Flow C's pre-pass produced no parseable
-    <points ...> block).
+    Flow B (and Flow C's fallback when its pre-pass yields no seed points):
+    augments the base prompt_single/prompt_multi with the flow_context's
+    free-text description only, ahead of the base prompt's own instructions.
 
     Returns (augmented_prompt_single, augmented_prompt_multi).
     """
-    seed_points = flow_context.get("seed_points")
-    if seed_points:
-        augment = lambda p: augment_prompt_with_seed_points(
-            p, flow_context["description"], seed_points, symmetry_type
-        )
-    else:
-        augment = lambda p: augment_prompt_with_description(p, flow_context["description"])
+    augment = lambda p: augment_prompt_with_description(p, flow_context["description"])
     return augment(prompt_single), augment(prompt_multi)
 
 
@@ -829,9 +920,13 @@ def process_object(
 
                 if flow == "a":
                     call_prompt_single, call_prompt_multi = prompt_single, prompt_multi
+                elif flow == "c" and flow_context.get("seed_points"):
+                    call_prompt_single, call_prompt_multi = build_flow_c_prompts(
+                        flow_context["description"], flow_context["seed_points"], symmetry_type
+                    )
                 else:
                     call_prompt_single, call_prompt_multi = build_augmented_prompts(
-                        flow_context, prompt_single, prompt_multi, symmetry_type
+                        flow_context, prompt_single, prompt_multi
                     )
 
                 inference     = run_inference(
@@ -1010,12 +1105,16 @@ def main() -> None:
 
     # Load Flow B/C prompts, failing fast if the expected files are missing
     describe_prompt = describe_and_point_prompt = None
-    if args.flow != "a":
+    if args.flow == "b":
         try:
             describe_prompt = load_flow_prompt("describe")
-            if args.flow == "c":
-                point_variant = "axis" if args.symmetry_type == "axis_sym" else "plane"
-                describe_and_point_prompt = load_flow_prompt(f"describe_and_point_{point_variant}")
+        except FileNotFoundError as e:
+            print(f"[error] {e}")
+            sys.exit(1)
+    elif args.flow == "c":
+        try:
+            point_variant = "axis" if args.symmetry_type == "axis_sym" else "plane"
+            describe_and_point_prompt = load_flow_prompt(f"describe_and_point_{point_variant}")
         except FileNotFoundError as e:
             print(f"[error] {e}")
             sys.exit(1)

@@ -200,9 +200,27 @@ done
 
 ## 4. Flow C — descripción y pointing integrados
 
-Same structure as Flow B — only `--flow c` and the experiment-id tag change
-(the describe+point prompt is picked automatically per symmetry type by
-`molmo_multiview_runner.py`, no `--prompt-id` needed for that pre-pass).
+**Different point geometry from Flow B — read before copying §3's loops.**
+Flow C's single-view pre-pass (`describe_and_point_axis.txt` /
+`describe_and_point_plane.txt`) asks Molmo to *name* every distinctive
+landmark it can find near the axis/plane, in plain text — it decides how
+many itself and returns **no pixel coordinates at all** in this step.
+Localization happens entirely in the second request: those labels replace
+the `--prompt-id` base prompt for the N-view call, where the model is asked
+to actually locate each named landmark, by name, in every view — see
+`build_flow_c_prompts` in `molmo_multiview_runner.py`. `--prompt-id` is still
+required as the fallback prompt for the (rare) case where the pre-pass
+produces no parseable labels for a given object.
+
+Because each image can now yield anywhere from 0 to ~10+ points instead of
+exactly 2, `estimate_symmetry.py` needs **`--point-mode all`** (not
+`independent`) — `independent` requires obj_id 1 AND 2 to both hit and
+silently discards every other obj_id, which would drop most of Flow C's
+points. Given the higher, noisier point count per object (Molmo can return
+inconsistent points across views for the same named landmark, same failure
+mode reported for multi-point prompting in the ZeroKey paper), the C3
+(HDBSCAN) sweep in §4c is more likely to matter for Flow C than it was for
+Flow A/B — don't skip it.
 
 ### 4a. Molmo inference (GPU)
 
@@ -222,16 +240,69 @@ CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
     --prompt-mode auto --yes
 ```
 
-### 4b/4c. Mapping + estimation + evaluation, then HDBSCAN sweep
+### 4b. Mapping + estimation + evaluation (CPU) — C1 (none) and C2 (greedy)
 
-Identical to §3b/§3c — copy those two loops, replacing `_flowB` with `_flowC`
-(and `--flow b` with `--flow c` in 4a above).
+```bash
+for SYM in axis plane; do
+    BASE_VAR=${SYM^^}_BASE; BASE=${!BASE_VAR}
+    EXP=${BASE}_flowC
+    SYMTYPE=${SYM}_sym
+
+    python Mapping/map_to_3d.py \
+        --renders-root ../data/renders --objects-root ../data/objects \
+        --symmetry-type $SYMTYPE --sizes 224 --lightings flat \
+        --experiment-id $EXP --overwrite --yes
+
+    for CLUSTER_ARGS in "" "--clustering-method greedy"; do
+        python Mapping/estimate_symmetry.py \
+            --renders-root ../data/renders --objects-root ../data/objects \
+            --symmetry-type $SYMTYPE --sizes 224 --lightings flat \
+            --experiment-id $EXP --point-mode all --overwrite $CLUSTER_ARGS
+    done
+
+    for METHOD in svd ransac_svd svd_sde ransac_svd_sde; do
+        python Mapping/evaluate.py \
+            --renders-root ../data/renders --objects-root ../data/objects \
+            --symmetry-type $SYMTYPE --sizes 224 --lightings flat \
+            --experiment-id $EXP --method $METHOD
+        python Mapping/evaluate.py \
+            --renders-root ../data/renders --objects-root ../data/objects \
+            --symmetry-type $SYMTYPE --sizes 224 --lightings flat \
+            --experiment-id ${EXP}_cluster --method $METHOD
+    done
+done
+```
+
+### 4c. C3 — HDBSCAN sweep (reuses stage 4a/4b's mapped points, no new Molmo calls)
+
+```bash
+for SYM in axis plane; do
+    BASE_VAR=${SYM^^}_BASE; BASE=${!BASE_VAR}
+    EXP=${BASE}_flowC
+    SYMTYPE=${SYM}_sym
+
+    for MS in 2 3 5; do
+        python Mapping/estimate_symmetry.py \
+            --renders-root ../data/renders --objects-root ../data/objects \
+            --symmetry-type $SYMTYPE --sizes 224 --lightings flat \
+            --experiment-id $EXP --point-mode all \
+            --clustering-method hdbscan --hdbscan-min-samples $MS
+
+        for METHOD in svd ransac_svd svd_sde ransac_svd_sde; do
+            python Mapping/evaluate.py \
+                --renders-root ../data/renders --objects-root ../data/objects \
+                --symmetry-type $SYMTYPE --sizes 224 --lightings flat \
+                --experiment-id ${EXP}_hdbscan_ms${MS} --method $METHOD
+        done
+    done
+done
+```
 
 - [ ] Flow C — axis — Molmo inference
-- [ ] Flow C — axis — map_to_3d + estimate (C1, C2) + evaluate
+- [ ] Flow C — axis — map_to_3d + estimate (C1, C2, `--point-mode all`) + evaluate
 - [ ] Flow C — axis — HDBSCAN sweep (C3, ms=2/3/5) + evaluate
 - [ ] Flow C — plane — Molmo inference
-- [ ] Flow C — plane — map_to_3d + estimate (C1, C2) + evaluate
+- [ ] Flow C — plane — map_to_3d + estimate (C1, C2, `--point-mode all`) + evaluate
 - [ ] Flow C — plane — HDBSCAN sweep (C3, ms=2/3/5) + evaluate
 
 ---
