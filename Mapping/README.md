@@ -202,9 +202,10 @@ Fits a symmetry axis or plane from the 3D hit points using four methods: plain S
 - `axis_sym`: first principal component of centered hit points = axis direction; origin = centroid.
 - `plane_sym`: last principal component (min-variance direction) = plane normal; origin = centroid.
 
-**Point mode** (`--point-mode`) controls how Molmo2 point pairs are treated before SVD:
-- `independent`: each 3D hit point enters SVD directly.
+**Point mode** (`--point-mode`) controls how Molmo2 points are treated before SVD:
+- `independent`: each 3D hit point enters SVD directly. Requires obj_id 1 AND 2 to both hit per image (images with only a partial hit are discarded); any obj_id beyond 2 is ignored. Use with Flow A/B prompts, which always return exactly that pair.
 - `midpoint`: obj_id=1 and obj_id=2 per image are replaced by their 3D midpoint. Use this for bilateral-pair prompts (e.g., `axis_v01`, `plane_v01`) so that midpoints lie on the axis/plane instead of opposite sides.
+- `all`: every hit point enters SVD directly, any obj_id count per image, no pairing requirement — an image contributes whatever subset of points it has, even if others were occluded. Required for **Flow C**, whose pre-pass returns a variable number of labeled points (typically 4-10), not a fixed pair; `independent`/`midpoint` would silently drop everything past obj_id 2.
 
 **SDE variants** (`svd_sde`, `ransac_svd_sde`) compute the Symmetry Distance Error against the mesh and store it in the output. Requires `--objects-root`.
 
@@ -254,7 +255,7 @@ python Mapping/estimate_symmetry.py \
 | `--symmetry-type` | *(required)* | `axis_sym` or `plane_sym` |
 | `--sizes` | `224 448 1136` | Sizes to pool points from |
 | `--lightings` | `flat brighter darker` | Lightings to pool points from |
-| `--point-mode` | `independent` | `independent` or `midpoint` — see prompt table in `Experiments.md` |
+| `--point-mode` | `independent` | `independent`, `midpoint`, or `all` (Flow C) — see prompt table in `Experiments.md` |
 | `--clustering-method` | `none` | `none`, `greedy`, or `hdbscan` |
 | `--hdbscan-min-samples` | `3` | `min_samples` for `--clustering-method hdbscan` (sweep 2, 3, 5) |
 | `--clustering` | `False` | Deprecated alias for `--clustering-method greedy` |
@@ -543,7 +544,7 @@ python Mapping/visualize_rays.py \
 | `--show-clusters` | `False` | Overlay cluster centroids from `mapped_points_3d[_EXP].json` (requires `map_to_3d.py` to have run) |
 | `--clustering-method` | `greedy` | `greedy` or `hdbscan` — clustering method for `--show-clusters` |
 | `--hdbscan-min-samples` | `3` | `min_samples` for `--clustering-method hdbscan` |
-| `--point-mode` | `independent` | `independent` or `midpoint` — must match `estimate_symmetry.py`'s point mode |
+| `--point-mode` | `independent` | `independent`, `midpoint`, or `all` — must match `estimate_symmetry.py`'s point mode |
 | `--ray-length` | `2 × bbox diag` | Length of miss rays |
 | `--ray-radius` | `0.004` | Tube radius for all rays |
 | `--hit-radius` | `0.015` | Sphere radius for hit points |

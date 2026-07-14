@@ -120,11 +120,22 @@ def load_gt(txt_path: Path) -> list[dict]:
 
 def _collect_hit_points(mapped_json: dict, nv_key: str,
                         point_mode: str = "independent") -> np.ndarray | None:
-    """Extract 3D hit points from mapped_points_3d.json for one n_views group."""
+    """
+    Extract 3D hit points from mapped_points_3d.json for one n_views group.
+    Mirrors estimate_symmetry.collect_hit_points -- keep in sync.
+    """
     group = mapped_json.get("n_views_results", {}).get(nv_key)
     if group is None:
         return None
     raw = group.get("points_3d", [])
+
+    if point_mode == "all":
+        pts = [
+            np.array(p["point_3d"], dtype=np.float64)
+            for p in raw
+            if p["hit"] and p["point_3d"] is not None
+        ]
+        return np.array(pts, dtype=np.float64) if len(pts) >= 2 else None
 
     by_img: dict[int, dict[int, np.ndarray]] = {}
     for p in raw:
@@ -232,9 +243,9 @@ def parse_args():
     p.add_argument("--hdbscan-min-samples", type=int, default=3,
                    help="min_samples for --clustering-method hdbscan.")
     p.add_argument("--point-mode", default="independent",
-                   choices=["independent", "midpoint"],
+                   choices=["independent", "midpoint", "all"],
                    help="Point collection mode for --show-clusters. Must match the mode "
-                        "used in estimate_symmetry.py.")
+                        "used in estimate_symmetry.py ('all' = Flow C, variable points/image).")
     p.add_argument("--patch-size", type=int, default=1, choices=PATCH_SIZES,
                    help="Ray-cast patch size for hit/miss computation (must match the "
                         "--patch-size used by map_to_3d.py to inspect the same output).")
