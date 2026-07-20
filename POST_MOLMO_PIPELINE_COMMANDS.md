@@ -138,7 +138,39 @@ python Mapping/compare_results.py \
 
 ---
 
-## 3. Full per-experiment cycle (process + compare in one call)
+## 2b. Export best/worst example objects for that ONE prompt-flow (optional)
+
+A **different command**, not `compare_results.py`: `Mapping/export_viz_samples.py` picks the
+N objects with the best and worst angular error for one experiment + method, copies their
+pipeline JSONs into `<results_dir>/<experiment_id>/viz_samples/{good,bad}/`, and writes a
+`README.md` with ready-to-run `visualize_rays.py` commands per object.
+
+```bash
+export_examples() {
+    local SYM=$1     # axis_sym | plane_sym
+    local EXP=$2
+    local METHOD=${3:-svd}
+
+    python Mapping/export_viz_samples.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type $SYM --sizes 224 --lightings flat \
+        --experiment-id $EXP --method $METHOD --n-views 14 \
+        --n-samples 10 --results-dir $RESULTS
+}
+```
+
+Example:
+
+```bash
+export_examples axis_sym axis_v01 svd
+```
+
+Output: `../results/axis_v01/viz_samples/good/`, `.../bad/`, `.../README.md`. Requires
+`evaluate.py` to have already run for that `--method` (reads `eval_*_<EXP>_<method>_results.json`).
+
+---
+
+## 3. Full per-experiment cycle (process + compare + examples in one call)
 
 ```bash
 run_experiment_and_compare() {
@@ -148,6 +180,7 @@ run_experiment_and_compare() {
 
     run_post_molmo "$SYM" "$EXP" "$MODE"
     compare_one_experiment "$SYM" "$EXP"
+    export_examples "$SYM" "$EXP" svd
 }
 
 # Examples
@@ -161,15 +194,16 @@ run_experiment_and_compare plane_sym plane_v01               midpoint
 
 Run this once per finished Molmo experiment — it never touches any other experiment's
 files (`map_to_3d.py`/`estimate_symmetry.py`/`evaluate.py` are isolated by `--experiment-id`,
-and `compare_one_experiment` only ever reads that one experiment's 8 eval files).
+`compare_one_experiment` only reads that one experiment's rows via `--experiment-id`, and
+`export_examples` only reads that one experiment's eval results).
 
 ---
 
 ## 4. Once ALL experiments are finished — one consolidated CSV
 
 Once every planned experiment (Flow A/B/C, all prompts, both symmetry types) has gone
-through §1–§3, run `compare_results.py` **without** the temp-dir isolation, pointed at the
-real `$RENDERS` — it will pick up every `eval_s224_flat_*_summary.csv` file that exists:
+through §1–§3, run `compare_results.py` **without** `--experiment-id` — it will pick up
+every `eval_s224_flat_*_summary.csv` file that exists under `$RENDERS`:
 
 ```bash
 python Mapping/compare_results.py \
