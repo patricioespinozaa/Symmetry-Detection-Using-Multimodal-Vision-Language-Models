@@ -7,6 +7,8 @@ Command reference for three things, in order:
 2. Generating a **compare_results specific to that single prompt-flow** right after it finishes.
 3. Once **every** planned experiment has been processed, generating **one consolidated
    comparison CSV across all of them**.
+4. *(Optional, §6)* Sweeping clustering method and backprojection patch-size **on top of one
+   already-picked winning prompt-flow** — this is a separate axis, not run for every prompt.
 
 This assumes Step 2 of the main pipeline (Molmo2 inference,
 `MolmoPointing/molmo_multiview_runner.py`) has already produced
@@ -253,7 +255,106 @@ PY
 
 ---
 
-## 5. Related docs
+## 6. Clustering & backprojection sweeps on top of ONE prompt-flow (optional)
+
+**§1–§3 above do *not* sweep clustering method or patch size** — `run_post_molmo` uses each
+script's default (`--clustering-method none`, `--patch-size 1` / exact ray). Clustering
+(`none`/`greedy`/`hdbscan`) and backprojection (`patch-size` 1/3/5) are a separate,
+orthogonal axis applied **only on top of the best-performing prompt-flow** you already picked
+via §1–§4 — not swept for every one of the 24 prompts × 3 flows (see
+`EXPERIMENT_ROADMAP.md` §5–6 for the full rationale and checklist).
+
+**Naming caveat:** each stage's output filename gets its own tag appended automatically, but
+the *next* stage doesn't know about a tag a different script appended — you must pass it the
+grown `--experiment-id` string yourself. `estimate_symmetry.py` has no `--patch-size` flag;
+to read a patch-tagged `mapped_points_3d` file you pass `--experiment-id <EXP>_p{N}` directly.
+
+```bash
+# Clustering sweep (C2 greedy, C3 hdbscan ms=2/3/5) — reuses the base EXP's
+# mapped_points_3d_<EXP>.json (patch-size 1), no new Molmo/map_to_3d calls.
+run_clustering_sweep() {
+    local SYM=$1
+    local EXP=$2
+    local MODE=$3
+
+    python Mapping/estimate_symmetry.py \
+        --renders-root $RENDERS --objects-root $OBJECTS \
+        --symmetry-type $SYM --sizes 224 --lightings flat \
+        --experiment-id $EXP --point-mode $MODE --clustering-method greedy --overwrite
+
+    for MS in 2 3 5; do
+        python Mapping/estimate_symmetry.py \
+            --renders-root $RENDERS --objects-root $OBJECTS \
+            --symmetry-type $SYM --sizes 224 --lightings flat \
+            --experiment-id $EXP --point-mode $MODE \
+            --clustering-method hdbscan --hdbscan-min-samples $MS --overwrite
+    done
+
+    for CLUSTER_EXP in ${EXP}_cluster ${EXP}_hdbscan_ms2 ${EXP}_hdbscan_ms3 ${EXP}_hdbscan_ms5; do
+        for METHOD in svd ransac_svd svd_sde ransac_svd_sde; do
+            python Mapping/evaluate.py \
+                --renders-root $RENDERS --objects-root $OBJECTS \
+                --symmetry-type $SYM --sizes 224 --lightings flat \
+                --experiment-id $CLUSTER_EXP --method $METHOD
+        done
+    done
+}
+
+# Patch-size / backprojection sweep (h=3, h=5) — new map_to_3d call per patch size.
+run_patch_sweep() {
+    local SYM=$1
+    local EXP=$2
+    local MODE=$3
+
+    for PATCH in 3 5; do
+        local EXP_P="${EXP}_p${PATCH}"
+
+        python Mapping/map_to_3d.py \
+            --renders-root $RENDERS --objects-root $OBJECTS \
+            --symmetry-type $SYM --sizes 224 --lightings flat \
+            --experiment-id $EXP --patch-size $PATCH --overwrite --yes
+
+        python Mapping/estimate_symmetry.py \
+            --renders-root $RENDERS --objects-root $OBJECTS \
+            --symmetry-type $SYM --sizes 224 --lightings flat \
+            --experiment-id $EXP_P --point-mode $MODE --overwrite
+
+        for METHOD in svd ransac_svd svd_sde ransac_svd_sde; do
+            python Mapping/evaluate.py \
+                --renders-root $RENDERS --objects-root $OBJECTS \
+                --symmetry-type $SYM --sizes 224 --lightings flat \
+                --experiment-id $EXP_P --method $METHOD
+        done
+    done
+}
+```
+
+Example, once `axis_v05_1_flowB` (base, C1/patch-1) has already gone through §1–§3:
+
+```bash
+run_clustering_sweep axis_sym axis_v05_1_flowB independent
+run_patch_sweep      axis_sym axis_v05_1_flowB independent
+```
+
+Compare the clustering/patch variants of that one prompt-flow against its C1 baseline, using
+`--experiment-id` (§2) with the full set of grown experiment ids:
+
+```bash
+python Mapping/compare_results.py \
+    --renders-root $RENDERS --symmetry-type axis_sym \
+    --sizes 224 --lightings flat --total-objects 850 \
+    --experiment-id \
+        axis_v05_1_flowB \
+        axis_v05_1_flowB_cluster \
+        axis_v05_1_flowB_hdbscan_ms2 axis_v05_1_flowB_hdbscan_ms3 axis_v05_1_flowB_hdbscan_ms5 \
+        axis_v05_1_flowB_p3 axis_v05_1_flowB_p5 \
+    --save-dir $RESULTS/axis_sym/per_experiment/axis_v05_1_flowB_variants/plots \
+    --csv-dir  $RESULTS/axis_sym/per_experiment/axis_v05_1_flowB_variants
+```
+
+---
+
+## 7. Related docs
 
 | Doc | What it covers |
 |---|---|
