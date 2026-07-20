@@ -27,6 +27,23 @@ Usage
     --symmetry-type axis_sym \
     --save-dir ../results/plots \
     --csv-dir ../results
+
+    # Consolidate CSVs for a single prompt-flow experiment (exact match, no
+    # prefix collisions between e.g. axis_v00 and axis_v00_1):
+    python Mapping/compare_results.py \
+    --renders-root ../data/renders \
+    --symmetry-type axis_sym \
+    --experiment-id axis_v01 \
+    --save-dir ../results/axis_sym/per_experiment/axis_v01/plots \
+    --csv-dir ../results/axis_sym/per_experiment/axis_v01
+
+    # Multiple specific experiments (e.g. a Flow A/B/C comparison for one base prompt):
+    python Mapping/compare_results.py \
+    --renders-root ../data/renders \
+    --symmetry-type axis_sym \
+    --experiment-id axis_v05_1 axis_v05_1_flowB axis_v05_1_flowC \
+    --save-dir ../results/axis_sym/plots \
+    --csv-dir ../results
 """
 
 from __future__ import annotations
@@ -81,25 +98,44 @@ _ACADEMIC_STYLE: dict = {
 # ── Data loading ──────────────────────────────────────────────────────────────
 
 def load_csvs(renders_root: Path, symmetry_type: str, sizes: list[int],
-              lightings: list[str]) -> pd.DataFrame:
+              lightings: list[str],
+              experiment_ids: list[str] | None = None) -> pd.DataFrame:
+    """experiment_ids, if given, filters to those experiments by exact match
+    against the fully-parsed experiment id (never by filename prefix) — so
+    e.g. --experiment-id axis_v00 never accidentally pulls in axis_v00_1."""
     size_tag    = "s" + "_".join(str(s) for s in sizes)
     light_tag   = "_".join(lightings)
     prefix      = f"eval_{size_tag}_{light_tag}_"
     sym_prefix  = "axis_v" if symmetry_type == "axis_sym" else "plane_v"
     root        = renders_root / symmetry_type
+    wanted      = set(experiment_ids) if experiment_ids else None
 
-    frames = []
+    frames     = []
+    found_exps = set()
     for csv in sorted(root.glob(f"{prefix}{sym_prefix}*_summary.csv")):
         stem   = csv.stem.replace(prefix, "").removesuffix("_summary")
         method = next((m for m in METHODS if stem.endswith("_" + m)), "unknown")
         exp    = stem[: -(len(method) + 1)]
+        found_exps.add(exp)
+        if wanted is not None and exp not in wanted:
+            continue
         df     = pd.read_csv(csv)
         df.insert(0, "method", method)
         df.insert(0, "experiment", exp)
         frames.append(df)
 
     if not frames:
+        if wanted is not None:
+            raise SystemExit(
+                f"[error] None of --experiment-id {sorted(wanted)} found in {root}. "
+                f"Available: {sorted(found_exps)}"
+            )
         raise SystemExit(f"[error] No CSVs found in {root} matching '{prefix}{sym_prefix}*'")
+
+    if wanted is not None:
+        missing = wanted - found_exps
+        if missing:
+            print(f"[warn] --experiment-id not found, skipped: {sorted(missing)}")
 
     combined = pd.concat(frames, ignore_index=True)
     combined["n_views"] = combined["n_views"].astype(int)
@@ -125,7 +161,9 @@ def print_table(df: pd.DataFrame, symmetry_type: str) -> None:
 # ── Plot 1: métricas vs n_views por método ────────────────────────────────────
 
 def plot_metrics_by_nviews(df: pd.DataFrame, symmetry_type: str,
-                           save_dir: Path | None) -> None:
+                           save_dir: Path | None,
+                           out_prefix: str | None = None) -> None:
+    prefix  = out_prefix or symmetry_type
     methods = [m for m in METHODS if m in df["method"].unique()]
     exps    = sorted(df["experiment"].unique())
     n_cols  = len(methods)
@@ -176,7 +214,7 @@ def plot_metrics_by_nviews(df: pd.DataFrame, symmetry_type: str,
         direction = "↑ mejor" if higher_better else "↓ mejor"
         fig.suptitle(f"{symmetry_type} — {ylabel}  ({direction})", y=1.02)
         fig.tight_layout(rect=[0, 0.08, 1, 1])
-        _save_or_show(fig, save_dir, f"{symmetry_type}_{metric}.png")
+        _save_or_show(fig, save_dir, f"{prefix}_{metric}.png")
 
 
 # ── Plot 3: curva de precisión continua ──────────────────────────────────────
@@ -191,10 +229,12 @@ def _results_json_path(renders_root: Path, symmetry_type: str,
 
 def plot_precision_curve(df: pd.DataFrame, renders_root: Path, symmetry_type: str,
                          sizes: list[int], lightings: list[str],
-                         save_dir: Path | None) -> None:
+                         save_dir: Path | None,
+                         out_prefix: str | None = None) -> None:
     """Curva de precisión angular continua (precision@θ para θ ∈ [0°, 90°]).
     Se usa el mayor n_views disponible (resultado final del sistema).
     Un subplot por método, curvas coloreadas por experimento."""
+    prefix  = out_prefix or symmetry_type
     exps    = sorted(df["experiment"].unique())
     methods = [m for m in METHODS if m in df["method"].unique()]
     nv_max  = int(df["n_views"].max())
@@ -247,16 +287,18 @@ def plot_precision_curve(df: pd.DataFrame, renders_root: Path, symmetry_type: st
         y=1.02,
     )
     fig.tight_layout(rect=[0, 0.08, 1, 1])
-    _save_or_show(fig, save_dir, f"{symmetry_type}_precision_curve_nv{nv_max}.png")
+    _save_or_show(fig, save_dir, f"{prefix}_precision_curve_nv{nv_max}.png")
 
 
 # ── Plot 4: tasa de aceptación SDE ───────────────────────────────────────────
 
 def plot_acceptance_rate(df: pd.DataFrame, renders_root: Path, symmetry_type: str,
-                         save_dir: Path | None) -> None:
+                         save_dir: Path | None,
+                         out_prefix: str | None = None) -> None:
     """% de predicciones con accepted=True (SDE ≤ umbral) por experimento y n_views.
     Solo se grafican los métodos SDE (svd_sde, ransac_svd_sde).
     Lee predicted_symmetry_<EXP>.json directamente de cada objeto."""
+    prefix      = out_prefix or symmetry_type
     sde_methods = [m for m in ["svd_sde", "ransac_svd_sde"] if m in df["method"].unique()]
     if not sde_methods:
         return
@@ -319,18 +361,20 @@ def plot_acceptance_rate(df: pd.DataFrame, renders_root: Path, symmetry_type: st
                bbox_to_anchor=(0.5, -0.10))
     fig.suptitle(f"{symmetry_type} — Tasa de aceptación SDE  ↑ mejor", y=1.02)
     fig.tight_layout(rect=[0, 0.08, 1, 1])
-    _save_or_show(fig, save_dir, f"{symmetry_type}_acceptance_rate.png")
+    _save_or_show(fig, save_dir, f"{prefix}_acceptance_rate.png")
 
 
 # ── Plot 5: % objetos válidos por prompt (un gráfico por prompt) ──────────────
 
 def plot_valid_by_prompt(df: pd.DataFrame, symmetry_type: str,
                          save_dir: Path | None,
-                         total_objects: int | None = None) -> None:
+                         total_objects: int | None = None,
+                         out_prefix: str | None = None) -> None:
     """Un único gráfico de líneas con una curva por experimento/prompt.
     Eje X: n_views (discreto). Eje Y: % objetos con predicción válida.
     Como todos los métodos dan el mismo n_objects, se agrupan y se toma el primer valor.
     Se guarda en save_dir/valid/."""
+    prefix      = out_prefix or symmetry_type
     exps        = sorted(df["experiment"].unique())
     n_views_all = sorted(df["n_views"].unique())
     valid_dir   = (save_dir / "valid") if save_dir else None
@@ -362,7 +406,7 @@ def plot_valid_by_prompt(df: pd.DataFrame, symmetry_type: str,
     ax.legend(bbox_to_anchor=(1.02, 1), loc="upper left", borderaxespad=0)
     ax.grid()
     fig.tight_layout()
-    _save_or_show(fig, valid_dir, f"{symmetry_type}_valid.png")
+    _save_or_show(fig, valid_dir, f"{prefix}_valid.png")
 
 
 # ── Helper ────────────────────────────────────────────────────────────────────
@@ -387,6 +431,15 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument("--renders-root",  required=True)
     p.add_argument("--symmetry-type", required=True, choices=["axis_sym", "plane_sym"])
+    p.add_argument("--experiment-id", nargs="+", default=None, metavar="EXP_ID",
+                   help="Filtra a uno o más experimentos específicos (comparación exacta "
+                        "contra el experiment_id ya parseado, nunca por prefijo de archivo — "
+                        "'axis_v00' nunca incluye 'axis_v00_1'). Si se omite, incluye todos "
+                        "los experimentos encontrados en renders-root. Útil para consolidar "
+                        "los eval CSV de un solo prompt-flujo (o para comparar un pequeño "
+                        "grupo, p.ej. Flow A/B/C de un mismo prompt base). "
+                        "Ej.: --experiment-id axis_v01 o "
+                        "--experiment-id axis_v05_1 axis_v05_1_flowB axis_v05_1_flowC")
     p.add_argument("--sizes",     type=int, nargs="+", default=[224])
     p.add_argument("--lightings", type=str, nargs="+", default=["flat"],
                    choices=["flat", "darker", "brighter"])
@@ -411,24 +464,37 @@ def main() -> None:
 
     plt.rcParams.update(_ACADEMIC_STYLE)
 
-    df = load_csvs(root, args.symmetry_type, args.sizes, args.lightings)
+    df = load_csvs(root, args.symmetry_type, args.sizes, args.lightings,
+                    experiment_ids=args.experiment_id)
     print_table(df, args.symmetry_type)
+
+    # When filtered to specific experiment(s), tag output filenames so they
+    # never overwrite a full "all experiments" comparison in the same
+    # --save-dir / --csv-dir.
+    if args.experiment_id:
+        ids = sorted(args.experiment_id)
+        tag = "_".join(ids) if len(ids) <= 3 else f"{len(ids)}exps"
+        out_prefix = f"{args.symmetry_type}_{tag}"
+    else:
+        out_prefix = args.symmetry_type
 
     if args.csv_dir:
         today   = date.today().strftime("%d_%m_%Y")
         out_dir = Path(args.csv_dir) / f"experiments_{today}"
         out_dir.mkdir(parents=True, exist_ok=True)
-        csv_path = out_dir / f"{args.symmetry_type}_comparison.csv"
+        csv_path = out_dir / f"{out_prefix}_comparison.csv"
         df.to_csv(csv_path, index=False)
         print(f"Saved: {csv_path}")
 
     if args.no_plots:
         return
 
-    plot_metrics_by_nviews(df, args.symmetry_type, save_dir)
-    plot_precision_curve(df, root, args.symmetry_type, args.sizes, args.lightings, save_dir)
-    plot_acceptance_rate(df, root, args.symmetry_type, save_dir)
-    plot_valid_by_prompt(df, args.symmetry_type, save_dir, total_objects=args.total_objects)
+    plot_metrics_by_nviews(df, args.symmetry_type, save_dir, out_prefix=out_prefix)
+    plot_precision_curve(df, root, args.symmetry_type, args.sizes, args.lightings, save_dir,
+                          out_prefix=out_prefix)
+    plot_acceptance_rate(df, root, args.symmetry_type, save_dir, out_prefix=out_prefix)
+    plot_valid_by_prompt(df, args.symmetry_type, save_dir, total_objects=args.total_objects,
+                          out_prefix=out_prefix)
 
 
 if __name__ == "__main__":

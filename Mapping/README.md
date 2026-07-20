@@ -401,9 +401,28 @@ python Mapping/compare_results.py \
     --symmetry-type axis_sym \
     --save-dir ../results/plots \
     --csv-dir ../results
+
+# Consolidate the eval CSVs of a single prompt-flow experiment (exact match,
+# never a filename prefix — axis_v00 never pulls in axis_v00_1)
+python Mapping/compare_results.py \
+    --renders-root ../data/renders \
+    --symmetry-type axis_sym \
+    --experiment-id axis_v01 \
+    --save-dir ../results/axis_sym/per_experiment/axis_v01/plots \
+    --csv-dir ../results/axis_sym/per_experiment/axis_v01
+
+# Or a small named group (e.g. Flow A/B/C of one base prompt)
+python Mapping/compare_results.py \
+    --renders-root ../data/renders \
+    --symmetry-type axis_sym \
+    --experiment-id axis_v05_1 axis_v05_1_flowB axis_v05_1_flowC \
+    --save-dir ../results/axis_sym/plots \
+    --csv-dir ../results
 ```
 
-The CSV is saved as `<csv-dir>/experiments_DD_MM_YYYY/<symmetry_type>_comparison.csv`.
+The CSV is saved as `<csv-dir>/experiments_DD_MM_YYYY/<symmetry_type>_comparison.csv` (or
+`..._<experiment_id(s)>_comparison.csv` when `--experiment-id` filters the run — output
+filenames are tagged so a filtered run never overwrites the full comparison in the same dir).
 
 ### Arguments
 
@@ -411,6 +430,7 @@ The CSV is saved as `<csv-dir>/experiments_DD_MM_YYYY/<symmetry_type>_comparison
 |---|---|---|
 | `--renders-root` | *(required)* | Root folder of renders |
 | `--symmetry-type` | *(required)* | `axis_sym` or `plane_sym` |
+| `--experiment-id` | `None` | One or more experiment ids to filter to (exact match, not prefix). Omit to include every experiment found |
 | `--sizes` | `224` | Must match what was used to run evaluate.py |
 | `--lightings` | `flat` | Must match what was used to run evaluate.py |
 | `--save-dir` | `None` | Directory to save plots. If omitted, displays on screen |
