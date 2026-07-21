@@ -66,6 +66,41 @@ def build_camera_rays(
     return ray_origin, dir_world
 
 
+def project_point(
+    p_world: np.ndarray,
+    R: list[list[float]],
+    T: list[float],
+    fov_deg: float,
+    image_size: int,
+) -> tuple[float, float, bool]:
+    """
+    Forward-project a world-space point to pixel coordinates in the rendered
+    PNG. Exact inverse of build_camera_rays' direction math (same R, T, FOV
+    convention: p_cam = p_world @ R + T, z forward).
+
+    Returns:
+        px, py:  pixel coordinates in the saved image (0..image_size)
+        behind:  True if the point is behind the camera (p_cam.z <= 0),
+                 in which case px/py are not meaningful
+    """
+    R_np = np.array(R, dtype=np.float64)
+    T_np = np.array(T, dtype=np.float64)
+
+    p_cam  = p_world @ R_np + T_np
+    behind = bool(p_cam[2] <= 1e-6)
+
+    half_tan = np.tan(np.deg2rad(fov_deg) / 2.0)
+    ndc_x = (p_cam[0] / p_cam[2]) / half_tan
+    ndc_y = (p_cam[1] / p_cam[2]) / half_tan
+
+    x_molmo = (ndc_x + 1.0) / 2.0 * 1000.0
+    y_molmo = (1.0 - ndc_y) / 2.0 * 1000.0
+
+    px = x_molmo / 1000.0 * image_size
+    py = y_molmo / 1000.0 * image_size
+    return float(px), float(py), behind
+
+
 def cast_ray(
     mesh: trimesh.Trimesh,
     ray_origin: np.ndarray,
