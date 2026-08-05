@@ -1,0 +1,1168 @@
+[2026-07-21 13:37:15] ====================================================================================================
+[2026-07-21 13:37:15] run_all_postprocessing START | renders-root=../data/renders | overwrite=False | dry_run=False
+[2026-07-21 13:38:07] Discovered 19 base experiment(s) to process (7 variant(s) each -> ~133 total rows, 532 evaluate calls):
+[2026-07-21 13:38:07]   - axis_sym   axis_v00                 point-mode=independent
+[2026-07-21 13:38:07]   - axis_sym   axis_v01                 point-mode=midpoint
+[2026-07-21 13:38:07]   - axis_sym   axis_v01_1               point-mode=midpoint
+[2026-07-21 13:38:07]   - axis_sym   axis_v03_1               point-mode=midpoint
+[2026-07-21 13:38:07]   - axis_sym   axis_v04                 point-mode=independent
+[2026-07-21 13:38:07]   - axis_sym   axis_v05                 point-mode=independent
+[2026-07-21 13:38:07]   - axis_sym   axis_v05_1               point-mode=independent
+[2026-07-21 13:38:07]   - axis_sym   axis_v05_1_flowB         point-mode=independent
+[2026-07-21 13:38:07]   - axis_sym   axis_v05_1_flowC         point-mode=all
+[2026-07-21 13:38:07]   - plane_sym  plane_v00                point-mode=independent
+[2026-07-21 13:38:07]   - plane_sym  plane_v00_1              point-mode=independent
+[2026-07-21 13:38:07]   - plane_sym  plane_v01                point-mode=midpoint
+[2026-07-21 13:38:07]   - plane_sym  plane_v02                point-mode=independent
+[2026-07-21 13:38:07]   - plane_sym  plane_v03                point-mode=midpoint
+[2026-07-21 13:38:07]   - plane_sym  plane_v04                point-mode=independent
+[2026-07-21 13:38:07]   - plane_sym  plane_v04_1              point-mode=independent
+[2026-07-21 13:38:07]   - plane_sym  plane_v04_1_flowB        point-mode=independent
+[2026-07-21 13:38:07]   - plane_sym  plane_v04_1_flowC        point-mode=all
+[2026-07-21 13:38:07]   - plane_sym  plane_v05                point-mode=independent
+[2026-07-21 13:38:07] ----- [1/19] axis_sym / axis_v00 -----
+[2026-07-21 13:38:07] axis_v00                     | core stages            | SKIP    | all 4 eval summaries already exist
+[2026-07-21 13:38:07] axis_v00_cluster             | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-21 13:38:07] axis_v00_cluster             | compare_results        | START
+[2026-07-21 13:38:12] axis_v00_cluster             | compare_results        | DONE    |     5.9s
+[2026-07-21 13:38:12] axis_v00_hdbscan_ms2         | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-21 13:38:12] axis_v00_hdbscan_ms2         | compare_results        | START
+[2026-07-21 13:38:17] axis_v00_hdbscan_ms2         | compare_results        | DONE    |     4.8s
+[2026-07-21 13:38:17] axis_v00_hdbscan_ms3         | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-21 13:38:17] axis_v00_hdbscan_ms3         | compare_results        | START
+[2026-07-21 13:38:22] axis_v00_hdbscan_ms3         | compare_results        | DONE    |     4.5s
+[2026-07-21 13:38:22] axis_v00_hdbscan_ms5         | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-21 13:38:22] axis_v00_hdbscan_ms5         | compare_results        | START
+[2026-07-21 13:38:26] axis_v00_hdbscan_ms5         | compare_results        | DONE    |     4.5s
+[2026-07-21 13:38:26] axis_v00_p3                  | patch sweep            | SKIP    | all 4 eval summaries already exist
+[2026-07-21 13:38:26] axis_v00_p3                  | compare_results        | START
+[2026-07-21 13:38:31] axis_v00_p3                  | compare_results        | DONE    |     4.6s
+[2026-07-21 13:38:31] axis_v00_p5                  | patch sweep            | SKIP    | all 4 eval summaries already exist
+[2026-07-21 13:38:31] axis_v00_p5                  | compare_results        | START
+[2026-07-21 13:38:36] axis_v00_p5                  | compare_results        | DONE    |     5.2s
+[2026-07-21 13:38:36] axis_v00                     | compare_results        | START
+[2026-07-21 13:38:41] axis_v00                     | compare_results        | DONE    |     5.2s
+[2026-07-21 13:38:41] ----- [2/19] axis_sym / axis_v01 -----
+[2026-07-21 13:38:41] axis_v01                     | map_to_3d              | START
+[2026-07-21 13:42:37] axis_v01                     | map_to_3d              | DONE    |   235.9s
+[2026-07-21 13:42:37] axis_v01                     | estimate_symmetry      | START
+[2026-07-21 13:44:06] axis_v01                     | estimate_symmetry      | DONE    |    89.1s
+[2026-07-21 13:44:06] axis_v01                     | evaluate[svd]          | START
+[2026-07-21 13:44:09] axis_v01                     | evaluate[svd]          | DONE    |     2.6s
+[2026-07-21 13:44:09] axis_v01                     | evaluate[ransac_svd]   | START
+[2026-07-21 13:44:10] axis_v01                     | evaluate[ransac_svd]   | DONE    |     1.3s
+[2026-07-21 13:44:10] axis_v01                     | evaluate[svd_sde]      | START
+[2026-07-21 13:44:11] axis_v01                     | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 13:44:11] axis_v01                     | evaluate[ransac_svd_sde] | START
+[2026-07-21 13:44:12] axis_v01                     | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 13:44:12] axis_v01_cluster             | estimate_symmetry      | START
+[2026-07-21 13:45:41] axis_v01_cluster             | estimate_symmetry      | DONE    |    88.7s
+[2026-07-21 13:45:41] axis_v01_cluster             | evaluate[svd]          | START
+[2026-07-21 13:45:43] axis_v01_cluster             | evaluate[svd]          | DONE    |     1.8s
+[2026-07-21 13:45:43] axis_v01_cluster             | evaluate[ransac_svd]   | START
+[2026-07-21 13:45:44] axis_v01_cluster             | evaluate[ransac_svd]   | DONE    |     1.1s
+[2026-07-21 13:45:44] axis_v01_cluster             | evaluate[svd_sde]      | START
+[2026-07-21 13:45:45] axis_v01_cluster             | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 13:45:45] axis_v01_cluster             | evaluate[ransac_svd_sde] | START
+[2026-07-21 13:45:46] axis_v01_cluster             | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 13:45:46] axis_v01_cluster             | compare_results        | START
+[2026-07-21 13:45:49] axis_v01_cluster             | compare_results        | DONE    |     2.8s
+[2026-07-21 13:45:49] axis_v01_hdbscan_ms2         | estimate_symmetry      | START
+[2026-07-21 13:47:21] axis_v01_hdbscan_ms2         | estimate_symmetry      | DONE    |    92.0s
+[2026-07-21 13:47:21] axis_v01_hdbscan_ms2         | evaluate[svd]          | START
+[2026-07-21 13:47:23] axis_v01_hdbscan_ms2         | evaluate[svd]          | DONE    |     1.9s
+[2026-07-21 13:47:23] axis_v01_hdbscan_ms2         | evaluate[ransac_svd]   | START
+[2026-07-21 13:47:24] axis_v01_hdbscan_ms2         | evaluate[ransac_svd]   | DONE    |     1.1s
+[2026-07-21 13:47:24] axis_v01_hdbscan_ms2         | evaluate[svd_sde]      | START
+[2026-07-21 13:47:25] axis_v01_hdbscan_ms2         | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 13:47:25] axis_v01_hdbscan_ms2         | evaluate[ransac_svd_sde] | START
+[2026-07-21 13:47:26] axis_v01_hdbscan_ms2         | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 13:47:26] axis_v01_hdbscan_ms2         | compare_results        | START
+[2026-07-21 13:47:29] axis_v01_hdbscan_ms2         | compare_results        | DONE    |     2.8s
+[2026-07-21 13:47:29] axis_v01_hdbscan_ms3         | estimate_symmetry      | START
+[2026-07-21 13:49:00] axis_v01_hdbscan_ms3         | estimate_symmetry      | DONE    |    90.9s
+[2026-07-21 13:49:00] axis_v01_hdbscan_ms3         | evaluate[svd]          | START
+[2026-07-21 13:49:02] axis_v01_hdbscan_ms3         | evaluate[svd]          | DONE    |     1.8s
+[2026-07-21 13:49:02] axis_v01_hdbscan_ms3         | evaluate[ransac_svd]   | START
+[2026-07-21 13:49:03] axis_v01_hdbscan_ms3         | evaluate[ransac_svd]   | DONE    |     1.1s
+[2026-07-21 13:49:03] axis_v01_hdbscan_ms3         | evaluate[svd_sde]      | START
+[2026-07-21 13:49:04] axis_v01_hdbscan_ms3         | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 13:49:04] axis_v01_hdbscan_ms3         | evaluate[ransac_svd_sde] | START
+[2026-07-21 13:49:05] axis_v01_hdbscan_ms3         | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 13:49:05] axis_v01_hdbscan_ms3         | compare_results        | START
+[2026-07-21 13:49:08] axis_v01_hdbscan_ms3         | compare_results        | DONE    |     2.7s
+[2026-07-21 13:49:08] axis_v01_hdbscan_ms5         | estimate_symmetry      | START
+[2026-07-21 13:50:38] axis_v01_hdbscan_ms5         | estimate_symmetry      | DONE    |    90.0s
+[2026-07-21 13:50:38] axis_v01_hdbscan_ms5         | evaluate[svd]          | START
+[2026-07-21 13:50:40] axis_v01_hdbscan_ms5         | evaluate[svd]          | DONE    |     2.1s
+[2026-07-21 13:50:40] axis_v01_hdbscan_ms5         | evaluate[ransac_svd]   | START
+[2026-07-21 13:50:41] axis_v01_hdbscan_ms5         | evaluate[ransac_svd]   | DONE    |     1.1s
+[2026-07-21 13:50:41] axis_v01_hdbscan_ms5         | evaluate[svd_sde]      | START
+[2026-07-21 13:50:42] axis_v01_hdbscan_ms5         | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 13:50:42] axis_v01_hdbscan_ms5         | evaluate[ransac_svd_sde] | START
+[2026-07-21 13:50:43] axis_v01_hdbscan_ms5         | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 13:50:43] axis_v01_hdbscan_ms5         | compare_results        | START
+[2026-07-21 13:50:46] axis_v01_hdbscan_ms5         | compare_results        | DONE    |     2.9s
+[2026-07-21 13:50:46] axis_v01_p3                  | map_to_3d              | START
+[2026-07-21 14:03:49] axis_v01_p3                  | map_to_3d              | DONE    |   782.8s
+[2026-07-21 14:03:49] axis_v01_p3                  | estimate_symmetry      | START
+[2026-07-21 14:05:26] axis_v01_p3                  | estimate_symmetry      | DONE    |    97.0s
+[2026-07-21 14:05:26] axis_v01_p3                  | evaluate[svd]          | START
+[2026-07-21 14:05:28] axis_v01_p3                  | evaluate[svd]          | DONE    |     1.9s
+[2026-07-21 14:05:28] axis_v01_p3                  | evaluate[ransac_svd]   | START
+[2026-07-21 14:05:29] axis_v01_p3                  | evaluate[ransac_svd]   | DONE    |     1.1s
+[2026-07-21 14:05:29] axis_v01_p3                  | evaluate[svd_sde]      | START
+[2026-07-21 14:05:30] axis_v01_p3                  | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 14:05:30] axis_v01_p3                  | evaluate[ransac_svd_sde] | START
+[2026-07-21 14:05:31] axis_v01_p3                  | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 14:05:31] axis_v01_p3                  | compare_results        | START
+[2026-07-21 14:05:34] axis_v01_p3                  | compare_results        | DONE    |     2.8s
+[2026-07-21 14:05:34] axis_v01_p5                  | map_to_3d              | START
+[2026-07-21 14:37:50] axis_v01_p5                  | map_to_3d              | DONE    |  1935.8s
+[2026-07-21 14:37:50] axis_v01_p5                  | estimate_symmetry      | START
+[2026-07-21 14:39:27] axis_v01_p5                  | estimate_symmetry      | DONE    |    97.6s
+[2026-07-21 14:39:27] axis_v01_p5                  | evaluate[svd]          | START
+[2026-07-21 14:39:30] axis_v01_p5                  | evaluate[svd]          | DONE    |     2.2s
+[2026-07-21 14:39:30] axis_v01_p5                  | evaluate[ransac_svd]   | START
+[2026-07-21 14:39:31] axis_v01_p5                  | evaluate[ransac_svd]   | DONE    |     1.1s
+[2026-07-21 14:39:31] axis_v01_p5                  | evaluate[svd_sde]      | START
+[2026-07-21 14:39:32] axis_v01_p5                  | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 14:39:32] axis_v01_p5                  | evaluate[ransac_svd_sde] | START
+[2026-07-21 14:39:33] axis_v01_p5                  | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 14:39:33] axis_v01_p5                  | compare_results        | START
+[2026-07-21 14:39:36] axis_v01_p5                  | compare_results        | DONE    |     2.9s
+[2026-07-21 14:39:36] axis_v01                     | compare_results        | START
+[2026-07-21 14:39:39] axis_v01                     | compare_results        | DONE    |     3.1s
+[2026-07-21 14:39:39] ----- [3/19] axis_sym / axis_v01_1 -----
+[2026-07-21 14:39:39] axis_v01_1                   | core stages            | SKIP    | all 4 eval summaries already exist
+[2026-07-21 14:39:39] axis_v01_1_cluster           | estimate_symmetry      | START
+[2026-07-21 14:41:13] axis_v01_1_cluster           | estimate_symmetry      | DONE    |    94.4s
+[2026-07-21 14:41:13] axis_v01_1_cluster           | evaluate[svd]          | START
+[2026-07-21 14:41:16] axis_v01_1_cluster           | evaluate[svd]          | DONE    |     2.3s
+[2026-07-21 14:41:16] axis_v01_1_cluster           | evaluate[ransac_svd]   | START
+[2026-07-21 14:41:17] axis_v01_1_cluster           | evaluate[ransac_svd]   | DONE    |     1.2s
+[2026-07-21 14:41:17] axis_v01_1_cluster           | evaluate[svd_sde]      | START
+[2026-07-21 14:41:18] axis_v01_1_cluster           | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 14:41:18] axis_v01_1_cluster           | evaluate[ransac_svd_sde] | START
+[2026-07-21 14:41:19] axis_v01_1_cluster           | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 14:41:19] axis_v01_1_cluster           | compare_results        | START
+[2026-07-21 14:41:22] axis_v01_1_cluster           | compare_results        | DONE    |     2.8s
+[2026-07-21 14:41:22] axis_v01_1_hdbscan_ms2       | estimate_symmetry      | START
+[2026-07-21 14:43:03] axis_v01_1_hdbscan_ms2       | estimate_symmetry      | DONE    |   101.3s
+[2026-07-21 14:43:03] axis_v01_1_hdbscan_ms2       | evaluate[svd]          | START
+[2026-07-21 14:43:05] axis_v01_1_hdbscan_ms2       | evaluate[svd]          | DONE    |     2.1s
+[2026-07-21 14:43:05] axis_v01_1_hdbscan_ms2       | evaluate[ransac_svd]   | START
+[2026-07-21 14:43:06] axis_v01_1_hdbscan_ms2       | evaluate[ransac_svd]   | DONE    |     1.2s
+[2026-07-21 14:43:06] axis_v01_1_hdbscan_ms2       | evaluate[svd_sde]      | START
+[2026-07-21 14:43:08] axis_v01_1_hdbscan_ms2       | evaluate[svd_sde]      | DONE    |     1.2s
+[2026-07-21 14:43:08] axis_v01_1_hdbscan_ms2       | evaluate[ransac_svd_sde] | START
+[2026-07-21 14:43:09] axis_v01_1_hdbscan_ms2       | evaluate[ransac_svd_sde] | DONE    |     1.2s
+[2026-07-21 14:43:09] axis_v01_1_hdbscan_ms2       | compare_results        | START
+[2026-07-21 14:43:12] axis_v01_1_hdbscan_ms2       | compare_results        | DONE    |     3.0s
+[2026-07-21 14:43:12] axis_v01_1_hdbscan_ms3       | estimate_symmetry      | START
+[2026-07-21 14:44:49] axis_v01_1_hdbscan_ms3       | estimate_symmetry      | DONE    |    96.6s
+[2026-07-21 14:44:49] axis_v01_1_hdbscan_ms3       | evaluate[svd]          | START
+[2026-07-21 14:44:51] axis_v01_1_hdbscan_ms3       | evaluate[svd]          | DONE    |     2.0s
+[2026-07-21 14:44:51] axis_v01_1_hdbscan_ms3       | evaluate[ransac_svd]   | START
+[2026-07-21 14:44:52] axis_v01_1_hdbscan_ms3       | evaluate[ransac_svd]   | DONE    |     1.0s
+[2026-07-21 14:44:52] axis_v01_1_hdbscan_ms3       | evaluate[svd_sde]      | START
+[2026-07-21 14:44:53] axis_v01_1_hdbscan_ms3       | evaluate[svd_sde]      | DONE    |     1.0s
+[2026-07-21 14:44:53] axis_v01_1_hdbscan_ms3       | evaluate[ransac_svd_sde] | START
+[2026-07-21 14:44:54] axis_v01_1_hdbscan_ms3       | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 14:44:54] axis_v01_1_hdbscan_ms3       | compare_results        | START
+[2026-07-21 14:44:56] axis_v01_1_hdbscan_ms3       | compare_results        | DONE    |     2.6s
+[2026-07-21 14:44:56] axis_v01_1_hdbscan_ms5       | estimate_symmetry      | START
+[2026-07-21 14:46:27] axis_v01_1_hdbscan_ms5       | estimate_symmetry      | DONE    |    91.2s
+[2026-07-21 14:46:27] axis_v01_1_hdbscan_ms5       | evaluate[svd]          | START
+[2026-07-21 14:46:29] axis_v01_1_hdbscan_ms5       | evaluate[svd]          | DONE    |     1.8s
+[2026-07-21 14:46:29] axis_v01_1_hdbscan_ms5       | evaluate[ransac_svd]   | START
+[2026-07-21 14:46:30] axis_v01_1_hdbscan_ms5       | evaluate[ransac_svd]   | DONE    |     1.0s
+[2026-07-21 14:46:30] axis_v01_1_hdbscan_ms5       | evaluate[svd_sde]      | START
+[2026-07-21 14:46:31] axis_v01_1_hdbscan_ms5       | evaluate[svd_sde]      | DONE    |     1.0s
+[2026-07-21 14:46:31] axis_v01_1_hdbscan_ms5       | evaluate[ransac_svd_sde] | START
+[2026-07-21 14:46:32] axis_v01_1_hdbscan_ms5       | evaluate[ransac_svd_sde] | DONE    |     1.0s
+[2026-07-21 14:46:32] axis_v01_1_hdbscan_ms5       | compare_results        | START
+[2026-07-21 14:46:35] axis_v01_1_hdbscan_ms5       | compare_results        | DONE    |     2.5s
+[2026-07-21 14:46:35] axis_v01_1_p3                | map_to_3d              | START
+[2026-07-21 14:59:40] axis_v01_1_p3                | map_to_3d              | DONE    |   785.0s
+[2026-07-21 14:59:40] axis_v01_1_p3                | estimate_symmetry      | START
+[2026-07-21 15:01:21] axis_v01_1_p3                | estimate_symmetry      | DONE    |   100.9s
+[2026-07-21 15:01:21] axis_v01_1_p3                | evaluate[svd]          | START
+[2026-07-21 15:01:23] axis_v01_1_p3                | evaluate[svd]          | DONE    |     2.1s
+[2026-07-21 15:01:23] axis_v01_1_p3                | evaluate[ransac_svd]   | START
+[2026-07-21 15:01:24] axis_v01_1_p3                | evaluate[ransac_svd]   | DONE    |     1.1s
+[2026-07-21 15:01:24] axis_v01_1_p3                | evaluate[svd_sde]      | START
+[2026-07-21 15:01:25] axis_v01_1_p3                | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 15:01:25] axis_v01_1_p3                | evaluate[ransac_svd_sde] | START
+[2026-07-21 15:01:26] axis_v01_1_p3                | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 15:01:26] axis_v01_1_p3                | compare_results        | START
+[2026-07-21 15:01:29] axis_v01_1_p3                | compare_results        | DONE    |     2.8s
+[2026-07-21 15:01:29] axis_v01_1_p5                | map_to_3d              | START
+[2026-07-21 15:34:34] axis_v01_1_p5                | map_to_3d              | DONE    |  1985.6s
+[2026-07-21 15:34:34] axis_v01_1_p5                | estimate_symmetry      | START
+[2026-07-21 15:36:19] axis_v01_1_p5                | estimate_symmetry      | DONE    |   104.9s
+[2026-07-21 15:36:19] axis_v01_1_p5                | evaluate[svd]          | START
+[2026-07-21 15:36:21] axis_v01_1_p5                | evaluate[svd]          | DONE    |     1.9s
+[2026-07-21 15:36:21] axis_v01_1_p5                | evaluate[ransac_svd]   | START
+[2026-07-21 15:36:22] axis_v01_1_p5                | evaluate[ransac_svd]   | DONE    |     1.2s
+[2026-07-21 15:36:22] axis_v01_1_p5                | evaluate[svd_sde]      | START
+[2026-07-21 15:36:24] axis_v01_1_p5                | evaluate[svd_sde]      | DONE    |     1.2s
+[2026-07-21 15:36:24] axis_v01_1_p5                | evaluate[ransac_svd_sde] | START
+[2026-07-21 15:36:25] axis_v01_1_p5                | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 15:36:25] axis_v01_1_p5                | compare_results        | START
+[2026-07-21 15:36:27] axis_v01_1_p5                | compare_results        | DONE    |     2.8s
+[2026-07-21 15:36:27] axis_v01_1                   | compare_results        | START
+[2026-07-21 15:36:33] axis_v01_1                   | compare_results        | DONE    |     5.1s
+[2026-07-21 15:36:33] ----- [4/19] axis_sym / axis_v03_1 -----
+[2026-07-21 15:36:33] axis_v03_1                   | core stages            | SKIP    | all 4 eval summaries already exist
+[2026-07-21 15:36:33] axis_v03_1_cluster           | estimate_symmetry      | START
+[2026-07-21 15:38:08] axis_v03_1_cluster           | estimate_symmetry      | DONE    |    95.6s
+[2026-07-21 15:38:08] axis_v03_1_cluster           | evaluate[svd]          | START
+[2026-07-21 15:38:10] axis_v03_1_cluster           | evaluate[svd]          | DONE    |     2.0s
+[2026-07-21 15:38:10] axis_v03_1_cluster           | evaluate[ransac_svd]   | START
+[2026-07-21 15:38:11] axis_v03_1_cluster           | evaluate[ransac_svd]   | DONE    |     1.2s
+[2026-07-21 15:38:11] axis_v03_1_cluster           | evaluate[svd_sde]      | START
+[2026-07-21 15:38:12] axis_v03_1_cluster           | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 15:38:12] axis_v03_1_cluster           | evaluate[ransac_svd_sde] | START
+[2026-07-21 15:38:13] axis_v03_1_cluster           | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 15:38:13] axis_v03_1_cluster           | compare_results        | START
+[2026-07-21 15:38:16] axis_v03_1_cluster           | compare_results        | DONE    |     2.8s
+[2026-07-21 15:38:16] axis_v03_1_hdbscan_ms2       | estimate_symmetry      | START
+[2026-07-21 15:39:51] axis_v03_1_hdbscan_ms2       | estimate_symmetry      | DONE    |    94.5s
+[2026-07-21 15:39:51] axis_v03_1_hdbscan_ms2       | evaluate[svd]          | START
+[2026-07-21 15:39:53] axis_v03_1_hdbscan_ms2       | evaluate[svd]          | DONE    |     2.1s
+[2026-07-21 15:39:53] axis_v03_1_hdbscan_ms2       | evaluate[ransac_svd]   | START
+[2026-07-21 15:39:54] axis_v03_1_hdbscan_ms2       | evaluate[ransac_svd]   | DONE    |     1.1s
+[2026-07-21 15:39:54] axis_v03_1_hdbscan_ms2       | evaluate[svd_sde]      | START
+[2026-07-21 15:39:55] axis_v03_1_hdbscan_ms2       | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 15:39:55] axis_v03_1_hdbscan_ms2       | evaluate[ransac_svd_sde] | START
+[2026-07-21 15:39:56] axis_v03_1_hdbscan_ms2       | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 15:39:56] axis_v03_1_hdbscan_ms2       | compare_results        | START
+[2026-07-21 15:39:59] axis_v03_1_hdbscan_ms2       | compare_results        | DONE    |     2.7s
+[2026-07-21 15:39:59] axis_v03_1_hdbscan_ms3       | estimate_symmetry      | START
+[2026-07-21 15:41:34] axis_v03_1_hdbscan_ms3       | estimate_symmetry      | DONE    |    95.1s
+[2026-07-21 15:41:34] axis_v03_1_hdbscan_ms3       | evaluate[svd]          | START
+[2026-07-21 15:41:36] axis_v03_1_hdbscan_ms3       | evaluate[svd]          | DONE    |     2.1s
+[2026-07-21 15:41:36] axis_v03_1_hdbscan_ms3       | evaluate[ransac_svd]   | START
+[2026-07-21 15:41:37] axis_v03_1_hdbscan_ms3       | evaluate[ransac_svd]   | DONE    |     1.1s
+[2026-07-21 15:41:37] axis_v03_1_hdbscan_ms3       | evaluate[svd_sde]      | START
+[2026-07-21 15:41:38] axis_v03_1_hdbscan_ms3       | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 15:41:38] axis_v03_1_hdbscan_ms3       | evaluate[ransac_svd_sde] | START
+[2026-07-21 15:41:39] axis_v03_1_hdbscan_ms3       | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 15:41:39] axis_v03_1_hdbscan_ms3       | compare_results        | START
+[2026-07-21 15:41:42] axis_v03_1_hdbscan_ms3       | compare_results        | DONE    |     2.8s
+[2026-07-21 15:41:42] axis_v03_1_hdbscan_ms5       | estimate_symmetry      | START
+[2026-07-21 15:43:16] axis_v03_1_hdbscan_ms5       | estimate_symmetry      | DONE    |    94.1s
+[2026-07-21 15:43:16] axis_v03_1_hdbscan_ms5       | evaluate[svd]          | START
+[2026-07-21 15:43:18] axis_v03_1_hdbscan_ms5       | evaluate[svd]          | DONE    |     1.9s
+[2026-07-21 15:43:18] axis_v03_1_hdbscan_ms5       | evaluate[ransac_svd]   | START
+[2026-07-21 15:43:19] axis_v03_1_hdbscan_ms5       | evaluate[ransac_svd]   | DONE    |     1.1s
+[2026-07-21 15:43:19] axis_v03_1_hdbscan_ms5       | evaluate[svd_sde]      | START
+[2026-07-21 15:43:20] axis_v03_1_hdbscan_ms5       | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 15:43:20] axis_v03_1_hdbscan_ms5       | evaluate[ransac_svd_sde] | START
+[2026-07-21 15:43:21] axis_v03_1_hdbscan_ms5       | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 15:43:21] axis_v03_1_hdbscan_ms5       | compare_results        | START
+[2026-07-21 15:43:24] axis_v03_1_hdbscan_ms5       | compare_results        | DONE    |     2.8s
+[2026-07-21 15:43:24] axis_v03_1_p3                | map_to_3d              | START
+[2026-07-21 15:57:41] axis_v03_1_p3                | map_to_3d              | DONE    |   856.6s
+[2026-07-21 15:57:41] axis_v03_1_p3                | estimate_symmetry      | START
+[2026-07-21 15:59:26] axis_v03_1_p3                | estimate_symmetry      | DONE    |   105.5s
+[2026-07-21 15:59:26] axis_v03_1_p3                | evaluate[svd]          | START
+[2026-07-21 15:59:29] axis_v03_1_p3                | evaluate[svd]          | DONE    |     2.2s
+[2026-07-21 15:59:29] axis_v03_1_p3                | evaluate[ransac_svd]   | START
+[2026-07-21 15:59:30] axis_v03_1_p3                | evaluate[ransac_svd]   | DONE    |     1.1s
+[2026-07-21 15:59:30] axis_v03_1_p3                | evaluate[svd_sde]      | START
+[2026-07-21 15:59:31] axis_v03_1_p3                | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 15:59:31] axis_v03_1_p3                | evaluate[ransac_svd_sde] | START
+[2026-07-21 15:59:32] axis_v03_1_p3                | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 15:59:32] axis_v03_1_p3                | compare_results        | START
+[2026-07-21 15:59:35] axis_v03_1_p3                | compare_results        | DONE    |     2.7s
+[2026-07-21 15:59:35] axis_v03_1_p5                | map_to_3d              | START
+[2026-07-21 16:35:11] axis_v03_1_p5                | map_to_3d              | DONE    |  2136.4s
+[2026-07-21 16:35:11] axis_v03_1_p5                | estimate_symmetry      | START
+[2026-07-21 16:36:52] axis_v03_1_p5                | estimate_symmetry      | DONE    |   101.4s
+[2026-07-21 16:36:52] axis_v03_1_p5                | evaluate[svd]          | START
+[2026-07-21 16:36:55] axis_v03_1_p5                | evaluate[svd]          | DONE    |     2.1s
+[2026-07-21 16:36:55] axis_v03_1_p5                | evaluate[ransac_svd]   | START
+[2026-07-21 16:36:56] axis_v03_1_p5                | evaluate[ransac_svd]   | DONE    |     1.1s
+[2026-07-21 16:36:56] axis_v03_1_p5                | evaluate[svd_sde]      | START
+[2026-07-21 16:36:57] axis_v03_1_p5                | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 16:36:57] axis_v03_1_p5                | evaluate[ransac_svd_sde] | START
+[2026-07-21 16:36:58] axis_v03_1_p5                | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 16:36:58] axis_v03_1_p5                | compare_results        | START
+[2026-07-21 16:37:01] axis_v03_1_p5                | compare_results        | DONE    |     2.8s
+[2026-07-21 16:37:01] axis_v03_1                   | compare_results        | START
+[2026-07-21 16:37:06] axis_v03_1                   | compare_results        | DONE    |     5.2s
+[2026-07-21 16:37:06] ----- [5/19] axis_sym / axis_v04 -----
+[2026-07-21 16:37:06] axis_v04                     | core stages            | SKIP    | all 4 eval summaries already exist
+[2026-07-21 16:37:06] axis_v04_cluster             | estimate_symmetry      | START
+[2026-07-21 16:38:37] axis_v04_cluster             | estimate_symmetry      | DONE    |    91.6s
+[2026-07-21 16:38:37] axis_v04_cluster             | evaluate[svd]          | START
+[2026-07-21 16:38:39] axis_v04_cluster             | evaluate[svd]          | DONE    |     1.8s
+[2026-07-21 16:38:39] axis_v04_cluster             | evaluate[ransac_svd]   | START
+[2026-07-21 16:38:40] axis_v04_cluster             | evaluate[ransac_svd]   | DONE    |     1.1s
+[2026-07-21 16:38:40] axis_v04_cluster             | evaluate[svd_sde]      | START
+[2026-07-21 16:38:42] axis_v04_cluster             | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 16:38:42] axis_v04_cluster             | evaluate[ransac_svd_sde] | START
+[2026-07-21 16:38:43] axis_v04_cluster             | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 16:38:43] axis_v04_cluster             | compare_results        | START
+[2026-07-21 16:38:45] axis_v04_cluster             | compare_results        | DONE    |     2.9s
+[2026-07-21 16:38:45] axis_v04_hdbscan_ms2         | estimate_symmetry      | START
+[2026-07-21 16:40:17] axis_v04_hdbscan_ms2         | estimate_symmetry      | DONE    |    91.3s
+[2026-07-21 16:40:17] axis_v04_hdbscan_ms2         | evaluate[svd]          | START
+[2026-07-21 16:40:19] axis_v04_hdbscan_ms2         | evaluate[svd]          | DONE    |     1.8s
+[2026-07-21 16:40:19] axis_v04_hdbscan_ms2         | evaluate[ransac_svd]   | START
+[2026-07-21 16:40:20] axis_v04_hdbscan_ms2         | evaluate[ransac_svd]   | DONE    |     1.1s
+[2026-07-21 16:40:20] axis_v04_hdbscan_ms2         | evaluate[svd_sde]      | START
+[2026-07-21 16:40:21] axis_v04_hdbscan_ms2         | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 16:40:21] axis_v04_hdbscan_ms2         | evaluate[ransac_svd_sde] | START
+[2026-07-21 16:40:22] axis_v04_hdbscan_ms2         | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 16:40:22] axis_v04_hdbscan_ms2         | compare_results        | START
+[2026-07-21 16:40:25] axis_v04_hdbscan_ms2         | compare_results        | DONE    |     2.9s
+[2026-07-21 16:40:25] axis_v04_hdbscan_ms3         | estimate_symmetry      | START
+[2026-07-21 16:41:57] axis_v04_hdbscan_ms3         | estimate_symmetry      | DONE    |    92.4s
+[2026-07-21 16:41:57] axis_v04_hdbscan_ms3         | evaluate[svd]          | START
+[2026-07-21 16:41:59] axis_v04_hdbscan_ms3         | evaluate[svd]          | DONE    |     1.8s
+[2026-07-21 16:41:59] axis_v04_hdbscan_ms3         | evaluate[ransac_svd]   | START
+[2026-07-21 16:42:00] axis_v04_hdbscan_ms3         | evaluate[ransac_svd]   | DONE    |     1.2s
+[2026-07-21 16:42:00] axis_v04_hdbscan_ms3         | evaluate[svd_sde]      | START
+[2026-07-21 16:42:01] axis_v04_hdbscan_ms3         | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 16:42:01] axis_v04_hdbscan_ms3         | evaluate[ransac_svd_sde] | START
+[2026-07-21 16:42:02] axis_v04_hdbscan_ms3         | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 16:42:02] axis_v04_hdbscan_ms3         | compare_results        | START
+[2026-07-21 16:42:05] axis_v04_hdbscan_ms3         | compare_results        | DONE    |     2.8s
+[2026-07-21 16:42:05] axis_v04_hdbscan_ms5         | estimate_symmetry      | START
+[2026-07-21 16:43:41] axis_v04_hdbscan_ms5         | estimate_symmetry      | DONE    |    95.6s
+[2026-07-21 16:43:41] axis_v04_hdbscan_ms5         | evaluate[svd]          | START
+[2026-07-21 16:43:43] axis_v04_hdbscan_ms5         | evaluate[svd]          | DONE    |     2.0s
+[2026-07-21 16:43:43] axis_v04_hdbscan_ms5         | evaluate[ransac_svd]   | START
+[2026-07-21 16:43:44] axis_v04_hdbscan_ms5         | evaluate[ransac_svd]   | DONE    |     1.1s
+[2026-07-21 16:43:44] axis_v04_hdbscan_ms5         | evaluate[svd_sde]      | START
+[2026-07-21 16:43:45] axis_v04_hdbscan_ms5         | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 16:43:45] axis_v04_hdbscan_ms5         | evaluate[ransac_svd_sde] | START
+[2026-07-21 16:43:46] axis_v04_hdbscan_ms5         | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 16:43:46] axis_v04_hdbscan_ms5         | compare_results        | START
+[2026-07-21 16:43:49] axis_v04_hdbscan_ms5         | compare_results        | DONE    |     2.9s
+[2026-07-21 16:43:49] axis_v04_p3                  | map_to_3d              | START
+[2026-07-21 16:55:08] axis_v04_p3                  | map_to_3d              | DONE    |   679.1s
+[2026-07-21 16:55:08] axis_v04_p3                  | estimate_symmetry      | START
+[2026-07-21 16:56:48] axis_v04_p3                  | estimate_symmetry      | DONE    |    99.5s
+[2026-07-21 16:56:48] axis_v04_p3                  | evaluate[svd]          | START
+[2026-07-21 16:56:50] axis_v04_p3                  | evaluate[svd]          | DONE    |     2.2s
+[2026-07-21 16:56:50] axis_v04_p3                  | evaluate[ransac_svd]   | START
+[2026-07-21 16:56:51] axis_v04_p3                  | evaluate[ransac_svd]   | DONE    |     1.2s
+[2026-07-21 16:56:51] axis_v04_p3                  | evaluate[svd_sde]      | START
+[2026-07-21 16:56:52] axis_v04_p3                  | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 16:56:52] axis_v04_p3                  | evaluate[ransac_svd_sde] | START
+[2026-07-21 16:56:53] axis_v04_p3                  | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 16:56:53] axis_v04_p3                  | compare_results        | START
+[2026-07-21 16:56:56] axis_v04_p3                  | compare_results        | DONE    |     2.8s
+[2026-07-21 16:56:56] axis_v04_p5                  | map_to_3d              | START
+[2026-07-21 17:24:16] axis_v04_p5                  | map_to_3d              | DONE    |  1639.3s
+[2026-07-21 17:24:16] axis_v04_p5                  | estimate_symmetry      | START
+[2026-07-21 17:26:00] axis_v04_p5                  | estimate_symmetry      | DONE    |   104.3s
+[2026-07-21 17:26:00] axis_v04_p5                  | evaluate[svd]          | START
+[2026-07-21 17:26:02] axis_v04_p5                  | evaluate[svd]          | DONE    |     2.2s
+[2026-07-21 17:26:02] axis_v04_p5                  | evaluate[ransac_svd]   | START
+[2026-07-21 17:26:03] axis_v04_p5                  | evaluate[ransac_svd]   | DONE    |     1.1s
+[2026-07-21 17:26:03] axis_v04_p5                  | evaluate[svd_sde]      | START
+[2026-07-21 17:26:04] axis_v04_p5                  | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 17:26:04] axis_v04_p5                  | evaluate[ransac_svd_sde] | START
+[2026-07-21 17:26:05] axis_v04_p5                  | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 17:26:05] axis_v04_p5                  | compare_results        | START
+[2026-07-21 17:26:08] axis_v04_p5                  | compare_results        | DONE    |     2.8s
+[2026-07-21 17:26:08] axis_v04                     | compare_results        | START
+[2026-07-21 17:26:14] axis_v04                     | compare_results        | DONE    |     5.3s
+[2026-07-21 17:26:14] ----- [6/19] axis_sym / axis_v05 -----
+[2026-07-21 17:26:14] axis_v05                     | map_to_3d              | START
+[2026-07-21 17:29:46] axis_v05                     | map_to_3d              | DONE    |   212.7s
+[2026-07-21 17:29:46] axis_v05                     | estimate_symmetry      | START
+[2026-07-21 17:29:48] axis_v05                     | estimate_symmetry      | FAIL    |     1.1s | exit=1
+[2026-07-21 17:29:48]                              |   stderr> (skip existing)
+[2026-07-21 17:29:48]                              |   stderr> 
+[2026-07-21 17:29:48]                              |   stderr>   0%|          | 0/850 [00:00<?, ?obj/s]
+[2026-07-21 17:29:48]                              |   stderr>   0%|          | 0/850 [00:00<?, ?obj/s]
+[2026-07-21 17:29:48]                              |   stderr> Traceback (most recent call last):
+[2026-07-21 17:29:48]                              |   stderr>   File "/home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/Mapping/estimate_symmetry.py", line 613, in <module>
+[2026-07-21 17:29:48]                              |   stderr>     main()
+[2026-07-21 17:29:48]                              |   stderr>   File "/home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/Mapping/estimate_symmetry.py", line 596, in main
+[2026-07-21 17:29:48]                              |   stderr>     process_object(
+[2026-07-21 17:29:48]                              |   stderr>   File "/home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/Mapping/estimate_symmetry.py", line 413, in process_object
+[2026-07-21 17:29:48]                              |   stderr>     mapped = json.load(f)
+[2026-07-21 17:29:48]                              |   stderr>   File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/json/__init__.py", line 293, in load
+[2026-07-21 17:29:48]                              |   stderr>     return loads(fp.read(),
+[2026-07-21 17:29:48]                              |   stderr>   File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/json/__init__.py", line 346, in loads
+[2026-07-21 17:29:48]                              |   stderr>     return _default_decoder.decode(s)
+[2026-07-21 17:29:48]                              |   stderr>   File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/json/decoder.py", line 337, in decode
+[2026-07-21 17:29:48]                              |   stderr>     obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+[2026-07-21 17:29:48]                              |   stderr>   File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/json/decoder.py", line 353, in raw_decode
+[2026-07-21 17:29:48]                              |   stderr>     obj, end = self.scan_once(s, idx)
+[2026-07-21 17:29:48]                              |   stderr> json.decoder.JSONDecodeError: Expecting ',' delimiter: line 344 column 33 (char 8170)
+[2026-07-21 17:29:48] axis_v05                     | core stages            | ABORTED | skipping evaluate/compare for this experiment
+[2026-07-21 17:29:48] ----- [7/19] axis_sym / axis_v05_1 -----
+[2026-07-21 17:29:48] axis_v05_1                   | core stages            | SKIP    | all 4 eval summaries already exist
+[2026-07-21 17:29:48] axis_v05_1_cluster           | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-21 17:29:48] axis_v05_1_cluster           | compare_results        | START
+[2026-07-21 17:29:52] axis_v05_1_cluster           | compare_results        | DONE    |     4.9s
+[2026-07-21 17:29:52] axis_v05_1_hdbscan_ms2       | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-21 17:29:52] axis_v05_1_hdbscan_ms2       | compare_results        | START
+[2026-07-21 17:29:57] axis_v05_1_hdbscan_ms2       | compare_results        | DONE    |     4.8s
+[2026-07-21 17:29:57] axis_v05_1_hdbscan_ms3       | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-21 17:29:57] axis_v05_1_hdbscan_ms3       | compare_results        | START
+[2026-07-21 17:30:02] axis_v05_1_hdbscan_ms3       | compare_results        | DONE    |     4.9s
+[2026-07-21 17:30:02] axis_v05_1_hdbscan_ms5       | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-21 17:30:02] axis_v05_1_hdbscan_ms5       | compare_results        | START
+[2026-07-21 17:30:07] axis_v05_1_hdbscan_ms5       | compare_results        | DONE    |     5.1s
+[2026-07-21 17:30:07] axis_v05_1_p3                | patch sweep            | SKIP    | all 4 eval summaries already exist
+[2026-07-21 17:30:07] axis_v05_1_p3                | compare_results        | START
+[2026-07-21 17:30:13] axis_v05_1_p3                | compare_results        | DONE    |     5.4s
+[2026-07-21 17:30:13] axis_v05_1_p5                | patch sweep            | SKIP    | all 4 eval summaries already exist
+[2026-07-21 17:30:13] axis_v05_1_p5                | compare_results        | START
+[2026-07-21 17:30:18] axis_v05_1_p5                | compare_results        | DONE    |     5.6s
+[2026-07-21 17:30:18] axis_v05_1                   | compare_results        | START
+[2026-07-21 17:30:24] axis_v05_1                   | compare_results        | DONE    |     5.5s
+[2026-07-21 17:30:24] ----- [8/19] axis_sym / axis_v05_1_flowB -----
+[2026-07-21 17:30:24] axis_v05_1_flowB             | core stages            | SKIP    | all 4 eval summaries already exist
+[2026-07-21 17:30:24] axis_v05_1_flowB_cluster     | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-21 17:30:24] axis_v05_1_flowB_cluster     | compare_results        | START
+[2026-07-21 17:30:29] axis_v05_1_flowB_cluster     | compare_results        | DONE    |     5.4s
+[2026-07-21 17:30:29] axis_v05_1_flowB_hdbscan_ms2 | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-21 17:30:29] axis_v05_1_flowB_hdbscan_ms2 | compare_results        | START
+[2026-07-21 17:30:35] axis_v05_1_flowB_hdbscan_ms2 | compare_results        | DONE    |     5.5s
+[2026-07-21 17:30:35] axis_v05_1_flowB_hdbscan_ms3 | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-21 17:30:35] axis_v05_1_flowB_hdbscan_ms3 | compare_results        | START
+[2026-07-21 17:30:40] axis_v05_1_flowB_hdbscan_ms3 | compare_results        | DONE    |     5.6s
+[2026-07-21 17:30:40] axis_v05_1_flowB_hdbscan_ms5 | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-21 17:30:40] axis_v05_1_flowB_hdbscan_ms5 | compare_results        | START
+[2026-07-21 17:30:46] axis_v05_1_flowB_hdbscan_ms5 | compare_results        | DONE    |     6.0s
+[2026-07-21 17:30:46] axis_v05_1_flowB_p3          | map_to_3d              | START
+[2026-07-21 17:50:31] axis_v05_1_flowB_p3          | map_to_3d              | DONE    |  1184.5s
+[2026-07-21 17:50:31] axis_v05_1_flowB_p3          | estimate_symmetry      | START
+[2026-07-21 17:52:35] axis_v05_1_flowB_p3          | estimate_symmetry      | DONE    |   124.2s
+[2026-07-21 17:52:35] axis_v05_1_flowB_p3          | evaluate[svd]          | START
+[2026-07-21 17:52:37] axis_v05_1_flowB_p3          | evaluate[svd]          | DONE    |     2.3s
+[2026-07-21 17:52:37] axis_v05_1_flowB_p3          | evaluate[ransac_svd]   | START
+[2026-07-21 17:52:38] axis_v05_1_flowB_p3          | evaluate[ransac_svd]   | DONE    |     1.2s
+[2026-07-21 17:52:38] axis_v05_1_flowB_p3          | evaluate[svd_sde]      | START
+[2026-07-21 17:52:40] axis_v05_1_flowB_p3          | evaluate[svd_sde]      | DONE    |     1.2s
+[2026-07-21 17:52:40] axis_v05_1_flowB_p3          | evaluate[ransac_svd_sde] | START
+[2026-07-21 17:52:41] axis_v05_1_flowB_p3          | evaluate[ransac_svd_sde] | DONE    |     1.2s
+[2026-07-21 17:52:41] axis_v05_1_flowB_p3          | compare_results        | START
+[2026-07-21 17:52:44] axis_v05_1_flowB_p3          | compare_results        | DONE    |     2.9s
+[2026-07-21 17:52:44] axis_v05_1_flowB_p5          | map_to_3d              | START
+[2026-07-21 18:42:50] axis_v05_1_flowB_p5          | map_to_3d              | DONE    |  3006.2s
+[2026-07-21 18:42:50] axis_v05_1_flowB_p5          | estimate_symmetry      | START
+[2026-07-21 18:44:57] axis_v05_1_flowB_p5          | estimate_symmetry      | DONE    |   126.8s
+[2026-07-21 18:44:57] axis_v05_1_flowB_p5          | evaluate[svd]          | START
+[2026-07-21 18:44:59] axis_v05_1_flowB_p5          | evaluate[svd]          | DONE    |     2.3s
+[2026-07-21 18:44:59] axis_v05_1_flowB_p5          | evaluate[ransac_svd]   | START
+[2026-07-21 18:45:00] axis_v05_1_flowB_p5          | evaluate[ransac_svd]   | DONE    |     1.2s
+[2026-07-21 18:45:00] axis_v05_1_flowB_p5          | evaluate[svd_sde]      | START
+[2026-07-21 18:45:01] axis_v05_1_flowB_p5          | evaluate[svd_sde]      | DONE    |     1.2s
+[2026-07-21 18:45:01] axis_v05_1_flowB_p5          | evaluate[ransac_svd_sde] | START
+[2026-07-21 18:45:02] axis_v05_1_flowB_p5          | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 18:45:02] axis_v05_1_flowB_p5          | compare_results        | START
+[2026-07-21 18:45:05] axis_v05_1_flowB_p5          | compare_results        | DONE    |     2.9s
+[2026-07-21 18:45:05] axis_v05_1_flowB             | compare_results        | START
+[2026-07-21 18:45:11] axis_v05_1_flowB             | compare_results        | DONE    |     6.0s
+[2026-07-21 18:45:11] ----- [9/19] axis_sym / axis_v05_1_flowC -----
+[2026-07-21 18:45:11] axis_v05_1_flowC             | core stages            | SKIP    | all 4 eval summaries already exist
+[2026-07-21 18:45:11] axis_v05_1_flowC_cluster     | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-21 18:45:11] axis_v05_1_flowC_cluster     | compare_results        | START
+[2026-07-21 18:45:16] axis_v05_1_flowC_cluster     | compare_results        | DONE    |     5.1s
+[2026-07-21 18:45:16] axis_v05_1_flowC_hdbscan_ms2 | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-21 18:45:16] axis_v05_1_flowC_hdbscan_ms2 | compare_results        | START
+[2026-07-21 18:45:21] axis_v05_1_flowC_hdbscan_ms2 | compare_results        | DONE    |     5.0s
+[2026-07-21 18:45:21] axis_v05_1_flowC_hdbscan_ms3 | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-21 18:45:21] axis_v05_1_flowC_hdbscan_ms3 | compare_results        | START
+[2026-07-21 18:45:26] axis_v05_1_flowC_hdbscan_ms3 | compare_results        | DONE    |     5.1s
+[2026-07-21 18:45:26] axis_v05_1_flowC_hdbscan_ms5 | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-21 18:45:26] axis_v05_1_flowC_hdbscan_ms5 | compare_results        | START
+[2026-07-21 18:45:32] axis_v05_1_flowC_hdbscan_ms5 | compare_results        | DONE    |     5.1s
+[2026-07-21 18:45:32] axis_v05_1_flowC_p3          | map_to_3d              | START
+[2026-07-21 18:56:54] axis_v05_1_flowC_p3          | map_to_3d              | DONE    |   682.4s
+[2026-07-21 18:56:54] axis_v05_1_flowC_p3          | estimate_symmetry      | START
+[2026-07-21 18:58:57] axis_v05_1_flowC_p3          | estimate_symmetry      | DONE    |   123.3s
+[2026-07-21 18:58:57] axis_v05_1_flowC_p3          | evaluate[svd]          | START
+[2026-07-21 18:58:59] axis_v05_1_flowC_p3          | evaluate[svd]          | DONE    |     2.2s
+[2026-07-21 18:58:59] axis_v05_1_flowC_p3          | evaluate[ransac_svd]   | START
+[2026-07-21 18:59:01] axis_v05_1_flowC_p3          | evaluate[ransac_svd]   | DONE    |     1.2s
+[2026-07-21 18:59:01] axis_v05_1_flowC_p3          | evaluate[svd_sde]      | START
+[2026-07-21 18:59:02] axis_v05_1_flowC_p3          | evaluate[svd_sde]      | DONE    |     1.2s
+[2026-07-21 18:59:02] axis_v05_1_flowC_p3          | evaluate[ransac_svd_sde] | START
+[2026-07-21 18:59:03] axis_v05_1_flowC_p3          | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 18:59:03] axis_v05_1_flowC_p3          | compare_results        | START
+[2026-07-21 18:59:06] axis_v05_1_flowC_p3          | compare_results        | DONE    |     2.8s
+[2026-07-21 18:59:06] axis_v05_1_flowC_p5          | map_to_3d              | START
+[2026-07-21 19:26:54] axis_v05_1_flowC_p5          | map_to_3d              | DONE    |  1668.2s
+[2026-07-21 19:26:54] axis_v05_1_flowC_p5          | estimate_symmetry      | START
+[2026-07-21 19:29:02] axis_v05_1_flowC_p5          | estimate_symmetry      | DONE    |   128.2s
+[2026-07-21 19:29:02] axis_v05_1_flowC_p5          | evaluate[svd]          | START
+[2026-07-21 19:29:04] axis_v05_1_flowC_p5          | evaluate[svd]          | DONE    |     2.2s
+[2026-07-21 19:29:04] axis_v05_1_flowC_p5          | evaluate[ransac_svd]   | START
+[2026-07-21 19:29:06] axis_v05_1_flowC_p5          | evaluate[ransac_svd]   | DONE    |     1.2s
+[2026-07-21 19:29:06] axis_v05_1_flowC_p5          | evaluate[svd_sde]      | START
+[2026-07-21 19:29:07] axis_v05_1_flowC_p5          | evaluate[svd_sde]      | DONE    |     1.1s
+[2026-07-21 19:29:07] axis_v05_1_flowC_p5          | evaluate[ransac_svd_sde] | START
+[2026-07-21 19:29:08] axis_v05_1_flowC_p5          | evaluate[ransac_svd_sde] | DONE    |     1.1s
+[2026-07-21 19:29:08] axis_v05_1_flowC_p5          | compare_results        | START
+[2026-07-21 19:29:11] axis_v05_1_flowC_p5          | compare_results        | DONE    |     2.9s
+[2026-07-21 19:29:11] axis_v05_1_flowC             | compare_results        | START
+[2026-07-21 19:29:16] axis_v05_1_flowC             | compare_results        | DONE    |     5.5s
+[2026-07-21 19:29:16] ----- [10/19] plane_sym / plane_v00 -----
+[2026-07-21 19:29:16] plane_v00                    | map_to_3d              | START
+[2026-07-21 19:33:30] plane_v00                    | map_to_3d              | DONE    |   253.7s
+[2026-07-21 19:33:30] plane_v00                    | estimate_symmetry      | START
+[2026-07-21 19:33:31] plane_v00                    | estimate_symmetry      | FAIL    |     0.9s | exit=1
+[2026-07-21 19:33:31]                              |   stderr> (skip existing)
+[2026-07-21 19:33:31]                              |   stderr> 
+[2026-07-21 19:33:31]                              |   stderr>   0%|          | 0/850 [00:00<?, ?obj/s]
+[2026-07-21 19:33:31]                              |   stderr>   0%|          | 0/850 [00:00<?, ?obj/s]
+[2026-07-21 19:33:31]                              |   stderr> Traceback (most recent call last):
+[2026-07-21 19:33:31]                              |   stderr>   File "/home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/Mapping/estimate_symmetry.py", line 613, in <module>
+[2026-07-21 19:33:31]                              |   stderr>     main()
+[2026-07-21 19:33:31]                              |   stderr>   File "/home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/Mapping/estimate_symmetry.py", line 596, in main
+[2026-07-21 19:33:31]                              |   stderr>     process_object(
+[2026-07-21 19:33:31]                              |   stderr>   File "/home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/Mapping/estimate_symmetry.py", line 413, in process_object
+[2026-07-21 19:33:31]                              |   stderr>     mapped = json.load(f)
+[2026-07-21 19:33:31]                              |   stderr>   File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/json/__init__.py", line 293, in load
+[2026-07-21 19:33:31]                              |   stderr>     return loads(fp.read(),
+[2026-07-21 19:33:31]                              |   stderr>   File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/json/__init__.py", line 346, in loads
+[2026-07-21 19:33:31]                              |   stderr>     return _default_decoder.decode(s)
+[2026-07-21 19:33:31]                              |   stderr>   File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/json/decoder.py", line 337, in decode
+[2026-07-21 19:33:31]                              |   stderr>     obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+[2026-07-21 19:33:31]                              |   stderr>   File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/json/decoder.py", line 355, in raw_decode
+[2026-07-21 19:33:31]                              |   stderr>     raise JSONDecodeError("Expecting value", s, err.value) from None
+[2026-07-21 19:33:31]                              |   stderr> json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+[2026-07-21 19:33:31] plane_v00                    | core stages            | ABORTED | skipping evaluate/compare for this experiment
+[2026-07-21 19:33:31] ----- [11/19] plane_sym / plane_v00_1 -----
+[2026-07-21 19:33:31] plane_v00_1                  | map_to_3d              | START
+[2026-07-21 19:38:17] plane_v00_1                  | map_to_3d              | DONE    |   285.7s
+[2026-07-21 19:38:17] plane_v00_1                  | estimate_symmetry      | START
+[2026-07-21 19:41:18] plane_v00_1                  | estimate_symmetry      | DONE    |   181.8s
+[2026-07-21 19:41:18] plane_v00_1                  | evaluate[svd]          | START
+[2026-07-21 19:42:05] plane_v00_1                  | evaluate[svd]          | DONE    |    47.0s
+[2026-07-21 19:42:05] plane_v00_1                  | evaluate[ransac_svd]   | START
+[2026-07-21 19:42:49] plane_v00_1                  | evaluate[ransac_svd]   | DONE    |    44.0s
+[2026-07-21 19:42:49] plane_v00_1                  | evaluate[svd_sde]      | START
+[2026-07-21 19:43:33] plane_v00_1                  | evaluate[svd_sde]      | DONE    |    43.4s
+[2026-07-21 19:43:33] plane_v00_1                  | evaluate[ransac_svd_sde] | START
+[2026-07-21 19:44:16] plane_v00_1                  | evaluate[ransac_svd_sde] | DONE    |    43.6s
+[2026-07-21 19:44:16] plane_v00_1_cluster          | estimate_symmetry      | START
+[2026-07-21 19:47:47] plane_v00_1_cluster          | estimate_symmetry      | DONE    |   210.9s
+[2026-07-21 19:47:47] plane_v00_1_cluster          | evaluate[svd]          | START
+[2026-07-21 19:48:39] plane_v00_1_cluster          | evaluate[svd]          | DONE    |    51.4s
+[2026-07-21 19:48:39] plane_v00_1_cluster          | evaluate[ransac_svd]   | START
+[2026-07-21 19:49:29] plane_v00_1_cluster          | evaluate[ransac_svd]   | DONE    |    50.7s
+[2026-07-21 19:49:29] plane_v00_1_cluster          | evaluate[svd_sde]      | START
+[2026-07-21 19:50:21] plane_v00_1_cluster          | evaluate[svd_sde]      | DONE    |    51.7s
+[2026-07-21 19:50:21] plane_v00_1_cluster          | evaluate[ransac_svd_sde] | START
+[2026-07-21 19:51:09] plane_v00_1_cluster          | evaluate[ransac_svd_sde] | DONE    |    48.1s
+[2026-07-21 19:51:09] plane_v00_1_cluster          | compare_results        | START
+[2026-07-21 19:51:13] plane_v00_1_cluster          | compare_results        | DONE    |     4.2s
+[2026-07-21 19:51:13] plane_v00_1_hdbscan_ms2      | estimate_symmetry      | START
+[2026-07-21 19:54:33] plane_v00_1_hdbscan_ms2      | estimate_symmetry      | DONE    |   199.3s
+[2026-07-21 19:54:33] plane_v00_1_hdbscan_ms2      | evaluate[svd]          | START
+[2026-07-21 19:55:22] plane_v00_1_hdbscan_ms2      | evaluate[svd]          | DONE    |    49.6s
+[2026-07-21 19:55:22] plane_v00_1_hdbscan_ms2      | evaluate[ransac_svd]   | START
+[2026-07-21 19:56:11] plane_v00_1_hdbscan_ms2      | evaluate[ransac_svd]   | DONE    |    48.4s
+[2026-07-21 19:56:11] plane_v00_1_hdbscan_ms2      | evaluate[svd_sde]      | START
+[2026-07-21 19:56:56] plane_v00_1_hdbscan_ms2      | evaluate[svd_sde]      | DONE    |    45.3s
+[2026-07-21 19:56:56] plane_v00_1_hdbscan_ms2      | evaluate[ransac_svd_sde] | START
+[2026-07-21 19:57:44] plane_v00_1_hdbscan_ms2      | evaluate[ransac_svd_sde] | DONE    |    47.9s
+[2026-07-21 19:57:44] plane_v00_1_hdbscan_ms2      | compare_results        | START
+[2026-07-21 19:57:48] plane_v00_1_hdbscan_ms2      | compare_results        | DONE    |     3.8s
+[2026-07-21 19:57:48] plane_v00_1_hdbscan_ms3      | estimate_symmetry      | START
+[2026-07-21 20:00:56] plane_v00_1_hdbscan_ms3      | estimate_symmetry      | DONE    |   188.5s
+[2026-07-21 20:00:56] plane_v00_1_hdbscan_ms3      | evaluate[svd]          | START
+[2026-07-21 20:01:46] plane_v00_1_hdbscan_ms3      | evaluate[svd]          | DONE    |    49.5s
+[2026-07-21 20:01:46] plane_v00_1_hdbscan_ms3      | evaluate[ransac_svd]   | START
+[2026-07-21 20:02:31] plane_v00_1_hdbscan_ms3      | evaluate[ransac_svd]   | DONE    |    45.1s
+[2026-07-21 20:02:31] plane_v00_1_hdbscan_ms3      | evaluate[svd_sde]      | START
+[2026-07-21 20:03:17] plane_v00_1_hdbscan_ms3      | evaluate[svd_sde]      | DONE    |    46.2s
+[2026-07-21 20:03:17] plane_v00_1_hdbscan_ms3      | evaluate[ransac_svd_sde] | START
+[2026-07-21 20:04:01] plane_v00_1_hdbscan_ms3      | evaluate[ransac_svd_sde] | DONE    |    43.8s
+[2026-07-21 20:04:01] plane_v00_1_hdbscan_ms3      | compare_results        | START
+[2026-07-21 20:04:04] plane_v00_1_hdbscan_ms3      | compare_results        | DONE    |     3.4s
+[2026-07-21 20:04:04] plane_v00_1_hdbscan_ms5      | estimate_symmetry      | START
+[2026-07-21 20:06:33] plane_v00_1_hdbscan_ms5      | estimate_symmetry      | DONE    |   149.0s
+[2026-07-21 20:06:33] plane_v00_1_hdbscan_ms5      | evaluate[svd]          | START
+[2026-07-21 20:07:18] plane_v00_1_hdbscan_ms5      | evaluate[svd]          | DONE    |    45.3s
+[2026-07-21 20:07:18] plane_v00_1_hdbscan_ms5      | evaluate[ransac_svd]   | START
+[2026-07-21 20:08:03] plane_v00_1_hdbscan_ms5      | evaluate[ransac_svd]   | DONE    |    44.4s
+[2026-07-21 20:08:03] plane_v00_1_hdbscan_ms5      | evaluate[svd_sde]      | START
+[2026-07-21 20:08:46] plane_v00_1_hdbscan_ms5      | evaluate[svd_sde]      | DONE    |    43.2s
+[2026-07-21 20:08:46] plane_v00_1_hdbscan_ms5      | evaluate[ransac_svd_sde] | START
+[2026-07-21 20:09:29] plane_v00_1_hdbscan_ms5      | evaluate[ransac_svd_sde] | DONE    |    43.4s
+[2026-07-21 20:09:29] plane_v00_1_hdbscan_ms5      | compare_results        | START
+[2026-07-21 20:09:33] plane_v00_1_hdbscan_ms5      | compare_results        | DONE    |     3.5s
+[2026-07-21 20:09:33] plane_v00_1_p3               | map_to_3d              | START
+[2026-07-21 20:32:57] plane_v00_1_p3               | map_to_3d              | DONE    |  1403.9s
+[2026-07-21 20:32:57] plane_v00_1_p3               | estimate_symmetry      | START
+[2026-07-21 20:36:11] plane_v00_1_p3               | estimate_symmetry      | DONE    |   194.3s
+[2026-07-21 20:36:11] plane_v00_1_p3               | evaluate[svd]          | START
+[2026-07-21 20:37:00] plane_v00_1_p3               | evaluate[svd]          | DONE    |    48.9s
+[2026-07-21 20:37:00] plane_v00_1_p3               | evaluate[ransac_svd]   | START
+[2026-07-21 20:37:48] plane_v00_1_p3               | evaluate[ransac_svd]   | DONE    |    47.5s
+[2026-07-21 20:37:48] plane_v00_1_p3               | evaluate[svd_sde]      | START
+[2026-07-21 20:38:34] plane_v00_1_p3               | evaluate[svd_sde]      | DONE    |    46.8s
+[2026-07-21 20:38:34] plane_v00_1_p3               | evaluate[ransac_svd_sde] | START
+[2026-07-21 20:39:20] plane_v00_1_p3               | evaluate[ransac_svd_sde] | DONE    |    45.6s
+[2026-07-21 20:39:20] plane_v00_1_p3               | compare_results        | START
+[2026-07-21 20:39:24] plane_v00_1_p3               | compare_results        | DONE    |     3.6s
+[2026-07-21 20:39:24] plane_v00_1_p5               | map_to_3d              | START
+[2026-07-21 21:39:08] plane_v00_1_p5               | map_to_3d              | DONE    |  3584.8s
+[2026-07-21 21:39:08] plane_v00_1_p5               | estimate_symmetry      | START
+[2026-07-21 21:42:11] plane_v00_1_p5               | estimate_symmetry      | DONE    |   182.5s
+[2026-07-21 21:42:11] plane_v00_1_p5               | evaluate[svd]          | START
+[2026-07-21 21:42:53] plane_v00_1_p5               | evaluate[svd]          | DONE    |    42.2s
+[2026-07-21 21:42:53] plane_v00_1_p5               | evaluate[ransac_svd]   | START
+[2026-07-21 21:43:33] plane_v00_1_p5               | evaluate[ransac_svd]   | DONE    |    40.1s
+[2026-07-21 21:43:33] plane_v00_1_p5               | evaluate[svd_sde]      | START
+[2026-07-21 21:44:19] plane_v00_1_p5               | evaluate[svd_sde]      | DONE    |    46.2s
+[2026-07-21 21:44:19] plane_v00_1_p5               | evaluate[ransac_svd_sde] | START
+[2026-07-21 21:45:03] plane_v00_1_p5               | evaluate[ransac_svd_sde] | DONE    |    43.0s
+[2026-07-21 21:45:03] plane_v00_1_p5               | compare_results        | START
+[2026-07-21 21:45:06] plane_v00_1_p5               | compare_results        | DONE    |     3.4s
+[2026-07-21 21:45:06] plane_v00_1                  | compare_results        | START
+[2026-07-21 21:45:10] plane_v00_1                  | compare_results        | DONE    |     3.7s
+[2026-07-21 21:45:10] ----- [12/19] plane_sym / plane_v01 -----
+[2026-07-21 21:45:10] plane_v01                    | core stages            | SKIP    | all 4 eval summaries already exist
+[2026-07-21 21:45:10] plane_v01_cluster            | estimate_symmetry      | START
+[2026-07-21 21:47:29] plane_v01_cluster            | estimate_symmetry      | DONE    |   139.1s
+[2026-07-21 21:47:29] plane_v01_cluster            | evaluate[svd]          | START
+[2026-07-21 21:48:13] plane_v01_cluster            | evaluate[svd]          | DONE    |    44.0s
+[2026-07-21 21:48:13] plane_v01_cluster            | evaluate[ransac_svd]   | START
+[2026-07-21 21:48:55] plane_v01_cluster            | evaluate[ransac_svd]   | DONE    |    42.2s
+[2026-07-21 21:48:55] plane_v01_cluster            | evaluate[svd_sde]      | START
+[2026-07-21 21:49:38] plane_v01_cluster            | evaluate[svd_sde]      | DONE    |    42.5s
+[2026-07-21 21:49:38] plane_v01_cluster            | evaluate[ransac_svd_sde] | START
+[2026-07-21 21:50:22] plane_v01_cluster            | evaluate[ransac_svd_sde] | DONE    |    44.6s
+[2026-07-21 21:50:22] plane_v01_cluster            | compare_results        | START
+[2026-07-21 21:50:26] plane_v01_cluster            | compare_results        | DONE    |     3.5s
+[2026-07-21 21:50:26] plane_v01_hdbscan_ms2        | estimate_symmetry      | START
+[2026-07-21 21:52:32] plane_v01_hdbscan_ms2        | estimate_symmetry      | DONE    |   126.3s
+[2026-07-21 21:52:32] plane_v01_hdbscan_ms2        | evaluate[svd]          | START
+[2026-07-21 21:53:15] plane_v01_hdbscan_ms2        | evaluate[svd]          | DONE    |    43.1s
+[2026-07-21 21:53:15] plane_v01_hdbscan_ms2        | evaluate[ransac_svd]   | START
+[2026-07-21 21:53:57] plane_v01_hdbscan_ms2        | evaluate[ransac_svd]   | DONE    |    41.6s
+[2026-07-21 21:53:57] plane_v01_hdbscan_ms2        | evaluate[svd_sde]      | START
+[2026-07-21 21:54:38] plane_v01_hdbscan_ms2        | evaluate[svd_sde]      | DONE    |    41.8s
+[2026-07-21 21:54:38] plane_v01_hdbscan_ms2        | evaluate[ransac_svd_sde] | START
+[2026-07-21 21:55:20] plane_v01_hdbscan_ms2        | evaluate[ransac_svd_sde] | DONE    |    42.0s
+[2026-07-21 21:55:20] plane_v01_hdbscan_ms2        | compare_results        | START
+[2026-07-21 21:55:24] plane_v01_hdbscan_ms2        | compare_results        | DONE    |     3.3s
+[2026-07-21 21:55:24] plane_v01_hdbscan_ms3        | estimate_symmetry      | START
+[2026-07-21 21:57:32] plane_v01_hdbscan_ms3        | estimate_symmetry      | DONE    |   128.4s
+[2026-07-21 21:57:32] plane_v01_hdbscan_ms3        | evaluate[svd]          | START
+[2026-07-21 21:58:16] plane_v01_hdbscan_ms3        | evaluate[svd]          | DONE    |    44.2s
+[2026-07-21 21:58:16] plane_v01_hdbscan_ms3        | evaluate[ransac_svd]   | START
+[2026-07-21 21:58:58] plane_v01_hdbscan_ms3        | evaluate[ransac_svd]   | DONE    |    42.1s
+[2026-07-21 21:58:58] plane_v01_hdbscan_ms3        | evaluate[svd_sde]      | START
+[2026-07-21 21:59:41] plane_v01_hdbscan_ms3        | evaluate[svd_sde]      | DONE    |    42.5s
+[2026-07-21 21:59:41] plane_v01_hdbscan_ms3        | evaluate[ransac_svd_sde] | START
+[2026-07-21 22:00:23] plane_v01_hdbscan_ms3        | evaluate[ransac_svd_sde] | DONE    |    42.1s
+[2026-07-21 22:00:23] plane_v01_hdbscan_ms3        | compare_results        | START
+[2026-07-21 22:00:26] plane_v01_hdbscan_ms3        | compare_results        | DONE    |     3.4s
+[2026-07-21 22:00:26] plane_v01_hdbscan_ms5        | estimate_symmetry      | START
+[2026-07-21 22:02:51] plane_v01_hdbscan_ms5        | estimate_symmetry      | DONE    |   144.4s
+[2026-07-21 22:02:51] plane_v01_hdbscan_ms5        | evaluate[svd]          | START
+[2026-07-21 22:03:36] plane_v01_hdbscan_ms5        | evaluate[svd]          | DONE    |    44.9s
+[2026-07-21 22:03:36] plane_v01_hdbscan_ms5        | evaluate[ransac_svd]   | START
+[2026-07-21 22:04:18] plane_v01_hdbscan_ms5        | evaluate[ransac_svd]   | DONE    |    42.4s
+[2026-07-21 22:04:18] plane_v01_hdbscan_ms5        | evaluate[svd_sde]      | START
+[2026-07-21 22:05:00] plane_v01_hdbscan_ms5        | evaluate[svd_sde]      | DONE    |    42.3s
+[2026-07-21 22:05:00] plane_v01_hdbscan_ms5        | evaluate[ransac_svd_sde] | START
+[2026-07-21 22:05:42] plane_v01_hdbscan_ms5        | evaluate[ransac_svd_sde] | DONE    |    42.0s
+[2026-07-21 22:05:42] plane_v01_hdbscan_ms5        | compare_results        | START
+[2026-07-21 22:05:46] plane_v01_hdbscan_ms5        | compare_results        | DONE    |     3.3s
+[2026-07-21 22:05:46] plane_v01_p3                 | map_to_3d              | START
+[2026-07-21 22:20:01] plane_v01_p3                 | map_to_3d              | DONE    |   854.9s
+[2026-07-21 22:20:01] plane_v01_p3                 | estimate_symmetry      | START
+[2026-07-21 22:22:42] plane_v01_p3                 | estimate_symmetry      | DONE    |   161.7s
+[2026-07-21 22:22:42] plane_v01_p3                 | evaluate[svd]          | START
+[2026-07-21 22:23:27] plane_v01_p3                 | evaluate[svd]          | DONE    |    45.2s
+[2026-07-21 22:23:27] plane_v01_p3                 | evaluate[ransac_svd]   | START
+[2026-07-21 22:24:11] plane_v01_p3                 | evaluate[ransac_svd]   | DONE    |    43.2s
+[2026-07-21 22:24:11] plane_v01_p3                 | evaluate[svd_sde]      | START
+[2026-07-21 22:24:53] plane_v01_p3                 | evaluate[svd_sde]      | DONE    |    42.6s
+[2026-07-21 22:24:53] plane_v01_p3                 | evaluate[ransac_svd_sde] | START
+[2026-07-21 22:25:37] plane_v01_p3                 | evaluate[ransac_svd_sde] | DONE    |    43.4s
+[2026-07-21 22:25:37] plane_v01_p3                 | compare_results        | START
+[2026-07-21 22:25:40] plane_v01_p3                 | compare_results        | DONE    |     3.4s
+[2026-07-21 22:25:40] plane_v01_p5                 | map_to_3d              | START
+[2026-07-21 23:00:08] plane_v01_p5                 | map_to_3d              | DONE    |  2068.3s
+[2026-07-21 23:00:08] plane_v01_p5                 | estimate_symmetry      | START
+[2026-07-21 23:02:54] plane_v01_p5                 | estimate_symmetry      | DONE    |   165.3s
+[2026-07-21 23:02:54] plane_v01_p5                 | evaluate[svd]          | START
+[2026-07-21 23:03:35] plane_v01_p5                 | evaluate[svd]          | DONE    |    41.1s
+[2026-07-21 23:03:35] plane_v01_p5                 | evaluate[ransac_svd]   | START
+[2026-07-21 23:04:14] plane_v01_p5                 | evaluate[ransac_svd]   | DONE    |    38.9s
+[2026-07-21 23:04:14] plane_v01_p5                 | evaluate[svd_sde]      | START
+[2026-07-21 23:04:52] plane_v01_p5                 | evaluate[svd_sde]      | DONE    |    38.8s
+[2026-07-21 23:04:52] plane_v01_p5                 | evaluate[ransac_svd_sde] | START
+[2026-07-21 23:05:32] plane_v01_p5                 | evaluate[ransac_svd_sde] | DONE    |    39.1s
+[2026-07-21 23:05:32] plane_v01_p5                 | compare_results        | START
+[2026-07-21 23:05:35] plane_v01_p5                 | compare_results        | DONE    |     3.0s
+[2026-07-21 23:05:35] plane_v01                    | compare_results        | START
+[2026-07-21 23:05:38] plane_v01                    | compare_results        | DONE    |     3.5s
+[2026-07-21 23:05:38] ----- [13/19] plane_sym / plane_v02 -----
+[2026-07-21 23:05:38] plane_v02                    | map_to_3d              | START
+[2026-07-21 23:09:35] plane_v02                    | map_to_3d              | DONE    |   236.6s
+[2026-07-21 23:09:35] plane_v02                    | estimate_symmetry      | START
+[2026-07-21 23:12:31] plane_v02                    | estimate_symmetry      | DONE    |   176.0s
+[2026-07-21 23:12:31] plane_v02                    | evaluate[svd]          | START
+[2026-07-21 23:13:16] plane_v02                    | evaluate[svd]          | DONE    |    45.1s
+[2026-07-21 23:13:16] plane_v02                    | evaluate[ransac_svd]   | START
+[2026-07-21 23:13:59] plane_v02                    | evaluate[ransac_svd]   | DONE    |    42.9s
+[2026-07-21 23:13:59] plane_v02                    | evaluate[svd_sde]      | START
+[2026-07-21 23:14:42] plane_v02                    | evaluate[svd_sde]      | DONE    |    43.5s
+[2026-07-21 23:14:42] plane_v02                    | evaluate[ransac_svd_sde] | START
+[2026-07-21 23:15:25] plane_v02                    | evaluate[ransac_svd_sde] | DONE    |    43.1s
+[2026-07-21 23:15:25] plane_v02_cluster            | estimate_symmetry      | START
+[2026-07-21 23:18:22] plane_v02_cluster            | estimate_symmetry      | DONE    |   176.6s
+[2026-07-21 23:18:22] plane_v02_cluster            | evaluate[svd]          | START
+[2026-07-21 23:19:08] plane_v02_cluster            | evaluate[svd]          | DONE    |    46.0s
+[2026-07-21 23:19:08] plane_v02_cluster            | evaluate[ransac_svd]   | START
+[2026-07-21 23:19:52] plane_v02_cluster            | evaluate[ransac_svd]   | DONE    |    44.1s
+[2026-07-21 23:19:52] plane_v02_cluster            | evaluate[svd_sde]      | START
+[2026-07-21 23:20:35] plane_v02_cluster            | evaluate[svd_sde]      | DONE    |    43.3s
+[2026-07-21 23:20:35] plane_v02_cluster            | evaluate[ransac_svd_sde] | START
+[2026-07-21 23:21:19] plane_v02_cluster            | evaluate[ransac_svd_sde] | DONE    |    43.7s
+[2026-07-21 23:21:19] plane_v02_cluster            | compare_results        | START
+[2026-07-21 23:21:22] plane_v02_cluster            | compare_results        | DONE    |     3.5s
+[2026-07-21 23:21:22] plane_v02_hdbscan_ms2        | estimate_symmetry      | START
+[2026-07-21 23:23:56] plane_v02_hdbscan_ms2        | estimate_symmetry      | DONE    |   153.7s
+[2026-07-21 23:23:56] plane_v02_hdbscan_ms2        | evaluate[svd]          | START
+[2026-07-21 23:24:42] plane_v02_hdbscan_ms2        | evaluate[svd]          | DONE    |    45.5s
+[2026-07-21 23:24:42] plane_v02_hdbscan_ms2        | evaluate[ransac_svd]   | START
+[2026-07-21 23:25:25] plane_v02_hdbscan_ms2        | evaluate[ransac_svd]   | DONE    |    43.3s
+[2026-07-21 23:25:25] plane_v02_hdbscan_ms2        | evaluate[svd_sde]      | START
+[2026-07-21 23:26:09] plane_v02_hdbscan_ms2        | evaluate[svd_sde]      | DONE    |    43.8s
+[2026-07-21 23:26:09] plane_v02_hdbscan_ms2        | evaluate[ransac_svd_sde] | START
+[2026-07-21 23:26:52] plane_v02_hdbscan_ms2        | evaluate[ransac_svd_sde] | DONE    |    43.6s
+[2026-07-21 23:26:52] plane_v02_hdbscan_ms2        | compare_results        | START
+[2026-07-21 23:26:56] plane_v02_hdbscan_ms2        | compare_results        | DONE    |     3.6s
+[2026-07-21 23:26:56] plane_v02_hdbscan_ms3        | estimate_symmetry      | START
+[2026-07-21 23:29:27] plane_v02_hdbscan_ms3        | estimate_symmetry      | DONE    |   151.4s
+[2026-07-21 23:29:27] plane_v02_hdbscan_ms3        | evaluate[svd]          | START
+[2026-07-21 23:30:13] plane_v02_hdbscan_ms3        | evaluate[svd]          | DONE    |    45.5s
+[2026-07-21 23:30:13] plane_v02_hdbscan_ms3        | evaluate[ransac_svd]   | START
+[2026-07-21 23:30:57] plane_v02_hdbscan_ms3        | evaluate[ransac_svd]   | DONE    |    43.9s
+[2026-07-21 23:30:57] plane_v02_hdbscan_ms3        | evaluate[svd_sde]      | START
+[2026-07-21 23:31:40] plane_v02_hdbscan_ms3        | evaluate[svd_sde]      | DONE    |    43.4s
+[2026-07-21 23:31:40] plane_v02_hdbscan_ms3        | evaluate[ransac_svd_sde] | START
+[2026-07-21 23:32:24] plane_v02_hdbscan_ms3        | evaluate[ransac_svd_sde] | DONE    |    43.9s
+[2026-07-21 23:32:24] plane_v02_hdbscan_ms3        | compare_results        | START
+[2026-07-21 23:32:28] plane_v02_hdbscan_ms3        | compare_results        | DONE    |     3.6s
+[2026-07-21 23:32:28] plane_v02_hdbscan_ms5        | estimate_symmetry      | START
+[2026-07-21 23:34:57] plane_v02_hdbscan_ms5        | estimate_symmetry      | DONE    |   149.3s
+[2026-07-21 23:34:57] plane_v02_hdbscan_ms5        | evaluate[svd]          | START
+[2026-07-21 23:35:43] plane_v02_hdbscan_ms5        | evaluate[svd]          | DONE    |    46.2s
+[2026-07-21 23:35:43] plane_v02_hdbscan_ms5        | evaluate[ransac_svd]   | START
+[2026-07-21 23:36:27] plane_v02_hdbscan_ms5        | evaluate[ransac_svd]   | DONE    |    43.7s
+[2026-07-21 23:36:27] plane_v02_hdbscan_ms5        | evaluate[svd_sde]      | START
+[2026-07-21 23:37:11] plane_v02_hdbscan_ms5        | evaluate[svd_sde]      | DONE    |    44.1s
+[2026-07-21 23:37:11] plane_v02_hdbscan_ms5        | evaluate[ransac_svd_sde] | START
+[2026-07-21 23:37:54] plane_v02_hdbscan_ms5        | evaluate[ransac_svd_sde] | DONE    |    43.1s
+[2026-07-21 23:37:54] plane_v02_hdbscan_ms5        | compare_results        | START
+[2026-07-21 23:37:58] plane_v02_hdbscan_ms5        | compare_results        | DONE    |     3.5s
+[2026-07-21 23:37:58] plane_v02_p3                 | map_to_3d              | START
+[2026-07-21 23:57:23] plane_v02_p3                 | map_to_3d              | DONE    |  1165.8s
+[2026-07-21 23:57:23] plane_v02_p3                 | estimate_symmetry      | START
+[2026-07-22 00:00:24] plane_v02_p3                 | estimate_symmetry      | DONE    |   180.8s
+[2026-07-22 00:00:24] plane_v02_p3                 | evaluate[svd]          | START
+[2026-07-22 00:01:10] plane_v02_p3                 | evaluate[svd]          | DONE    |    46.2s
+[2026-07-22 00:01:10] plane_v02_p3                 | evaluate[ransac_svd]   | START
+[2026-07-22 00:01:54] plane_v02_p3                 | evaluate[ransac_svd]   | DONE    |    43.7s
+[2026-07-22 00:01:54] plane_v02_p3                 | evaluate[svd_sde]      | START
+[2026-07-22 00:02:38] plane_v02_p3                 | evaluate[svd_sde]      | DONE    |    44.1s
+[2026-07-22 00:02:38] plane_v02_p3                 | evaluate[ransac_svd_sde] | START
+[2026-07-22 00:03:21] plane_v02_p3                 | evaluate[ransac_svd_sde] | DONE    |    43.4s
+[2026-07-22 00:03:21] plane_v02_p3                 | compare_results        | START
+[2026-07-22 00:03:25] plane_v02_p3                 | compare_results        | DONE    |     3.5s
+[2026-07-22 00:03:25] plane_v02_p5                 | map_to_3d              | START
+[2026-07-22 00:53:06] plane_v02_p5                 | map_to_3d              | DONE    |  2980.7s
+[2026-07-22 00:53:06] plane_v02_p5                 | estimate_symmetry      | START
+[2026-07-22 00:56:10] plane_v02_p5                 | estimate_symmetry      | DONE    |   184.8s
+[2026-07-22 00:56:10] plane_v02_p5                 | evaluate[svd]          | START
+[2026-07-22 00:56:56] plane_v02_p5                 | evaluate[svd]          | DONE    |    45.9s
+[2026-07-22 00:56:56] plane_v02_p5                 | evaluate[ransac_svd]   | START
+[2026-07-22 00:57:40] plane_v02_p5                 | evaluate[ransac_svd]   | DONE    |    43.5s
+[2026-07-22 00:57:40] plane_v02_p5                 | evaluate[svd_sde]      | START
+[2026-07-22 00:58:24] plane_v02_p5                 | evaluate[svd_sde]      | DONE    |    43.9s
+[2026-07-22 00:58:24] plane_v02_p5                 | evaluate[ransac_svd_sde] | START
+[2026-07-22 00:59:08] plane_v02_p5                 | evaluate[ransac_svd_sde] | DONE    |    43.9s
+[2026-07-22 00:59:08] plane_v02_p5                 | compare_results        | START
+[2026-07-22 00:59:11] plane_v02_p5                 | compare_results        | DONE    |     3.4s
+[2026-07-22 00:59:11] plane_v02                    | compare_results        | START
+[2026-07-22 00:59:15] plane_v02                    | compare_results        | DONE    |     3.8s
+[2026-07-22 00:59:15] ----- [14/19] plane_sym / plane_v03 -----
+[2026-07-22 00:59:15] plane_v03                    | core stages            | SKIP    | all 4 eval summaries already exist
+[2026-07-22 00:59:15] plane_v03_cluster            | estimate_symmetry      | START
+[2026-07-22 01:01:34] plane_v03_cluster            | estimate_symmetry      | DONE    |   138.7s
+[2026-07-22 01:01:34] plane_v03_cluster            | evaluate[svd]          | START
+[2026-07-22 01:02:19] plane_v03_cluster            | evaluate[svd]          | DONE    |    45.0s
+[2026-07-22 01:02:19] plane_v03_cluster            | evaluate[ransac_svd]   | START
+[2026-07-22 01:03:00] plane_v03_cluster            | evaluate[ransac_svd]   | DONE    |    42.0s
+[2026-07-22 01:03:00] plane_v03_cluster            | evaluate[svd_sde]      | START
+[2026-07-22 01:03:42] plane_v03_cluster            | evaluate[svd_sde]      | DONE    |    41.9s
+[2026-07-22 01:03:42] plane_v03_cluster            | evaluate[ransac_svd_sde] | START
+[2026-07-22 01:04:25] plane_v03_cluster            | evaluate[ransac_svd_sde] | DONE    |    42.2s
+[2026-07-22 01:04:25] plane_v03_cluster            | compare_results        | START
+[2026-07-22 01:04:28] plane_v03_cluster            | compare_results        | DONE    |     3.4s
+[2026-07-22 01:04:28] plane_v03_hdbscan_ms2        | estimate_symmetry      | START
+[2026-07-22 01:06:35] plane_v03_hdbscan_ms2        | estimate_symmetry      | DONE    |   126.6s
+[2026-07-22 01:06:35] plane_v03_hdbscan_ms2        | evaluate[svd]          | START
+[2026-07-22 01:07:19] plane_v03_hdbscan_ms2        | evaluate[svd]          | DONE    |    44.4s
+[2026-07-22 01:07:19] plane_v03_hdbscan_ms2        | evaluate[ransac_svd]   | START
+[2026-07-22 01:08:01] plane_v03_hdbscan_ms2        | evaluate[ransac_svd]   | DONE    |    42.2s
+[2026-07-22 01:08:01] plane_v03_hdbscan_ms2        | evaluate[svd_sde]      | START
+[2026-07-22 01:08:44] plane_v03_hdbscan_ms2        | evaluate[svd_sde]      | DONE    |    42.3s
+[2026-07-22 01:08:44] plane_v03_hdbscan_ms2        | evaluate[ransac_svd_sde] | START
+[2026-07-22 01:09:26] plane_v03_hdbscan_ms2        | evaluate[ransac_svd_sde] | DONE    |    42.2s
+[2026-07-22 01:09:26] plane_v03_hdbscan_ms2        | compare_results        | START
+[2026-07-22 01:09:29] plane_v03_hdbscan_ms2        | compare_results        | DONE    |     3.4s
+[2026-07-22 01:09:29] plane_v03_hdbscan_ms3        | estimate_symmetry      | START
+[2026-07-22 01:11:35] plane_v03_hdbscan_ms3        | estimate_symmetry      | DONE    |   125.9s
+[2026-07-22 01:11:35] plane_v03_hdbscan_ms3        | evaluate[svd]          | START
+[2026-07-22 01:12:19] plane_v03_hdbscan_ms3        | evaluate[svd]          | DONE    |    44.0s
+[2026-07-22 01:12:19] plane_v03_hdbscan_ms3        | evaluate[ransac_svd]   | START
+[2026-07-22 01:13:01] plane_v03_hdbscan_ms3        | evaluate[ransac_svd]   | DONE    |    42.1s
+[2026-07-22 01:13:01] plane_v03_hdbscan_ms3        | evaluate[svd_sde]      | START
+[2026-07-22 01:13:43] plane_v03_hdbscan_ms3        | evaluate[svd_sde]      | DONE    |    42.2s
+[2026-07-22 01:13:43] plane_v03_hdbscan_ms3        | evaluate[ransac_svd_sde] | START
+[2026-07-22 01:14:25] plane_v03_hdbscan_ms3        | evaluate[ransac_svd_sde] | DONE    |    42.1s
+[2026-07-22 01:14:25] plane_v03_hdbscan_ms3        | compare_results        | START
+[2026-07-22 01:14:29] plane_v03_hdbscan_ms3        | compare_results        | DONE    |     3.4s
+[2026-07-22 01:14:29] plane_v03_hdbscan_ms5        | estimate_symmetry      | START
+[2026-07-22 01:16:45] plane_v03_hdbscan_ms5        | estimate_symmetry      | DONE    |   136.6s
+[2026-07-22 01:16:45] plane_v03_hdbscan_ms5        | evaluate[svd]          | START
+[2026-07-22 01:17:31] plane_v03_hdbscan_ms5        | evaluate[svd]          | DONE    |    45.8s
+[2026-07-22 01:17:31] plane_v03_hdbscan_ms5        | evaluate[ransac_svd]   | START
+[2026-07-22 01:18:14] plane_v03_hdbscan_ms5        | evaluate[ransac_svd]   | DONE    |    42.6s
+[2026-07-22 01:18:14] plane_v03_hdbscan_ms5        | evaluate[svd_sde]      | START
+[2026-07-22 01:18:56] plane_v03_hdbscan_ms5        | evaluate[svd_sde]      | DONE    |    42.4s
+[2026-07-22 01:18:56] plane_v03_hdbscan_ms5        | evaluate[ransac_svd_sde] | START
+[2026-07-22 01:19:39] plane_v03_hdbscan_ms5        | evaluate[ransac_svd_sde] | DONE    |    42.1s
+[2026-07-22 01:19:39] plane_v03_hdbscan_ms5        | compare_results        | START
+[2026-07-22 01:19:42] plane_v03_hdbscan_ms5        | compare_results        | DONE    |     3.3s
+[2026-07-22 01:19:42] plane_v03_p3                 | map_to_3d              | START
+[2026-07-22 01:35:43] plane_v03_p3                 | map_to_3d              | DONE    |   961.3s
+[2026-07-22 01:35:43] plane_v03_p3                 | estimate_symmetry      | START
+[2026-07-22 01:38:22] plane_v03_p3                 | estimate_symmetry      | DONE    |   159.3s
+[2026-07-22 01:38:22] plane_v03_p3                 | evaluate[svd]          | START
+[2026-07-22 01:39:07] plane_v03_p3                 | evaluate[svd]          | DONE    |    44.8s
+[2026-07-22 01:39:07] plane_v03_p3                 | evaluate[ransac_svd]   | START
+[2026-07-22 01:39:50] plane_v03_p3                 | evaluate[ransac_svd]   | DONE    |    42.9s
+[2026-07-22 01:39:50] plane_v03_p3                 | evaluate[svd_sde]      | START
+[2026-07-22 01:40:32] plane_v03_p3                 | evaluate[svd_sde]      | DONE    |    42.1s
+[2026-07-22 01:40:32] plane_v03_p3                 | evaluate[ransac_svd_sde] | START
+[2026-07-22 01:41:14] plane_v03_p3                 | evaluate[ransac_svd_sde] | DONE    |    42.2s
+[2026-07-22 01:41:14] plane_v03_p3                 | compare_results        | START
+[2026-07-22 01:41:18] plane_v03_p3                 | compare_results        | DONE    |     3.4s
+[2026-07-22 01:41:18] plane_v03_p5                 | map_to_3d              | START
+[2026-07-22 02:21:05] plane_v03_p5                 | map_to_3d              | DONE    |  2386.7s
+[2026-07-22 02:21:05] plane_v03_p5                 | estimate_symmetry      | START
+[2026-07-22 02:23:50] plane_v03_p5                 | estimate_symmetry      | DONE    |   165.5s
+[2026-07-22 02:23:50] plane_v03_p5                 | evaluate[svd]          | START
+[2026-07-22 02:24:35] plane_v03_p5                 | evaluate[svd]          | DONE    |    45.2s
+[2026-07-22 02:24:35] plane_v03_p5                 | evaluate[ransac_svd]   | START
+[2026-07-22 02:25:18] plane_v03_p5                 | evaluate[ransac_svd]   | DONE    |    42.7s
+[2026-07-22 02:25:18] plane_v03_p5                 | evaluate[svd_sde]      | START
+[2026-07-22 02:26:02] plane_v03_p5                 | evaluate[svd_sde]      | DONE    |    43.7s
+[2026-07-22 02:26:02] plane_v03_p5                 | evaluate[ransac_svd_sde] | START
+[2026-07-22 02:26:46] plane_v03_p5                 | evaluate[ransac_svd_sde] | DONE    |    44.4s
+[2026-07-22 02:26:46] plane_v03_p5                 | compare_results        | START
+[2026-07-22 02:26:49] plane_v03_p5                 | compare_results        | DONE    |     3.4s
+[2026-07-22 02:26:49] plane_v03                    | compare_results        | START
+[2026-07-22 02:26:53] plane_v03                    | compare_results        | DONE    |     3.7s
+[2026-07-22 02:26:53] ----- [15/19] plane_sym / plane_v04 -----
+[2026-07-22 02:26:53] plane_v04                    | map_to_3d              | START
+[2026-07-22 02:31:15] plane_v04                    | map_to_3d              | DONE    |   261.8s
+[2026-07-22 02:31:15] plane_v04                    | estimate_symmetry      | START
+[2026-07-22 02:34:18] plane_v04                    | estimate_symmetry      | DONE    |   183.4s
+[2026-07-22 02:34:18] plane_v04                    | evaluate[svd]          | START
+[2026-07-22 02:35:02] plane_v04                    | evaluate[svd]          | DONE    |    43.2s
+[2026-07-22 02:35:02] plane_v04                    | evaluate[ransac_svd]   | START
+[2026-07-22 02:35:43] plane_v04                    | evaluate[ransac_svd]   | DONE    |    41.0s
+[2026-07-22 02:35:43] plane_v04                    | evaluate[svd_sde]      | START
+[2026-07-22 02:36:24] plane_v04                    | evaluate[svd_sde]      | DONE    |    41.3s
+[2026-07-22 02:36:24] plane_v04                    | evaluate[ransac_svd_sde] | START
+[2026-07-22 02:37:07] plane_v04                    | evaluate[ransac_svd_sde] | DONE    |    43.1s
+[2026-07-22 02:37:07] plane_v04_cluster            | estimate_symmetry      | START
+[2026-07-22 02:39:53] plane_v04_cluster            | estimate_symmetry      | DONE    |   165.6s
+[2026-07-22 02:39:53] plane_v04_cluster            | evaluate[svd]          | START
+[2026-07-22 02:40:35] plane_v04_cluster            | evaluate[svd]          | DONE    |    42.4s
+[2026-07-22 02:40:35] plane_v04_cluster            | evaluate[ransac_svd]   | START
+[2026-07-22 02:41:16] plane_v04_cluster            | evaluate[ransac_svd]   | DONE    |    40.5s
+[2026-07-22 02:41:16] plane_v04_cluster            | evaluate[svd_sde]      | START
+[2026-07-22 02:41:56] plane_v04_cluster            | evaluate[svd_sde]      | DONE    |    40.1s
+[2026-07-22 02:41:56] plane_v04_cluster            | evaluate[ransac_svd_sde] | START
+[2026-07-22 02:42:36] plane_v04_cluster            | evaluate[ransac_svd_sde] | DONE    |    40.4s
+[2026-07-22 02:42:36] plane_v04_cluster            | compare_results        | START
+[2026-07-22 02:42:39] plane_v04_cluster            | compare_results        | DONE    |     3.4s
+[2026-07-22 02:42:39] plane_v04_hdbscan_ms2        | estimate_symmetry      | START
+[2026-07-22 02:45:05] plane_v04_hdbscan_ms2        | estimate_symmetry      | DONE    |   145.4s
+[2026-07-22 02:45:05] plane_v04_hdbscan_ms2        | evaluate[svd]          | START
+[2026-07-22 02:45:46] plane_v04_hdbscan_ms2        | evaluate[svd]          | DONE    |    41.6s
+[2026-07-22 02:45:46] plane_v04_hdbscan_ms2        | evaluate[ransac_svd]   | START
+[2026-07-22 02:46:26] plane_v04_hdbscan_ms2        | evaluate[ransac_svd]   | DONE    |    39.9s
+[2026-07-22 02:46:26] plane_v04_hdbscan_ms2        | evaluate[svd_sde]      | START
+[2026-07-22 02:47:06] plane_v04_hdbscan_ms2        | evaluate[svd_sde]      | DONE    |    39.6s
+[2026-07-22 02:47:06] plane_v04_hdbscan_ms2        | evaluate[ransac_svd_sde] | START
+[2026-07-22 02:47:46] plane_v04_hdbscan_ms2        | evaluate[ransac_svd_sde] | DONE    |    39.9s
+[2026-07-22 02:47:46] plane_v04_hdbscan_ms2        | compare_results        | START
+[2026-07-22 02:47:49] plane_v04_hdbscan_ms2        | compare_results        | DONE    |     3.3s
+[2026-07-22 02:47:49] plane_v04_hdbscan_ms3        | estimate_symmetry      | START
+[2026-07-22 02:50:05] plane_v04_hdbscan_ms3        | estimate_symmetry      | DONE    |   135.7s
+[2026-07-22 02:50:05] plane_v04_hdbscan_ms3        | evaluate[svd]          | START
+[2026-07-22 02:50:46] plane_v04_hdbscan_ms3        | evaluate[svd]          | DONE    |    41.2s
+[2026-07-22 02:50:46] plane_v04_hdbscan_ms3        | evaluate[ransac_svd]   | START
+[2026-07-22 02:51:26] plane_v04_hdbscan_ms3        | evaluate[ransac_svd]   | DONE    |    39.7s
+[2026-07-22 02:51:26] plane_v04_hdbscan_ms3        | evaluate[svd_sde]      | START
+[2026-07-22 02:52:06] plane_v04_hdbscan_ms3        | evaluate[svd_sde]      | DONE    |    39.9s
+[2026-07-22 02:52:06] plane_v04_hdbscan_ms3        | evaluate[ransac_svd_sde] | START
+[2026-07-22 02:52:46] plane_v04_hdbscan_ms3        | evaluate[ransac_svd_sde] | DONE    |    39.7s
+[2026-07-22 02:52:46] plane_v04_hdbscan_ms3        | compare_results        | START
+[2026-07-22 02:52:49] plane_v04_hdbscan_ms3        | compare_results        | DONE    |     3.2s
+[2026-07-22 02:52:49] plane_v04_hdbscan_ms5        | estimate_symmetry      | START
+[2026-07-22 02:55:19] plane_v04_hdbscan_ms5        | estimate_symmetry      | DONE    |   150.6s
+[2026-07-22 02:55:19] plane_v04_hdbscan_ms5        | evaluate[svd]          | START
+[2026-07-22 02:56:01] plane_v04_hdbscan_ms5        | evaluate[svd]          | DONE    |    41.9s
+[2026-07-22 02:56:01] plane_v04_hdbscan_ms5        | evaluate[ransac_svd]   | START
+[2026-07-22 02:56:41] plane_v04_hdbscan_ms5        | evaluate[ransac_svd]   | DONE    |    39.5s
+[2026-07-22 02:56:41] plane_v04_hdbscan_ms5        | evaluate[svd_sde]      | START
+[2026-07-22 02:57:21] plane_v04_hdbscan_ms5        | evaluate[svd_sde]      | DONE    |    39.9s
+[2026-07-22 02:57:21] plane_v04_hdbscan_ms5        | evaluate[ransac_svd_sde] | START
+[2026-07-22 02:58:01] plane_v04_hdbscan_ms5        | evaluate[ransac_svd_sde] | DONE    |    39.9s
+[2026-07-22 02:58:01] plane_v04_hdbscan_ms5        | compare_results        | START
+[2026-07-22 02:58:04] plane_v04_hdbscan_ms5        | compare_results        | DONE    |     3.2s
+[2026-07-22 02:58:04] plane_v04_p3                 | map_to_3d              | START
+[2026-07-22 03:16:30] plane_v04_p3                 | map_to_3d              | DONE    |  1106.0s
+[2026-07-22 03:16:30] plane_v04_p3                 | estimate_symmetry      | START
+[2026-07-22 03:19:26] plane_v04_p3                 | estimate_symmetry      | DONE    |   176.3s
+[2026-07-22 03:19:26] plane_v04_p3                 | evaluate[svd]          | START
+[2026-07-22 03:20:08] plane_v04_p3                 | evaluate[svd]          | DONE    |    41.9s
+[2026-07-22 03:20:08] plane_v04_p3                 | evaluate[ransac_svd]   | START
+[2026-07-22 03:20:48] plane_v04_p3                 | evaluate[ransac_svd]   | DONE    |    39.8s
+[2026-07-22 03:20:48] plane_v04_p3                 | evaluate[svd_sde]      | START
+[2026-07-22 03:21:28] plane_v04_p3                 | evaluate[svd_sde]      | DONE    |    39.8s
+[2026-07-22 03:21:28] plane_v04_p3                 | evaluate[ransac_svd_sde] | START
+[2026-07-22 03:22:07] plane_v04_p3                 | evaluate[ransac_svd_sde] | DONE    |    39.8s
+[2026-07-22 03:22:07] plane_v04_p3                 | compare_results        | START
+[2026-07-22 03:22:11] plane_v04_p3                 | compare_results        | DONE    |     3.2s
+[2026-07-22 03:22:11] plane_v04_p5                 | map_to_3d              | START
+[2026-07-22 04:08:30] plane_v04_p5                 | map_to_3d              | DONE    |  2779.5s
+[2026-07-22 04:08:30] plane_v04_p5                 | estimate_symmetry      | START
+[2026-07-22 04:11:30] plane_v04_p5                 | estimate_symmetry      | DONE    |   179.7s
+[2026-07-22 04:11:30] plane_v04_p5                 | evaluate[svd]          | START
+[2026-07-22 04:12:12] plane_v04_p5                 | evaluate[svd]          | DONE    |    41.9s
+[2026-07-22 04:12:12] plane_v04_p5                 | evaluate[ransac_svd]   | START
+[2026-07-22 04:12:53] plane_v04_p5                 | evaluate[ransac_svd]   | DONE    |    41.3s
+[2026-07-22 04:12:53] plane_v04_p5                 | evaluate[svd_sde]      | START
+[2026-07-22 04:13:33] plane_v04_p5                 | evaluate[svd_sde]      | DONE    |    39.7s
+[2026-07-22 04:13:33] plane_v04_p5                 | evaluate[ransac_svd_sde] | START
+[2026-07-22 04:14:13] plane_v04_p5                 | evaluate[ransac_svd_sde] | DONE    |    40.0s
+[2026-07-22 04:14:13] plane_v04_p5                 | compare_results        | START
+[2026-07-22 04:14:16] plane_v04_p5                 | compare_results        | DONE    |     3.2s
+[2026-07-22 04:14:16] plane_v04                    | compare_results        | START
+[2026-07-22 04:14:19] plane_v04                    | compare_results        | DONE    |     3.4s
+[2026-07-22 04:14:19] ----- [16/19] plane_sym / plane_v04_1 -----
+[2026-07-22 04:14:19] plane_v04_1                  | core stages            | SKIP    | all 4 eval summaries already exist
+[2026-07-22 04:14:19] plane_v04_1_cluster          | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-22 04:14:19] plane_v04_1_cluster          | compare_results        | START
+[2026-07-22 04:14:23] plane_v04_1_cluster          | compare_results        | DONE    |     3.7s
+[2026-07-22 04:14:23] plane_v04_1_hdbscan_ms2      | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-22 04:14:23] plane_v04_1_hdbscan_ms2      | compare_results        | START
+[2026-07-22 04:14:27] plane_v04_1_hdbscan_ms2      | compare_results        | DONE    |     3.9s
+[2026-07-22 04:14:27] plane_v04_1_hdbscan_ms3      | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-22 04:14:27] plane_v04_1_hdbscan_ms3      | compare_results        | START
+[2026-07-22 04:14:31] plane_v04_1_hdbscan_ms3      | compare_results        | DONE    |     4.0s
+[2026-07-22 04:14:31] plane_v04_1_hdbscan_ms5      | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-22 04:14:31] plane_v04_1_hdbscan_ms5      | compare_results        | START
+[2026-07-22 04:14:35] plane_v04_1_hdbscan_ms5      | compare_results        | DONE    |     4.0s
+[2026-07-22 04:14:35] plane_v04_1_p3               | patch sweep            | SKIP    | all 4 eval summaries already exist
+[2026-07-22 04:14:35] plane_v04_1_p3               | compare_results        | START
+[2026-07-22 04:14:39] plane_v04_1_p3               | compare_results        | DONE    |     3.9s
+[2026-07-22 04:14:39] plane_v04_1_p5               | patch sweep            | SKIP    | all 4 eval summaries already exist
+[2026-07-22 04:14:39] plane_v04_1_p5               | compare_results        | START
+[2026-07-22 04:14:43] plane_v04_1_p5               | compare_results        | DONE    |     3.8s
+[2026-07-22 04:14:43] plane_v04_1                  | compare_results        | START
+[2026-07-22 04:14:46] plane_v04_1                  | compare_results        | DONE    |     3.7s
+[2026-07-22 04:14:46] ----- [17/19] plane_sym / plane_v04_1_flowB -----
+[2026-07-22 04:14:46] plane_v04_1_flowB            | core stages            | SKIP    | all 4 eval summaries already exist
+[2026-07-22 04:14:46] plane_v04_1_flowB_cluster    | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-22 04:14:46] plane_v04_1_flowB_cluster    | compare_results        | START
+[2026-07-22 04:14:50] plane_v04_1_flowB_cluster    | compare_results        | DONE    |     3.9s
+[2026-07-22 04:14:50] plane_v04_1_flowB_hdbscan_ms2 | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-22 04:14:50] plane_v04_1_flowB_hdbscan_ms2 | compare_results        | START
+[2026-07-22 04:14:54] plane_v04_1_flowB_hdbscan_ms2 | compare_results        | DONE    |     3.8s
+[2026-07-22 04:14:54] plane_v04_1_flowB_hdbscan_ms3 | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-22 04:14:54] plane_v04_1_flowB_hdbscan_ms3 | compare_results        | START
+[2026-07-22 04:14:58] plane_v04_1_flowB_hdbscan_ms3 | compare_results        | DONE    |     3.6s
+[2026-07-22 04:14:58] plane_v04_1_flowB_hdbscan_ms5 | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-22 04:14:58] plane_v04_1_flowB_hdbscan_ms5 | compare_results        | START
+[2026-07-22 04:15:02] plane_v04_1_flowB_hdbscan_ms5 | compare_results        | DONE    |     3.8s
+[2026-07-22 04:15:02] plane_v04_1_flowB_p3         | map_to_3d              | START
+[2026-07-22 04:35:30] plane_v04_1_flowB_p3         | map_to_3d              | DONE    |  1228.8s
+[2026-07-22 04:35:30] plane_v04_1_flowB_p3         | estimate_symmetry      | START
+[2026-07-22 04:38:28] plane_v04_1_flowB_p3         | estimate_symmetry      | DONE    |   177.6s
+[2026-07-22 04:38:28] plane_v04_1_flowB_p3         | evaluate[svd]          | START
+[2026-07-22 04:39:10] plane_v04_1_flowB_p3         | evaluate[svd]          | DONE    |    42.1s
+[2026-07-22 04:39:10] plane_v04_1_flowB_p3         | evaluate[ransac_svd]   | START
+[2026-07-22 04:39:50] plane_v04_1_flowB_p3         | evaluate[ransac_svd]   | DONE    |    39.7s
+[2026-07-22 04:39:50] plane_v04_1_flowB_p3         | evaluate[svd_sde]      | START
+[2026-07-22 04:40:30] plane_v04_1_flowB_p3         | evaluate[svd_sde]      | DONE    |    40.0s
+[2026-07-22 04:40:30] plane_v04_1_flowB_p3         | evaluate[ransac_svd_sde] | START
+[2026-07-22 04:41:10] plane_v04_1_flowB_p3         | evaluate[ransac_svd_sde] | DONE    |    39.8s
+[2026-07-22 04:41:10] plane_v04_1_flowB_p3         | compare_results        | START
+[2026-07-22 04:41:13] plane_v04_1_flowB_p3         | compare_results        | DONE    |     3.2s
+[2026-07-22 04:41:13] plane_v04_1_flowB_p5         | map_to_3d              | START
+[2026-07-22 05:34:05] plane_v04_1_flowB_p5         | map_to_3d              | DONE    |  3171.7s
+[2026-07-22 05:34:05] plane_v04_1_flowB_p5         | estimate_symmetry      | START
+[2026-07-22 05:37:05] plane_v04_1_flowB_p5         | estimate_symmetry      | DONE    |   180.6s
+[2026-07-22 05:37:05] plane_v04_1_flowB_p5         | evaluate[svd]          | START
+[2026-07-22 05:37:49] plane_v04_1_flowB_p5         | evaluate[svd]          | DONE    |    43.9s
+[2026-07-22 05:37:49] plane_v04_1_flowB_p5         | evaluate[ransac_svd]   | START
+[2026-07-22 05:38:30] plane_v04_1_flowB_p5         | evaluate[ransac_svd]   | DONE    |    40.8s
+[2026-07-22 05:38:30] plane_v04_1_flowB_p5         | evaluate[svd_sde]      | START
+[2026-07-22 05:39:12] plane_v04_1_flowB_p5         | evaluate[svd_sde]      | DONE    |    41.9s
+[2026-07-22 05:39:12] plane_v04_1_flowB_p5         | evaluate[ransac_svd_sde] | START
+[2026-07-22 05:39:53] plane_v04_1_flowB_p5         | evaluate[ransac_svd_sde] | DONE    |    41.5s
+[2026-07-22 05:39:53] plane_v04_1_flowB_p5         | compare_results        | START
+[2026-07-22 05:39:57] plane_v04_1_flowB_p5         | compare_results        | DONE    |     3.6s
+[2026-07-22 05:39:57] plane_v04_1_flowB            | compare_results        | START
+[2026-07-22 05:40:01] plane_v04_1_flowB            | compare_results        | DONE    |     4.5s
+[2026-07-22 05:40:01] ----- [18/19] plane_sym / plane_v04_1_flowC -----
+[2026-07-22 05:40:01] plane_v04_1_flowC            | core stages            | SKIP    | all 4 eval summaries already exist
+[2026-07-22 05:40:01] plane_v04_1_flowC_cluster    | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-22 05:40:01] plane_v04_1_flowC_cluster    | compare_results        | START
+[2026-07-22 05:40:05] plane_v04_1_flowC_cluster    | compare_results        | DONE    |     3.6s
+[2026-07-22 05:40:05] plane_v04_1_flowC_hdbscan_ms2 | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-22 05:40:05] plane_v04_1_flowC_hdbscan_ms2 | compare_results        | START
+[2026-07-22 05:40:09] plane_v04_1_flowC_hdbscan_ms2 | compare_results        | DONE    |     3.8s
+[2026-07-22 05:40:09] plane_v04_1_flowC_hdbscan_ms3 | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-22 05:40:09] plane_v04_1_flowC_hdbscan_ms3 | compare_results        | START
+[2026-07-22 05:40:12] plane_v04_1_flowC_hdbscan_ms3 | compare_results        | DONE    |     3.6s
+[2026-07-22 05:40:12] plane_v04_1_flowC_hdbscan_ms5 | estimate_symmetry      | SKIP    | all 4 eval summaries already exist
+[2026-07-22 05:40:12] plane_v04_1_flowC_hdbscan_ms5 | compare_results        | START
+[2026-07-22 05:40:16] plane_v04_1_flowC_hdbscan_ms5 | compare_results        | DONE    |     3.7s
+[2026-07-22 05:40:16] plane_v04_1_flowC_p3         | map_to_3d              | START
+[2026-07-22 05:54:56] plane_v04_1_flowC_p3         | map_to_3d              | DONE    |   879.9s
+[2026-07-22 05:54:56] plane_v04_1_flowC_p3         | estimate_symmetry      | START
+[2026-07-22 05:58:16] plane_v04_1_flowC_p3         | estimate_symmetry      | DONE    |   200.2s
+[2026-07-22 05:58:16] plane_v04_1_flowC_p3         | evaluate[svd]          | START
+[2026-07-22 05:58:59] plane_v04_1_flowC_p3         | evaluate[svd]          | DONE    |    42.5s
+[2026-07-22 05:58:59] plane_v04_1_flowC_p3         | evaluate[ransac_svd]   | START
+[2026-07-22 05:59:43] plane_v04_1_flowC_p3         | evaluate[ransac_svd]   | DONE    |    43.9s
+[2026-07-22 05:59:43] plane_v04_1_flowC_p3         | evaluate[svd_sde]      | START
+[2026-07-22 06:00:24] plane_v04_1_flowC_p3         | evaluate[svd_sde]      | DONE    |    41.0s
+[2026-07-22 06:00:24] plane_v04_1_flowC_p3         | evaluate[ransac_svd_sde] | START
+[2026-07-22 06:01:04] plane_v04_1_flowC_p3         | evaluate[ransac_svd_sde] | DONE    |    39.9s
+[2026-07-22 06:01:04] plane_v04_1_flowC_p3         | compare_results        | START
+[2026-07-22 06:01:07] plane_v04_1_flowC_p3         | compare_results        | DONE    |     3.3s
+[2026-07-22 06:01:07] plane_v04_1_flowC_p5         | map_to_3d              | START
+[2026-07-22 06:36:50] plane_v04_1_flowC_p5         | map_to_3d              | DONE    |  2143.1s
+[2026-07-22 06:36:50] plane_v04_1_flowC_p5         | estimate_symmetry      | START
+[2026-07-22 06:40:20] plane_v04_1_flowC_p5         | estimate_symmetry      | DONE    |   210.0s
+[2026-07-22 06:40:20] plane_v04_1_flowC_p5         | evaluate[svd]          | START
+[2026-07-22 06:41:02] plane_v04_1_flowC_p5         | evaluate[svd]          | DONE    |    42.2s
+[2026-07-22 06:41:02] plane_v04_1_flowC_p5         | evaluate[ransac_svd]   | START
+[2026-07-22 06:41:43] plane_v04_1_flowC_p5         | evaluate[ransac_svd]   | DONE    |    41.3s
+[2026-07-22 06:41:43] plane_v04_1_flowC_p5         | evaluate[svd_sde]      | START
+[2026-07-22 06:42:25] plane_v04_1_flowC_p5         | evaluate[svd_sde]      | DONE    |    41.9s
+[2026-07-22 06:42:25] plane_v04_1_flowC_p5         | evaluate[ransac_svd_sde] | START
+[2026-07-22 06:43:08] plane_v04_1_flowC_p5         | evaluate[ransac_svd_sde] | DONE    |    42.5s
+[2026-07-22 06:43:08] plane_v04_1_flowC_p5         | compare_results        | START
+[2026-07-22 06:43:12] plane_v04_1_flowC_p5         | compare_results        | DONE    |     3.8s
+[2026-07-22 06:43:12] plane_v04_1_flowC            | compare_results        | START
+[2026-07-22 06:43:16] plane_v04_1_flowC            | compare_results        | DONE    |     3.8s
+[2026-07-22 06:43:16] ----- [19/19] plane_sym / plane_v05 -----
+[2026-07-22 06:43:16] plane_v05                    | core stages            | SKIP    | all 4 eval summaries already exist
+[2026-07-22 06:43:16] plane_v05_cluster            | estimate_symmetry      | START
+[2026-07-22 06:45:08] plane_v05_cluster            | estimate_symmetry      | DONE    |   112.7s
+[2026-07-22 06:45:08] plane_v05_cluster            | evaluate[svd]          | START
+[2026-07-22 06:45:48] plane_v05_cluster            | evaluate[svd]          | DONE    |    40.0s
+[2026-07-22 06:45:48] plane_v05_cluster            | evaluate[ransac_svd]   | START
+[2026-07-22 06:46:26] plane_v05_cluster            | evaluate[ransac_svd]   | DONE    |    38.0s
+[2026-07-22 06:46:26] plane_v05_cluster            | evaluate[svd_sde]      | START
+[2026-07-22 06:47:05] plane_v05_cluster            | evaluate[svd_sde]      | DONE    |    38.2s
+[2026-07-22 06:47:05] plane_v05_cluster            | evaluate[ransac_svd_sde] | START
+[2026-07-22 06:47:43] plane_v05_cluster            | evaluate[ransac_svd_sde] | DONE    |    38.8s
+[2026-07-22 06:47:43] plane_v05_cluster            | compare_results        | START
+[2026-07-22 06:47:47] plane_v05_cluster            | compare_results        | DONE    |     3.4s
+[2026-07-22 06:47:47] plane_v05_hdbscan_ms2        | estimate_symmetry      | START
+[2026-07-22 06:49:21] plane_v05_hdbscan_ms2        | estimate_symmetry      | DONE    |    94.6s
+[2026-07-22 06:49:21] plane_v05_hdbscan_ms2        | evaluate[svd]          | START
+[2026-07-22 06:50:01] plane_v05_hdbscan_ms2        | evaluate[svd]          | DONE    |    39.5s
+[2026-07-22 06:50:01] plane_v05_hdbscan_ms2        | evaluate[ransac_svd]   | START
+[2026-07-22 06:50:38] plane_v05_hdbscan_ms2        | evaluate[ransac_svd]   | DONE    |    37.7s
+[2026-07-22 06:50:38] plane_v05_hdbscan_ms2        | evaluate[svd_sde]      | START
+[2026-07-22 06:51:17] plane_v05_hdbscan_ms2        | evaluate[svd_sde]      | DONE    |    38.3s
+[2026-07-22 06:51:17] plane_v05_hdbscan_ms2        | evaluate[ransac_svd_sde] | START
+[2026-07-22 06:51:55] plane_v05_hdbscan_ms2        | evaluate[ransac_svd_sde] | DONE    |    38.3s
+[2026-07-22 06:51:55] plane_v05_hdbscan_ms2        | compare_results        | START
+[2026-07-22 06:51:58] plane_v05_hdbscan_ms2        | compare_results        | DONE    |     3.2s
+[2026-07-22 06:51:58] plane_v05_hdbscan_ms3        | estimate_symmetry      | START
+[2026-07-22 06:53:38] plane_v05_hdbscan_ms3        | estimate_symmetry      | DONE    |    99.9s
+[2026-07-22 06:53:38] plane_v05_hdbscan_ms3        | evaluate[svd]          | START
+[2026-07-22 06:54:20] plane_v05_hdbscan_ms3        | evaluate[svd]          | DONE    |    42.1s
+[2026-07-22 06:54:20] plane_v05_hdbscan_ms3        | evaluate[ransac_svd]   | START
+[2026-07-22 06:55:00] plane_v05_hdbscan_ms3        | evaluate[ransac_svd]   | DONE    |    39.7s
+[2026-07-22 06:55:00] plane_v05_hdbscan_ms3        | evaluate[svd_sde]      | START
+[2026-07-22 06:55:38] plane_v05_hdbscan_ms3        | evaluate[svd_sde]      | DONE    |    38.2s
+[2026-07-22 06:55:38] plane_v05_hdbscan_ms3        | evaluate[ransac_svd_sde] | START
+[2026-07-22 06:56:16] plane_v05_hdbscan_ms3        | evaluate[ransac_svd_sde] | DONE    |    38.3s
+[2026-07-22 06:56:16] plane_v05_hdbscan_ms3        | compare_results        | START
+[2026-07-22 06:56:20] plane_v05_hdbscan_ms3        | compare_results        | DONE    |     3.4s
+[2026-07-22 06:56:20] plane_v05_hdbscan_ms5        | estimate_symmetry      | START
+[2026-07-22 06:58:05] plane_v05_hdbscan_ms5        | estimate_symmetry      | DONE    |   105.8s
+[2026-07-22 06:58:05] plane_v05_hdbscan_ms5        | evaluate[svd]          | START
+[2026-07-22 06:58:45] plane_v05_hdbscan_ms5        | evaluate[svd]          | DONE    |    39.6s
+[2026-07-22 06:58:45] plane_v05_hdbscan_ms5        | evaluate[ransac_svd]   | START
+[2026-07-22 06:59:23] plane_v05_hdbscan_ms5        | evaluate[ransac_svd]   | DONE    |    37.7s
+[2026-07-22 06:59:23] plane_v05_hdbscan_ms5        | evaluate[svd_sde]      | START
+[2026-07-22 07:00:01] plane_v05_hdbscan_ms5        | evaluate[svd_sde]      | DONE    |    38.1s
+[2026-07-22 07:00:01] plane_v05_hdbscan_ms5        | evaluate[ransac_svd_sde] | START
+[2026-07-22 07:00:41] plane_v05_hdbscan_ms5        | evaluate[ransac_svd_sde] | DONE    |    39.7s
+[2026-07-22 07:00:41] plane_v05_hdbscan_ms5        | compare_results        | START
+[2026-07-22 07:00:44] plane_v05_hdbscan_ms5        | compare_results        | DONE    |     3.3s
+[2026-07-22 07:00:44] plane_v05_p3                 | map_to_3d              | START
+[2026-07-22 07:10:20] plane_v05_p3                 | map_to_3d              | DONE    |   575.9s
+[2026-07-22 07:10:20] plane_v05_p3                 | estimate_symmetry      | START
+[2026-07-22 07:12:31] plane_v05_p3                 | estimate_symmetry      | DONE    |   131.4s
+[2026-07-22 07:12:31] plane_v05_p3                 | evaluate[svd]          | START
+[2026-07-22 07:13:12] plane_v05_p3                 | evaluate[svd]          | DONE    |    40.6s
+[2026-07-22 07:13:12] plane_v05_p3                 | evaluate[ransac_svd]   | START
+[2026-07-22 07:13:51] plane_v05_p3                 | evaluate[ransac_svd]   | DONE    |    39.6s
+[2026-07-22 07:13:51] plane_v05_p3                 | evaluate[svd_sde]      | START
+[2026-07-22 07:14:33] plane_v05_p3                 | evaluate[svd_sde]      | DONE    |    41.4s
+[2026-07-22 07:14:33] plane_v05_p3                 | evaluate[ransac_svd_sde] | START
+[2026-07-22 07:15:12] plane_v05_p3                 | evaluate[ransac_svd_sde] | DONE    |    38.8s
+[2026-07-22 07:15:12] plane_v05_p3                 | compare_results        | START
+[2026-07-22 07:15:15] plane_v05_p3                 | compare_results        | DONE    |     3.2s
+[2026-07-22 07:15:15] plane_v05_p5                 | map_to_3d              | START
+[2026-07-22 07:37:21] plane_v05_p5                 | map_to_3d              | DONE    |  1326.1s
+[2026-07-22 07:37:21] plane_v05_p5                 | estimate_symmetry      | START
+[2026-07-22 07:39:55] plane_v05_p5                 | estimate_symmetry      | DONE    |   154.2s
+[2026-07-22 07:39:55] plane_v05_p5                 | evaluate[svd]          | START
+[2026-07-22 07:40:37] plane_v05_p5                 | evaluate[svd]          | DONE    |    41.6s
+[2026-07-22 07:40:37] plane_v05_p5                 | evaluate[ransac_svd]   | START
+[2026-07-22 07:41:17] plane_v05_p5                 | evaluate[ransac_svd]   | DONE    |    40.1s
+[2026-07-22 07:41:17] plane_v05_p5                 | evaluate[svd_sde]      | START
+[2026-07-22 07:41:58] plane_v05_p5                 | evaluate[svd_sde]      | DONE    |    41.2s
+[2026-07-22 07:41:58] plane_v05_p5                 | evaluate[ransac_svd_sde] | START
+[2026-07-22 07:42:37] plane_v05_p5                 | evaluate[ransac_svd_sde] | DONE    |    39.5s
+[2026-07-22 07:42:37] plane_v05_p5                 | compare_results        | START
+[2026-07-22 07:42:40] plane_v05_p5                 | compare_results        | DONE    |     3.2s
+[2026-07-22 07:42:40] plane_v05                    | compare_results        | START
+[2026-07-22 07:42:44] plane_v05                    | compare_results        | DONE    |     3.6s
+[2026-07-22 07:42:44] Running final consolidated compare_results (section 4) for axis_sym and plane_sym...
+[2026-07-22 07:42:44] axis_sym                     | consolidated_compare   | START
+[2026-07-22 07:43:51] axis_sym                     | consolidated_compare   | DONE    |    67.4s
+[2026-07-22 07:43:51] plane_sym                    | consolidated_compare   | START
+[2026-07-22 07:45:05] plane_sym                    | consolidated_compare   | DONE    |    73.5s
+[2026-07-22 07:45:05] merge                        | consolidated_compare   | DONE    | wrote ../results/experiments_22_07_2026/all_experiments_comparison.csv (2148 rows)
+[2026-07-22 07:45:05] run_all_postprocessing DONE | 19 experiment(s) | total wall time 1087.0 min
+[2026-07-22 07:45:05] ====================================================================================================
