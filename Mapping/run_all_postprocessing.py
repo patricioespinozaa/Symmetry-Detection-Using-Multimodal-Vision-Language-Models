@@ -154,6 +154,37 @@ def experiment_already_done(renders_root: Path, sym: str, exp_id: str) -> bool:
     )
 
 
+def clean_corrupt_json_files(logger: Logger, renders_root: Path, sym: str, exp_id: str) -> int:
+    """Per-object files (molmo_multiview_<EXP>.json, mapped_points_3d_<EXP>.json,
+    predicted_symmetry_<EXP>.json) only get skip-if-exists treatment downstream —
+    a 0-byte/truncated file (left by an earlier interrupted run, OR written moments
+    ago by map_to_3d.py itself in this very run) is silently treated as "already
+    done" and crashes the reading stage with a JSONDecodeError, which aborts the
+    entire experiment (not just the one bad object) unless purged first. Call this
+    BOTH before map_to_3d (cleans stale corruption from a prior run) AND again right
+    after map_to_3d succeeds, before estimate_symmetry reads its output (catches
+    corruption map_to_3d just introduced in this run)."""
+    import json as _json
+
+    sym_dir = renders_root / sym
+    removed: list[tuple[Path, str]] = []
+    for f in sym_dir.glob(f"**/*_{exp_id}.json"):
+        try:
+            with open(f, "r", encoding="utf-8") as fh:
+                _json.load(fh)
+        except Exception as e:
+            try:
+                f.unlink()
+                removed.append((f, str(e)))
+            except OSError:
+                pass
+    if removed:
+        logger.line(f"{exp_id:28s} | {'corrupt-scan':22s} | CLEAN   | removed {len(removed)} unreadable json file(s)")
+        for f, e in removed:
+            logger.line(f"{'':28s} |   removed> {f} ({e})")
+    return len(removed)
+
+
 def compare_one(logger: Logger, args, sym: str, variant_id: str) -> None:
     renders = Path(args.renders_root)
     results = Path(args.results_root)
@@ -203,6 +234,9 @@ def run_core_stages(logger: Logger, args, sym: str, exp_id: str, mode: str) -> b
         logger.line(f"{exp_id:28s} | {'core stages':22s} | SKIP    | all 4 eval summaries already exist")
         return True
 
+    if not args.dry_run:
+        clean_corrupt_json_files(logger, renders, sym, exp_id)
+
     ok = run_stage(
         logger, exp_id, "map_to_3d",
         [sys.executable, "Mapping/map_to_3d.py", *common, "--overwrite", "--yes"]
@@ -211,6 +245,8 @@ def run_core_stages(logger: Logger, args, sym: str, exp_id: str, mode: str) -> b
         args.dry_run,
     )
     if ok:
+        if not args.dry_run:
+            clean_corrupt_json_files(logger, renders, sym, exp_id)
         ok = run_stage(
             logger, exp_id, "estimate_symmetry",
             [sys.executable, "Mapping/estimate_symmetry.py", *common, "--point-mode", mode]
@@ -285,6 +321,8 @@ def run_patch_sweep(logger: Logger, args, sym: str, exp_id: str, mode: str) -> N
             args.dry_run,
         )
         if ok:
+            if not args.dry_run:
+                clean_corrupt_json_files(logger, renders, sym, variant_id)
             ok = run_stage(
                 logger, variant_id, "estimate_symmetry",
                 [sys.executable, "Mapping/estimate_symmetry.py", *common_base,
