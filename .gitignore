@@ -8,3 +8,10 @@ __pycache__/
 # editor / tool UI state
 imgui.ini
 .polyscope.ini
+
+results*
+Tesis_DCC_MDS
+Prompted_*
+experiments_17*
+Gemini_poster_theme
+.vscode
