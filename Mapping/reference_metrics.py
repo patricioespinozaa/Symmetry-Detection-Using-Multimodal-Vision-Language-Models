@@ -2,9 +2,24 @@
 """
 reference_metrics.py
 ---------------------
-Standalone re-scoring of ALREADY-FITTED plane-symmetry predictions using the
-exact SDE and F1 formulas from the reference paper's evaluation scripts
-(metric_SDE.py / metric_F1.py — both plane-only).
+Standalone re-scoring of ALREADY-FITTED plane- and axis-symmetry predictions.
+
+For plane_sym: the exact SDE and F1 formulas from the reference paper's
+evaluation scripts (metric_SDE.py / metric_F1.py — both plane-only in the
+source repo).
+
+For axis_sym: only an SDE-style metric (`calaxisloss`), NOT a port of
+anything in the reference repo -- that repo has no ground-truth-matching
+evaluation for axes at all (confirmed by reading it: `evaluation/` only has
+a self-supervised DINOv2-feature-invariance proxy for axes, no SDE/F1 against
+ground truth). `calaxisloss` is our own extension, built by applying the same
+convention the wider literature uses for planar SDE (PRS-Net and follow-ups:
+area-weighted surface sampling, squared distance to the true mesh surface,
+unnormalized) to axis reflection (180 deg rotation about the line) instead of
+planar reflection. No F1 for axis_sym: cross-checked with a literature search
+(see conversation) that found no established multi-candidate F1 convention
+for axis symmetry detection in 3D -- angular_error/AUC_angular is what the
+field actually reports for axes, which this project already computes.
 
 Does NOT re-run map_to_3d / estimate_symmetry. It reads the normal/origin
 already stored in predicted_symmetry_<EXP>.json and only re-scores them, so
@@ -42,16 +57,22 @@ and `distPlanes` non-max-suppression before building `predicted`) still isn't
 replicated here, since it only matters once real per-candidate confidence
 scores exist upstream.
 
-Only plane_sym is supported — the reference functions are plane-only
-(calplaneloss reflects through a hyperplane; the F1 matching works on planes
-as 4-vectors [nx, ny, nz, d]). Requires gpytoolbox (`pip install gpytoolbox`).
+Requires gpytoolbox (`pip install gpytoolbox`).
 
-Usage:
+Usage (plane, SDE_ref + F1_ref):
     python Mapping/reference_metrics.py \\
         --renders-root ../data/renders --objects-root ../data/objects \\
+        --symmetry-type plane_sym \\
         --experiment-id plane_v04_1_flowB plane_v04_1_flowC_p5 \\
         --methods svd ransac_svd_sde \\
         --out reference_metrics_plane.csv
+
+Usage (axis, SDE_ref only -- f1_ref comes back as None, see above):
+    python Mapping/reference_metrics.py \\
+        --renders-root ../data/renders --objects-root ../data/objects \\
+        --symmetry-type axis_sym \\
+        --experiment-id axis_v05_1_flowC_p5 \\
+        --out reference_metrics_axis.csv
 """
 
 from __future__ import annotations
@@ -91,6 +112,26 @@ def calplaneloss(plane: np.ndarray, vertices: np.ndarray, faces: np.ndarray, poi
     lam = points.dot(plane.T)
     planepoints = points - 2 * lam * plane
     d, ind, b = gpy.squared_distance(planepoints[:, 0:3], vertices, faces, use_aabb=True, use_cpp=True)
+    return float(np.mean(d))
+
+
+# ── Axis SDE (our own extension, NOT ported from the reference repo) ──────────
+# Same convention as calplaneloss (area-weighted surface sample, squared distance
+# to the real mesh surface via AABB, unnormalized) applied to axis reflection
+# (180 deg rotation about the line) instead of planar reflection. The reflection
+# formula itself matches Mapping/estimate_symmetry.py::sde_axis exactly (same
+# geometry, "foot of perpendicular on the axis, then 2*proj - point"); what
+# changes here is the same trio of literature-convention differences as
+# calplaneloss vs. sde_plane: surface sample vs. vertex sample, true-surface
+# distance vs. nearest-sampled-point distance, squared+unnormalized vs.
+# linear+bbox-normalized.
+
+def calaxisloss(axis_dir: np.ndarray, axis_origin: np.ndarray,
+                 vertices: np.ndarray, faces: np.ndarray, points: np.ndarray) -> float:
+    t = (points - axis_origin) @ axis_dir
+    proj = axis_origin + t[:, None] * axis_dir
+    reflected = 2.0 * proj - points
+    d, ind, b = gpy.squared_distance(reflected, vertices, faces, use_aabb=True, use_cpp=True)
     return float(np.mean(d))
 
 
@@ -178,9 +219,12 @@ class MeshCache:
 
 def score_experiment(
     renders_root: Path, objects_dir: Path, experiment_id: str,
-    methods: list[str], mesh_cache: MeshCache,
+    methods: list[str], mesh_cache: MeshCache, symmetry_type: str,
 ) -> list[dict]:
-    sym_dir = renders_root / "plane_sym"
+    is_axis = symmetry_type == "axis_sym"
+    vec_key = "direction" if is_axis else "normal"
+
+    sym_dir = renders_root / symmetry_type
     predicted_file = exp_filename(PREDICTED_FILE, experiment_id)
     object_dirs = sorted(d for d in sym_dir.iterdir() if d.is_dir())
 
@@ -196,43 +240,77 @@ def score_experiment(
         with open(pred_path, "r", encoding="utf-8") as fh:
             pred = json.load(fh)
 
-        gt_planes = gt_planes_for_object(objects_dir, object_id)
+        # No F1 for axis: no ground-truth axis matching exists in the reference
+        # repo or, per the literature check, in the field generally -- see
+        # module docstring. gt_planes stays [] for axis, f1_match_counts is
+        # simply never called in that branch below.
+        gt_planes = [] if is_axis else gt_planes_for_object(objects_dir, object_id)
         mesh_data = mesh_cache.get(object_id)
 
         for n_views_key, entry in pred.get("n_views_predictions", {}).items():
+            # svd/svd_sde (and ransac_svd/ransac_svd_sde) always share the exact same
+            # direction-or-normal/origin -- the "_sde" variant only adds the
+            # pipeline's own internal SDE, it doesn't refit anything (see
+            # estimate_symmetry.py::_make_entry). Cache the (expensive) re-scoring
+            # per distinct (vec, origin) seen for this object/n_views so those
+            # duplicate pairs are scored once, not twice.
+            plane_cache: dict[tuple, tuple[float | None, dict[float, tuple[int, int, int]]]] = {}
+
             for method in methods:
                 m = entry.get(method)
-                if m is None or "normal" not in m:
+                if m is None or vec_key not in m:
                     continue
                 key = (method, n_views_key)
                 n_objects_seen[key] = n_objects_seen.get(key, 0) + 1
-                pred_plane = normal_origin_to_plane(m["normal"], m["origin"])
 
-                if mesh_data is not None:
-                    v, f, sample = mesh_data
-                    sde_values.setdefault(key, []).append(calplaneloss(pred_plane, v, f, sample))
+                cache_key = (tuple(m[vec_key]), tuple(m["origin"]))
+                if cache_key not in plane_cache:
+                    sde_val = None
+                    if mesh_data is not None:
+                        v, f, sample = mesh_data
+                        if is_axis:
+                            axis_dir = np.asarray(m["direction"], dtype=np.float64)
+                            axis_origin = np.asarray(m["origin"], dtype=np.float64)
+                            sde_val = calaxisloss(axis_dir, axis_origin, v, f, sample)
+                        else:
+                            pred_plane = normal_origin_to_plane(m["normal"], m["origin"])
+                            sde_val = calplaneloss(pred_plane, v, f, sample)
+                    f1_by_t: dict[float, tuple[int, int, int]] = {}
+                    if not is_axis:
+                        pred_plane = normal_origin_to_plane(m["normal"], m["origin"])
+                        f1_by_t = {
+                            t: f1_match_counts([pred_plane], gt_planes, t)
+                            for t in THRESHOLDS_INLIER
+                        }
+                    plane_cache[cache_key] = (sde_val, f1_by_t)
+                sde_val, f1_by_t = plane_cache[cache_key]
 
-                counts_by_t = f1_counts.setdefault(key, {t: [0, 0, 0] for t in THRESHOLDS_INLIER})
-                for t in THRESHOLDS_INLIER:
-                    # [pred_plane]: one-candidate list today -- f1_match_counts itself
-                    # accepts any number of candidates, see its docstring.
-                    tp, fp, fn = f1_match_counts([pred_plane], gt_planes, t)
-                    c = counts_by_t[t]
-                    c[0] += tp
-                    c[1] += fp
-                    c[2] += fn
+                if sde_val is not None:
+                    sde_values.setdefault(key, []).append(sde_val)
+
+                if not is_axis:
+                    counts_by_t = f1_counts.setdefault(key, {t: [0, 0, 0] for t in THRESHOLDS_INLIER})
+                    for t in THRESHOLDS_INLIER:
+                        tp, fp, fn = f1_by_t[t]
+                        c = counts_by_t[t]
+                        c[0] += tp
+                        c[1] += fp
+                        c[2] += fn
 
     rows = []
     for key in sorted(set(sde_values) | set(f1_counts)):
         method, n_views_key = key
         sde_vals = np.array(sde_values.get(key, []))
-        f1_per_t = []
-        for t in THRESHOLDS_INLIER:
-            tp, fp, fn = f1_counts[key][t]
-            precision = tp / (tp + fp) if (tp + fp) else 0.0
-            recall = tp / (tp + fn) if (tp + fn) else 0.0
-            f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
-            f1_per_t.append(f1)
+        f1_ref = None
+        if not is_axis:
+            f1_per_t = []
+            for t in THRESHOLDS_INLIER:
+                tp, fp, fn = f1_counts[key][t]
+                precision = tp / (tp + fp) if (tp + fp) else 0.0
+                recall = tp / (tp + fn) if (tp + fn) else 0.0
+                f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
+                f1_per_t.append(f1)
+            f1_ref = float(np.mean(f1_per_t))
         rows.append({
             "experiment": experiment_id,
             "method": method,
@@ -241,7 +319,7 @@ def score_experiment(
             "sde_ref_mean": float(sde_vals.mean()) if len(sde_vals) else None,
             "sde_ref_min": float(sde_vals.min()) if len(sde_vals) else None,
             "sde_ref_max": float(sde_vals.max()) if len(sde_vals) else None,
-            "f1_ref": float(np.mean(f1_per_t)),
+            "f1_ref": f1_ref,
         })
     return rows
 
@@ -253,6 +331,10 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument("--renders-root", required=True)
     p.add_argument("--objects-root", required=True)
+    p.add_argument("--symmetry-type", required=True, choices=["plane_sym", "axis_sym"],
+                   help="plane_sym gets SDE_ref + F1_ref (both ported from the reference "
+                        "repo). axis_sym gets SDE_ref only (f1_ref comes back as None -- "
+                        "no F1 convention exists for axis, see module docstring).")
     p.add_argument("--experiment-id", nargs="+", required=True, metavar="EXP_ID",
                    help="One or more experiment ids to re-score. Pass only your ranking "
                         "'winners' -- this is meant to be cheap on a handful of experiments, "
@@ -264,35 +346,40 @@ def parse_args() -> argparse.Namespace:
                    help="Seed for the surface sampling (reproducible re-runs). Pass -1 to "
                         "leave it unseeded, matching the reference script's own behaviour "
                         "at the cost of run-to-run noise.")
-    p.add_argument("--out", default="reference_metrics_plane.csv")
+    p.add_argument("--out", default=None,
+                   help="Default: reference_metrics_plane.csv or reference_metrics_axis.csv, "
+                        "depending on --symmetry-type.")
     return p.parse_args()
 
 
 def main() -> None:
     args = parse_args()
     renders_root = Path(args.renders_root)
-    objects_dir = Path(args.objects_root) / OBJECTS_SUBDIR["plane_sym"]
+    objects_dir = Path(args.objects_root) / OBJECTS_SUBDIR[args.symmetry_type]
     seed = None if args.seed == -1 else args.seed
+    out_path = args.out or f"reference_metrics_{'axis' if args.symmetry_type == 'axis_sym' else 'plane'}.csv"
 
     mesh_cache = MeshCache(objects_dir, args.n_samples, seed)
 
     all_rows: list[dict] = []
     for exp_id in args.experiment_id:
         print(f"\n=== {exp_id} ===")
-        rows = score_experiment(renders_root, objects_dir, exp_id, args.methods, mesh_cache)
+        rows = score_experiment(renders_root, objects_dir, exp_id, args.methods, mesh_cache, args.symmetry_type)
         if not rows:
             print("  (sin predicciones encontradas -- revisa --experiment-id / --renders-root)")
         for r in rows:
+            f1_str = f"{r['f1_ref']:.4f}" if r["f1_ref"] is not None else "n/a (axis)"
+            sde_str = f"{r['sde_ref_mean']:.6f}" if r["sde_ref_mean"] is not None else "n/a"
             print(f"  {r['method']:16s} n_views={r['n_views']:>3}  n_obj={r['n_objects']:>4}  "
-                  f"SDE_ref(mean)={r['sde_ref_mean']:.6f}  F1_ref={r['f1_ref']:.4f}")
+                  f"SDE_ref(mean)={sde_str}  F1_ref={f1_str}")
         all_rows.extend(rows)
 
     if all_rows:
-        with open(args.out, "w", newline="", encoding="utf-8") as f:
+        with open(out_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=list(all_rows[0].keys()))
             writer.writeheader()
             writer.writerows(all_rows)
-        print(f"\nGuardado: {args.out}")
+        print(f"\nGuardado: {out_path}")
     else:
         print("\n[warn] nada que guardar -- 0 filas producidas")
 
