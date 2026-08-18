@@ -25,17 +25,22 @@ replicated here ON PURPOSE to match the reference paper's numbers:
     units/scale as the reference script, NOT comparable to the pipeline's own
     sde_mean column without conversion.
 
-F1 treats each of our predictions as a single always-accepted candidate
-(confidence=1.0 — our pipeline never emits multiple candidates with a
-confidence score, only one best plane per method/n_views). This degenerates
-the reference's multi-candidate matching into: for each ground-truth plane,
-TP if our one prediction is within the threshold of it (first unmatched GT it
-clears) and hasn't already matched a different GT, else FP; every unmatched
-GT plane after that is a FN. The counting loop (including its exact
-tie-break/iteration order) is copied verbatim from metric_F1.py so the
-resulting numbers are computed the same way, quirks included — this is
-deliberate, the whole point is a like-for-like comparison against the
-reference's reported figures, not a "corrected" metric.
+f1_match_counts() takes a LIST of predicted planes -- the exact same shape as
+metric_F1.py's own matching loop (`for pred in predicted: for idx, gt in
+enumerate(planes_gt): ...`), copied verbatim including its tie-break/iteration
+order. Today our pipeline only ever fits one plane per (object, method,
+n_views), so score_experiment() always calls it with a single-element list
+(confidence=1.0 implicit -- our pipeline has no per-candidate confidence
+score to filter on). But the function itself no longer assumes that: the day
+this pipeline emits several candidate planes per object (e.g. treating the
+4 fitting methods as a candidate set, or a future multi-candidate detector
+closer to EnhancedBackProjection's up-to-10-candidates-per-object approach),
+you pass the full list straight in and get the identical algorithm they use
+-- no rewrite needed. See the EnhancedBackProjection comparison discussion:
+their confidence/dedup filtering (metric_F1.py's `confidence >= threshold`
+and `distPlanes` non-max-suppression before building `predicted`) still isn't
+replicated here, since it only matters once real per-candidate confidence
+scores exist upstream.
 
 Only plane_sym is supported — the reference functions are plane-only
 (calplaneloss reflects through a hyperplane; the F1 matching works on planes
@@ -109,22 +114,28 @@ def gt_planes_for_object(objects_dir: Path, object_id: str) -> list[np.ndarray]:
     return [normal_origin_to_plane(e["normal"], e["origin"]) for e in label["elements"]]
 
 
-def f1_match_counts(pred_plane: np.ndarray, gt_planes: list[np.ndarray], threshold_inlier: float) -> tuple[int, int, int]:
-    """Verbatim port of the matching loop inside metric_F1.py::f1_score_calc, restricted
-    to our single always-accepted predicted plane per object (see module docstring)."""
+def f1_match_counts(predicted: list[np.ndarray], gt_planes: list[np.ndarray], threshold_inlier: float) -> tuple[int, int, int]:
+    """Verbatim port of the matching loop inside metric_F1.py::f1_score_calc.
+
+    `predicted` is a list of candidate planes -- today score_experiment() always
+    passes a single-element list (one plane per method/n_views), but this
+    function makes no assumption about that: pass in as many candidate planes
+    as you have (e.g. all 4 fitting methods as a set, or a future multi-plane
+    detector) and it runs the identical algorithm metric_F1.py uses."""
     mask = np.zeros(len(gt_planes), dtype=bool)
     tp = fp = 0
-    for idx, gt in enumerate(gt_planes):
-        if mask[idx]:
-            continue
-        val1 = np.linalg.norm(pred_plane - gt)
-        val2 = np.linalg.norm(pred_plane + gt)
-        val = min(val1, val2)
-        if val < threshold_inlier:
-            mask[idx] = True
-            tp += 1
-        else:
-            fp += 1
+    for pred_plane in predicted:
+        for idx, gt in enumerate(gt_planes):
+            if mask[idx]:
+                continue
+            val1 = np.linalg.norm(pred_plane - gt)
+            val2 = np.linalg.norm(pred_plane + gt)
+            val = min(val1, val2)
+            if val < threshold_inlier:
+                mask[idx] = True
+                tp += 1
+            else:
+                fp += 1
     fn = int(np.sum(~mask))
     return tp, fp, fn
 
@@ -203,7 +214,9 @@ def score_experiment(
 
                 counts_by_t = f1_counts.setdefault(key, {t: [0, 0, 0] for t in THRESHOLDS_INLIER})
                 for t in THRESHOLDS_INLIER:
-                    tp, fp, fn = f1_match_counts(pred_plane, gt_planes, t)
+                    # [pred_plane]: one-candidate list today -- f1_match_counts itself
+                    # accepts any number of candidates, see its docstring.
+                    tp, fp, fn = f1_match_counts([pred_plane], gt_planes, t)
                     c = counts_by_t[t]
                     c[0] += tp
                     c[1] += fp
