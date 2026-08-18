@@ -56,6 +56,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from pipeline_common.naming import exp_filename
 from pipeline_common.datasets import OBJECTS_SUBDIR, load_mesh
+from pipeline_common.clustering import cluster_points
 
 
 # ── Constants ─────────────────────────────────────────────────────────────────
@@ -273,6 +274,13 @@ def parse_args() -> argparse.Namespace:
                         "estimate_symmetry.py for this experiment ('all' = Flow C).")
     p.add_argument("--point-radius", type=float, default=0.02,
                    help="Sphere radius for --show-points.")
+    p.add_argument("--cluster", action="store_true",
+                   help="Apply the same greedy centroid clustering used before RANSAC+SVD "
+                        "(pipeline_common.clustering.cluster_points, threshold=0.05*bbox_diag "
+                        "of the raw hit points) before overlaying --show-points.")
+    p.add_argument("--no-title", action="store_true",
+                   help="Skip the 'Ground truth' / 'Predicted (error = ...)' matplotlib titles, "
+                        "for embedding the panels in a document that sets its own labels/font.")
     return p.parse_args()
 
 
@@ -352,6 +360,12 @@ def main() -> None:
                   f"(point_mode={args.point_mode}); skipping.")
         else:
             print(f"[info] {len(hit_points)} Molmo2 hit points overlaid on the Predicted panel.")
+            if args.cluster:
+                pts_bbox_diag = float(np.linalg.norm(
+                    hit_points.max(axis=0) - hit_points.min(axis=0)))
+                hit_points = cluster_points(hit_points, pts_bbox_diag, 0.05)
+                print(f"[info] clustered down to {len(hit_points)} centroids "
+                      f"(threshold=0.05*{pts_bbox_diag:.4f}).")
 
     # ── Polyscope: one session, two screenshots ───────────────────────────────
     ps.init()
@@ -385,7 +399,8 @@ def main() -> None:
         ax.set_xticks([]); ax.set_yticks([])
         for spine in ax.spines.values():
             spine.set_visible(False)
-        ax.set_title(title, fontsize=20, fontweight="bold", y=1.02)
+        if not args.no_title:
+            ax.set_title(title, fontsize=20, fontweight="bold", y=1.02)
 
     fig.tight_layout()
 
