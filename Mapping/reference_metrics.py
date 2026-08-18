@@ -81,6 +81,7 @@ import argparse
 import csv
 import json
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
@@ -215,6 +216,26 @@ class MeshCache:
         return self._cache[object_id]
 
 
+# ── Discovery: every experiment id that has predictions on disk ───────────────
+# Same idea as Mapping/run_all_postprocessing.py::discover_experiments, but keyed
+# off predicted_symmetry_*.json (already-fitted results) instead of
+# molmo_multiview_*.json (raw Molmo output) -- this naturally picks up every
+# variant (baseline, _cluster, _hdbscan_ms{2,3,5}, _p{3,5}), not just the base
+# experiment ids, since that's what --all is meant to cover ("todos los
+# experimentos", matching how the ~1M/~950K prediction-count estimates were
+# computed).
+
+def discover_experiment_ids(renders_root: Path, symmetry_type: str) -> list[str]:
+    import re
+    sym_dir = renders_root / symmetry_type
+    found: set[str] = set()
+    for f in sym_dir.glob("*/predicted_symmetry_*.json"):
+        m = re.match(r"predicted_symmetry_(.+)\.json$", f.name)
+        if m:
+            found.add(m.group(1))
+    return sorted(found)
+
+
 # ── Main scoring loop ──────────────────────────────────────────────────────────
 
 def score_experiment(
@@ -335,10 +356,15 @@ def parse_args() -> argparse.Namespace:
                    help="plane_sym gets SDE_ref + F1_ref (both ported from the reference "
                         "repo). axis_sym gets SDE_ref only (f1_ref comes back as None -- "
                         "no F1 convention exists for axis, see module docstring).")
-    p.add_argument("--experiment-id", nargs="+", required=True, metavar="EXP_ID",
+    p.add_argument("--experiment-id", nargs="+", default=None, metavar="EXP_ID",
                    help="One or more experiment ids to re-score. Pass only your ranking "
                         "'winners' -- this is meant to be cheap on a handful of experiments, "
-                        "not run over the full sweep.")
+                        "not run over the full sweep. Required unless --all is given.")
+    p.add_argument("--all", action="store_true",
+                   help="Discover and score every experiment id that has "
+                        "predicted_symmetry_*.json on disk for this --symmetry-type "
+                        "(baseline + every clustering/patch variant) -- the full sweep, "
+                        "several hours. Overrides --experiment-id.")
     p.add_argument("--methods", nargs="+", default=list(METHODS), choices=METHODS)
     p.add_argument("--n-samples", type=int, default=N_SAMPLES_DEFAULT,
                    help="Surface points sampled per object (matches the reference's 1000).")
@@ -354,34 +380,58 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    if not args.all and not args.experiment_id:
+        raise SystemExit("[error] pasa --experiment-id <...> o --all")
+
     renders_root = Path(args.renders_root)
     objects_dir = Path(args.objects_root) / OBJECTS_SUBDIR[args.symmetry_type]
     seed = None if args.seed == -1 else args.seed
     out_path = args.out or f"reference_metrics_{'axis' if args.symmetry_type == 'axis_sym' else 'plane'}.csv"
 
+    if args.all:
+        exp_ids = discover_experiment_ids(renders_root, args.symmetry_type)
+        print(f"--all: descubiertos {len(exp_ids)} experiment id(s) con predicciones en "
+              f"{renders_root / args.symmetry_type}")
+    else:
+        exp_ids = args.experiment_id
+
     mesh_cache = MeshCache(objects_dir, args.n_samples, seed)
 
-    all_rows: list[dict] = []
-    for exp_id in args.experiment_id:
-        print(f"\n=== {exp_id} ===")
+    # Escritura incremental: cada experimento termina -> se agrega al CSV al toque.
+    # En una corrida de horas (--all), esto evita perder todo si se corta a mitad
+    # de camino -- lo ya calculado queda guardado, y se puede retomar filtrando
+    # --experiment-id a lo que falte (o simplemente volver a correr, es idempotente
+    # salvo por el tiempo perdido en lo que ya estaba).
+    fieldnames = ["experiment", "method", "n_views", "n_objects",
+                  "sde_ref_mean", "sde_ref_min", "sde_ref_max", "f1_ref"]
+    csv_file = open(out_path, "w", newline="", encoding="utf-8")
+    writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+    writer.writeheader()
+
+    n_total_rows = 0
+    t0 = time.time()
+    for i, exp_id in enumerate(exp_ids, start=1):
+        elapsed = time.time() - t0
+        eta = ""
+        if i > 1:
+            eta_s = elapsed / (i - 1) * (len(exp_ids) - i + 1)
+            eta = f"  (ETA ~{eta_s/60:.0f} min)"
+        print(f"\n=== [{i}/{len(exp_ids)}] {exp_id} ==={eta}")
         rows = score_experiment(renders_root, objects_dir, exp_id, args.methods, mesh_cache, args.symmetry_type)
         if not rows:
-            print("  (sin predicciones encontradas -- revisa --experiment-id / --renders-root)")
+            print("  (sin predicciones encontradas)")
         for r in rows:
             f1_str = f"{r['f1_ref']:.4f}" if r["f1_ref"] is not None else "n/a (axis)"
             sde_str = f"{r['sde_ref_mean']:.6f}" if r["sde_ref_mean"] is not None else "n/a"
             print(f"  {r['method']:16s} n_views={r['n_views']:>3}  n_obj={r['n_objects']:>4}  "
                   f"SDE_ref(mean)={sde_str}  F1_ref={f1_str}")
-        all_rows.extend(rows)
+            writer.writerow(r)
+        csv_file.flush()
+        n_total_rows += len(rows)
 
-    if all_rows:
-        with open(out_path, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=list(all_rows[0].keys()))
-            writer.writeheader()
-            writer.writerows(all_rows)
-        print(f"\nGuardado: {out_path}")
-    else:
-        print("\n[warn] nada que guardar -- 0 filas producidas")
+    csv_file.close()
+    total_min = (time.time() - t0) / 60
+    print(f"\nGuardado: {out_path}  ({n_total_rows} filas, {len(exp_ids)} experimentos, {total_min:.1f} min)")
 
 
 if __name__ == "__main__":
