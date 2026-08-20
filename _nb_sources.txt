@@ -1,0 +1,800 @@
+
+===== CELL 0 (id=6c6d0214, type=markdown) =====
+# Ranking de post-procesamiento — axis_sym / plane_sym
+
+Lee `all_experiments_comparison.csv` / los CSV por tipo de simetria que genera
+`Mapping/compare_results.py` (una fila por combinacion `experiment x method x n_views`) y
+construye, en orden:
+
+1. **Carga y enriquecimiento**: parsea cada `experiment` id (prompt base, flow, clustering,
+   patch-size), le agrega la descripcion legible del prompt, su `point_mode`
+   (`independent`/`midpoint`, desde `MolmoPointing/Experiments.md`), su familia (`v0` original
+   vs `v1` mejorado) y la tasa de aceptacion (`n_objects / n_total`).
+2. **Validacion de integridad**: duplicados exactos, contaminacion cruzada entre tipos de
+   simetria, cobertura vs. el registro completo de 24 prompts + Flow B/C + 7 variantes de
+   post-procesamiento por experimento, y filas faltantes explicadas automaticamente por
+   `point_mode` (n_views=1 es imposible en prompts `midpoint`). Termina en un veredicto.
+3. **Inventario**: que prompts/experimentos/variantes quedaron documentados.
+4. **Metricas por tipo de simetria**: un diccionario unico (`AXIS_METRICS` / `PLANE_METRICS`)
+   que alimenta todas las tablas de abajo — agregar o quitar una metrica es editar una linea.
+5. **Resumen ejecutivo**: el mejor resultado global obtenido por metrica, listo para pegar en la
+   seccion de Resultados de la tesis.
+6. **Ranking por experimento**: para cada `experiment` (prompt+flow+clustering+patch), su mejor
+   fila (method+n_views) por metrica.
+7. **Ranking por tipo de prompt**: igual que (6) pero agregando sobre TODAS las variantes de un
+   mismo prompt base — responde "que diseño de prompt funciona mejor", independiente del
+   post-procesamiento aplicado.
+8. **Ablation de post-procesamiento**: efecto aislado de clustering, patch-size, metodo de
+   ajuste y point-mode (mas flow, confundido con la eleccion de prompt) — tablas + graficos de
+   barra (paleta validada del skill de dataviz).
+9. **Tendencia de n_views**: ¿mas vistas mejora la precision? Linea v0 vs v1.
+10. **Ranking conjunto**: combina dos metricas por suma de rangos (ajustable).
+11. **Guardado**: exporta todas las tablas (incluido el reporte de validacion) a
+    `<EXPERIMENTS_DIR>/rankings/`.
+
+Al final se deja, como anexo, el reporte de errores en los logs de ejecucion.
+
+===== CELL 1 (id=bbd1e58a, type=code) =====
+import re
+from pathlib import Path
+
+import pandas as pd
+
+pd.set_option("display.max_columns", None)
+pd.set_option("display.width", 160)
+
+===== CELL 2 (id=68c59f2d, type=markdown) =====
+## 0. Configuracion
+
+Ajusta `EXPERIMENTS_DIR` si corres esto otro dia (o descomenta la linea de "mas reciente" para
+no tener que tocarlo cada vez).
+
+===== CELL 3 (id=9391d108, type=code) =====
+import re as _re
+from datetime import date as _date
+
+def _find_latest_experiments_dir() -> Path:
+    """Busca carpetas experiments_DD_MM_YYYY tanto en la raiz del repo como bajo
+    results/, y devuelve la de fecha mas reciente (por el nombre, no por mtime)."""
+    candidates = list(Path(".").glob("experiments_*")) + list(Path("results").glob("experiments_*"))
+    dated = []
+    for p in candidates:
+        m = _re.match(r"experiments_(\d{2})_(\d{2})_(\d{4})$", p.name)
+        if m and p.is_dir():
+            d, mo, y = map(int, m.groups())
+            dated.append((_date(y, mo, d), p))
+    if not dated:
+        raise FileNotFoundError("No se encontro ninguna carpeta experiments_DD_MM_YYYY en '.' ni en 'results/'")
+    return max(dated, key=lambda t: t[0])[1]
+
+# Auto-detecta la carpeta experiments_DD_MM_YYYY mas reciente (busca en la raiz del repo
+# y en results/) para no tener que editar esto cada vez que sincronizas resultados nuevos.
+# Fija la linea de abajo a mano si necesitas reproducibilidad exacta sobre un corte pasado.
+EXPERIMENTS_DIR = _find_latest_experiments_dir()
+# EXPERIMENTS_DIR = Path("experiments_17_08_2026")
+
+AXIS_CSV = EXPERIMENTS_DIR / "axis_sym_comparison.csv"
+PLANE_CSV = EXPERIMENTS_DIR / "plane_sym_comparison.csv"
+ALL_CSV = EXPERIMENTS_DIR / "all_experiments_comparison.csv"
+
+TOP_N = 15  # cuantas filas mostrar por tabla
+
+# n_views=1 solo aporta ~2 puntos por objeto al ajuste (ver columna n_points_mean) -> metricas
+# ruidosas e infladas artificialmente en muestras chicas. Sube MIN_N_VIEWS (p.ej. 6) para exigir
+# al menos esa cantidad de vistas, o deja en 1 para no filtrar nada.
+MIN_N_VIEWS = 1
+MIN_N_OBJECTS = 0  # minimo de objetos evaluados para que una fila cuente
+
+print(f"EXPERIMENTS_DIR : {EXPERIMENTS_DIR}")
+print(f"Axis CSV : {AXIS_CSV}  (existe={AXIS_CSV.exists()})")
+print(f"Plane CSV: {PLANE_CSV}  (existe={PLANE_CSV.exists()})")
+print(f"All CSV  : {ALL_CSV}  (existe={ALL_CSV.exists()})")
+
+===== CELL 4 (id=c84ee453, type=markdown) =====
+## 1. Cargar, parsear y enriquecer
+
+`experiment` viene como `<prompt_base>[_flow{B,C}][_cluster | _hdbscan_ms{N}][_p{3,5}]`, en
+cualquier orden de sufijos (p.ej. `axis_v05_1_flowB_p3_cluster` o `axis_v00_p3_hdbscan_ms2`).
+`parse_experiment_id` los va despojando desde el final hasta quedarse con el prompt base.
+
+Ademas se agrega:
+- `prompt_description`: texto de `MolmoPointing/prompts_registry.py` (`DESCRIPTIONS`), que
+  documenta que estrategia de puntos usa cada prompt.
+- `prompt_family`: `"v1 (mejorado)"` si el prompt base termina en `_1` (p.ej. `axis_v05_1`),
+  `"v0 (original)"` en caso contrario.
+- `acceptance_rate`: `n_objects / n_total` — cuantos objetos del dataset lograron una prediccion
+  valida. Un AUC alto con `acceptance_rate` bajo es un resultado poco representativo.
+
+===== CELL 5 (id=2f8b440c, type=code) =====
+def parse_experiment_id(exp_id: str) -> dict:
+    remaining = exp_id
+    clustering = "none"
+    patch_size = 1
+    flow = "A"
+    changed = True
+    while changed:
+        changed = False
+        if m := re.search(r"_hdbscan_ms(\d+)$", remaining):
+            clustering = f"hdbscan_ms{m.group(1)}"
+            remaining = remaining[: m.start()]
+            changed = True
+            continue
+        if m := re.search(r"_cluster$", remaining):
+            clustering = "greedy"
+            remaining = remaining[: m.start()]
+            changed = True
+            continue
+        if m := re.search(r"_p([0-9]+)$", remaining):
+            patch_size = int(m.group(1))
+            remaining = remaining[: m.start()]
+            changed = True
+            continue
+        if m := re.search(r"_flow([ABC])$", remaining):
+            flow = m.group(1)
+            remaining = remaining[: m.start()]
+            changed = True
+            continue
+    return {"base_prompt": remaining, "flow": flow, "clustering": clustering, "patch_size": patch_size}
+
+===== CELL 6 (id=b6b28d81, type=code) =====
+# Copiado de MolmoPointing/prompts_registry.py::DESCRIPTIONS — que estrategia de puntos
+# testea cada prompt base. Si agregas un prompt nuevo, agrega su descripcion aqui tambien.
+PROMPT_DESCRIPTIONS: dict[str, str] = {
+    # Axis variants
+    "axis_v00": "Axis projection — two far-apart points directly on the projected axis",
+    "axis_v01": "Bilateral pair — left/right mirror points equidistant from the axis",
+    "axis_v02": "Widest silhouette extrema — leftmost and rightmost at the widest cross-section",
+    "axis_v03": "Structural feature pairs — visually symmetric elements (handles, holes, ribs)",
+    "axis_v04": "Polar extremes — topmost and bottommost points where the axis exits the surface",
+    "axis_v05": "Axis centerline — one point upper half + one point lower half on the centerline",
+    # Plane variants
+    "plane_v00": "Plane trace — top and bottom points on the plane's surface intersection",
+    "plane_v01": "Bilateral pair — left/right mirror points equidistant from the symmetry plane",
+    "plane_v02": "Plane seam — two points directly on the plane's surface trace (top and bottom)",
+    "plane_v03": "Structural feature pairs — corresponding symmetric elements across the plane",
+    "plane_v04": "Silhouette midpoints — horizontal center of left-right extent at top and bottom",
+    "plane_v05": "Plane trace extremes — two most distant points along the visible plane trace",
+    # Axis v1 variants (improved with centerline definition + upper/lower split + fallbacks)
+    "axis_v00_1": "Axis projection v1 — upper/lower split, centerline definition, no silhouette edges",
+    "axis_v01_1": "Bilateral pair v1 — height diversity across views, midpoint on centerline verified",
+    "axis_v02_1": "Widest cross-section v1 — returns centerline midpoints at widest + top/bottom heights",
+    "axis_v03_1": "Structural pairs v1 — midpoint verification + widest cross-section fallback",
+    "axis_v04_1": "Polar extremes v1 — horizontal center verification + flat-surface fallback",
+    "axis_v05_1": "Axis centerline v1 — explicit step-0 global axis identification, consistency check",
+    # Plane v1 variants (improved with top/bottom split + midpoint verification + height diversity)
+    "plane_v00_1": "Plane trace v1 — explicit top/bottom split + horizontal center guidance",
+    "plane_v01_1": "Bilateral pair v1 — height diversity across views, midpoint on trace verified",
+    "plane_v02_1": "Plane seam v1 — global plane step-0, consistency across views, top/bottom enforced",
+    "plane_v03_1": "Structural pairs v1 — midpoint verification + widest cross-section fallback",
+    "plane_v04_1": "Silhouette midpoints v1 — step-0 global plane ID + cross-view consistency check",
+    "plane_v05_1": "Plane trace v1 — topmost/bottommost on trace, vertical separation explicit",
+}
+
+# Copiado de MolmoPointing/Experiments.md (tabla de prompts registrados). "midpoint" no puede
+# producir resultados con n_views=1 (un solo par de puntos -> un solo midpoint -> el SVD
+# necesita >=2 -> estimate_symmetry.py descarta el objeto), asi que esos prompts SIEMPRE van
+# a faltarles la fila n_views=1 sin importar cuantas veces se re-corra el post-procesamiento.
+POINT_MODE: dict[str, str] = {
+    "axis_v00": "independent", "axis_v01": "midpoint",    "axis_v02": "midpoint",
+    "axis_v03": "midpoint",    "axis_v04": "independent", "axis_v05": "independent",
+    "axis_v00_1": "independent", "axis_v01_1": "midpoint",    "axis_v02_1": "independent",
+    "axis_v03_1": "midpoint",    "axis_v04_1": "independent", "axis_v05_1": "independent",
+    "plane_v00": "independent", "plane_v01": "midpoint",    "plane_v02": "independent",
+    "plane_v03": "midpoint",    "plane_v04": "independent", "plane_v05": "independent",
+    "plane_v00_1": "independent", "plane_v01_1": "midpoint",    "plane_v02_1": "independent",
+    "plane_v03_1": "midpoint",    "plane_v04_1": "independent", "plane_v05_1": "independent",
+}
+
+
+def enrich(df: pd.DataFrame) -> pd.DataFrame:
+    parsed = df["experiment"].apply(parse_experiment_id).apply(pd.Series)
+    df = pd.concat([df, parsed], axis=1)
+    df["prompt_description"] = df["base_prompt"].map(PROMPT_DESCRIPTIONS).fillna("(sin descripcion)")
+    df["prompt_family"] = df["base_prompt"].apply(lambda p: "v1 (mejorado)" if p.endswith("_1") else "v0 (original)")
+    # flowC siempre usa point-mode "all" (no independent/midpoint); ver estimate_symmetry.py
+    df["point_mode"] = df.apply(
+        lambda r: "all (flowC)" if r["flow"] == "C" else POINT_MODE.get(r["base_prompt"], "?"),
+        axis=1,
+    )
+    df["acceptance_rate"] = df["n_objects"] / df["n_total"]
+    return df
+
+
+def load_and_parse(csv_path: Path) -> pd.DataFrame:
+    return enrich(pd.read_csv(csv_path))
+
+
+def apply_min_filters(df: pd.DataFrame) -> pd.DataFrame:
+    return df[(df["n_views"] >= MIN_N_VIEWS) & (df["n_objects"] >= MIN_N_OBJECTS)].reset_index(drop=True)
+
+
+axis_df_all = load_and_parse(AXIS_CSV)
+plane_df_all = load_and_parse(PLANE_CSV)
+
+axis_df = apply_min_filters(axis_df_all)
+plane_df = apply_min_filters(plane_df_all)
+
+print(f"axis_sym : {axis_df_all.shape[0]} filas -> {axis_df.shape[0]} tras filtro, {axis_df['experiment'].nunique()} experimentos distintos")
+print(f"plane_sym: {plane_df_all.shape[0]} filas -> {plane_df.shape[0]} tras filtro, {plane_df['experiment'].nunique()} experimentos distintos")
+
+===== CELL 7 (id=837864cd, type=markdown) =====
+## 1b. Validacion de integridad — duplicados, cobertura vs. registro completo
+
+Antes de confiar en cualquier ranking de abajo, confirma que el CSV no tiene sorpresas:
+
+- **Filas duplicadas exactas** (mismo `experiment` + `method` + `n_views` repetido).
+- **Contaminacion cruzada**: un mismo `experiment` id apareciendo en ambos `axis_sym` y `plane_sym`.
+- **Cobertura vs. el registro completo**: 12 prompts axiales + 12 planares (`MolmoPointing/Experiments.md`),
+  Flow B/C solo sobre el prompt "ganador" de cada tipo (`EXPERIMENT_ROADMAP.md`), y 7 variantes de
+  post-procesamiento por experimento base (`baseline`, `cluster`, `hdbscan_ms{2,3,5}`, `p3`, `p5` —
+  ver `Mapping/run_all_postprocessing.py`). Total esperado: **28 experimentos base x 7 variantes = 196**.
+- **Filas por experimento**: cada uno deberia tener 16 filas (4 metodos x 4 n_views). Los que tengan
+  menos se explican automaticamente cruzando con `point_mode` — ver nota mas abajo.
+- Se opera sobre `axis_df_all` / `plane_df_all` (sin el filtro `MIN_N_VIEWS`), porque esto valida el
+  CSV crudo, no la vista filtrada para ranking.
+
+===== CELL 8 (id=d6f22837, type=code) =====
+EXPECTED_PATCH_SIZES = {1, 3, 5}
+EXPECTED_CLUSTERING = {"none", "greedy", "hdbscan_ms2", "hdbscan_ms3", "hdbscan_ms5"}
+EXPECTED_METHODS = {"svd", "ransac_svd", "svd_sde", "ransac_svd_sde"}
+EXPECTED_NVIEWS = {1, 6, 14, 26}
+STANDARD_N_VARIANTS = 7  # baseline + cluster + hdbscan_ms{2,3,5} + p3 + p5
+
+
+def registered_prompts(symmetry_prefix: str) -> set[str]:
+    return {p for p in POINT_MODE if p.startswith(symmetry_prefix)}
+
+
+def find_winner(df_all: pd.DataFrame) -> str | None:
+    """El prompt que corrio flow B/C es, por diseño del roadmap, el 'ganador'."""
+    winners = df_all.loc[df_all["flow"].isin(["B", "C"]), "base_prompt"].unique()
+    return sorted(winners)[0] if len(winners) else None
+
+
+def validate_symmetry_type(df_all: pd.DataFrame, symmetry_label: str, symmetry_prefix: str) -> dict:
+    print(f"\n{'=' * 90}\nVALIDACION — {symmetry_label}\n{'=' * 90}")
+    issues = []
+
+    # 1. Duplicados exactos ---------------------------------------------------------------
+    dup_key = ["experiment", "method", "n_views"]
+    dupes = df_all[df_all.duplicated(subset=dup_key, keep=False)].sort_values(dup_key)
+    print(f"\n[1] Filas duplicadas exactas (experiment+method+n_views): {len(dupes)}")
+    if len(dupes):
+        issues.append(f"{len(dupes)} filas duplicadas")
+        display(dupes[dup_key + ["n_objects", "auc_angular"]])
+
+    # 2. n_total consistente (siempre deberia ser el mismo N del dataset) -------------------
+    n_total_vals = df_all["n_total"].unique()
+    print(f"\n[2] Valores distintos de n_total encontrados: {sorted(n_total_vals)}")
+    if len(n_total_vals) > 1:
+        issues.append(f"n_total inconsistente: {sorted(n_total_vals)}")
+
+    # 3. Cobertura vs. registro completo -----------------------------------------------------
+    registered = registered_prompts(symmetry_prefix)
+    found_flow_a = set(df_all.loc[df_all["flow"] == "A", "base_prompt"].unique())
+    missing_prompts = registered - found_flow_a
+    extra_prompts = found_flow_a - registered
+    winner = find_winner(df_all)
+    print(f"\n[3] Prompts registrados: {len(registered)} | encontrados (Flow A): {len(found_flow_a)}")
+    print(f"    Faltantes: {sorted(missing_prompts) or '(ninguno)'}")
+    if extra_prompts:
+        print(f"    NO registrados pero presentes (revisar si es un prompt nuevo sin documentar): {sorted(extra_prompts)}")
+        issues.append(f"prompts no registrados: {sorted(extra_prompts)}")
+    if missing_prompts:
+        issues.append(f"{len(missing_prompts)} prompts sin post-procesar: {sorted(missing_prompts)}")
+    print(f"    Prompt 'ganador' (unico con Flow B/C): {winner}")
+    flows_by_prompt = df_all.groupby("base_prompt")["flow"].apply(lambda s: sorted(s.unique()))
+    non_winner_with_bc = flows_by_prompt[
+        (flows_by_prompt.index != winner) & flows_by_prompt.apply(lambda fl: "B" in fl or "C" in fl)
+    ]
+    if len(non_winner_with_bc):
+        print(f"    [!] Flow B/C fuera del prompt ganador (inesperado): {non_winner_with_bc.to_dict()}")
+        issues.append("Flow B/C corrido fuera del prompt ganador")
+
+    # 4. Variantes por (base_prompt, flow) — se espera 7, historicamente hay 15 (grid completo) --
+    variants = (
+        df_all.drop_duplicates("experiment")
+        .groupby(["base_prompt", "flow"])["experiment"].nunique()
+        .reset_index(name="n_variantes")
+    )
+    off_standard = variants[~variants["n_variantes"].isin([STANDARD_N_VARIANTS, 15])]
+    over_grid = variants[variants["n_variantes"] == 15]
+    print(f"\n[4] Combinaciones (prompt, flow): {len(variants)} — variantes esperadas por combinacion: {STANDARD_N_VARIANTS}")
+    if len(over_grid):
+        print(f"    Con grid completo (15, clustering x patch cruzado — mas de lo minimo, no es error):")
+        display(over_grid)
+    if len(off_standard):
+        print(f"    [!] Con conteo de variantes NI 7 NI 15 (revisar):")
+        display(off_standard)
+        issues.append(f"{len(off_standard)} combinaciones (prompt,flow) con numero de variantes atipico")
+    total_variantes_encontradas = variants["n_variantes"].sum()
+    print(f"    Total experimentos encontrados: {total_variantes_encontradas}")
+
+    # 5. Filas por experimento — 16 esperadas (4 metodos x 4 n_views), 12 si es midpoint --------
+    rows_per_exp = df_all.groupby(["experiment", "point_mode"]).size().reset_index(name="n_rows")
+    rows_per_exp["n_rows_esperadas"] = rows_per_exp["point_mode"].apply(lambda pm: 12 if pm == "midpoint" else 16)
+    unexplained = rows_per_exp[rows_per_exp["n_rows"] != rows_per_exp["n_rows_esperadas"]]
+    print(f"\n[5] Experimentos con filas != lo esperado segun point_mode (16 normal, 12 si midpoint): {len(unexplained)}")
+    if len(unexplained):
+        display(unexplained.sort_values("n_rows"))
+        issues.append(f"{len(unexplained)} experimentos con conteo de filas no explicado por point_mode")
+    n_midpoint_capped = (rows_per_exp["point_mode"] == "midpoint").sum()
+    print(f"    (De referencia: {n_midpoint_capped} experimentos son 'midpoint' -> 12 filas es su maximo posible, no un error)")
+
+    # Veredicto ------------------------------------------------------------------------------
+    print(f"\n{'-' * 90}")
+    if issues:
+        print(f"VEREDICTO {symmetry_label}: revisar {len(issues)} hallazgo(s):")
+        for i in issues:
+            print(f"  - {i}")
+    else:
+        print(f"VEREDICTO {symmetry_label}: sin duplicados, sin contaminacion cruzada, cobertura completa "
+              f"del registro, y todas las filas faltantes se explican por la limitacion estructural de "
+              f"n_views=1 en prompts midpoint. Datos limpios.")
+    return {"issues": issues, "winner": winner, "missing_prompts": missing_prompts}
+
+
+_axis_validation = validate_symmetry_type(axis_df_all, "axis_sym", "axis_")
+_plane_validation = validate_symmetry_type(plane_df_all, "plane_sym", "plane_")
+
+# Contaminacion cruzada entre symmetry_type (mismo experiment id en axis Y plane)
+_cross = set(axis_df_all["experiment"]) & set(plane_df_all["experiment"])
+print(f"\n{'=' * 90}\nExperiment ids que aparecen en AMBOS symmetry_type (deberia ser 0): {len(_cross)}")
+if _cross:
+    print(f"  {sorted(_cross)}")
+
+===== CELL 9 (id=dbafcaa3, type=markdown) =====
+## 2. Inventario — que prompts, flows y variantes quedaron documentados
+
+===== CELL 10 (id=a64edaf9, type=code) =====
+def inventory(df: pd.DataFrame) -> pd.DataFrame:
+    inv = (
+        df.drop_duplicates("experiment")[
+            ["experiment", "base_prompt", "prompt_family", "flow", "clustering", "patch_size", "prompt_description"]
+        ]
+        .sort_values(["base_prompt", "flow", "clustering", "patch_size"])
+        .reset_index(drop=True)
+    )
+    return inv
+
+
+axis_inventory = inventory(axis_df)
+plane_inventory = inventory(plane_df)
+
+print("=== axis_sym: prompts base documentados ===")
+print(sorted(axis_inventory["base_prompt"].unique()))
+print(f"\n=== axis_sym: inventario completo ({len(axis_inventory)} experimentos) ===")
+display(axis_inventory)
+
+===== CELL 11 (id=c220be4b, type=code) =====
+print("=== plane_sym: prompts base documentados ===")
+print(sorted(plane_inventory["base_prompt"].unique()))
+print(f"\n=== plane_sym: inventario completo ({len(plane_inventory)} experimentos) ===")
+display(plane_inventory)
+
+===== CELL 12 (id=9ef44927, type=code) =====
+def coverage(df: pd.DataFrame) -> pd.DataFrame:
+    '''Por prompt base: cuantos flows, metodos de clustering y patch-sizes se corrieron.'''
+    inv = inventory(df)
+    return (
+        inv.groupby(["base_prompt", "prompt_family"])
+        .agg(
+            n_variantes=("experiment", "nunique"),
+            flows=("flow", lambda s: sorted(s.unique())),
+            clustering=("clustering", lambda s: sorted(s.unique())),
+            patch_sizes=("patch_size", lambda s: sorted(s.unique())),
+        )
+        .sort_index()
+    )
+
+
+print("=== axis_sym: cobertura por prompt base ===")
+display(coverage(axis_df))
+print("\n=== plane_sym: cobertura por prompt base ===")
+display(coverage(plane_df))
+
+===== CELL 13 (id=44941839, type=markdown) =====
+## 3. Metricas por tipo de simetria
+
+Un solo diccionario `{etiqueta legible: (columna, ascending)}` por tipo de simetria alimenta
+**todas** las tablas de las secciones 4-8. `ascending=True` significa "menor es mejor" (errores);
+`ascending=False` significa "mayor es mejor" (AUC, precision).
+
+`plane_sym` trae ademas las metricas SDE (surface distance error: `sde_mean`, `auc_sde`) que
+`axis_sym` no tiene.
+
+**Funciones de ranking:**
+- `best_per_experiment(df, metric, ascending)`: para cada `experiment` (prompt+flow+clustering+patch),
+  la fila (method+n_views) que optimiza esa metrica.
+- `best_per_prompt(df, metric, ascending)`: igual, pero agregando sobre TODAS las variantes de un
+  mismo `base_prompt` — responde "dandole a cada prompt su mejor configuracion posible, cual gana".
+- `combined_rank(df, metrics)`: suma de rangos entre varias metricas (empate ponderado).
+
+**Cuidado con `n_views=1`**: en los datos revisados, `n_views=1` promedia solo ~2 puntos por
+objeto (columna `n_points_mean`) antes de ajustar la simetria — con tan poca evidencia el
+`auc_angular` puede salir artificialmente alto/inestable. Todas las tablas muestran `n_views`,
+`n_objects` y `acceptance_rate` junto al resultado para poder juzgarlo; si prefieres excluir esas
+filas de entrada, sube `MIN_N_VIEWS` en la celda de configuracion (p.ej. a 6).
+
+===== CELL 14 (id=7c733f70, type=code) =====
+# etiqueta legible -> (columna del CSV, ascending)
+AXIS_METRICS: dict[str, tuple[str, bool]] = {
+    "AUC angular": ("auc_angular", False),
+    "Error angular medio (deg)": ("angular_error_mean", True),
+    "Precision @5deg": ("precision_5deg", False),
+    "Precision @10deg": ("precision_10deg", False),
+    "Error traslacion medio": ("translation_error_mean", True),
+}
+
+PLANE_METRICS: dict[str, tuple[str, bool]] = {
+    **AXIS_METRICS,
+    "SDE medio": ("sde_mean", True),
+    "AUC SDE": ("auc_sde", False),
+}
+
+CONTEXT_COLS = [
+    "experiment", "base_prompt", "prompt_family", "flow", "clustering", "patch_size",
+    "method", "n_views", "n_objects", "acceptance_rate",
+]
+
+
+def best_per_experiment(df: pd.DataFrame, metric: str, ascending: bool) -> pd.DataFrame:
+    idx = df.groupby("experiment")[metric].idxmin() if ascending else df.groupby("experiment")[metric].idxmax()
+    cols = CONTEXT_COLS + [metric]
+    return df.loc[idx, cols].sort_values(metric, ascending=ascending).reset_index(drop=True)
+
+
+def best_per_prompt(df: pd.DataFrame, metric: str, ascending: bool) -> pd.DataFrame:
+    idx = df.groupby("base_prompt")[metric].idxmin() if ascending else df.groupby("base_prompt")[metric].idxmax()
+    cols = ["experiment", "base_prompt", "prompt_family", "prompt_description"] + CONTEXT_COLS[3:] + [metric]
+    return df.loc[idx, cols].sort_values(metric, ascending=ascending).reset_index(drop=True)
+
+
+def combined_rank(df: pd.DataFrame, metrics: list[tuple[str, bool]]) -> pd.DataFrame:
+    d = df.copy()
+    rank_cols = []
+    for metric, ascending in metrics:
+        col = f"_rank_{metric}"
+        d[col] = d[metric].rank(ascending=ascending, method="min")
+        rank_cols.append(col)
+    d["combined_rank"] = d[rank_cols].sum(axis=1)
+
+    best_idx = d.groupby("experiment")["combined_rank"].idxmin()
+    metric_cols = [m for m, _ in metrics]
+    cols = CONTEXT_COLS + metric_cols + ["combined_rank"]
+    return d.loc[best_idx, cols].sort_values("combined_rank").reset_index(drop=True)
+
+===== CELL 15 (id=04b0f440, type=markdown) =====
+## 4. Resumen ejecutivo — mejor resultado global por metrica
+
+Una fila por metrica: el mejor resultado obtenido en **todo** el grid de experimentos, listo
+para citar en la seccion de Resultados de la tesis.
+
+===== CELL 16 (id=b4a08d72, type=code) =====
+def global_best_summary(df: pd.DataFrame, metrics: dict[str, tuple[str, bool]]) -> pd.DataFrame:
+    rows = []
+    for label, (metric, ascending) in metrics.items():
+        best = best_per_experiment(df, metric, ascending).iloc[0]
+        rows.append(
+            {
+                "metrica": label,
+                "valor": best[metric],
+                "experiment": best["experiment"],
+                "prompt": best["base_prompt"],
+                "flow": best["flow"],
+                "clustering": best["clustering"],
+                "patch_size": best["patch_size"],
+                "method": best["method"],
+                "n_views": best["n_views"],
+                "n_objects": best["n_objects"],
+                "acceptance_rate": round(best["acceptance_rate"], 3),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+print("=== axis_sym - resumen ejecutivo (mejor resultado global por metrica) ===")
+display(global_best_summary(axis_df, AXIS_METRICS))
+
+print("\n=== plane_sym - resumen ejecutivo (mejor resultado global por metrica) ===")
+display(global_best_summary(plane_df, PLANE_METRICS))
+
+===== CELL 17 (id=f7f3fae1, type=markdown) =====
+## 5. Ranking por experimento
+
+Para cada `experiment` (prompt+flow+clustering+patch), su mejor fila (method+n_views), ordenado
+por cada metrica.
+
+===== CELL 18 (id=9c5b972b, type=code) =====
+def show_rankings_by_experiment(df: pd.DataFrame, metrics: dict[str, tuple[str, bool]], symmetry_label: str, top_n: int = TOP_N) -> None:
+    for label, (metric, ascending) in metrics.items():
+        direction = "menor a mayor" if ascending else "mayor a menor"
+        print(f"=== {symmetry_label} - ranking por experimento - {label} [{metric}] ({direction}) - top {top_n} ===")
+        display(best_per_experiment(df, metric, ascending).head(top_n))
+        print()
+
+
+show_rankings_by_experiment(axis_df, AXIS_METRICS, "axis_sym")
+
+===== CELL 19 (id=99dc68ce, type=code) =====
+show_rankings_by_experiment(plane_df, PLANE_METRICS, "plane_sym")
+
+===== CELL 20 (id=1b74a8ce, type=markdown) =====
+## 6. Ranking por tipo de prompt
+
+Igual que la seccion anterior, pero agregando sobre **todas** las variantes (flow/clustering/patch)
+de un mismo `base_prompt`: responde "que diseño de prompt funciona mejor" independiente del
+post-procesamiento elegido. La tabla pivot final compara todos los prompts lado a lado, una
+columna por metrica.
+
+===== CELL 21 (id=1cd70209, type=code) =====
+def show_rankings_by_prompt(df: pd.DataFrame, metrics: dict[str, tuple[str, bool]], symmetry_label: str) -> None:
+    for label, (metric, ascending) in metrics.items():
+        direction = "menor a mayor" if ascending else "mayor a menor"
+        print(f"=== {symmetry_label} - mejor PROMPT por {label} [{metric}] ({direction}) ===")
+        display(best_per_prompt(df, metric, ascending))
+        print()
+
+
+show_rankings_by_prompt(axis_df, AXIS_METRICS, "axis_sym")
+
+===== CELL 22 (id=d5ed2e0d, type=code) =====
+show_rankings_by_prompt(plane_df, PLANE_METRICS, "plane_sym")
+
+===== CELL 23 (id=31149b18, type=code) =====
+def prompt_metric_pivot(df: pd.DataFrame, metrics: dict[str, tuple[str, bool]]) -> pd.DataFrame:
+    '''Vista compacta: una fila por prompt, una columna por metrica, con su mejor valor alcanzable.'''
+    cols = {}
+    for label, (metric, ascending) in metrics.items():
+        cols[label] = best_per_prompt(df, metric, ascending).set_index("base_prompt")[metric]
+    return pd.DataFrame(cols).sort_index()
+
+
+print("=== axis_sym - pivot prompt x metrica (mejor valor alcanzable por prompt) ===")
+display(prompt_metric_pivot(axis_df, AXIS_METRICS))
+
+print("\n=== plane_sym - pivot prompt x metrica ===")
+display(prompt_metric_pivot(plane_df, PLANE_METRICS))
+
+===== CELL 24 (id=6a411083, type=markdown) =====
+## 7. Ablation de post-procesamiento — clustering, patch-size, metodo, point-mode, flow
+
+Aisla el efecto de cada eleccion de post-procesamiento, colapsando sobre todos los prompts:
+para cada valor (p.ej. `clustering="greedy"`), el mejor y el promedio de cada metrica entre
+todas las filas que caen en ese grupo.
+
+**Ejes limpios (no confundidos con la eleccion de prompt)**: `clustering`, `patch_size`,
+`method` y `point_mode` — cada prompt pasa por todas las variantes de estos ejes, asi que
+comparar entre sus valores aisla el efecto real del post-procesamiento.
+
+**Cuidado con `flow`**: solo `axis_v05_1` y `plane_v04_1` corrieron variantes B/C (ver seccion 2
+de cobertura) — la tabla de flow esta confundida con la eleccion de prompt, no es un efecto
+aislado como los demas.
+
+===== CELL 25 (id=7e672ec4, type=code) =====
+def ablation_table(df: pd.DataFrame, group_col: str, metrics: dict[str, tuple[str, bool]]) -> pd.DataFrame:
+    agg = {}
+    for label, (metric, ascending) in metrics.items():
+        g = df.groupby(group_col)[metric]
+        agg[f"{label} (mejor)"] = g.min() if ascending else g.max()
+        agg[f"{label} (promedio)"] = g.mean()
+    return pd.DataFrame(agg).sort_index()
+
+
+print("=== axis_sym - efecto del CLUSTERING ===")
+display(ablation_table(axis_df, "clustering", AXIS_METRICS))
+
+print("\n=== axis_sym - efecto del PATCH_SIZE ===")
+display(ablation_table(axis_df, "patch_size", AXIS_METRICS))
+
+print("\n=== axis_sym - efecto del METODO DE AJUSTE ===")
+display(ablation_table(axis_df, "method", AXIS_METRICS))
+
+print("\n=== axis_sym - efecto del POINT_MODE (independent vs midpoint) ===")
+display(ablation_table(axis_df, "point_mode", AXIS_METRICS))
+
+print("\n=== axis_sym - efecto del FLOW (confundido con prompt, solo axis_v05_1 corre B/C) ===")
+display(ablation_table(axis_df, "flow", AXIS_METRICS))
+
+===== CELL 26 (id=846e7ee3, type=code) =====
+print("=== plane_sym - efecto del CLUSTERING ===")
+display(ablation_table(plane_df, "clustering", PLANE_METRICS))
+
+print("\n=== plane_sym - efecto del PATCH_SIZE ===")
+display(ablation_table(plane_df, "patch_size", PLANE_METRICS))
+
+print("\n=== plane_sym - efecto del METODO DE AJUSTE ===")
+display(ablation_table(plane_df, "method", PLANE_METRICS))
+
+print("\n=== plane_sym - efecto del POINT_MODE (independent vs midpoint) ===")
+display(ablation_table(plane_df, "point_mode", PLANE_METRICS))
+
+print("\n=== plane_sym - efecto del FLOW (confundido con prompt, solo plane_v04_1 corre B/C) ===")
+display(ablation_table(plane_df, "flow", PLANE_METRICS))
+
+===== CELL 27 (id=7a9ce76f, type=markdown) =====
+## 7b. Visualizacion del ablation
+
+Un grafico de barras por eje (clustering, patch-size, metodo de ajuste), usando siempre
+`auc_angular` como metrica cabecera por ser la unica comun a `axis_sym` y `plane_sym` — es
+"el mejor alcanzado" (max) por cada valor del eje, colapsando sobre todos los prompts.
+Paleta validada (colorblind-safe) tomada del skill de dataviz: una sola serie -> un solo hue
+(azul), sin necesidad de leyenda.
+
+===== CELL 28 (id=c1fe81ee, type=code) =====
+import matplotlib.pyplot as plt
+
+# Paleta validada (references/palette.md del skill de dataviz) — modo claro, slots categoricos
+# en orden fijo (nunca ciclados) mas los tokens de "chrome" (grid/ejes/texto).
+PALETTE = {
+    "blue": "#2a78d6", "orange": "#eb6834", "aqua": "#1baf7a", "yellow": "#eda100",
+    "magenta": "#e87ba4", "green": "#008300", "violet": "#4a3aa7", "red": "#e34948",
+}
+CHROME = {
+    "primary_ink": "#0b0b0b", "secondary_ink": "#52514e", "muted": "#898781",
+    "gridline": "#e1e0d9", "baseline": "#c3c2b7", "surface": "#fcfcfb",
+}
+
+
+def _style_ax(ax, ylabel: str) -> None:
+    ax.set_facecolor(CHROME["surface"])
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    for side in ("left", "bottom"):
+        ax.spines[side].set_color(CHROME["baseline"])
+    ax.tick_params(colors=CHROME["muted"], labelsize=9)
+    ax.yaxis.grid(True, color=CHROME["gridline"], linewidth=1, zorder=0)
+    ax.set_axisbelow(True)
+    ax.set_ylabel(ylabel, color=CHROME["secondary_ink"], fontsize=10)
+    ax.set_xlabel("")
+
+
+def plot_ablation_bar(df: pd.DataFrame, group_col: str, metric: str, ascending: bool, title: str) -> None:
+    g = df.groupby(group_col)[metric]
+    best = (g.min() if ascending else g.max()).sort_values(ascending=ascending)
+    fig, ax = plt.subplots(figsize=(max(4, 0.9 * len(best)), 3.2))
+    ax.bar(best.index.astype(str), best.values, color=PALETTE["blue"], width=0.6, zorder=3)
+    _style_ax(ax, ylabel=metric)
+    ax.set_title(title, color=CHROME["primary_ink"], fontsize=11, loc="left")
+    plt.setp(ax.get_xticklabels(), rotation=25, ha="right")
+    fig.tight_layout()
+    plt.show()
+
+
+for label, df_, sym in [("axis_sym", axis_df, "axis"), ("plane_sym", plane_df, "plane")]:
+    plot_ablation_bar(df_, "clustering", "auc_angular", False, f"{label} — mejor AUC angular por CLUSTERING")
+    plot_ablation_bar(df_, "patch_size", "auc_angular", False, f"{label} — mejor AUC angular por PATCH-SIZE")
+    plot_ablation_bar(df_, "method", "auc_angular", False, f"{label} — mejor AUC angular por METODO DE AJUSTE")
+
+===== CELL 29 (id=02d237e8, type=markdown) =====
+## 7c. Efecto de n_views — tendencia, v0 vs v1
+
+¿Mas vistas mejora la precision? Promedio de `auc_angular` por `n_views`, separado por
+`prompt_family` (dos series -> dos hues categoricos con leyenda, nunca color como unico
+indicador). Un eje Y solamente (nunca doble eje).
+
+===== CELL 30 (id=cb4c7959, type=code) =====
+def plot_nviews_trend(df: pd.DataFrame, metric: str, title: str) -> None:
+    fig, ax = plt.subplots(figsize=(5.5, 3.4))
+    series_colors = [PALETTE["blue"], PALETTE["orange"]]
+    for color, (family, sub) in zip(series_colors, sorted(df.groupby("prompt_family"))):
+        trend = sub.groupby("n_views")[metric].mean().sort_index()
+        ax.plot(trend.index.astype(str), trend.values, marker="o", markersize=6,
+                linewidth=2, color=color, label=family, zorder=3)
+    _style_ax(ax, ylabel=metric)
+    ax.set_xlabel("n_views", color=CHROME["secondary_ink"], fontsize=10)
+    ax.set_title(title, color=CHROME["primary_ink"], fontsize=11, loc="left")
+    ax.legend(frameon=False, labelcolor=CHROME["secondary_ink"], fontsize=9, loc="best")
+    fig.tight_layout()
+    plt.show()
+
+
+plot_nviews_trend(axis_df, "auc_angular", "axis_sym — AUC angular promedio por n_views")
+plot_nviews_trend(plane_df, "auc_angular", "plane_sym — AUC angular promedio por n_views")
+
+print("=== axis_sym - auc_angular promedio por n_views x prompt_family (tabla) ===")
+display(axis_df.groupby(["prompt_family", "n_views"])["auc_angular"].mean().unstack("n_views"))
+print("\n=== plane_sym - auc_angular promedio por n_views x prompt_family (tabla) ===")
+display(plane_df.groupby(["prompt_family", "n_views"])["auc_angular"].mean().unstack("n_views"))
+
+===== CELL 31 (id=a9313305, type=markdown) =====
+## 8. Ranking conjunto — axis_sym / plane_sym
+
+Combina dos metricas por suma de rangos (rango 1 = mejor en cada metrica, menor suma = mejor
+combinado). Es un empate ponderado 50/50; ajusta la lista de metricas si quieres pesar una mas
+que la otra.
+
+===== CELL 32 (id=8a6d797b, type=code) =====
+print(f"=== axis_sym - ranking CONJUNTO (auc_angular desc + angular_error_mean asc) - top {TOP_N} ===")
+axis_combined = combined_rank(axis_df, [("auc_angular", False), ("angular_error_mean", True)])
+display(axis_combined.head(TOP_N))
+
+===== CELL 33 (id=bbda3dd6, type=code) =====
+print(f"=== plane_sym - ranking CONJUNTO (auc_angular desc + sde_mean asc) - top {TOP_N} ===")
+plane_combined = combined_rank(plane_df, [("auc_angular", False), ("sde_mean", True)])
+display(plane_combined.head(TOP_N))
+
+===== CELL 34 (id=fc4824b4, type=markdown) =====
+## 9. Guardar los rankings
+
+Exporta las tablas completas (no solo el top N) a `results/experiments_.../rankings/`: un
+ranking por experimento y un ranking por prompt por cada metrica, mas los dos rankings
+conjuntos.
+
+===== CELL 35 (id=caf1a6e2, type=code) =====
+OUT_DIR = EXPERIMENTS_DIR / "rankings"
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+for label, (metric, ascending) in AXIS_METRICS.items():
+    best_per_experiment(axis_df, metric, ascending).to_csv(OUT_DIR / f"axis_sym_ranking_{metric}.csv", index=False)
+    best_per_prompt(axis_df, metric, ascending).to_csv(OUT_DIR / f"axis_sym_ranking_by_prompt_{metric}.csv", index=False)
+
+for label, (metric, ascending) in PLANE_METRICS.items():
+    best_per_experiment(plane_df, metric, ascending).to_csv(OUT_DIR / f"plane_sym_ranking_{metric}.csv", index=False)
+    best_per_prompt(plane_df, metric, ascending).to_csv(OUT_DIR / f"plane_sym_ranking_by_prompt_{metric}.csv", index=False)
+
+axis_combined.to_csv(OUT_DIR / "axis_sym_ranking_combined.csv", index=False)
+plane_combined.to_csv(OUT_DIR / "plane_sym_ranking_combined.csv", index=False)
+
+# Ablation (clustering, patch_size, method, point_mode, flow) por eje limpio
+for group_col in ["clustering", "patch_size", "method", "point_mode", "flow"]:
+    ablation_table(axis_df, group_col, AXIS_METRICS).to_csv(OUT_DIR / f"axis_sym_ablation_{group_col}.csv")
+    ablation_table(plane_df, group_col, PLANE_METRICS).to_csv(OUT_DIR / f"plane_sym_ablation_{group_col}.csv")
+
+# Reporte de validacion de integridad (hallazgos de la seccion 1b), para dejar constancia
+# de que corte de datos se valido y con que resultado.
+with open(OUT_DIR / "validation_report.txt", "w", encoding="utf-8") as f:
+    f.write(f"Validado: {EXPERIMENTS_DIR}\n\n")
+    for label, v in [("axis_sym", _axis_validation), ("plane_sym", _plane_validation)]:
+        f.write(f"{label} — ganador (Flow B/C): {v['winner']}\n")
+        f.write(f"{label} — prompts sin post-procesar: {sorted(v['missing_prompts']) or 'ninguno'}\n")
+        f.write(f"{label} — hallazgos: {v['issues'] or 'ninguno (datos limpios)'}\n\n")
+    f.write(f"Experiment ids en ambos symmetry_type (contaminacion cruzada): {sorted(_cross) or 'ninguno'}\n")
+
+print(f"Guardado en: {OUT_DIR}")
+
+===== CELL 36 (id=f9357ab1, type=markdown) =====
+## Anexo — Reporte de errores en logs de ejecucion
+
+Fuera del alcance del ranking de metricas: revisa `log_postprocesos.txt` /
+`log_postprocesos_full.txt` en la raiz del repo en busca de lineas con palabras clave de
+error/fallo, como reporte rapido de que tan limpia corrio la ultima tanda de post-procesamiento.
+
+===== CELL 37 (id=ed2b8d75, type=code) =====
+from pathlib import Path
+
+LOG_FILES = [
+    "log_postprocesos.txt",
+    "log_postprocesos_full.txt",
+]
+
+# Palabras clave tipicas de error/fallo (ajusta segun lo que uses en tus scripts)
+ERROR_KEYWORDS = [
+    "error", "Error", "ERROR",
+    "traceback", "Traceback",
+    "exception", "Exception",
+    "failed", "Failed", "FAILED",
+    "fatal", "Fatal", "FATAL",
+    "critical", "CRITICAL",
+    "not found", "NotFound",
+    "raise ",
+]
+
+for log_path in LOG_FILES:
+    path = Path(log_path)
+    if not path.exists():
+        print(f"[!] No encontrado: {log_path}")
+        continue
+
+    print(f"\n{'='*80}\n{log_path}\n{'='*80}")
+    matches = 0
+    with path.open("r", encoding="utf-8", errors="replace") as f:
+        for lineno, line in enumerate(f, start=1):
+            if any(kw in line for kw in ERROR_KEYWORDS):
+                print(f"L{lineno}: {line.rstrip()}")
+                matches += 1
+
+    print(f"\n--> Total de lineas con posibles errores en {log_path}: {matches}")
+
+===== CELL 38 (id=a68b447d, type=code) =====
+
