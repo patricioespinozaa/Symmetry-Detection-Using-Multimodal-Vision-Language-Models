@@ -215,7 +215,10 @@ def auc_from_errors(errors: list[float],
     thresholds = np.linspace(0, max_error, n_steps + 1)
     arr        = np.array(errors)
     precisions = [(arr < t).mean() for t in thresholds]
-    return float(np.trapezoid(precisions, thresholds) / max_error)
+    # np.trapezoid solo existe desde NumPy 2.0; np.trapz es su predecesor
+    # (deprecado pero presente en 1.x). Usamos el que esté disponible.
+    trapz_fn = getattr(np, "trapezoid", None) or np.trapz
+    return float(trapz_fn(precisions, thresholds) / max_error)
 
 
 # ── Per-object evaluation ─────────────────────────────────────────────────────
