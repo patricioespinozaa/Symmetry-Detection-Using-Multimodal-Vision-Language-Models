@@ -46,6 +46,18 @@ para **todos** los ~220 experimentos del sweep (24 prompts × Flow A + 4 Flow B/
 | **Manejo de objetos sin predicción válida** | Se imputa `angular_error = 90°` (peor caso) — así los objetos donde Molmo no produjo puntos usables penalizan las métricas en vez de excluirse silenciosamente | `evaluate.py::compute_summary`, docstring líneas 326-328 |
 | **Manejo de múltiples planos GT (solo plane_sym)** | Se toma el **mejor match** (menor error angular) entre todos los planos GT del objeto — **no** hay concepto de recall sobre el conjunto completo de simetrías; no se penaliza por los GT no encontrados | `evaluate.py::evaluate_plane` (líneas 244-269), campo `n_true_planes` guardado para referencia |
 
+> **Actualización (ver `docs/actualizacion_metricas.md` para el detalle completo)**:
+> `evaluate.py` tenía además una fórmula propia y separada de "SDE"
+> (`symmetry_distance_error`, poblaba `sde`/`sde_mean`/`auc_sde`/
+> `precision_sde_*` en el CSV de resumen, solo para `plane_sym`) que resultó
+> **no ser una SDE válida** — medía el doble de la distancia promedio al
+> plano predicho, sin verificar que el punto reflejado cayera sobre
+> superficie real. Se eliminó por completo (no estaba documentada en esta
+> sección, que siempre describió solo la SDE *interna* de abajo). Desde el
+> refactor, `evaluate.py` no reporta ningún "SDE propio" — el único SDE que
+> reporta es `SDE_ref` (§3), ahora simétrico entre `axis_sym` y `plane_sym`
+> (antes solo se acumulaba para plano).
+
 ### 2.2 SDE propio (Symmetry Distance Error) — NO usa ground truth
 
 Autoconsistencia geométrica: refleja puntos de la malla a través del eje/plano
@@ -69,18 +81,25 @@ la variante `_sde` únicamente le agrega este campo, no re-ajusta nada
 
 ---
 
-## 3. Métricas de referencia — `Mapping/reference_metrics.py`
+## 3. Métricas de referencia — `Mapping/evaluate.py` (`--with-reference-metrics` / `--all`)
 
-Script standalone (no modifica el pipeline existente, no re-ejecuta
-`map_to_3d`/`estimate_symmetry`) que **re-puntúa** predicciones ya guardadas en
+**Antes vivían en un script separado, `Mapping/reference_metrics.py`** —
+fusionado dentro de `evaluate.py` (ver `docs/actualizacion_metricas.md`),
+mismos nombres de función (`calplaneloss`, `calaxisloss`, `f1_match_counts`,
+etc.), mismas fórmulas exactas, sin cambios de comportamiento salvo la
+adición de `f1_match_counts_hungarian` (§3.2). No re-ejecuta
+`map_to_3d`/`estimate_symmetry` — **re-puntúa** predicciones ya guardadas en
 `predicted_symmetry_<EXP>.json`, calculando métricas con la **misma fórmula
 exacta** que usa el repositorio de referencia — deliberadamente distinta a la
 sección 2.2, para poder comparar contra ese trabajo externo o contra la
-convención general de la literatura.
+convención general de la literatura. Es opt-in (`--with-reference-metrics`
+para una corrida normal, o `--all`/`--experiment-ids` para el modo bulk sobre
+muchas a la vez) porque necesita `gpytoolbox` y es notoriamente más caro que
+el resto de las métricas (ver §5.5).
 
 ### 3.1 SDE de referencia (`SDE_ref`) — plane y axis
 
-| Aspecto | Referencia (`reference_metrics.py`) | Diferencia vs. pipeline propio (§2.2) |
+| Aspecto | Referencia (`evaluate.py`) | Diferencia vs. SDE interno de `estimate_symmetry.py` (§2.2) |
 |---|---|---|
 | Muestreo | 1000 puntos de la **superficie** (área-ponderado, `gpy.random_points_on_mesh`) | Vértices → superficie |
 | Distancia | A la **malla triangulada real** (árbol AABB, `gpy.squared_distance`) | Vecino-más-cercano-en-muestra → superficie real |
