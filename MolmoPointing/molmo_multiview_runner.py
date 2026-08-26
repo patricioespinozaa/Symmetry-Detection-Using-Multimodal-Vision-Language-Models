@@ -526,7 +526,16 @@ def augment_prompt_with_description(base_prompt: str, description: str) -> str:
     )
 
 
-MAX_POINTS_PER_IMAGE = 3   # hard cap on points/image for Flow C's main pointing call
+FLOW_C_POINTS_PER_IMAGE = 2   # exact point count/image for Flow C's main pointing call --
+                              # matches the geometric minimum the no-mesh triangulation
+                              # needs per view (2 points -> one interpretation plane; see
+                              # docs/pipeline_sin_malla.md S3.1 and
+                              # docs/implementacion_pipeline_sin_malla.md). Was previously
+                              # "at most 3, fewer OK", which let Molmo return 0-1 points/image
+                              # inconsistently once several images shared one call -- confirmed
+                              # empirically (axis_v05_1_flowC and plane_v04_1_flowC both
+                              # collapsed to 1 point/image at n_views>1), not just a theoretical
+                              # concern.
 
 
 def build_flow_c_prompts(
@@ -544,33 +553,46 @@ def build_flow_c_prompts(
     anti-degenerate rules).
 
     Unlike an earlier iteration of this design, points are NOT tracked by
-    persistent cross-view identity: obj_id here just enumerates however many
-    points (up to MAX_POINTS_PER_IMAGE) a given image independently returns
-    -- the model is not asked to "re-find" a specific named landmark, only
-    to locate points on the symmetry axis/plane using the description and
-    location hint as context. This is simpler and, per empirical testing,
-    more reliable: asking Molmo to track K named landmarks across many
-    views (in one batched multi-image call) was observed to degenerate into
-    mechanically evenly-spaced grid/line patterns of points and duplicated
-    coordinates instead of genuine per-point reasoning -- the same failure
-    mode noted for multi-point prompting in the ZeroKey paper. The IMPORTANT
-    RULES below explicitly target those observed failures.
+    persistent cross-view identity: obj_id here just enumerates the (always
+    exactly FLOW_C_POINTS_PER_IMAGE) points a given image independently
+    returns -- the model is not asked to "re-find" a specific named
+    landmark, only to locate points on the symmetry axis/plane using the
+    description and location hint as context. This is simpler and, per
+    empirical testing, more reliable: asking Molmo to track K named
+    landmarks across many views (in one batched multi-image call) was
+    observed to degenerate into mechanically evenly-spaced grid/line
+    patterns of points and duplicated coordinates instead of genuine
+    per-point reasoning -- the same failure mode noted for multi-point
+    prompting in the ZeroKey paper. The IMPORTANT RULES below explicitly
+    target those observed failures.
+
+    Point count fixed at exactly FLOW_C_POINTS_PER_IMAGE=2 (not "up to N,
+    fewer OK" as in an earlier version): with a flexible cap, Molmo
+    empirically collapsed to 1 point/image once several images shared a
+    single call, which is unusable for the no-mesh triangulation pipeline
+    (needs 2 points/view minimum to define an interpretation plane, for
+    both axis_sym and plane_sym -- see docs/pipeline_sin_malla.md S3.1/S3.2).
+    Downstream consumers should NOT assume the two points have fixed
+    semantic roles (e.g. "top"/"bottom") across views -- pick whichever pair
+    is most useful per algorithm (e.g. widest_pair() in
+    pipeline_common/triangulation.py), same as this function's docstring
+    already established for obj_id identity.
 
     Returns (prompt_single, prompt_multi).
     """
     label = "axis" if symmetry_type == "axis_sym" else "plane"
 
     if symmetry_type == "axis_sym":
-        task_single = "find points that lie ON the object's symmetry axis in THIS image"
-        task_multi  = "find points that lie ON the object's symmetry axis"
+        task_single = "find TWO points that lie ON the object's symmetry axis in THIS image"
+        task_multi  = "find TWO points that lie ON the object's symmetry axis"
         consistency = "The symmetry axis is the SAME across all views -- keep it consistent."
     else:
         task_single = (
-            "find points that lie ON the visible trace of the object's symmetry plane "
+            "find TWO points that lie ON the visible trace of the object's symmetry plane "
             "(the line/seam dividing it into two mirror halves) in THIS image"
         )
         task_multi = (
-            "find points that lie ON the visible trace of the object's symmetry plane "
+            "find TWO points that lie ON the visible trace of the object's symmetry plane "
             "(the line/seam dividing it into two mirror halves)"
         )
         consistency = "The symmetry plane is the SAME across all views -- keep it consistent."
@@ -584,13 +606,12 @@ def build_flow_c_prompts(
 
     anti_degenerate_rules = (
         f"IMPORTANT RULES:\n"
-        f"- Return AT MOST {MAX_POINTS_PER_IMAGE} points (fewer is fine if that's all you can "
-        f"confidently identify).\n"
-        f"- Every point MUST be independently reasoned from the object's visible geometry -- do "
-        f"NOT output a sequence of evenly-spaced points forming a line or grid pattern, and do "
-        f"NOT repeat the same (X, Y) coordinate for more than one point.\n"
-        f"- Do NOT invent points beyond what you can actually identify -- if you are unsure, "
-        f"return fewer points rather than guessing.\n"
+        f"- Return EXACTLY {FLOW_C_POINTS_PER_IMAGE} points -- not fewer, not more -- even if "
+        f"you are not fully confident; give your best two independent estimates.\n"
+        f"- The two points MUST be different from each other and as far apart as possible "
+        f"along the {label} -- do NOT repeat the same (X, Y) coordinate for both.\n"
+        f"- Each point MUST be independently reasoned from the object's visible geometry -- do "
+        f"NOT output evenly-spaced or grid-like coordinates.\n"
         f"- Do NOT force a point at the image center.\n"
     )
 
@@ -599,11 +620,11 @@ def build_flow_c_prompts(
         f"Your task: for EACH image below, {task_multi}, using the description and the "
         f"{label} location above as context. {consistency}\n\n"
         f"{anti_degenerate_rules}"
-        f"- Number the points 1, 2, 3 (at most) within each image -- these numbers do NOT need "
-        f"to refer to the same physical feature across different images, they just enumerate "
-        f"however many points that image has.\n\n"
+        f"- Number the two points 1 and 2 within each image -- these numbers do NOT need "
+        f"to refer to the same physical feature across different images, they just tell the "
+        f"two points of that image apart.\n\n"
         f"Output format (one entry per image, separated by semicolons):\n\n"
-        f'<points coords="1 1 X1 Y1 2 X2 Y2; 2 1 X1 Y1; 3 1 X1 Y1 2 X2 Y2 3 X3 Y3">\n\n'
+        f'<points coords="1 1 X1 Y1 2 X2 Y2; 2 1 X1 Y1 2 X2 Y2; 3 1 X1 Y1 2 X2 Y2">\n\n'
         f"Where each entry is: image_index obj_id X Y\n\n"
         f"Return ONLY the <points ...> block."
     )
@@ -614,7 +635,7 @@ def build_flow_c_prompts(
         f"context.\n\n"
         f"{anti_degenerate_rules}\n"
         f"Output ONLY:\n\n"
-        f'<points coords="1 1 X1 Y1 2 X2 Y2 3 X3 Y3">'
+        f'<points coords="1 1 X1 Y1 2 X2 Y2">'
     )
 
     return prompt_single, prompt_multi

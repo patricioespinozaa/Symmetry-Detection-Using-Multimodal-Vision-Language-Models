@@ -172,9 +172,13 @@ de 7, corridas antes de estandarizar el sweep a 7).
 **Scripts clave del repo** (todos en la raíz o en `Mapping/`):
 - `Mapping/run_all_postprocessing.py` — corre el sweep completo (post-Molmo),
   resumible, con limpieza automática de JSON corruptos.
-- `Mapping/reference_metrics.py` — re-puntúa predicciones ya ajustadas con
-  métricas de referencia externa (SDE/F1), soporta `--all` para descubrir y
-  correr todos los experimentos. Ver `docs/metricas_evaluacion.md`.
+- `Mapping/evaluate.py` — además de las métricas propias (angular error, AUC,
+  precisión@θ), re-puntúa predicciones ya ajustadas con métricas de
+  referencia externa (SDE_ref/F1_ref) vía `--with-reference-metrics` (una
+  corrida) o `--all`/`--experiment-ids` (modo bulk, descubre y corre muchos
+  experimentos a la vez — antes era el script separado
+  `reference_metrics.py`, fusionado aquí, ver `docs/actualizacion_metricas.md`).
+  Ver `docs/metricas_evaluacion.md`.
 - `ranking_postprocesamiento.ipynb` (raíz) — notebook de análisis: inventario,
   rankings por métrica, ablation por eje de variación (clustering/patch/flow),
   validación de duplicados/completitud.

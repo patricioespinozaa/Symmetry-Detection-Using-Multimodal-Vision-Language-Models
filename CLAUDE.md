@@ -24,10 +24,17 @@ ImagesGenerator/  → renders multi-vista de mallas .obj (Fibonacci sphere sampl
 MolmoPointing/    → Molmo2-8B infiere puntos 2D sobre esos renders (requiere GPU)
 Mapping/map_to_3d.py         → ray casting: puntos 2D → puntos 3D sobre la malla
 Mapping/estimate_symmetry.py → SVD/RANSAC: puntos 3D → eje o plano (4 métodos)
-Mapping/evaluate.py          → métricas vs. ground truth (angular error, AUC, SDE)
+Mapping/evaluate.py          → métricas vs. ground truth (angular error, AUC,
+                                precisión@θ) + SDE_ref/F1_ref opt-in
+                                (--with-reference-metrics una corrida, o
+                                --all/--experiment-ids modo bulk sobre muchas)
 Mapping/compare_results.py   → tablas + plots agregados
-Mapping/reference_metrics.py → re-scoring standalone con fórmulas de un paper externo
 ```
+
+`reference_metrics.py` ya no existe como script separado — se fusionó dentro
+de `evaluate.py` (ver `docs/actualizacion_metricas.md`). Cualquier código que
+haga `from reference_metrics import ...` hay que migrarlo a
+`from evaluate import ...` (mismos nombres de función).
 
 Cada etapa lee/escribe JSON acumulativos por objeto bajo
 `<renders_root>/<symmetry_type>/<object_id>/<size>/<lighting>/` — las corridas ya
@@ -43,25 +50,43 @@ imposible (se necesitan ≥2 vistas para tener un par).
 
 - **`AUC_angular` trunca en 45°, no en 90°** (`evaluate.py::AUC_ANGULAR_MAX = 45.0`).
   Todo error ≥45° cuenta como fallo total sin importar cuán grande sea.
-- **El SDE del pipeline propio solo se acumula en el CSV para `plane_sym`**, nunca
-  para `axis_sym` — aunque `sde_axis` sí se calcula y guarda por objeto
-  (`evaluate.py::compute_summary`). Es una asimetría real del pipeline original, no
-  un bug a "arreglar" sin más — ver §5.4 de `docs/metricas_evaluacion.md`.
-- **`SDE_THRESHOLD = 0.05`** define el campo informativo `accepted`, no filtra
-  ninguna métrica.
+- **`evaluate.py` ya no reporta ningún "SDE propio"** — la fórmula vieja
+  (`symmetry_distance_error`, `sde`/`sde_mean`/`auc_sde`/`precision_sde_*` en
+  el CSV de resumen, solo para `plane_sym`) resultó ser un bug conceptual, no
+  una variante válida (medía distancia al plano promediada, sin verificar que
+  el reflejo cayera sobre superficie real) — se eliminó por completo, ver
+  `docs/actualizacion_metricas.md`. `SDE_ref` (abajo) es ahora la única SDE
+  que reporta este script, **para ambos tipos de simetría por igual** — la
+  vieja asimetría eje/plano en el CSV ya no existe. El campo `sde`/`accepted`
+  interno de `estimate_symmetry.py` (heurística de aceptación, no lo que
+  `evaluate.py` re-puntúa) sigue intacto, sin cambios.
+- **`SDE_THRESHOLD = 0.05`** (en `estimate_symmetry.py`) define el campo
+  informativo `accepted`, no filtra ninguna métrica.
 - **Objetos sin predicción válida** se imputan con `angular_error = 90°` (peor caso),
   no se excluyen — así penalizan las métricas en vez de inflarlas artificialmente.
-- **SDE (propio y de referencia) no es data leakage**: no usa el archivo de ground
-  truth, es autoconsistencia geométrica (reflejar contra la propia malla).
+- **SDE_ref no es data leakage**: no usa el archivo de ground truth (excepto
+  `F1_ref`, que sí compara contra el plano GT por diseño — es una métrica de
+  detección, no de autoconsistencia).
 - **`svd`/`svd_sde` y `ransac_svd`/`ransac_svd_sde` comparten el mismo ajuste** — la
-  variante `_sde` solo agrega el campo SDE, no re-ajusta nada. `reference_metrics.py`
-  explota esto con una caché (`plane_cache`) para ahorrar ~50% del cómputo.
-- **`SDE_ref`/`F1_ref` (de `reference_metrics.py`) NO son intercambiables con
-  `sde_mean`/`auc_angular` del pipeline propio** — muestreo, escala y normalización
-  distintos (§3.1/5.4 de `metricas_evaluacion.md`). Nunca mezclar en la misma tabla
-  sin dejar explícita la diferencia de convención.
+  variante `_sde` solo agrega el campo SDE interno (`accepted`), no re-ajusta nada.
+  El modo bulk de `evaluate.py` (`--all`/`--experiment-ids`) explota esto con una
+  caché local para ahorrar ~50% del cómputo de SDE_ref/F1_ref.
+- **`SDE_ref`/`F1_ref` NO son intercambiables con `angular_error`/`translation_error`
+  del pipeline propio** — muestreo, escala y normalización distintos (§3.1/5.4 de
+  `metricas_evaluacion.md`, a actualizar tras el refactor). Nunca mezclar en la
+  misma tabla sin dejar explícita la diferencia de convención.
+- **`F1_ref` tiene dos variantes**: `f1_ref` (greedy, orden de lista — convención
+  histórica de PRS-Net/E3Sym) y `f1_ref_hungarian` (asignación óptima —
+  convención de Reflect3D/ArchSym 2025-2026). Dan el mismo resultado con un
+  solo plano predicho por objeto (el caso actual); divergen recién cuando el
+  pipeline prediga varios planos candidato por objeto.
 - **No existe F1 de referencia para `axis_sym`** — ni en el repo de referencia ni,
   según revisión de literatura, en el campo en general. No es una omisión.
+- **Métricas multi-plano (`evaluate_plane_multiset`, recall/precision sobre el
+  conjunto de planos GT) están implementadas pero NO conectadas al flujo
+  principal** — el JSON de predicción todavía guarda un solo plano por
+  método/n_views. Llamarla directamente una vez que exista un detector de
+  hasta 3 planos (dataset curado trae objetos con 1/2/3 planos GT).
 
 ## Entorno
 
@@ -70,7 +95,8 @@ conda activate tesis_env
 ```
 Ver "Installation" en `README.md` para la lista completa de deps (PyTorch3D con CUDA
 12.4, `transformers`/Molmo2, `trimesh`/`scipy`/`pandas` para Mapping, `scikit-learn`
-para HDBSCAN, `gpytoolbox`/`rtree` para `reference_metrics.py`). El entorno de
+para HDBSCAN, `gpytoolbox`/`rtree` para `evaluate.py --with-reference-metrics`/`--all`).
+El entorno de
 desarrollo local (Windows) no tiene GPU ni todas las deps pesadas instaladas — los
 pasos de Molmo2/renderizado y las corridas largas del sweep se ejecutan en el
 servidor remoto, no localmente.
@@ -79,9 +105,10 @@ servidor remoto, no localmente.
 
 - `ranking_postprocesamiento.ipynb` — notebook principal de análisis de resultados:
   rankings por experimento/prompt, ablations, y (secciones 10-11) comparación contra
-  `reference_metrics_*.csv`. Reusa helpers ya definidos ahí (`enrich`, `inventory`,
-  `best_per_experiment`, `plot_ablation_bar`, etc.) — no dupliques esa lógica en un
-  notebook nuevo.
+  `reference_metrics_*.csv` (generado por `evaluate.py --all`, ver arriba — mismo
+  nombre/columnas de siempre, ahora fusionado en `evaluate.py`). Reusa helpers ya
+  definidos ahí (`enrich`, `inventory`, `best_per_experiment`, `plot_ablation_bar`,
+  etc.) — no dupliques esa lógica en un notebook nuevo.
 - `analisis_tiempos_postprocesamiento.ipynb` — tiempos de cómputo del postproceso.
 - **Los notebooks pueden superar el límite de tokens de lectura de las tools** si
   tienen outputs de celdas cacheados. Si una tool de notebook falla por tamaño, limpiar
