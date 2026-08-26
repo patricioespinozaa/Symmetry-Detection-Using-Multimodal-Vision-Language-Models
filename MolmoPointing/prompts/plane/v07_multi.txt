@@ -1,0 +1,35 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+Step 1: Identify the global symmetry plane orientation from ALL views jointly (it is not necessarily aligned with any single image's vertical axis).
+Step 2: For each image, using THAT global orientation, compute the horizontal midpoint of the object's left-right extent at two different heights: one near the TOP and one near the BOTTOM.
+
+These midpoints lie on the symmetry plane's projected trace.
+
+For each image:
+1. Project the global symmetry plane's orientation into that view.
+2. Return:
+   - obj_id 1: the midpoint of the left-right extent near the TOP, computed relative to the global plane's orientation,
+   - obj_id 2: the midpoint of the left-right extent near the BOTTOM, computed the same way.
+
+The horizontal midpoint at height Y = (X_left_edge + X_right_edge) / 2 at that height, where "left/right" is defined relative to the global symmetry plane's orientation, not necessarily the image's vertical axis.
+
+IMPORTANT RULES:
+- Both points MUST lie on the symmetry plane trace (the center of the object's bilateral extent at that height).
+- Use the SAME global symmetry plane consistently across all views.
+- obj_id 1 MUST be in the upper half of the object's visible extent in each image; obj_id 2 in the lower half.
+- Both points MUST lie on or within the visible object.
+- Do NOT place points on the silhouette edges — place them at the computed midpoint between the edges.
+- Do NOT collapse both points to the same height.
+- Infer the global plane from ALL views jointly before answering, and verify that the midpoints chosen in every image are consistent with that SAME global plane.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 Xtop Ytop 2 Xbottom Ybottom; 2 1 Xtop Ytop 2 Xbottom Ybottom; 3 1 Xtop Ytop 2 Xbottom Ybottom">
+
+Where each entry is: image_index obj_id X Y
+- obj_id 1 = TOP midpoint of the left-right extent (on the symmetry plane trace)
+- obj_id 2 = BOTTOM midpoint of the left-right extent (on the symmetry plane trace)
+
+Return ONLY the <points ...> block.
