@@ -5,9 +5,29 @@ Contexto persistente para trabajar en este repo. Complementa (no duplica) a:
 - `docs/metricas_evaluacion.md` — definición exacta de cada métrica, origen (código y
   literatura), y hallazgos metodológicos ya validados.
 - `README.md` — estructura del repo, instalación, pipeline paso a paso con comandos.
+- `docs/data-schemas.md` — esquema JSON exacto de cada archivo acumulativo del pipeline
+  (`molmo_multiview*.json`, `mapped_points_3d*.json`, `predicted_symmetry*.json`,
+  `eval_*_results.json`).
+- `docs/features/` — un `.md` por feature/etapa (metodología generada desde el código:
+  descripción, archivos/funciones clave, inputs/outputs, decisiones de diseño,
+  limitaciones conocidas). Uno por etapa del pipeline de abajo:
+  [`exploratory-data-analysis.md`](docs/features/exploratory-data-analysis.md),
+  [`images-generator.md`](docs/features/images-generator.md),
+  [`molmo-pointing.md`](docs/features/molmo-pointing.md),
+  [`mapping.md`](docs/features/mapping.md),
+  [`consolidation-evaluation.md`](docs/features/consolidation-evaluation.md),
+  [`interactive-viewer.md`](docs/features/interactive-viewer.md),
+  [`pipeline-common.md`](docs/features/pipeline-common.md).
+- `docs/audits/` — auditoría de arquitectura (`architecture-audit.md`) y el log de la
+  refactorización que se ejecutó a partir de ella (`refactor-log.md`).
+- `docs/code-norms.md` — normas de estilo Python (docstrings, orden de imports, type
+  hints, naming) para código nuevo o modificado en este repo.
 
 Si una pregunta es sobre *qué significa una métrica* o *contexto de la tesis*, lee esos
-docs primero en vez de re-derivarlo desde el código.
+docs primero en vez de re-derivarlo desde el código. Si es sobre *cómo está implementada
+una etapa concreta* (qué archivos/funciones la componen, qué decisiones de diseño tiene),
+mirá primero el `.md` correspondiente en `docs/features/` antes de releer el código fuente
+completo.
 
 ## Qué es este proyecto
 
@@ -22,12 +42,26 @@ eje/plano de simetría, evaluado contra ground truth de ShapeNet.
 ```
 ImagesGenerator/  → renders multi-vista de mallas .obj (Fibonacci sphere sampling)
 MolmoPointing/    → Molmo2-8B infiere puntos 2D sobre esos renders (requiere GPU)
+
+# Con malla (pipeline original):
 Mapping/map_to_3d.py         → ray casting: puntos 2D → puntos 3D sobre la malla
-Mapping/estimate_symmetry.py → SVD/RANSAC: puntos 3D → eje o plano (4 métodos)
+Mapping/estimate_symmetry.py → SVD/RANSAC: puntos 3D → eje o plano
+                                (métodos svd/ransac_svd/svd_sde/ransac_svd_sde)
+
+# Sin malla (pipeline alternativo, ver docs/pipeline_sin_malla.md):
+Mapping/estimate_symmetry_no_mesh.py → triangulación de rayos multi-vista → eje o
+                                        plano, SIN ray-casting contra la malla
+                                        (métodos triangulation/triangulation_multiplane,
+                                        este último hasta 3 planos por objeto)
+
 Mapping/evaluate.py          → métricas vs. ground truth (angular error, AUC,
                                 precisión@θ) + SDE_ref/F1_ref opt-in
                                 (--with-reference-metrics una corrida, o
-                                --all/--experiment-ids modo bulk sobre muchas)
+                                --all/--experiment-ids modo bulk sobre muchas).
+                                Para triangulation_multiplane, métricas de
+                                recall/precision sobre el conjunto completo de
+                                planos (evaluate_plane_multiset) en vez de un
+                                único ángulo — ver docs/implementacion_pipeline_sin_malla.md.
 Mapping/compare_results.py   → tablas + plots agregados
 ```
 
@@ -83,10 +117,13 @@ imposible (se necesitan ≥2 vistas para tener un par).
 - **No existe F1 de referencia para `axis_sym`** — ni en el repo de referencia ni,
   según revisión de literatura, en el campo en general. No es una omisión.
 - **Métricas multi-plano (`evaluate_plane_multiset`, recall/precision sobre el
-  conjunto de planos GT) están implementadas pero NO conectadas al flujo
-  principal** — el JSON de predicción todavía guarda un solo plano por
-  método/n_views. Llamarla directamente una vez que exista un detector de
-  hasta 3 planos (dataset curado trae objetos con 1/2/3 planos GT).
+  conjunto de planos GT) SÍ están conectadas al flujo principal** — vía el
+  método `triangulation_multiplane` de `Mapping/estimate_symmetry_no_mesh.py`
+  (`--max-planes > 1`) y el wrapper `evaluate_plane_multi_from_pred` en
+  `evaluate.py`, incluyendo SDE_ref/F1_ref por plano con
+  `--with-reference-metrics`. Los métodos con malla (`svd`/`ransac_svd`/...)
+  siguen guardando un solo plano por objeto/n_views — el multi-plano solo
+  existe hoy en el pipeline sin malla.
 
 ## Entorno
 

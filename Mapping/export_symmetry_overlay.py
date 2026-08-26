@@ -59,6 +59,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from pipeline_common.naming import exp_filename
 from pipeline_common.datasets import OBJECTS_SUBDIR, load_mesh_vertices
 from pipeline_common.camera import project_point
+from pipeline_common.viz_colors import (
+    COLOR_GT_AXIS,
+    COLOR_GT_PLANE,
+    COLOR_PRED_AXIS,
+    COLOR_PRED_PLANE,
+)
 
 
 # ── Constants ─────────────────────────────────────────────────────────────────
@@ -67,11 +73,6 @@ MOLMO_JSON_BASE = "molmo_multiview.json"
 PRED_JSON_BASE  = "predicted_symmetry.json"
 FOV_DEG         = 60.0
 METHODS         = ["svd", "ransac_svd", "svd_sde", "ransac_svd_sde"]
-
-COLOR_GT_AXIS    = (0.15, 0.40, 0.90)   # blue
-COLOR_GT_PLANE   = (0.10, 0.80, 0.35)   # green
-COLOR_PRED_AXIS  = (0.90, 0.15, 0.15)   # red
-COLOR_PRED_PLANE = (0.85, 0.10, 0.85)   # magenta
 
 
 # ── Ground-truth parser (mirrors visualize_rays.load_gt) ─────────────────────

@@ -73,6 +73,18 @@ from pipeline_common.naming import exp_filename
 from pipeline_common.datasets import OBJECTS_SUBDIR, load_mesh
 from pipeline_common.camera import molmo_to_ndc, build_camera_rays, cast_ray, cast_ray_patch
 from pipeline_common.clustering import cluster_points, cluster_hdbscan
+from pipeline_common.viz_colors import (
+    COLOR_MESH,
+    COLOR_CAMERA,
+    COLOR_HIT_RAY,
+    COLOR_MISS_RAY,
+    COLOR_HIT_PT,
+    COLOR_CLUSTER_PT,
+    COLOR_GT_AXIS,
+    COLOR_GT_PLANE,
+    COLOR_PRED_AXIS,
+    COLOR_PRED_PLANE,
+)
 
 
 # ── Constants ─────────────────────────────────────────────────────────────────
@@ -84,18 +96,6 @@ FOV_DEG          = 60.0
 PATCH_SIZES      = (1, 3, 5)
 
 METHODS = ["svd", "ransac_svd", "svd_sde", "ransac_svd_sde"]
-
-# Colors (RGB in [0,1])
-COLOR_MESH        = (0.75, 0.75, 0.75)
-COLOR_CAMERA      = (0.20, 0.40, 0.90)   # blue
-COLOR_HIT_RAY     = (0.15, 0.80, 0.25)   # green
-COLOR_MISS_RAY    = (1.00, 0.55, 0.10)   # orange
-COLOR_HIT_PT      = (1.00, 0.95, 0.10)   # yellow
-COLOR_CLUSTER_PT  = (0.95, 0.30, 0.15)   # red-orange  (cluster centroids)
-COLOR_GT_AXIS     = (0.15, 0.40, 0.90)   # blue
-COLOR_GT_PLANE    = (0.10, 0.80, 0.35)   # green
-COLOR_PRED_AXIS   = (0.90, 0.15, 0.15)   # red
-COLOR_PRED_PLANE  = (0.85, 0.10, 0.85)   # magenta
 
 
 # ── Ground-truth parser ───────────────────────────────────────────────────────

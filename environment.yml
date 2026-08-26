@@ -51,6 +51,7 @@ dependencies:
       - fonttools==4.63.0
       - fsspec==2026.2.0
       - fvcore==0.1.5.post20221221
+      - gpytoolbox  # no pinned version recorded when this env was captured; install latest
       - h11==0.16.0
       - hf-xet==1.5.0
       - httpcore==1.0.9
