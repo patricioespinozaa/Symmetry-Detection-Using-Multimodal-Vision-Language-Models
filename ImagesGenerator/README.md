@@ -14,7 +14,7 @@ This tool exports multi-view images of a 3D mesh using the Fibonacci sphere samp
 | Script | Purpose |
 |---|---|
 | `export_fibonacci_views.py` | Renders one object from a given set of Fibonacci viewpoints |
-| `data_render.py` | Batch runner — applies `export_fibonacci_views.py` to all objects in a dataset folder, with multi-GPU support |
+| `data_render.py` | Batch runner — applies `export_fibonacci_views.py` sequentially to all objects in a dataset folder (one `subprocess` call per object/size/lighting combo; no GPU-distribution logic of its own — run two instances with different `CUDA_VISIBLE_DEVICES` for manual multi-GPU parallelism, as in the root `README.md`'s Step 1) |
 
 ## Usage
 

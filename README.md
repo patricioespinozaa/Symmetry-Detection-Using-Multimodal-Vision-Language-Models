@@ -27,11 +27,25 @@ Symmetry-Detection-Using-Multimodal-Vision-Language-Models/
 │
 ├── Mapping/                       # 2D predictions → 3D symmetry evaluation
 │   ├── map_to_3d.py               # Ray casting: Molmo 2D coords → 3D hit points
-│   ├── estimate_symmetry.py       # SVD fit: 3D points → axis or plane (4 methods)
-│   ├── evaluate.py                # Metrics: angular error, AUC, precision@k, SDE
+│   ├── estimate_symmetry.py       # SVD/RANSAC fit (mesh-based): 3D points → axis or plane (4 methods)
+│   ├── estimate_symmetry_no_mesh.py # Mesh-free fit via multi-view ray triangulation (up to 3 planes)
+│   ├── evaluate.py                # Metrics: angular error, AUC, precision@k, SDE_ref, F1_ref (+ bulk --all mode)
 │   ├── compare_results.py         # Table + plots across experiments/methods
 │   ├── visualize_rays.py          # Debug: Polyscope 3D ray viewer
+│   ├── visualize_symmetry.py      # Debug: Polyscope GT vs. predicted symmetry viewer
+│   ├── export_symmetry_overlay.py # Batch-export overlay renders
+│   ├── export_viz_samples.py      # Batch-export sample visualizations + README
+│   ├── render_symmetry_comparison.py # Side-by-side comparison renders
+│   ├── run_all_postprocessing.py  # Sweep entrypoint: map_to_3d → estimate → evaluate
 │   ├── cleanup_experiments.py     # Remove n_views keys from JSON results
+│   ├── cleanup_all_experiments.sh # Delete all experiment files for all prompts
+│   ├── find_extra_renders.sh      # Audit render directories vs source .obj files
+│   ├── archive/                   # Superseded one-off diagnostic scripts, kept for reference
+│   │   ├── audit_view_indices.py       # superseded by audit_view_indices_v2.py
+│   │   └── check_origin_compactness.py # superseded by check_origin_full.py
+│   ├── audit_view_indices_v2.py, check_independent_vs_midpoint.py,
+│   │   check_origin_full.py, check_sde_vs_angular.py  # ad hoc analysis scripts
+│   │   tied to specific thesis findings — see each file's docstring
 │   └── README.md
 │
 ├── InteractiveViewer/             # Polyscope viewer for objects and GT symmetries
@@ -50,10 +64,10 @@ Symmetry-Detection-Using-Multimodal-Vision-Language-Models/
 │   ├── datasets.py                 # OBJECTS_SUBDIR + mesh loading
 │   ├── camera.py                   # NDC/ray math, ray casting (exact + patch)
 │   ├── clustering.py                # Greedy centroid + HDBSCAN clustering
-│   └── view_selection.py           # Seeded description-view selection (Flow B/C)
+│   ├── view_selection.py           # Seeded description-view selection (Flow B/C)
+│   └── triangulation.py            # Ray/interpretation-plane primitives (mesh-free pipeline)
 │
-├── cleanup_all_experiments.sh     # Delete all experiment files for all prompts
-└── find_extra_renders.sh          # Audit render directories vs source .obj files
+└── docs/                          # Design docs, metric definitions, audits (see below)
 ```
 
 ---
@@ -116,11 +130,21 @@ pip install trimesh scipy pandas matplotlib
 # HDBSCAN clustering (estimate_symmetry.py --clustering-method hdbscan)
 pip install scikit-learn
 
-# Optional: 3D visualization (visualize_rays.py)
+# Optional: reference metrics (evaluate.py --with-reference-metrics / --all / --experiment-ids)
+pip install gpytoolbox rtree
+
+# Optional: 3D visualization (visualize_rays.py, visualize_symmetry.py, render_symmetry_comparison.py)
 pip install polyscope
 
 # Optional: 3D visualization (InteractiveViewer/)
 pip install open3d
+```
+
+Or use the pinned environment directly (Linux/CUDA 12.4 only — captured from the
+remote GPU server, will not install as-is on Windows/CPU-only machines):
+
+```bash
+conda env create -f environment.yml
 ```
 
 ---
@@ -216,6 +240,70 @@ python Mapping/compare_results.py \
 
 ---
 
+## Alternate pipeline: mesh-free (no ray-casting against the mesh)
+
+Steps 1–2 (render + Molmo2 inference) are identical. From there, this variant
+skips `map_to_3d.py`/`estimate_symmetry.py` entirely and estimates the
+axis/plane directly from multi-view ray triangulation — see
+[docs/pipeline_sin_malla.md](docs/pipeline_sin_malla.md) and
+[docs/implementacion_pipeline_sin_malla.md](docs/implementacion_pipeline_sin_malla.md)
+for the full design rationale.
+
+### Step 3' — Fit symmetry without the mesh
+
+```bash
+# axis_sym
+python Mapping/estimate_symmetry_no_mesh.py \
+    --renders-root ../data/renders \
+    --symmetry-type axis_sym \
+    --sizes 224 --lightings flat \
+    --overwrite
+
+# plane_sym, single best-fit plane (method "triangulation")
+python Mapping/estimate_symmetry_no_mesh.py \
+    --renders-root ../data/renders \
+    --symmetry-type plane_sym \
+    --sizes 224 --lightings flat \
+    --max-planes 1 --overwrite
+
+# plane_sym, up to 3 candidate planes (method "triangulation_multiplane")
+python Mapping/estimate_symmetry_no_mesh.py \
+    --renders-root ../data/renders \
+    --symmetry-type plane_sym \
+    --sizes 224 --lightings flat \
+    --max-planes 3 --overwrite
+```
+
+Writes `predicted_symmetry[_<EXP>].json` under the method key `triangulation`
+(single axis/plane) or `triangulation_multiplane` (`--max-planes > 1`, a list
+of candidate planes) — see [docs/data-schemas.md](docs/data-schemas.md).
+
+### Step 4' — Evaluate
+
+```bash
+# axis_sym / plane_sym, single plane — same angular-error metrics as the with-mesh path
+python Mapping/evaluate.py \
+    --renders-root ../data/renders \
+    --objects-root ../data/objects \
+    --symmetry-type axis_sym \
+    --sizes 224 --lightings flat \
+    --method triangulation --with-reference-metrics
+
+# plane_sym, multi-plane — recall/precision over the full GT plane set instead
+# of a single angular error, plus per-plane SDE_ref/F1_ref
+python Mapping/evaluate.py \
+    --renders-root ../data/renders \
+    --objects-root ../data/objects \
+    --symmetry-type plane_sym \
+    --sizes 224 --lightings flat \
+    --method triangulation_multiplane --with-reference-metrics
+```
+
+`--with-reference-metrics` requires `gpytoolbox` (see Installation below).
+`compare_results.py` (Step 6) works the same way against these outputs.
+
+---
+
 ## Running prompt experiments
 
 To compare multiple prompt strategies, use `--experiment-id` to isolate results from production files. See `MolmoPointing/Experiments.md` for the full loop (axis + plane, all 6 prompts each).
@@ -252,8 +340,8 @@ Files with `--experiment-id` get an `_<ID>` suffix; production files are never t
 To delete all experiment files and start clean:
 
 ```bash
-bash cleanup_all_experiments.sh          # dry-run (shows counts)
-bash cleanup_all_experiments.sh --delete # execute
+bash Mapping/cleanup_all_experiments.sh          # dry-run (shows counts)
+bash Mapping/cleanup_all_experiments.sh --delete # execute
 ```
 
 ---
@@ -293,6 +381,34 @@ tag to the output filename automatically).
 
 ---
 
+## Additional tools
+
+Maintenance and diagnostic scripts that sit outside the main step-by-step flow:
+
+```bash
+# Sweep entrypoint: chains map_to_3d.py -> estimate_symmetry.py -> evaluate.py
+# for every method/n_views combination in one call
+python Mapping/run_all_postprocessing.py \
+    --renders-root ../data/renders --objects-root ../data/objects \
+    --symmetry-type axis_sym --sizes 224 --lightings flat
+
+# Remove n_views keys from accumulated JSON results (e.g. after a bad partial run)
+python Mapping/cleanup_experiments.py --renders-root ../data/renders --symmetry-type axis_sym
+
+# Audit render directories vs. source .obj files (find missing/extra renders)
+bash Mapping/find_extra_renders.sh
+```
+
+`Mapping/audit_view_indices_v2.py`, `Mapping/check_independent_vs_midpoint.py`,
+`Mapping/check_sde_vs_angular.py`, and `Mapping/check_origin_full.py` are ad hoc
+analysis scripts tied to specific thesis findings (view-index consistency,
+`--point-mode` comparison, SDE-vs-angular-error correlation) — see each
+script's own docstring for its exact input/output and when to use it.
+`Mapping/archive/` holds their now-superseded predecessors, kept for reference
+only (see [docs/audits/refactor-log.md](docs/audits/refactor-log.md)).
+
+---
+
 ## tmux cheatsheet
 
 Long jobs should run inside `tmux` so they survive terminal disconnections.
@@ -315,4 +431,11 @@ tmux ls                      # list sessions
 | Molmo2 inference + experiments | [MolmoPointing/README.md](MolmoPointing/README.md) |
 | Mapping + evaluation | [Mapping/README.md](Mapping/README.md) |
 | Interactive viewer | [InteractiveViewer/README.md](InteractiveViewer/README.md) |
-| **What experiments are left to run, in order** | [EXPERIMENT_ROADMAP.md](EXPERIMENT_ROADMAP.md) |
+| Mesh-free pipeline design | [docs/pipeline_sin_malla.md](docs/pipeline_sin_malla.md), [docs/implementacion_pipeline_sin_malla.md](docs/implementacion_pipeline_sin_malla.md) |
+| Metrics: definitions + history of changes | [docs/metricas_evaluacion.md](docs/metricas_evaluacion.md), [docs/actualizacion_metricas.md](docs/actualizacion_metricas.md) |
+| JSON schema of every accumulative pipeline file | [docs/data-schemas.md](docs/data-schemas.md) |
+| Per-feature methodology docs (description, key files/functions, inputs/outputs, design decisions, known limitations) | [docs/features/](docs/features/) |
+| Python code style/norms | [docs/code-norms.md](docs/code-norms.md) |
+| Thesis context | [docs/Contexto.md](docs/Contexto.md) |
+| Architecture audits / refactor log | [docs/audits/](docs/audits/) |
+| Archived/historical notes (superseded, kept for reference) | [docs/archive/](docs/archive/) |

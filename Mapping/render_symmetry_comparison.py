@@ -57,6 +57,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from pipeline_common.naming import exp_filename
 from pipeline_common.datasets import OBJECTS_SUBDIR, load_mesh
 from pipeline_common.clustering import cluster_points
+from pipeline_common.viz_colors import (
+    COLOR_GT_AXIS,
+    COLOR_GT_PLANE,
+    COLOR_PRED_AXIS,
+    COLOR_PRED_PLANE,
+    COLOR_HIT_PT,
+)
 
 
 # ── Constants ─────────────────────────────────────────────────────────────────
@@ -67,11 +74,6 @@ METHODS          = ["svd", "ransac_svd", "svd_sde", "ransac_svd_sde"]
 POINT_MODES      = ("independent", "midpoint", "all")
 
 COLOR_MESH       = (0.78, 0.78, 0.78)
-COLOR_GT_AXIS    = (0.15, 0.40, 0.90)   # blue
-COLOR_GT_PLANE   = (0.10, 0.80, 0.35)   # green
-COLOR_PRED_AXIS  = (0.90, 0.15, 0.15)   # red
-COLOR_PRED_PLANE = (0.85, 0.10, 0.85)   # magenta
-COLOR_HIT_PT     = (1.00, 0.95, 0.10)   # yellow -- Molmo2 hit points
 
 
 def collect_hit_points(mapped_json: dict, nv_key: str,

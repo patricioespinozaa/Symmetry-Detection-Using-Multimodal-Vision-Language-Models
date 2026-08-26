@@ -33,9 +33,11 @@ method key "triangulation":
 
 For plane_sym with --max-planes > 1, the entry becomes a list under a
 "planes" key instead of a single normal/origin (see docs/implementacion_pipeline_sin_malla.md
-S3, Fase 2) -- Mapping/evaluate.py does not yet consume this shape (that
-wiring, via evaluate_plane_multiset, is still pending); --max-planes 1
-(the default) keeps the single-plane schema fully compatible today.
+S3, Fase 2) -- consumed by Mapping/evaluate.py via the "triangulation_multiplane"
+method (evaluate_plane_multi_from_pred / evaluate_plane_multiset), including
+SDE_ref/F1_ref when --with-reference-metrics is passed. --max-planes 1
+(the default) keeps the single-plane "triangulation" schema fully compatible
+with the with-mesh methods.
 
 Usage
 -----

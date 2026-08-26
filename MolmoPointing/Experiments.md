@@ -94,8 +94,9 @@ Flow-A prompt rather than replacing these loops.
 
 **For the full ordered checklist of what's still pending (Flow B, Flow C,
 HDBSCAN sweep, patch backprojection) with a worked `--experiment-id` chaining
-example, see [`EXPERIMENT_ROADMAP.md`](../EXPERIMENT_ROADMAP.md) at the repo
-root.** The quick-reference below is just the raw flag syntax.
+example, see [`docs/archive/EXPERIMENT_ROADMAP.md`](../docs/archive/EXPERIMENT_ROADMAP.md)
+(archived — historical planning doc, kept for reference).** The quick-reference
+below is just the raw flag syntax.
 
 **Flows B/C** — run the best-performing Flow-A prompt (`--prompt-id`) under
 `--flow b` or `--flow c` instead of the default `--flow a`:
@@ -113,12 +114,15 @@ loops below, substituting `axis_v05_1_flowB` for `--experiment-id`. See
 **Flow C only — `--point-mode` differs from every other flow/prompt in the
 table above.** Flow C's pre-pass only gives a description + a qualitative
 hint of where the axis/plane is located (plain text, no coordinates); the
-actual N-view pointing call then returns up to 3 points per image (not a
-fixed obj_id 1/2 pair), so `estimate_symmetry.py` must be run with
-**`--point-mode all`** (every hit point goes to SVD directly, any obj_id
-count, no pairing requirement) — `independent` and `midpoint` both assume
-exactly obj_id 1 and 2 and would silently discard the rest. See
-`EXPERIMENT_ROADMAP.md` §4 for the full command sequence.
+actual N-view pointing call then returns exactly 2 points per image
+(`FLOW_C_POINTS_PER_IMAGE = 2` in `molmo_multiview_runner.py` — an earlier
+"up to 3, fewer OK" version empirically collapsed to 1 point/image once
+several images shared a call), so `estimate_symmetry.py` should still be
+run with **`--point-mode all`** rather than `independent`: `all` tolerates
+images where only one of the two points hits the mesh, while `independent`
+would discard the whole image in that case. See
+`docs/archive/EXPERIMENT_ROADMAP.md` §4 for the full command sequence
+(archived — historical planning doc).
 
 **Clustering variants** — sweep `--clustering-method hdbscan --hdbscan-min-samples {2,3,5}`
 in `estimate_symmetry.py` against an existing `mapped_points_3d[_EXP].json` (no
