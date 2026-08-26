@@ -1,0 +1,31 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant axis of rotational symmetry.
+
+For each image, identify the TOP and BOTTOM poles of the global rotation axis — the points where the axis exits the object's surface at the very top and very bottom.
+
+For each image:
+1. Locate where the global axis exits at the top and bottom of the object.
+2. Return:
+   - obj_id 1: the TOP pole (topmost point on the axis, at the horizontal center of the topmost surface),
+   - obj_id 2: the BOTTOM pole (bottommost point on the axis, at the horizontal center of the bottommost surface).
+
+IMPORTANT RULES:
+- Both points MUST be ON the rotation axis — at the horizontal center of the object at that height, NOT on the lateral silhouette.
+- Use the SAME global axis consistently across all views.
+- obj_id 1 MUST be above obj_id 2 in each image.
+- For flat surfaces (e.g., flat-topped objects), place the pole at the geometric center of the top or bottom face.
+- For ROUNDED or CURVED tops/bottoms (no single flat face — e.g. a dome, a sphere cap, a rounded knob), place the pole at the center of curvature of that rounded region: the point equidistant from the left and right silhouette edges at that region's topmost/bottommost extent.
+- Infer the global axis from ALL views jointly before answering.
+- Verify consistency: the TOP pole should correspond to the same geometric point on the object across all views, whether the surface there is flat or curved.
+- Do NOT place points on the lateral silhouette edges.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 Xtop Ytop 2 Xbottom Ybottom; 2 1 Xtop Ytop 2 Xbottom Ybottom; 3 1 Xtop Ytop 2 Xbottom Ybottom">
+
+Where each entry is: image_index obj_id X Y
+- obj_id 1 = TOP pole of the rotation axis
+- obj_id 2 = BOTTOM pole of the rotation axis
+
+Return ONLY the <points ...> block.

@@ -65,6 +65,11 @@ DESCRIPTIONS: dict[str, str] = {
     "plane_v03_1": "Structural pairs v1 — midpoint verification + widest cross-section fallback",
     "plane_v04_1": "Silhouette midpoints v1 — step-0 global plane ID + cross-view consistency check",
     "plane_v05_1": "Plane trace v1 — topmost/bottommost on trace, vertical separation explicit",
+    # Round 2 (data-driven, see docs/audits/... ranking axis/plane v0-v05_1)
+    "axis_v06":  "Pole + curvature fallback — v04_1 poles, with explicit center-of-curvature rule for rounded caps",
+    "axis_v07":  "Narrowest cross-section (neck/waist) — inversion of v02's view-dependent 'widest' anchor",
+    "plane_v06": "Seam/spine reinforced — v02 with explicit non-bilateral constraint + v04-style midpoint fallback",
+    "plane_v07": "Global-orientation midpoint — v04_1 midpoint formula anchored to the plane's own orientation, not image-vertical",
 }
 
 

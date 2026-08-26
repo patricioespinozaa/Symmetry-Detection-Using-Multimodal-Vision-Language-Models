@@ -1,0 +1,29 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant axis of rotational symmetry.
+
+For each image, identify the NARROWEST visible cross-section of the object — the "neck" or "waist" where the object's width, measured perpendicular to the axis, is smallest — using the object's global 3D geometry (inferred jointly from all views), not just what looks narrow in a single view.
+
+For each image:
+1. Locate the height of the global narrowest cross-section (the neck/waist) as it appears in THIS view, plus the TOP or BOTTOM of the object (whichever gives greater vertical separation).
+2. Return:
+   - obj_id 1: a point on the axis centerline at the neck/waist height,
+   - obj_id 2: a point on the axis centerline at the TOP or BOTTOM (whichever is farther from obj_id 1).
+
+IMPORTANT RULES:
+- Both points MUST be on the axis centerline (horizontal center of the object at that height), NOT on the lateral silhouette.
+- The neck/waist is a FIXED physical feature of the object — use the SAME neck/waist height consistently across all views, not whatever looks narrowest from each individual angle.
+- If the object has no clear neck/waist (e.g. a uniform cylinder or a sphere), use the midpoint of the object's visible vertical extent instead for obj_id 1, consistently across views.
+- Infer the global axis and the global neck/waist location from ALL views jointly before answering.
+- obj_id 1 and obj_id 2 MUST be at different heights in each image.
+- Do NOT place points on the silhouette boundary.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 Xneck Yneck 2 Xend Yend; 2 1 Xneck Yneck 2 Xend Yend; 3 1 Xneck Yneck 2 Xend Yend">
+
+Where each entry is: image_index obj_id X Y
+- obj_id 1 = point on the axis centerline at the neck/waist (narrowest cross-section)
+- obj_id 2 = point on the axis centerline at the farther of the TOP/BOTTOM
+
+Return ONLY the <points ...> block.

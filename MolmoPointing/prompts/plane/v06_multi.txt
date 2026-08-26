@@ -1,0 +1,32 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+Step 1: Identify the global symmetry plane orientation from ALL views together.
+Step 2: For each image, locate the global plane's surface trace (the visible seam/spine) and mark one point near the TOP and one near the BOTTOM.
+
+For each image:
+1. Project the global symmetry plane's trace into that view.
+2. Return:
+   - obj_id 1: a point on the trace near the TOP (upper half of visible object),
+   - obj_id 2: a point on the trace near the BOTTOM (lower half of visible object).
+
+IMPORTANT RULES:
+- Both points MUST lie ON the symmetry plane's visible surface trace.
+- Do NOT place points on the lateral sides, and do NOT use any left/right feature pair — only the single central seam itself counts.
+- Use the SAME global symmetry plane consistently across all views.
+- The seam position should be consistent: it should appear at approximately the same relative position on the object across all views where it is visible.
+- Maximize vertical distance between the two points in each image.
+- Both points MUST lie on the visible object surface.
+- FALLBACK: if no visible seam/spine exists at a given height in a given view (e.g. a smooth, featureless region), use the horizontal midpoint between the left and right silhouette edges at that height instead — still consistent with the global plane inferred in Step 1.
+- Infer the global plane from ALL views jointly before answering.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 Xtop Ytop 2 Xbottom Ybottom; 2 1 Xtop Ytop 2 Xbottom Ybottom; 3 1 Xtop Ytop 2 Xbottom Ybottom">
+
+Where each entry is: image_index obj_id X Y
+- obj_id 1 = TOP point on the symmetry plane surface trace
+- obj_id 2 = BOTTOM point on the symmetry plane surface trace
+
+Return ONLY the <points ...> block.

@@ -1,0 +1,21 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+Your task is to identify two points that lie DIRECTLY ON the symmetry plane, where the plane intersects the object's visible surface. Look for the visible "seam" or "spine" that divides the two mirror halves.
+
+Return:
+- obj_id 1: a point on the symmetry plane's surface trace near the TOP of the object
+- obj_id 2: a point on the symmetry plane's surface trace near the BOTTOM of the object
+
+IMPORTANT RULES:
+- Both points MUST lie ON the symmetry plane (on the visible dividing boundary between the two mirror halves).
+- Do NOT place points on the lateral sides, and do NOT use any left/right feature pair — only the single central seam itself counts.
+- The two points MUST be as far apart vertically as possible.
+- Both points MUST lie on the visible object surface.
+- FALLBACK: if no visible seam/spine exists at a given height (e.g. a smooth, featureless region where the surface itself gives no visual cue), use the horizontal midpoint between the left and right silhouette edges at that height instead — that midpoint still lies on the symmetry plane's projected trace even without a visible seam.
+- Do NOT collapse both points to the same location.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">

@@ -1,0 +1,25 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant rotational symmetry axis.
+
+Your task is to identify the NARROWEST visible cross-section of the object — the "neck" or "waist" where the object's width, measured perpendicular to the axis, is smallest — and return a point on the axis centerline at that height, plus a second point on the axis centerline at the TOP or BOTTOM of the object (whichever gives greater vertical separation).
+
+The axis centerline is the horizontal center of the object at each height — equidistant from the left and right silhouette edges.
+
+Return:
+- obj_id 1: a point on the axis centerline at the height where the object appears NARROWEST (its neck/waist, if one exists)
+- obj_id 2: a point on the axis centerline near the TOP or BOTTOM of the object (whichever gives greater vertical separation from obj_id 1)
+
+IMPORTANT RULES:
+- Both points MUST be on the axis centerline (horizontal center at that height), NOT on the silhouette edges.
+- The "narrowest cross-section" refers to the object's actual 3D geometry (a physical pinch point, like a bottle's neck or an hourglass's waist) — NOT an artifact of this particular viewing angle.
+- If the object has no clear narrowing (e.g. a uniform cylinder or a sphere), use the midpoint of the object's visible vertical extent instead for obj_id 1.
+- The two points MUST be at different heights (different Y coordinates).
+- Maximize the vertical distance between obj_id 1 and obj_id 2.
+- Both points MUST lie on or near the visible object surface.
+- Do NOT place points on the silhouette boundary.
+- Do NOT collapse both points to the same height or position.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">
