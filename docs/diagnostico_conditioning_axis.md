@@ -245,3 +245,88 @@ tres hipótesis.
    (`widest_pair` es compartido por las 14 variantes actuales) — el
    resultado de "sin señal geométrica" es estructural al método de
    triangulación, no específico de `axis_v06`.
+
+---
+
+## 6. Diagnóstico complementario: geometría del set de cámaras vs. eje GT
+
+Script: [`Mapping/diagnose_view_geometry.py`](../Mapping/diagnose_view_geometry.py).
+A diferencia de la sección 2-5 (que mide el conditioning de las normales
+construidas con los puntos que **devolvió Molmo2**), este mide algo previo e
+independiente de la respuesta del VLM: qué tan alineado está, respecto al
+eje GT real de cada objeto, el propio set de cámaras (Fibonacci sphere
+sampling) que se le mandó a Molmo2. Se verificó primero, a partir de los
+`.txt` de `data/objects/curated_axis_sym_obj/`, que la dirección del eje GT
+**sí varía sustancialmente entre objetos** (no todos alineados al mismo eje
+del mundo) — condición necesaria para que esto sea un predictor por-objeto
+válido y no una constante del dataset.
+
+**Hipótesis a testear:** una cámara que mira casi exactamente a lo largo del
+eje real ("de punta", *end-on*) ve el eje proyectado casi como un punto, no
+como una línea — cualquier par top/bottom que devuelva Molmo2 en esa vista
+debería producir un plano de interpretación casi degenerado. Signo
+esperado: más ángulo cámara-eje (más perpendicular, "vista de manual") →
+menos error; más fracción de vistas "de punta" → más error.
+
+### 6.1 Resultado (corrida sobre `axis_v06_nomesh`, 2457 filas)
+
+| predictor | n=6 | n=14 | n=26 | pooled | signo esperado |
+|---|---|---|---|---|---|
+| `min_view_axis_angle_deg` | +0.17 / +0.15 | +0.15 / +0.09 | +0.03 / +0.02 | +0.11 / +0.08 | negativo |
+| `mean_view_axis_angle_deg` | **+0.34 / +0.34** | +0.22 / +0.22 | **+0.31 / +0.31** | +0.25 / +0.26 | negativo |
+| `median_view_axis_angle_deg` | +0.21 / +0.22 | +0.16 / +0.16 | +0.04 / +0.02 | +0.15 / +0.14 | negativo |
+| `frac_degenerate` | −0.31 / −0.15 | −0.20 / −0.11 | −0.07 / −0.07 | −0.21 / −0.11 | **positivo** |
+
+Comparación directa (n_views=6): objetos CON ≥1 vista "de punta" → media
+51.05°/mediana 54.64° (n=231) vs. SIN ninguna → media 58.74°/mediana 59.70°
+(n=593). Mismo patrón, más atenuado, en n=14 y n=26.
+
+**Las cuatro métricas tienen el signo invertido respecto a la hipótesis.**
+`mean_view_axis_angle_deg` es la señal más fuerte de todo el diagnóstico
+(propio + el de la sección 2-5) — pero en la dirección contraria: **más
+perpendicularidad promedio del set de cámaras correlaciona con MÁS error, no
+menos**, y tener al menos una vista "de punta" correlaciona con **menos**
+error.
+
+### 6.2 Interpretación
+
+La explicación más plausible no es que la triangulación se beneficie de mala
+geometría, sino que **la variable de confusión es la ambigüedad del
+objetivo semántico, no el conditioning matemático**:
+
+- Una vista casi *end-on* (mirando a lo largo del eje) muestra al objeto
+  desde "arriba"/"abajo": para un objeto de revolución, esa vista tiene un
+  centro visualmente inequívoco (el centro de una silueta aproximadamente
+  circular) — un blanco fácil de señalar con precisión en píxeles, aunque
+  geométricamente esa vista aporte poca información angular sobre el eje.
+- Una vista mayoritariamente perpendicular ("de manual", la que en teoría
+  triangula mejor) muestra el cuerpo lateral completo del objeto — y ahí es
+  exactamente donde vive la ambigüedad que ya motivó el fallback de
+  curvatura de `axis_v06` (tapas redondeadas, sin un único "punto donde el
+  eje sale de la superficie" claramente definido). Más vistas de este tipo
+  no mejoran la triangulación si lo que degradan es la **identidad
+  consistente** del punto señalado (Molmo puede elegir un punto ligeramente
+  distinto de la región curva en cada vista lateral, mientras que en la
+  vista *end-on* casi no hay margen de ambigüedad: el centro es el centro).
+
+Esto **no contradice, sino que refuerza**, la conclusión de la sección 4: el
+cuello de botella sigue sin ser conditioning geométrico (ni el de la sección
+2-5, ni este). La señal que sí aparece acá es consistente con que la
+dificultad está en la **identificabilidad semántica del punto pedido en
+vistas laterales/perpendiculares**, no en la matemática de triangulación ni
+en el muestreo de cámaras en sí.
+
+### 6.3 Implicación práctica
+
+**No rediseñar el muestreo de vistas** para excluir ángulos "de punta" — la
+evidencia dice lo contrario de lo que se hubiera recomendado ingenuamente
+(esas vistas, si acaso, ayudan). El camino sigue siendo el de la sección 5:
+priorizar el diagnóstico de consistencia de identidad (residuo perpendicular
+al eje por punto, buscando la distribución bimodal) y el experimento híbrido
+`hybrid_v08` de verificación cross-view — con un matiz nuevo: si `hybrid_v08`
+funciona, debería beneficiar desproporcionadamente a las vistas
+**perpendiculares/laterales** (donde vive la ambigüedad), no a las *end-on*
+(que ya funcionan bien). Vale la pena, al re-evaluar `hybrid_v08`,
+desagregar el error por `mean_view_axis_angle_deg` (alto vs. bajo) en vez de
+solo mirar el agregado — si la mejora se concentra en el grupo de ángulo
+alto, confirma esta lectura.
