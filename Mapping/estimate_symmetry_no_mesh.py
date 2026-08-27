@@ -65,6 +65,7 @@ from itertools import combinations
 from pathlib import Path
 
 import numpy as np
+from PIL import Image
 from tqdm import tqdm
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -91,6 +92,73 @@ DEFAULT_FOV         = 60.0
 
 EDGE_ON_THRESH_DEFAULT     = 0.5    # |cos(angle)| below this = view is "edge-on" to a plane candidate
 DUP_ANGLE_THRESH_DEFAULT   = 15.0   # degrees; candidate planes closer than this are treated as duplicates
+
+BACKGROUND_THRESH        = 250  # RGB channel > this = fondo blanco (ver Mapping/diagnose_point_localization.py)
+MIN_POINTS_ON_OBJECT_DEFAULT = 2   # una vista con menos puntos ON-OBJECT que esto queda invalida
+
+
+# ── Filtro opcional: descartar puntos que no caen sobre el objeto ─────────────
+# Ver docs/diagnostico_conditioning_axis.md S7: los puntos fuera de la silueta
+# (fondo blanco) no explican angular_error, pero SI correlacionan con outliers
+# de translation_error (lift 1.2-1.4x). Este filtro es puramente aditivo/previo
+# a widest_pair/get_point_by_obj_id -- no requiere ningun cambio en la logica
+# de estimacion, y por diseno escala solas a mas puntos por vista: si una vista
+# pide N puntos y sobreviven >=min_points tras filtrar, se usa igual que hoy
+# (widest_pair elige el mejor par entre los que sobrevivieron); si sobreviven
+# <min_points, la vista queda invalida -- mismo criterio que ya aplica el resto
+# del pipeline para vistas con <2 puntos devueltos.
+
+def _is_on_object(pixel: np.ndarray) -> bool:
+    return not bool(np.all(pixel[:3] > BACKGROUND_THRESH))
+
+
+def _molmo_xy_to_pixel(x: float, y: float, img_w: int, img_h: int) -> tuple[int, int]:
+    px = int(round((x / 1000.0) * img_w))
+    py = int(round((y / 1000.0) * img_h))
+    return min(max(px, 0), img_w - 1), min(max(py, 0), img_h - 1)
+
+
+def filter_points_on_object(
+    points_by_image: dict, images_sent: list[dict], render_dir: Path,
+    min_points: int = MIN_POINTS_ON_OBJECT_DEFAULT,
+    image_cache: dict | None = None,
+) -> dict:
+    """Devuelve una copia de points_by_image donde, por cada vista, solo
+    quedan los puntos que caen sobre el objeto renderizado (no sobre el fondo
+    blanco). Si a una vista le quedan menos de min_points puntos validos, su
+    lista queda vacia (equivalente a "vista invalida" para widest_pair/
+    get_point_by_obj_id, que ya manejan ese caso). image_cache es opcional,
+    compartido por el llamador para no releer el mismo PNG dos veces dentro
+    del mismo objeto."""
+    if image_cache is None:
+        image_cache = {}
+
+    filtered: dict = {}
+    for img_idx_str, pts in points_by_image.items():
+        if not pts:
+            filtered[img_idx_str] = pts
+            continue
+
+        cam = images_sent[int(img_idx_str)]
+        filename = cam["filename"]
+        if filename not in image_cache:
+            img_path = render_dir / filename
+            image_cache[filename] = np.array(Image.open(img_path).convert("RGB")) if img_path.exists() else None
+        img = image_cache[filename]
+
+        if img is None:
+            filtered[img_idx_str] = pts  # sin PNG no se puede clasificar -- no se filtra, se deja como estaba
+            continue
+
+        img_h, img_w = img.shape[0], img.shape[1]
+        kept = []
+        for p in pts:
+            px, py = _molmo_xy_to_pixel(p["x"], p["y"], img_w, img_h)
+            if _is_on_object(img[py, px]):
+                kept.append(p)
+
+        filtered[img_idx_str] = kept if len(kept) >= min_points else []
+    return filtered
 
 
 # ── Axis: triangulate a single line from all interpretation planes ────────────
@@ -303,6 +371,8 @@ def process_object(
     experiment_id: str | None = None,
     edge_on_thresh: float = EDGE_ON_THRESH_DEFAULT,
     max_planes:    int = 1,
+    filter_off_object: bool = False,
+    min_points_on_object: int = MIN_POINTS_ON_OBJECT_DEFAULT,
 ) -> None:
     input_file  = exp_filename(MOLMO_JSON, experiment_id)
     output_file = exp_filename(OUTPUT_FILE, experiment_id)
@@ -312,6 +382,7 @@ def process_object(
 
     # (n_views_key, size, lighting) -> (points_by_image, images_sent, fov_deg, image_size)
     configs: dict[str, list[tuple]] = defaultdict(list)
+    _image_cache: dict = {}  # compartido entre n_views groups de este objeto (PNGs se repiten)
 
     for size in sizes:
         for lighting in lightings:
@@ -336,6 +407,11 @@ def process_object(
             for n_views_key, group in molmo_data.items():
                 images_sent     = group.get("images_sent", [])
                 points_by_image = group.get("points_by_image", {})
+                if filter_off_object and points_by_image:
+                    points_by_image = filter_points_on_object(
+                        points_by_image, images_sent, render_dir,
+                        min_points=min_points_on_object, image_cache=_image_cache,
+                    )
                 if not points_by_image:
                     continue
                 configs[n_views_key].append((points_by_image, images_sent, fov_deg, image_size))
@@ -477,6 +553,16 @@ def parse_args() -> argparse.Namespace:
                         "S4). 1 (default) keeps the single-plane schema Mapping/evaluate.py already "
                         "understands; >1 writes a 'planes' list that evaluate.py does not yet consume "
                         "(see docs/implementacion_pipeline_sin_malla.md, Fase 2).")
+    p.add_argument("--filter-off-object", action="store_true",
+                   help="Descarta puntos que no caen sobre el objeto renderizado (fondo blanco) "
+                        "ANTES de widest_pair/get_point_by_obj_id. Si a una vista le quedan menos "
+                        "de --min-points-on-object puntos, la vista queda invalida (ver "
+                        "docs/diagnostico_conditioning_axis.md S7). Requiere que los PNG de los "
+                        "renders esten disponibles junto al molmo_multiview_<ID>.json.")
+    p.add_argument("--min-points-on-object", type=int, default=MIN_POINTS_ON_OBJECT_DEFAULT,
+                   help="Solo con --filter-off-object: minimo de puntos ON-OBJECT que debe "
+                        "conservar una vista para seguir siendo valida. Escala solo a mas puntos "
+                        "por vista sin cambios de codigo.")
     return p.parse_args()
 
 
@@ -502,18 +588,22 @@ def main() -> None:
     if args.symmetry_type == "plane_sym":
         print(f"edge_on_thresh  : {args.edge_on_thresh}")
         print(f"max_planes      : {args.max_planes}")
+    if args.filter_off_object:
+        print(f"filter_off_object : True (min_points_on_object={args.min_points_on_object})")
     print(f"({'overwrite' if args.overwrite else 'skip existing'})")
 
     for obj_dir in tqdm(objects, unit="obj", dynamic_ncols=True):
         process_object(
-            object_dir     = obj_dir,
-            symmetry_type  = args.symmetry_type,
-            sizes          = args.sizes,
-            lightings      = args.lightings,
-            overwrite      = args.overwrite,
-            experiment_id  = args.experiment_id,
-            edge_on_thresh = args.edge_on_thresh,
-            max_planes     = args.max_planes,
+            object_dir           = obj_dir,
+            symmetry_type        = args.symmetry_type,
+            sizes                = args.sizes,
+            lightings            = args.lightings,
+            overwrite            = args.overwrite,
+            experiment_id        = args.experiment_id,
+            edge_on_thresh       = args.edge_on_thresh,
+            max_planes           = args.max_planes,
+            filter_off_object    = args.filter_off_object,
+            min_points_on_object = args.min_points_on_object,
         )
 
     print(f"\n[GPU {args.gpu_id}] Done.")
