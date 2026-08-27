@@ -285,6 +285,8 @@ def load_angular_errors(renders_root: Path, sizes: list[int], lightings: list[st
 
     out = defaultdict(dict)
     for obj_id, per_nv in data.get("objects", {}).items():
+        if per_nv is None:
+            continue  # evaluate_object devuelve None si no hay predicted_symmetry_<EXP>.json para este objeto
         for nv_key, metrics in per_nv.items():
             if isinstance(metrics, dict) and metrics.get("status") == "ok":
                 out[obj_id][nv_key] = metrics["angular_error_deg"]
