@@ -330,3 +330,60 @@ funciona, debería beneficiar desproporcionadamente a las vistas
 desagregar el error por `mean_view_axis_angle_deg` (alto vs. bajo) en vez de
 solo mirar el agregado — si la mejora se concentra en el grupo de ángulo
 alto, confirma esta lectura.
+
+---
+
+## 7. Diagnóstico complementario: ¿los puntos caen sobre el objeto?
+
+Scripts: [`Mapping/diagnose_point_localization.py`](../Mapping/diagnose_point_localization.py)
++ [`Mapping/diagnose_localization_vs_error.py`](../Mapping/diagnose_localization_vs_error.py).
+Mide, por objeto x n_views, qué fracción de los puntos 2D que devuelve Molmo2
+cae efectivamente sobre el objeto renderizado (vs. sobre el fondo blanco) —
+distinto de las hipótesis anteriores: acá no importa si el punto está "bien
+ubicado dentro del objeto", importa si está sobre el objeto **en absoluto**.
+
+**Hallazgo previo (sin cruzar con error todavía)**: en `axis_v06_nomesh`, el
+`pct_en_objeto` colapsa de 82.8% (n=6) a 51.5% (n=26) — a más vistas, una
+fracción creciente de los puntos devueltos ni siquiera cae sobre el objeto.
+`views_validas` está casi perfecto (Molmo casi nunca falla el parseo), así
+que el problema es puramente de localización, no de formato de respuesta.
+
+**Cruce con el error final** (`diagnose_localization_vs_error.py`, corrida
+sobre `axis_v06_nomesh`, n=6/14/26):
+
+| error | correlación (Pearson/Spearman, pooled) | lift (pct_obj bajo → outlier) |
+|---|---|---|
+| `angular_error_deg` | -0.007 / -0.014 (≈0) | 0.90x – 1.05x (≈1, sin relación) |
+| `translation_error` | -0.018 / -0.275 | **1.19x – 1.41x** (consistente en las 3 corridas) |
+
+La brecha grande entre Pearson y Spearman en `translation_error` es la firma
+de una relación que vive en la **cola** de la distribución (outliers), no en
+el caso típico — coincide con el patrón ya visto en §1 (`std` de traslación
+mucho mayor que la mediana sugiere unos pocos casos catastróficos).
+
+### Conclusión de los 3 diagnósticos combinados (§2-5, §6, §7)
+
+| Mecanismo probado | ¿Explica `angular_error`? | ¿Explica outliers de `translation_error`? |
+|---|---|---|
+| Conditioning de las normales (§2-5) | No (sin señal) | No (sin señal) |
+| Ángulo cámara-eje vs. GT (§6) | No (señal invertida) | No probado directamente |
+| Puntos fuera del objeto (§7) | **No** (lift≈1) | **Sí, parcialmente** (lift 1.2-1.4x) |
+
+El error angular alto y uniforme (~58-65° en las 14 variantes) queda **sin
+explicación geométrica tras tres diagnósticos independientes** — cada uno
+descarta un mecanismo distinto de "ruido" (conditioning matemático, cobertura
+de ángulos de cámara, alucinación fuera del objeto). Esto deja la
+inconsistencia de **identidad** entre puntos válidos (Molmo señalando bien
+geométricamente pero una estructura física distinta en cada vista) como la
+única hipótesis no descartada y no probada directamente todavía — el
+argumento más fuerte hasta ahora para priorizar `hybrid_v08` sobre cualquier
+variante geométrica adicional.
+
+Los outliers de `translation_error`, en cambio, sí tienen una causa parcial
+identificada y accionable de forma independiente: filtrar puntos que caen
+fuera de la silueta del objeto **antes** de triangular (un chequeo barato,
+sin necesidad de malla — ya está el clasificador fondo/objeto en
+`diagnose_point_localization.py::is_on_object`) debería reducir la cola de
+outliers de traslación sin necesitar un prompt nuevo. Es una mejora de
+implementación, no de prompt, y no se cruza con el problema del error
+angular (que sigue intacto).
