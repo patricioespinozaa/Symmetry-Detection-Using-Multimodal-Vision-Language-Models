@@ -1,0 +1,12 @@
+{
+  "mesh": "../data/objects/curated_axis_sym_obj/d851cbc873de1c4d3b6eb309177a6753.obj",
+  "device": "cuda:0",
+  "fov": 60.0,
+  "image_size": 224,
+  "camera_distance": 1.4609024267024366,
+  "total_images": 114,
+  "processing_time_seconds": 2.6,
+  "processing_time_human": "0m 2.60s",
+  "illumination": "flat",
+  "illumination_value": 0.7
+}
