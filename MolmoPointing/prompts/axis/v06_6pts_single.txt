@@ -1,0 +1,26 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant rotational symmetry axis.
+
+Your task is to identify SIX points along the axis centerline, spread from the top of the object to the bottom: the horizontal center of the object at each of six different heights, equidistant from the left and right silhouette edges.
+
+Return, from top to bottom:
+- obj_id 1: the TOP pole — topmost visible point on the rotation axis (at the horizontal center of the topmost surface)
+- obj_id 2: a point on the axis centerline in the upper quarter of the object's visible extent
+- obj_id 3: a point on the axis centerline slightly above the vertical midpoint
+- obj_id 4: a point on the axis centerline slightly below the vertical midpoint
+- obj_id 5: a point on the axis centerline in the lower quarter of the object's visible extent
+- obj_id 6: the BOTTOM pole — bottommost visible point on the rotation axis (at the horizontal center of the bottommost surface)
+
+IMPORTANT RULES:
+- All six points MUST lie ON the rotation axis — at the horizontal center of the object at that height, NOT on the lateral silhouette.
+- The six points MUST be at six clearly different heights, ordered from top (obj_id 1) to bottom (obj_id 6), spread as evenly as possible across the object's full visible vertical extent.
+- EVERY point MUST be located ON THE VISIBLE SURFACE OF THE OBJECT ITSELF — never on the background. If the exact axis centerline at a given height would fall outside the object (e.g. a concave region, a gap, or an opening), place that point on the nearest point of the object's visible surface at that height instead of on empty background.
+- For flat-topped or flat-bottomed objects, place obj_id 1 / obj_id 6 at the geometric center of the top or bottom face.
+- For ROUNDED or CURVED tops/bottoms (no single flat face), place obj_id 1 / obj_id 6 at the center of curvature of that rounded region: the point equidistant from the left and right silhouette edges at that region's topmost/bottommost extent.
+- Do NOT collapse two or more points to the same location or the same height.
+- Do NOT place any point on the lateral silhouette edges.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6">
