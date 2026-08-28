@@ -1,0 +1,35 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant axis of rotational symmetry.
+
+For each image, identify SIX points along the global rotation axis, spread from the top of the object to the bottom: the horizontal center of the object at each of six different heights, equidistant from the left and right silhouette edges.
+
+For each image:
+1. Locate where the global axis passes through the object at six different heights, evenly spread across the object's visible vertical extent.
+2. Return, from top to bottom:
+   - obj_id 1: the TOP pole (topmost point on the axis, at the horizontal center of the topmost surface),
+   - obj_id 2: a point on the axis centerline in the upper quarter,
+   - obj_id 3: a point on the axis centerline slightly above the vertical midpoint,
+   - obj_id 4: a point on the axis centerline slightly below the vertical midpoint,
+   - obj_id 5: a point on the axis centerline in the lower quarter,
+   - obj_id 6: the BOTTOM pole (bottommost point on the axis, at the horizontal center of the bottommost surface).
+
+IMPORTANT RULES:
+- All six points MUST be ON the rotation axis — at the horizontal center of the object at that height, NOT on the lateral silhouette.
+- Use the SAME global axis consistently across all views.
+- The six points MUST be at six clearly different heights, ordered top (obj_id 1) to bottom (obj_id 6), in EVERY image.
+- EVERY point MUST be located ON THE VISIBLE SURFACE OF THE OBJECT ITSELF in that view — never on the background. If the exact axis centerline at a given height would fall outside the object in a particular view (e.g. a concave region, a gap, or self-occlusion), place that point on the nearest point of the object's visible surface at that height instead of on empty background.
+- For flat surfaces (e.g. flat-topped objects), place obj_id 1 / obj_id 6 at the geometric center of the top or bottom face.
+- For ROUNDED or CURVED tops/bottoms (no single flat face), place obj_id 1 / obj_id 6 at the center of curvature of that rounded region.
+- Infer the global axis from ALL views jointly before answering.
+- Verify consistency: each obj_id should correspond to the same relative height on the object across all views, whether the surface there is flat or curved.
+- Do NOT place any point on the lateral silhouette edges.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6; 2 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6; 3 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6">
+
+Where each entry is: image_index obj_id X Y (repeated for obj_id 1 through 6)
+- obj_id 1 = TOP pole, obj_id 6 = BOTTOM pole, obj_id 2-5 = intermediate points top to bottom
+
+Return ONLY the <points ...> block.

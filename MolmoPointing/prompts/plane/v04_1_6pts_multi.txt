@@ -1,0 +1,38 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+Step 1: Identify the global symmetry plane orientation from ALL views jointly.
+Step 2: For each image, using that global orientation, compute SIX horizontal midpoints of the object's left-right extent, at six different heights spread from the top of the object to the bottom.
+
+These midpoints lie on the symmetry plane's projected trace.
+
+For each image:
+1. Project the global symmetry plane's orientation into that view.
+2. Return, from top to bottom:
+   - obj_id 1: midpoint at the TOP of the object,
+   - obj_id 2: midpoint in the upper quarter,
+   - obj_id 3: midpoint slightly above the vertical midpoint,
+   - obj_id 4: midpoint slightly below the vertical midpoint,
+   - obj_id 5: midpoint in the lower quarter,
+   - obj_id 6: midpoint at the BOTTOM of the object.
+
+The horizontal midpoint at height Y = (X_left_edge + X_right_edge) / 2 at that height, where "left/right" is defined relative to the global symmetry plane's orientation, not necessarily the image's vertical axis.
+
+IMPORTANT RULES:
+- All six points MUST lie on the symmetry plane trace (the center of the object's bilateral extent at that height).
+- Use the SAME global symmetry plane consistently across all views.
+- The six points MUST be at six clearly different heights, ordered top (obj_id 1) to bottom (obj_id 6), in EVERY image.
+- EVERY point MUST be located ON OR WITHIN THE VISIBLE OBJECT ITSELF in that view — never on the background. If the computed midpoint at a given height would fall outside the object in a particular view, place that point on the nearest point of the object's visible surface at that height instead of on empty background.
+- Do NOT place points on the silhouette edges — place them at the computed midpoint between the edges.
+- Do NOT collapse two or more points to the same height.
+- Infer the global plane from ALL views jointly before answering, and verify that the six midpoints in every image are consistent with that SAME global plane.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6; 2 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6; 3 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6">
+
+Where each entry is: image_index obj_id X Y (repeated for obj_id 1 through 6)
+- obj_id 1 = TOP midpoint, obj_id 6 = BOTTOM midpoint, obj_id 2-5 = intermediate midpoints top to bottom
+
+Return ONLY the <points ...> block.

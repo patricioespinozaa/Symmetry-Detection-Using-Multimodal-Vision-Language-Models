@@ -1,0 +1,26 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+Your task is to identify SIX horizontal midpoints of the object's left-right extent, at six different heights spread from the top of the object to the bottom. These midpoints lie on the symmetry plane's projected trace.
+
+Return, from top to bottom:
+- obj_id 1: the horizontal midpoint of the left-right extent at the TOP of the object
+- obj_id 2: the horizontal midpoint in the upper quarter of the object's visible extent
+- obj_id 3: the horizontal midpoint slightly above the vertical midpoint
+- obj_id 4: the horizontal midpoint slightly below the vertical midpoint
+- obj_id 5: the horizontal midpoint in the lower quarter of the object's visible extent
+- obj_id 6: the horizontal midpoint of the left-right extent at the BOTTOM of the object
+
+The horizontal midpoint at height Y = (X_left_edge + X_right_edge) / 2 at that height.
+
+IMPORTANT RULES:
+- All six points MUST lie on the symmetry plane's projected trace (the horizontal center of the object at that height).
+- The six points MUST be at six clearly different heights, ordered from top (obj_id 1) to bottom (obj_id 6), spread as evenly as possible across the object's full visible vertical extent.
+- EVERY point MUST be located ON OR WITHIN THE VISIBLE OBJECT ITSELF — never on the background. If the computed midpoint at a given height would fall outside the object (e.g. between two separate parts, or in a concave gap), place that point on the nearest point of the object's visible surface at that height instead of on empty background.
+- Do NOT place points on the silhouette edges — place them at the horizontal CENTER between the edges.
+- Do NOT collapse two or more points to the same height or the same location.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6">

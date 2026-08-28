@@ -70,6 +70,9 @@ DESCRIPTIONS: dict[str, str] = {
     "axis_v07":  "Narrowest cross-section (neck/waist) — inversion of v02's view-dependent 'widest' anchor",
     "plane_v06": "Seam/spine reinforced — v02 with explicit non-bilateral constraint + v04-style midpoint fallback",
     "plane_v07": "Global-orientation midpoint — v04_1 midpoint formula anchored to the plane's own orientation, not image-vertical",
+    # Round 3 (6 puntos por vista + filtro fondo/objeto, ver docs/diagnostico_conditioning_axis.md S7)
+    "axis_v06_6pts":  "v06 extendido a 6 puntos a lo largo del eje (poles + 4 intermedios), exige puntos dentro del objeto — compatible sin cambios con widest_pair",
+    "plane_v04_1_6pts": "v04_1 extendido a 6 midpoints a lo largo de la traza, exige puntos dentro del objeto — REQUIERE extender estimate_plane_no_mesh a 3 pares (hoy solo lee obj_id 1/2)",
 }
 
 
