@@ -1,0 +1,3068 @@
+{
+  "6": {
+    "experiment_id": "axis_v07_sandbox_6pts",
+    "prompt_used": "You are given multiple views of the SAME 3D object.\n\nThe object has ONE dominant rotational symmetry axis.\n\nFor each image, place SIX points along the projected axis line \u2014 the centerline of the object as seen from that viewpoint. These six points together define a straight line in each image representing the axis projection.\n\nFor each image:\n1. Infer the global rotation axis from ALL views jointly.\n2. Project that axis into the current view and identify the centerline.\n3. Place six points along that centerline, from top to bottom:\n   - obj_id 1: TOP pole (topmost axis point, horizontal center of topmost surface)\n   - obj_id 2: axis centerline at ~80% of object's vertical extent\n   - obj_id 3: axis centerline at ~60% of object's vertical extent\n   - obj_id 4: axis centerline at ~40% of object's vertical extent\n   - obj_id 5: axis centerline at ~20% of object's vertical extent\n   - obj_id 6: BOTTOM pole (bottommost axis point, horizontal center of bottommost surface)\n\nIMPORTANT RULES:\n- ALL six points MUST be ON the rotation axis \u2014 at the horizontal center of the object at each height, NOT on the lateral silhouette.\n- ALL six points MUST be inside the visible object, never on the background.\n- Use the SAME global axis consistently across all views.\n- The six points MUST be at six DIFFERENT heights, strictly ordered top (obj_id 1) to bottom (obj_id 6) in EVERY image.\n- The six points MUST be approximately collinear in each image \u2014 they should lie on the same projected line.\n- Maximize vertical spread: obj_id 1 and obj_id 6 must be as far apart as possible in each image.\n- At each height, the point must be equidistant from the left and right silhouette edges.\n- Do NOT place points on the lateral silhouette edges.\n- Infer the global axis from ALL views jointly before answering.\n- SELF-CHECK per image: your six points should form a straight line in the image following the object's vertical centerline.\n\nOutput format (one entry per image, separated by semicolons):\n\n<points coords=\"1 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6; 2 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6; 3 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6\">\n\nWhere each entry is: image_index obj_id X Y (repeated for obj_id 1 through 6)\n\nReturn ONLY the <points ...> block.",
+    "raw_output": "<points coords=\"1 1 500 467 2 500 467 3 500 467 4 500 467 5 500 467 6 500 467; 2 1 499 499 2 499 499 3 499 499 4 499 499 5 499 499 6 499 499; 3 1 500 499 2 500 499 3 500 499 4 500 499 5 500 499 6 500 499; 4 1 500 499 2 500 499 3 500 499 4 500 499 5 500 499 6 500 499; 5 1 500 499 2 500 499 3 500 499 4 500 499 5 500 499 6 500 499; 6 1 500 499 2 500 499 3 500 499 4 500 499 5 500 499 6 500 499\">",
+    "points_by_image": {
+      "0": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 467.0
+        }
+      ],
+      "1": [
+        {
+          "obj_id": 1,
+          "x": 499.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 2,
+          "x": 499.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 3,
+          "x": 499.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 4,
+          "x": 499.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 5,
+          "x": 499.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 6,
+          "x": 499.0,
+          "y": 499.0
+        }
+      ],
+      "2": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 499.0
+        }
+      ],
+      "3": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 499.0
+        }
+      ],
+      "4": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 499.0
+        }
+      ],
+      "5": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 499.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 499.0
+        }
+      ]
+    },
+    "images_sent": [
+      {
+        "img_idx": 0,
+        "filename": "IND_00_AZ_090_EL_+89.png",
+        "index": 0,
+        "azimuth": 90,
+        "elevation": 89,
+        "eye": [
+          0.0001,
+          1.4833691312709831,
+          0.001583369625727558
+        ],
+        "R": [
+          [
+            -0.998011589050293,
+            -0.06303082406520844,
+            -6.741406104993075e-05
+          ],
+          [
+            0.0,
+            0.0010695405071601272,
+            -0.999999463558197
+          ],
+          [
+            0.06303086131811142,
+            -0.99801105260849,
+            -0.0010674138320609927
+          ]
+        ],
+        "T": [
+          -0.0,
+          1.1641532182693481e-10,
+          1.4833699464797974
+        ]
+      },
+      {
+        "img_idx": 1,
+        "filename": "IND_23_AZ_283_EL_+36.png",
+        "index": 23,
+        "azimuth": 283,
+        "elevation": 36,
+        "eye": [
+          0.26217051073231395,
+          0.8806851244106882,
+          -1.1644941025772373
+        ],
+        "R": [
+          [
+            0.975581169128418,
+            -0.13040108978748322,
+            -0.17673981189727783
+          ],
+          [
+            -0.0,
+            0.8046823143959045,
+            -0.5937056541442871
+          ],
+          [
+            0.21963925659656525,
+            0.5792081356048584,
+            0.7850328683853149
+          ]
+        ],
+        "T": [
+          -0.0,
+          5.960464477539063e-08,
+          1.4833699464797974
+        ]
+      },
+      {
+        "img_idx": 2,
+        "filename": "IND_45_AZ_067_EL_+11.png",
+        "index": 45,
+        "azimuth": 67,
+        "elevation": 11,
+        "eye": [
+          0.5475858336112044,
+          0.30057955969042727,
+          1.3454322216736558
+        ],
+        "R": [
+          [
+            -0.9262253642082214,
+            -0.07638658583164215,
+            -0.36914992332458496
+          ],
+          [
+            0.0,
+            0.9792547821998596,
+            -0.20263291895389557
+          ],
+          [
+            0.3769702613353729,
+            -0.18768374621868134,
+            -0.9070106148719788
+          ]
+        ],
+        "T": [
+          -0.0,
+          -0.0,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 3,
+        "filename": "IND_68_AZ_351_EL_-11.png",
+        "index": 68,
+        "azimuth": 351,
+        "elevation": -11,
+        "eye": [
+          1.4325171144641007,
+          -0.30168568778326127,
+          -0.23930449754917932
+        ],
+        "R": [
+          [
+            0.1647685170173645,
+            0.20059886574745178,
+            -0.9657180905342102
+          ],
+          [
+            -0.0,
+            0.979100227355957,
+            0.2033785879611969
+          ],
+          [
+            0.9863322973251343,
+            -0.03351038694381714,
+            0.1613248884677887
+          ]
+        ],
+        "T": [
+          2.9802322387695312e-08,
+          1.7695128917694092e-08,
+          1.4833699464797974
+        ]
+      },
+      {
+        "img_idx": 4,
+        "filename": "IND_90_AZ_135_EL_-36.png",
+        "index": 90,
+        "azimuth": 135,
+        "elevation": -36,
+        "eye": [
+          -0.854877030179792,
+          -0.8803540258015963,
+          0.8333956038514835
+        ],
+        "R": [
+          [
+            -0.6980531215667725,
+            -0.424960732460022,
+            0.5763073563575745
+          ],
+          [
+            0.0,
+            0.8048469424247742,
+            0.5934824347496033
+          ],
+          [
+            -0.7160459756851196,
+            0.41428229212760925,
+            -0.5618258714675903
+          ]
+        ],
+        "T": [
+          -5.960464477539063e-08,
+          5.960464477539063e-08,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 5,
+        "filename": "IND_113_AZ_270_EL_-89.png",
+        "index": 113,
+        "azimuth": 270,
+        "elevation": -89,
+        "eye": [
+          0.0001,
+          -1.4833691312709831,
+          -0.0013833696257275578
+        ],
+        "R": [
+          [
+            0.9973975419998169,
+            0.07209908962249756,
+            -6.741407560184598e-05
+          ],
+          [
+            -0.0,
+            0.0009350192849524319,
+            0.9999995827674866
+          ],
+          [
+            0.07209912687540054,
+            -0.9973970055580139,
+            0.0009325859136879444
+          ]
+        ],
+        "T": [
+          -7.275957614183426e-12,
+          1.1641532182693481e-10,
+          1.4833698272705078
+        ]
+      }
+    ],
+    "n_points": 36
+  },
+  "14": {
+    "experiment_id": "axis_v07_sandbox_6pts",
+    "prompt_used": "You are given multiple views of the SAME 3D object.\n\nThe object has ONE dominant rotational symmetry axis.\n\nFor each image, place SIX points along the projected axis line \u2014 the centerline of the object as seen from that viewpoint. These six points together define a straight line in each image representing the axis projection.\n\nFor each image:\n1. Infer the global rotation axis from ALL views jointly.\n2. Project that axis into the current view and identify the centerline.\n3. Place six points along that centerline, from top to bottom:\n   - obj_id 1: TOP pole (topmost axis point, horizontal center of topmost surface)\n   - obj_id 2: axis centerline at ~80% of object's vertical extent\n   - obj_id 3: axis centerline at ~60% of object's vertical extent\n   - obj_id 4: axis centerline at ~40% of object's vertical extent\n   - obj_id 5: axis centerline at ~20% of object's vertical extent\n   - obj_id 6: BOTTOM pole (bottommost axis point, horizontal center of bottommost surface)\n\nIMPORTANT RULES:\n- ALL six points MUST be ON the rotation axis \u2014 at the horizontal center of the object at each height, NOT on the lateral silhouette.\n- ALL six points MUST be inside the visible object, never on the background.\n- Use the SAME global axis consistently across all views.\n- The six points MUST be at six DIFFERENT heights, strictly ordered top (obj_id 1) to bottom (obj_id 6) in EVERY image.\n- The six points MUST be approximately collinear in each image \u2014 they should lie on the same projected line.\n- Maximize vertical spread: obj_id 1 and obj_id 6 must be as far apart as possible in each image.\n- At each height, the point must be equidistant from the left and right silhouette edges.\n- Do NOT place points on the lateral silhouette edges.\n- Infer the global axis from ALL views jointly before answering.\n- SELF-CHECK per image: your six points should form a straight line in the image following the object's vertical centerline.\n\nOutput format (one entry per image, separated by semicolons):\n\n<points coords=\"1 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6; 2 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6; 3 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6\">\n\nWhere each entry is: image_index obj_id X Y (repeated for obj_id 1 through 6)\n\nReturn ONLY the <points ...> block.",
+    "raw_output": "<points coords=\"1 1 499 467 2 500 467 3 500 467 4 500 467 5 500 467 6 500 467; 2 1 499 467 2 500 467 3 500 467 4 500 467 5 500 467 6 500 467; 3 1 499 467 2 500 467 3 500 467 4 500 467 5 500 467 6 500 467; 4 1 499 467 2 500 467 3 500 467 4 500 467 5 500 467 6 500 467; 5 1 499 467 2 500 467 3 500 467 4 500 467 5 500 467 6 500 467; 6 1 499 467 2 500 467 3 500 467 4 500 467 5 500 467 6 500 467; 7 1 499 467 2 500 467 3 500 467 4 500 467 5 500 467 6 500 467; 8 1 499 467 2 500 467 3 500 467 4 500 467 5 500 467 6 500 467; 9 1 499 467 2 500 467 3 500 467 4 500 467 5 500 467 6 500 467; 10 1 499 467 2 500 467 3 500 467 4 500 467 5 500 467 6 500 467; 11 1 499 467 2 500 467 3 500 467 4 500 467 5 500 467 6 500 467; 12 1 499 467 2 500 467 3 500 467 4 500 467 5 500 467 6 500 467; 13 1 499 467 2 500 467 3 500 467 4 500 467 5 500 467 6 500 467; 14 1 499 467 2 500 467 3 500 467 4 500 467 5 500 467 6 500 467\">",
+    "points_by_image": {
+      "0": [
+        {
+          "obj_id": 1,
+          "x": 499.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 467.0
+        }
+      ],
+      "1": [
+        {
+          "obj_id": 1,
+          "x": 499.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 467.0
+        }
+      ],
+      "2": [
+        {
+          "obj_id": 1,
+          "x": 499.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 467.0
+        }
+      ],
+      "3": [
+        {
+          "obj_id": 1,
+          "x": 499.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 467.0
+        }
+      ],
+      "4": [
+        {
+          "obj_id": 1,
+          "x": 499.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 467.0
+        }
+      ],
+      "5": [
+        {
+          "obj_id": 1,
+          "x": 499.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 467.0
+        }
+      ],
+      "6": [
+        {
+          "obj_id": 1,
+          "x": 499.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 467.0
+        }
+      ],
+      "7": [
+        {
+          "obj_id": 1,
+          "x": 499.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 467.0
+        }
+      ],
+      "8": [
+        {
+          "obj_id": 1,
+          "x": 499.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 467.0
+        }
+      ],
+      "9": [
+        {
+          "obj_id": 1,
+          "x": 499.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 467.0
+        }
+      ],
+      "10": [
+        {
+          "obj_id": 1,
+          "x": 499.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 467.0
+        }
+      ],
+      "11": [
+        {
+          "obj_id": 1,
+          "x": 499.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 467.0
+        }
+      ],
+      "12": [
+        {
+          "obj_id": 1,
+          "x": 499.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 467.0
+        }
+      ],
+      "13": [
+        {
+          "obj_id": 1,
+          "x": 499.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 467.0
+        }
+      ]
+    },
+    "images_sent": [
+      {
+        "img_idx": 0,
+        "filename": "IND_00_AZ_090_EL_+89.png",
+        "index": 0,
+        "azimuth": 90,
+        "elevation": 89,
+        "eye": [
+          0.0001,
+          1.4833691312709831,
+          0.001583369625727558
+        ],
+        "R": [
+          [
+            -0.998011589050293,
+            -0.06303082406520844,
+            -6.741406104993075e-05
+          ],
+          [
+            0.0,
+            0.0010695405071601272,
+            -0.999999463558197
+          ],
+          [
+            0.06303086131811142,
+            -0.99801105260849,
+            -0.0010674138320609927
+          ]
+        ],
+        "T": [
+          -0.0,
+          1.1641532182693481e-10,
+          1.4833699464797974
+        ]
+      },
+      {
+        "img_idx": 1,
+        "filename": "IND_09_AZ_157_EL_+57.png",
+        "index": 9,
+        "azimuth": 157,
+        "elevation": 57,
+        "eye": [
+          -0.7424603889064918,
+          1.2467737662995189,
+          0.30772378290475233
+        ],
+        "R": [
+          [
+            -0.38288164138793945,
+            0.7764525413513184,
+            0.500522792339325
+          ],
+          [
+            0.0,
+            0.5418100953102112,
+            -0.8405009508132935
+          ],
+          [
+            -0.9237974882125854,
+            -0.32181236147880554,
+            -0.20744913816452026
+          ]
+        ],
+        "T": [
+          -0.0,
+          -5.21540641784668e-08,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 2,
+        "filename": "IND_17_AZ_177_EL_+44.png",
+        "index": 17,
+        "azimuth": 177,
+        "elevation": 44,
+        "eye": [
+          -1.0597173900938353,
+          1.037001853210508,
+          0.04485966522120794
+        ],
+        "R": [
+          [
+            -0.04229384660720825,
+            0.6984596252441406,
+            0.7143986821174622
+          ],
+          [
+            0.0,
+            0.7150384783744812,
+            -0.6990851759910583
+          ],
+          [
+            -0.9991052150726318,
+            -0.02956700138747692,
+            -0.030241727828979492
+          ]
+        ],
+        "T": [
+          -0.0,
+          -3.457535058259964e-08,
+          1.4833699464797974
+        ]
+      },
+      {
+        "img_idx": 3,
+        "filename": "IND_26_AZ_336_EL_+32.png",
+        "index": 26,
+        "azimuth": 336,
+        "elevation": 32,
+        "eye": [
+          1.133530586716084,
+          0.8012805074719191,
+          -0.5229188630348989
+        ],
+        "R": [
+          [
+            0.4188936948776245,
+            -0.49049872159957886,
+            -0.764159083366394
+          ],
+          [
+            -0.0,
+            0.8415522575378418,
+            -0.5401757955551147
+          ],
+          [
+            0.9080353379249573,
+            0.226276233792305,
+            0.3525208830833435
+          ]
+        ],
+        "T": [
+          -2.9802322387695312e-08,
+          5.21540641784668e-08,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 4,
+        "filename": "IND_35_AZ_132_EL_+22.png",
+        "index": 35,
+        "azimuth": 132,
+        "elevation": 22,
+        "eye": [
+          -0.931542882679484,
+          0.5634609291176215,
+          1.0075345250065535
+        ],
+        "R": [
+          [
+            -0.7342543601989746,
+            0.2578717768192291,
+            0.6279909610748291
+          ],
+          [
+            0.0,
+            0.9250472784042358,
+            -0.37985196709632874
+          ],
+          [
+            -0.6788744330406189,
+            -0.2789079546928406,
+            -0.6792200207710266
+          ]
+        ],
+        "T": [
+          -0.0,
+          -2.9802322387695312e-08,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 5,
+        "filename": "IND_43_AZ_152_EL_+13.png",
+        "index": 43,
+        "azimuth": 152,
+        "elevation": 13,
+        "eye": [
+          -1.2815075177041284,
+          0.3537756838602918,
+          0.6580026045313677
+        ],
+        "R": [
+          [
+            -0.45676687359809875,
+            0.21216155588626862,
+            0.8639163970947266
+          ],
+          [
+            0.0,
+            0.971143901348114,
+            -0.23849458992481232
+          ],
+          [
+            -0.8895864486694336,
+            -0.10893642902374268,
+            -0.4435863494873047
+          ]
+        ],
+        "T": [
+          5.960464477539063e-08,
+          -2.2351741790771484e-08,
+          1.4833699464797974
+        ]
+      },
+      {
+        "img_idx": 6,
+        "filename": "IND_52_AZ_311_EL_+04.png",
+        "index": 52,
+        "azimuth": 311,
+        "elevation": 4,
+        "eye": [
+          0.9584206812706835,
+          0.11927043583814448,
+          -1.125873234800746
+        ],
+        "R": [
+          [
+            0.7614623308181763,
+            -0.05211929231882095,
+            -0.6461103558540344
+          ],
+          [
+            -0.0,
+            0.9967622756958008,
+            -0.08040504902601242
+          ],
+          [
+            0.6482090950012207,
+            0.061225421726703644,
+            0.7589969038963318
+          ]
+        ],
+        "T": [
+          -0.0,
+          -0.0,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 7,
+        "filename": "IND_61_AZ_107_EL_-04.png",
+        "index": 61,
+        "azimuth": 107,
+        "elevation": -4,
+        "eye": [
+          -0.45628245617498736,
+          -0.11955094105016066,
+          1.4063783533153587
+        ],
+        "R": [
+          [
+            -0.9511910676956177,
+            -0.024871554225683212,
+            0.3075985610485077
+          ],
+          [
+            0.0,
+            0.9967470169067383,
+            0.08059415221214294
+          ],
+          [
+            -0.3086024522781372,
+            0.07666044682264328,
+            -0.9480968713760376
+          ]
+        ],
+        "T": [
+          -0.0,
+          -7.450580596923828e-09,
+          1.4833699464797974
+        ]
+      },
+      {
+        "img_idx": 8,
+        "filename": "IND_70_AZ_266_EL_-13.png",
+        "index": 70,
+        "azimuth": 266,
+        "elevation": -13,
+        "eye": [
+          -0.11192294990895256,
+          -0.35299728363259864,
+          -1.4364025727576382
+        ],
+        "R": [
+          [
+            0.9969781041145325,
+            -0.018486319109797478,
+            0.0754518210887909
+          ],
+          [
+            0.0,
+            0.9712725281715393,
+            0.23796983063220978
+          ],
+          [
+            -0.0776834636926651,
+            -0.2372506856918335,
+            0.9683374762535095
+          ]
+        ],
+        "T": [
+          7.450580596923828e-09,
+          -0.0,
+          1.4833699464797974
+        ]
+      },
+      {
+        "img_idx": 9,
+        "filename": "IND_78_AZ_286_EL_-22.png",
+        "index": 78,
+        "azimuth": 286,
+        "elevation": -22,
+        "eye": [
+          0.3690260563071843,
+          -0.5631466951203704,
+          -1.3217684175128597
+        ],
+        "R": [
+          [
+            0.9631659984588623,
+            0.10208805650472641,
+            -0.24877548217773438
+          ],
+          [
+            -0.0,
+            0.9251343011856079,
+            0.3796401023864746
+          ],
+          [
+            0.26890742778778076,
+            -0.36565646529197693,
+            0.8910578489303589
+          ]
+        ],
+        "T": [
+          -0.0,
+          -0.0,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 10,
+        "filename": "IND_87_AZ_083_EL_-32.png",
+        "index": 87,
+        "azimuth": 83,
+        "elevation": -32,
+        "eye": [
+          0.148378123484314,
+          -0.8019966092474249,
+          1.2390203998401255
+        ],
+        "R": [
+          [
+            -0.9929056763648987,
+            0.06428690254688263,
+            -0.10002773255109787
+          ],
+          [
+            0.0,
+            0.8412421345710754,
+            0.5406585335731506
+          ],
+          [
+            0.11890481412410736,
+            0.5368229150772095,
+            -0.8352740406990051
+          ]
+        ],
+        "T": [
+          -1.4901161193847656e-08,
+          5.960464477539063e-08,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 11,
+        "filename": "IND_96_AZ_241_EL_-44.png",
+        "index": 96,
+        "azimuth": 241,
+        "elevation": -44,
+        "eye": [
+          -0.5183180984923564,
+          -1.0361203286478027,
+          -0.926383934085169
+        ],
+        "R": [
+          [
+            0.872689425945282,
+            -0.34105610847473145,
+            0.34941935539245605
+          ],
+          [
+            0.0,
+            0.7156189680099487,
+            0.6984908580780029
+          ],
+          [
+            -0.4882757067680359,
+            -0.6095656156539917,
+            0.6245130896568298
+          ]
+        ],
+        "T": [
+          -2.9802322387695312e-08,
+          -0.0,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 12,
+        "filename": "IND_104_AZ_261_EL_-57.png",
+        "index": 104,
+        "azimuth": 261,
+        "elevation": -57,
+        "eye": [
+          -0.12831781970138567,
+          -1.2462873308643792,
+          -0.7941590558994476
+        ],
+        "R": [
+          [
+            0.9871965646743774,
+            -0.13401450216770172,
+            0.0865042582154274
+          ],
+          [
+            0.0,
+            0.5423184633255005,
+            0.8401730060577393
+          ],
+          [
+            -0.15950822830200195,
+            -0.8294159173965454,
+            0.5353749394416809
+          ]
+        ],
+        "T": [
+          -0.0,
+          -0.0,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 13,
+        "filename": "IND_113_AZ_270_EL_-89.png",
+        "index": 113,
+        "azimuth": 270,
+        "elevation": -89,
+        "eye": [
+          0.0001,
+          -1.4833691312709831,
+          -0.0013833696257275578
+        ],
+        "R": [
+          [
+            0.9973975419998169,
+            0.07209908962249756,
+            -6.741407560184598e-05
+          ],
+          [
+            -0.0,
+            0.0009350192849524319,
+            0.9999995827674866
+          ],
+          [
+            0.07209912687540054,
+            -0.9973970055580139,
+            0.0009325859136879444
+          ]
+        ],
+        "T": [
+          -7.275957614183426e-12,
+          1.1641532182693481e-10,
+          1.4833698272705078
+        ]
+      }
+    ],
+    "n_points": 84
+  },
+  "26": {
+    "experiment_id": "axis_v07_sandbox_6pts",
+    "prompt_used": "You are given multiple views of the SAME 3D object.\n\nThe object has ONE dominant rotational symmetry axis.\n\nFor each image, place SIX points along the projected axis line \u2014 the centerline of the object as seen from that viewpoint. These six points together define a straight line in each image representing the axis projection.\n\nFor each image:\n1. Infer the global rotation axis from ALL views jointly.\n2. Project that axis into the current view and identify the centerline.\n3. Place six points along that centerline, from top to bottom:\n   - obj_id 1: TOP pole (topmost axis point, horizontal center of topmost surface)\n   - obj_id 2: axis centerline at ~80% of object's vertical extent\n   - obj_id 3: axis centerline at ~60% of object's vertical extent\n   - obj_id 4: axis centerline at ~40% of object's vertical extent\n   - obj_id 5: axis centerline at ~20% of object's vertical extent\n   - obj_id 6: BOTTOM pole (bottommost axis point, horizontal center of bottommost surface)\n\nIMPORTANT RULES:\n- ALL six points MUST be ON the rotation axis \u2014 at the horizontal center of the object at each height, NOT on the lateral silhouette.\n- ALL six points MUST be inside the visible object, never on the background.\n- Use the SAME global axis consistently across all views.\n- The six points MUST be at six DIFFERENT heights, strictly ordered top (obj_id 1) to bottom (obj_id 6) in EVERY image.\n- The six points MUST be approximately collinear in each image \u2014 they should lie on the same projected line.\n- Maximize vertical spread: obj_id 1 and obj_id 6 must be as far apart as possible in each image.\n- At each height, the point must be equidistant from the left and right silhouette edges.\n- Do NOT place points on the lateral silhouette edges.\n- Infer the global axis from ALL views jointly before answering.\n- SELF-CHECK per image: your six points should form a straight line in the image following the object's vertical centerline.\n\nOutput format (one entry per image, separated by semicolons):\n\n<points coords=\"1 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6; 2 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6; 3 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6\">\n\nWhere each entry is: image_index obj_id X Y (repeated for obj_id 1 through 6)\n\nReturn ONLY the <points ...> block.",
+    "raw_output": "<tracks coords=\"1 1 520 456 2 520 456 3 520 456 4 520 456 5 520 456 6 520 456;2 1 500 469 2 500 469 3 500 469 4 500 469 5 500 469 6 500 469;3 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;4 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;5 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;6 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;7 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;8 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;9 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;10 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;11 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;12 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;13 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;14 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;15 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;16 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;17 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;18 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;19 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;20 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;21 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;22 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;23 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;24 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;25 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456;26 1 500 456 2 500 456 3 500 456 4 500 456 5 500 456 6 500 456\">",
+    "points_by_image": {
+      "0": [
+        {
+          "obj_id": 1,
+          "x": 520.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 520.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 520.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 520.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 520.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 520.0,
+          "y": 456.0
+        }
+      ],
+      "1": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 469.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 469.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 469.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 469.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 469.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 469.0
+        }
+      ],
+      "2": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "3": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "4": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "5": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "6": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "7": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "8": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "9": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "10": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "11": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "12": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "13": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "14": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "15": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "16": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "17": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "18": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "19": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "20": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "21": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "22": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "23": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "24": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ],
+      "25": [
+        {
+          "obj_id": 1,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 3,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 4,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 5,
+          "x": 500.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 6,
+          "x": 500.0,
+          "y": 456.0
+        }
+      ]
+    },
+    "images_sent": [
+      {
+        "img_idx": 0,
+        "filename": "IND_00_AZ_090_EL_+89.png",
+        "index": 0,
+        "azimuth": 90,
+        "elevation": 89,
+        "eye": [
+          0.0001,
+          1.4833691312709831,
+          0.001583369625727558
+        ],
+        "R": [
+          [
+            -0.998011589050293,
+            -0.06303082406520844,
+            -6.741406104993075e-05
+          ],
+          [
+            0.0,
+            0.0010695405071601272,
+            -0.999999463558197
+          ],
+          [
+            0.06303086131811142,
+            -0.99801105260849,
+            -0.0010674138320609927
+          ]
+        ],
+        "T": [
+          -0.0,
+          1.1641532182693481e-10,
+          1.4833699464797974
+        ]
+      },
+      {
+        "img_idx": 1,
+        "filename": "IND_05_AZ_328_EL_+65.png",
+        "index": 5,
+        "azimuth": 328,
+        "elevation": 65,
+        "eye": [
+          0.5147713851560033,
+          1.3524249820975671,
+          -0.3261031567097187
+        ],
+        "R": [
+          [
+            0.5351472496986389,
+            -0.7701874375343323,
+            -0.34702837467193604
+          ],
+          [
+            -0.0,
+            0.4108017086982727,
+            -0.9117247462272644
+          ],
+          [
+            0.8447587490081787,
+            0.4879069924354553,
+            0.219839408993721
+          ]
+        ],
+        "T": [
+          -2.9802322387695312e-08,
+          -1.4901161193847656e-08,
+          1.4833699464797974
+        ]
+      },
+      {
+        "img_idx": 2,
+        "filename": "IND_09_AZ_157_EL_+57.png",
+        "index": 9,
+        "azimuth": 157,
+        "elevation": 57,
+        "eye": [
+          -0.7424603889064918,
+          1.2467737662995189,
+          0.30772378290475233
+        ],
+        "R": [
+          [
+            -0.38288164138793945,
+            0.7764525413513184,
+            0.500522792339325
+          ],
+          [
+            0.0,
+            0.5418100953102112,
+            -0.8405009508132935
+          ],
+          [
+            -0.9237974882125854,
+            -0.32181236147880554,
+            -0.20744913816452026
+          ]
+        ],
+        "T": [
+          -0.0,
+          -5.21540641784668e-08,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 3,
+        "filename": "IND_14_AZ_125_EL_+48.png",
+        "index": 14,
+        "azimuth": 125,
+        "elevation": 48,
+        "eye": [
+          -0.5621448191428444,
+          1.1150090455412753,
+          0.8007085678729
+        ],
+        "R": [
+          [
+            -0.8184394240379333,
+            0.43190598487854004,
+            0.37896469235420227
+          ],
+          [
+            0.0,
+            0.6595360636711121,
+            -0.7516729831695557
+          ],
+          [
+            -0.5745929479598999,
+            -0.6151987910270691,
+            -0.5397902131080627
+          ]
+        ],
+        "T": [
+          2.9802322387695312e-08,
+          -2.9802322387695312e-08,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 4,
+        "filename": "IND_18_AZ_316_EL_+42.png",
+        "index": 18,
+        "azimuth": 316,
+        "elevation": 42,
+        "eye": [
+          0.7695569998547194,
+          1.011557166809039,
+          -0.7648008252119967
+        ],
+        "R": [
+          [
+            0.7049115896224976,
+            -0.4836910367012024,
+            -0.5187896490097046
+          ],
+          [
+            -0.0,
+            0.7314157485961914,
+            -0.6819318532943726
+          ],
+          [
+            0.7092952728271484,
+            0.48070165514945984,
+            0.515583336353302
+          ]
+        ],
+        "T": [
+          -0.0,
+          -2.9802322387695312e-08,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 5,
+        "filename": "IND_23_AZ_283_EL_+36.png",
+        "index": 23,
+        "azimuth": 283,
+        "elevation": 36,
+        "eye": [
+          0.26217051073231395,
+          0.8806851244106882,
+          -1.1644941025772373
+        ],
+        "R": [
+          [
+            0.975581169128418,
+            -0.13040108978748322,
+            -0.17673981189727783
+          ],
+          [
+            -0.0,
+            0.8046823143959045,
+            -0.5937056541442871
+          ],
+          [
+            0.21963925659656525,
+            0.5792081356048584,
+            0.7850328683853149
+          ]
+        ],
+        "T": [
+          -0.0,
+          5.960464477539063e-08,
+          1.4833699464797974
+        ]
+      },
+      {
+        "img_idx": 6,
+        "filename": "IND_27_AZ_112_EL_+31.png",
+        "index": 27,
+        "azimuth": 112,
+        "elevation": 31,
+        "eye": [
+          -0.4884140379891912,
+          0.7733354265894316,
+          1.167814294085285
+        ],
+        "R": [
+          [
+            -0.9225642681121826,
+            0.20115436613559723,
+            0.3292597830295563
+          ],
+          [
+            0.0,
+            0.8533509969711304,
+            -0.5213368535041809
+          ],
+          [
+            -0.38584330677986145,
+            -0.48096680641174316,
+            -0.7872711420059204
+          ]
+        ],
+        "T": [
+          -2.9802322387695312e-08,
+          -0.0,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 7,
+        "filename": "IND_32_AZ_080_EL_+25.png",
+        "index": 32,
+        "azimuth": 80,
+        "elevation": 25,
+        "eye": [
+          0.22639707924529448,
+          0.6419135226376976,
+          1.317982386815977
+        ],
+        "R": [
+          [
+            -0.9855652451515198,
+            -0.07326113432645798,
+            -0.1526234745979309
+          ],
+          [
+            0.0,
+            0.9015187621116638,
+            -0.4327400028705597
+          ],
+          [
+            0.16929595172405243,
+            -0.42649349570274353,
+            -0.8885055780410767
+          ]
+        ],
+        "T": [
+          -0.0,
+          -0.0,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 8,
+        "filename": "IND_36_AZ_271_EL_+21.png",
+        "index": 36,
+        "azimuth": 271,
+        "elevation": 21,
+        "eye": [
+          0.006743169724552537,
+          0.5395958470017554,
+          -1.3817297244952074
+        ],
+        "R": [
+          [
+            0.9999880790710449,
+            -0.0017752315616235137,
+            -0.004545845557004213
+          ],
+          [
+            -0.0,
+            0.9314913749694824,
+            -0.3637635409832001
+          ],
+          [
+            0.004880180116742849,
+            0.36375918984413147,
+            0.9314802885055542
+          ]
+        ],
+        "T": [
+          4.656612873077393e-10,
+          -0.0,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 9,
+        "filename": "IND_41_AZ_238_EL_+15.png",
+        "index": 41,
+        "azimuth": 238,
+        "elevation": 15,
+        "eye": [
+          -0.7597398498536404,
+          0.40814927647947813,
+          -1.2068950694433729
+        ],
+        "R": [
+          [
+            0.8462824821472168,
+            0.14658190310001373,
+            0.5121715664863586
+          ],
+          [
+            0.0,
+            0.9614012837409973,
+            -0.27515003085136414
+          ],
+          [
+            -0.5327344536781311,
+            0.23285464942455292,
+            0.8136170506477356
+          ]
+        ],
+        "T": [
+          -5.960464477539063e-08,
+          2.9802322387695312e-08,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 10,
+        "filename": "IND_45_AZ_067_EL_+11.png",
+        "index": 45,
+        "azimuth": 67,
+        "elevation": 11,
+        "eye": [
+          0.5475858336112044,
+          0.30057955969042727,
+          1.3454322216736558
+        ],
+        "R": [
+          [
+            -0.9262253642082214,
+            -0.07638658583164215,
+            -0.36914992332458496
+          ],
+          [
+            0.0,
+            0.9792547821998596,
+            -0.20263291895389557
+          ],
+          [
+            0.3769702613353729,
+            -0.18768374621868134,
+            -0.9070106148719788
+          ]
+        ],
+        "T": [
+          -0.0,
+          -0.0,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 11,
+        "filename": "IND_50_AZ_035_EL_+06.png",
+        "index": 50,
+        "azimuth": 35,
+        "elevation": 6,
+        "eye": [
+          1.2012835285007712,
+          0.16979975049159002,
+          0.8535057755392217
+        ],
+        "R": [
+          [
+            -0.5791900753974915,
+            -0.09331420809030533,
+            -0.8098341226577759
+          ],
+          [
+            0.0,
+            0.9934268593788147,
+            -0.11446890980005264
+          ],
+          [
+            0.8151925206184387,
+            -0.06629926711320877,
+            -0.5753829479217529
+          ]
+        ],
+        "T": [
+          -0.0,
+          7.450580596923828e-09,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 12,
+        "filename": "IND_54_AZ_226_EL_+02.png",
+        "index": 54,
+        "azimuth": 226,
+        "elevation": 2,
+        "eye": [
+          -1.0401778462703175,
+          0.06669131531634634,
+          -1.0554470600569679
+        ],
+        "R": [
+          [
+            0.7122400999069214,
+            0.0315585732460022,
+            0.7012261748313904
+          ],
+          [
+            0.0,
+            0.9989888668060303,
+            -0.044959329068660736
+          ],
+          [
+            -0.7019360065460205,
+            0.03202183544635773,
+            0.7115198373794556
+          ]
+        ],
+        "T": [
+          -0.0,
+          -0.0,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 13,
+        "filename": "IND_59_AZ_193_EL_-02.png",
+        "index": 59,
+        "azimuth": 193,
+        "elevation": -2,
+        "eye": [
+          -1.444179122381528,
+          -0.06530350008263633,
+          -0.3323677110481017
+        ],
+        "R": [
+          [
+            0.22428004443645477,
+            -0.04290222376585007,
+            0.9735798835754395
+          ],
+          [
+            0.0,
+            0.9990304708480835,
+            0.04402374103665352
+          ],
+          [
+            -0.974524736404419,
+            -0.009873646311461926,
+            0.22406259179115295
+          ]
+        ],
+        "T": [
+          2.9802322387695312e-08,
+          2.7939677238464355e-09,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 14,
+        "filename": "IND_63_AZ_022_EL_-06.png",
+        "index": 63,
+        "azimuth": 22,
+        "elevation": -6,
+        "eye": [
+          1.3564922414209444,
+          -0.1712285790467064,
+          0.575322303300946
+        ],
+        "R": [
+          [
+            -0.39045825600624084,
+            0.1062692180275917,
+            -0.9144666194915771
+          ],
+          [
+            0.0,
+            0.9933153986930847,
+            0.11543214321136475
+          ],
+          [
+            0.9206206798553467,
+            0.04507143422961235,
+            -0.3878481686115265
+          ]
+        ],
+        "T": [
+          -0.0,
+          3.725290298461914e-09,
+          1.4833699464797974
+        ]
+      },
+      {
+        "img_idx": 15,
+        "filename": "IND_68_AZ_351_EL_-11.png",
+        "index": 68,
+        "azimuth": 351,
+        "elevation": -11,
+        "eye": [
+          1.4325171144641007,
+          -0.30168568778326127,
+          -0.23930449754917932
+        ],
+        "R": [
+          [
+            0.1647685170173645,
+            0.20059886574745178,
+            -0.9657180905342102
+          ],
+          [
+            -0.0,
+            0.979100227355957,
+            0.2033785879611969
+          ],
+          [
+            0.9863322973251343,
+            -0.03351038694381714,
+            0.1613248884677887
+          ]
+        ],
+        "T": [
+          2.9802322387695312e-08,
+          1.7695128917694092e-08,
+          1.4833699464797974
+        ]
+      },
+      {
+        "img_idx": 16,
+        "filename": "IND_72_AZ_181_EL_-15.png",
+        "index": 72,
+        "azimuth": 181,
+        "elevation": -15,
+        "eye": [
+          -1.4263907448224538,
+          -0.4069280569122201,
+          -0.014324090741399398
+        ],
+        "R": [
+          [
+            0.010041685774922371,
+            -0.27431291341781616,
+            0.9615880250930786
+          ],
+          [
+            0.0,
+            0.9616365432739258,
+            0.27432674169540405
+          ],
+          [
+            -0.9999496340751648,
+            -0.0027547029312700033,
+            0.009656451642513275
+          ]
+        ],
+        "T": [
+          -9.313225746154785e-10,
+          3.4073309507220984e-08,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 17,
+        "filename": "IND_77_AZ_148_EL_-21.png",
+        "index": 77,
+        "azimuth": 148,
+        "elevation": -21,
+        "eye": [
+          -1.1734932525009836,
+          -0.538944075312243,
+          0.7299582522402026
+        ],
+        "R": [
+          [
+            -0.5281895995140076,
+            -0.30850815773010254,
+            0.7910996079444885
+          ],
+          [
+            0.0,
+            0.9316628575325012,
+            0.3633241355419159
+          ],
+          [
+            -0.8491265177726746,
+            0.19190402328968048,
+            -0.49209457635879517
+          ]
+        ],
+        "T": [
+          -0.0,
+          -0.0,
+          1.4833699464797974
+        ]
+      },
+      {
+        "img_idx": 18,
+        "filename": "IND_81_AZ_339_EL_-25.png",
+        "index": 81,
+        "azimuth": 339,
+        "elevation": -25,
+        "eye": [
+          1.2404458296689398,
+          -0.6427329326339816,
+          -0.4985726636687324
+        ],
+        "R": [
+          [
+            0.37293410301208496,
+            0.4020337760448456,
+            -0.836234986782074
+          ],
+          [
+            -0.0,
+            0.9012534022331238,
+            0.4332923889160156
+          ],
+          [
+            0.9278577566146851,
+            -0.16158951818943024,
+            0.33610811829566956
+          ]
+        ],
+        "T": [
+          -2.9802322387695312e-08,
+          -1.4901161193847656e-08,
+          1.4833697080612183
+        ]
+      },
+      {
+        "img_idx": 19,
+        "filename": "IND_86_AZ_306_EL_-31.png",
+        "index": 86,
+        "azimuth": 306,
+        "elevation": -31,
+        "eye": [
+          0.7376711777120338,
+          -0.7734746669884496,
+          -1.028573941480692
+        ],
+        "R": [
+          [
+            0.8126201033592224,
+            0.3038865923881531,
+            -0.497294157743454
+          ],
+          [
+            -0.0,
+            0.8532936573028564,
+            0.5214307308197021
+          ],
+          [
+            0.5827937126159668,
+            -0.4237251579761505,
+            0.6934035420417786
+          ]
+        ],
+        "T": [
+          5.960464477539063e-08,
+          -2.9802322387695312e-08,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 20,
+        "filename": "IND_90_AZ_135_EL_-36.png",
+        "index": 90,
+        "azimuth": 135,
+        "elevation": -36,
+        "eye": [
+          -0.854877030179792,
+          -0.8803540258015963,
+          0.8333956038514835
+        ],
+        "R": [
+          [
+            -0.6980531215667725,
+            -0.424960732460022,
+            0.5763073563575745
+          ],
+          [
+            0.0,
+            0.8048469424247742,
+            0.5934824347496033
+          ],
+          [
+            -0.7160459756851196,
+            0.41428229212760925,
+            -0.5618258714675903
+          ]
+        ],
+        "T": [
+          -5.960464477539063e-08,
+          5.960464477539063e-08,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 21,
+        "filename": "IND_95_AZ_103_EL_-43.png",
+        "index": 95,
+        "azimuth": 103,
+        "elevation": -43,
+        "eye": [
+          -0.24860769552390802,
+          -1.0118481802944856,
+          1.0558142136541389
+        ],
+        "R": [
+          [
+            -0.9733799695968628,
+            -0.15634189546108246,
+            0.16759656369686127
+          ],
+          [
+            0.0,
+            0.731232762336731,
+            0.6821280121803284
+          ],
+          [
+            -0.22919727861881256,
+            0.6639698147773743,
+            -0.711767315864563
+          ]
+        ],
+        "T": [
+          1.4901161193847656e-08,
+          -5.960464477539063e-08,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 22,
+        "filename": "IND_99_AZ_294_EL_-48.png",
+        "index": 99,
+        "azimuth": 294,
+        "elevation": -48,
+        "eye": [
+          0.3861239399883238,
+          -1.1149107164925016,
+          -0.8990375838701892
+        ],
+        "R": [
+          [
+            0.9188405275344849,
+            0.29660579562187195,
+            -0.2603018581867218
+          ],
+          [
+            -0.0,
+            0.6596115231513977,
+            0.7516067028045654
+          ],
+          [
+            0.39462900161743164,
+            -0.6906067132949829,
+            0.6060778498649597
+          ]
+        ],
+        "T": [
+          -0.0,
+          -0.0,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 23,
+        "filename": "IND_104_AZ_261_EL_-57.png",
+        "index": 104,
+        "azimuth": 261,
+        "elevation": -57,
+        "eye": [
+          -0.12831781970138567,
+          -1.2462873308643792,
+          -0.7941590558994476
+        ],
+        "R": [
+          [
+            0.9871965646743774,
+            -0.13401450216770172,
+            0.0865042582154274
+          ],
+          [
+            0.0,
+            0.5423184633255005,
+            0.8401730060577393
+          ],
+          [
+            -0.15950822830200195,
+            -0.8294159173965454,
+            0.5353749394416809
+          ]
+        ],
+        "T": [
+          -0.0,
+          -0.0,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 24,
+        "filename": "IND_108_AZ_090_EL_-65.png",
+        "index": 108,
+        "azimuth": 90,
+        "elevation": -65,
+        "eye": [
+          -0.008928362858712584,
+          -1.3527075568889793,
+          0.6086778539302953
+        ],
+        "R": [
+          [
+            -0.9998924732208252,
+            -0.013374947011470795,
+            0.006018972955644131
+          ],
+          [
+            0.0,
+            0.41037869453430176,
+            0.9119151830673218
+          ],
+          [
+            -0.014666875824332237,
+            0.9118171334266663,
+            -0.4103345274925232
+          ]
+        ],
+        "T": [
+          -0.0,
+          -0.0,
+          1.4833698272705078
+        ]
+      },
+      {
+        "img_idx": 25,
+        "filename": "IND_113_AZ_270_EL_-89.png",
+        "index": 113,
+        "azimuth": 270,
+        "elevation": -89,
+        "eye": [
+          0.0001,
+          -1.4833691312709831,
+          -0.0013833696257275578
+        ],
+        "R": [
+          [
+            0.9973975419998169,
+            0.07209908962249756,
+            -6.741407560184598e-05
+          ],
+          [
+            -0.0,
+            0.0009350192849524319,
+            0.9999995827674866
+          ],
+          [
+            0.07209912687540054,
+            -0.9973970055580139,
+            0.0009325859136879444
+          ]
+        ],
+        "T": [
+          -7.275957614183426e-12,
+          1.1641532182693481e-10,
+          1.4833698272705078
+        ]
+      }
+    ],
+    "n_points": 156
+  }
+}
