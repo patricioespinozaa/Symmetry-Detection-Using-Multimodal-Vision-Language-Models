@@ -1,0 +1,2112 @@
+{
+  "6": {
+    "experiment_id": "plane_v06_2pts",
+    "prompt_used": "You are given multiple views of the SAME 3D object rendered from different camera angles. The object can have multiple dominant planes of reflective symmetry dividing it into two mirror halves.\n\nSTEP 1: Understand the plane geometry from ALL views together:\nThe symmetry plane intersects the object surface along a \"seam\" or \"spine\", a curve or line on the surface that lies exactly on the plane and divides the two mirror halves. This seam is a fixed 3D feature of the object. In each image the seam projects as a LINE at a DIFFERENT orientation and position depending on the camera angle.\n\nSTEP 2: For each image independently:\na) Look at how the object is oriented in THIS specific image. The seam may appear as a diagonal, vertical, or even nearly horizontal line.\nb) Find two points on the visible seam that are as FAR APART as possible. Good candidates are: corners where the seam meets the object boundary, the topmost and bottommost visible points of the seam, or any two clearly identifiable surface landmarks that lie exactly on the symmetry plane.\nc) Both points must be ON the object surface and ON the seam, not on either mirror half, not on the background.\n\nCRITICAL RULES:\n- The seam projected into the image is a LINE with orientation that changes per camera view. It is NOT always vertical.\n- obj_id 1 and obj_id 2 must correspond to the SAME two 3D surface points across all images. Their pixel positions will differ per image, this is correct.\n- Do NOT default to the middle of the image. The seam will rarely be centered horizontally unless the camera faces the symmetry plane directly.\n- Maximize the distance between the two points in each image to make the projected line as long as possible.\n- If the seam is not visible from a given camera angle (the camera looks directly along the plane), place the two points at the two surface locations closest to where the seam would emerge.\n- Both points must lie on the object, not on the background.\n\nSELF-CHECK before outputting: In each image, draw an imaginary line through your two points. Does that line follow the visible seam dividing the two mirror halves of the object? If both points are at X\u2248500, reconsider, the camera is likely not looking straight at the symmetry plane.\n\nOutput format (one entry per image, separated by semicolons):\n<points coords=\"1 1 X1 Y1 2 X2 Y2; 2 1 X1 Y1 2 X2 Y2; 3 1 X1 Y1 2 X2 Y2\">\n\nReturn ONLY the <points ...> block.",
+    "raw_output": "<points coords=\"1 1 292 302 2 728 323; 2 1 272 456 2 666 405; 3 1 242 598 2 702 667\">",
+    "points_by_image": {
+      "0": [
+        {
+          "obj_id": 1,
+          "x": 292.0,
+          "y": 302.0
+        },
+        {
+          "obj_id": 2,
+          "x": 728.0,
+          "y": 323.0
+        }
+      ],
+      "1": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 456.0
+        },
+        {
+          "obj_id": 2,
+          "x": 666.0,
+          "y": 405.0
+        }
+      ],
+      "2": [
+        {
+          "obj_id": 1,
+          "x": 242.0,
+          "y": 598.0
+        },
+        {
+          "obj_id": 2,
+          "x": 702.0,
+          "y": 667.0
+        }
+      ]
+    },
+    "images_sent": [
+      {
+        "img_idx": 0,
+        "filename": "IND_00_AZ_090_EL_+89.png",
+        "index": 0,
+        "azimuth": 90,
+        "elevation": 89,
+        "eye": [
+          0.0001,
+          1.5030347507536725,
+          0.0016030352517654566
+        ],
+        "R": [
+          [
+            -0.9980599880218506,
+            -0.062260594218969345,
+            -6.653202581219375e-05
+          ],
+          [
+            0.0,
+            0.001068604993633926,
+            -0.999999463558197
+          ],
+          [
+            0.06226063519716263,
+            -0.9980593323707581,
+            -0.0010665318695828319
+          ]
+        ],
+        "T": [
+          7.275957614183426e-12,
+          -0.0,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 1,
+        "filename": "IND_23_AZ_283_EL_+36.png",
+        "index": 23,
+        "azimuth": 283,
+        "elevation": 36,
+        "eye": [
+          0.26564621033732494,
+          0.8923607203062872,
+          -1.179932267918792
+        ],
+        "R": [
+          [
+            0.975581169128418,
+            -0.13040108978748322,
+            -0.17673981189727783
+          ],
+          [
+            -0.0,
+            0.8046822547912598,
+            -0.5937057137489319
+          ],
+          [
+            0.21963927149772644,
+            0.5792081356048584,
+            0.7850328087806702
+          ]
+        ],
+        "T": [
+          -0.0,
+          5.960464477539063e-08,
+          1.5030354261398315
+        ]
+      },
+      {
+        "img_idx": 2,
+        "filename": "IND_45_AZ_067_EL_+11.png",
+        "index": 45,
+        "azimuth": 67,
+        "elevation": 11,
+        "eye": [
+          0.5548453986182519,
+          0.3045644634615348,
+          1.3632691562258215
+        ],
+        "R": [
+          [
+            -0.9262253642082214,
+            -0.07638657838106155,
+            -0.3691498935222626
+          ],
+          [
+            0.0,
+            0.9792547821998596,
+            -0.20263291895389557
+          ],
+          [
+            0.37697023153305054,
+            -0.18768374621868134,
+            -0.9070106148719788
+          ]
+        ],
+        "T": [
+          -0.0,
+          -2.9802322387695312e-08,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 3,
+        "filename": "IND_68_AZ_351_EL_-11.png",
+        "index": 68,
+        "azimuth": 351,
+        "elevation": -11,
+        "eye": [
+          1.4515085683656346,
+          -0.3056852559381114,
+          -0.24247705324694155
+        ],
+        "R": [
+          [
+            0.1647685468196869,
+            0.20059886574745178,
+            -0.9657180309295654
+          ],
+          [
+            -0.0,
+            0.9791001677513123,
+            0.2033785879611969
+          ],
+          [
+            0.9863322973251343,
+            -0.033510394394397736,
+            0.1613249033689499
+          ]
+        ],
+        "T": [
+          -0.0,
+          2.514570951461792e-08,
+          1.503035306930542
+        ]
+      },
+      {
+        "img_idx": 4,
+        "filename": "IND_90_AZ_135_EL_-36.png",
+        "index": 90,
+        "azimuth": 135,
+        "elevation": -36,
+        "eye": [
+          -0.866210477819762,
+          -0.8920252321901465,
+          0.8444442636074317
+        ],
+        "R": [
+          [
+            -0.6980531215667725,
+            -0.424960732460022,
+            0.5763073563575745
+          ],
+          [
+            0.0,
+            0.8048469424247742,
+            0.5934824347496033
+          ],
+          [
+            -0.7160459756851196,
+            0.41428229212760925,
+            -0.5618258714675903
+          ]
+        ],
+        "T": [
+          -0.0,
+          2.9802322387695312e-08,
+          1.5030354261398315
+        ]
+      },
+      {
+        "img_idx": 5,
+        "filename": "IND_113_AZ_270_EL_-89.png",
+        "index": 113,
+        "azimuth": 270,
+        "elevation": -89,
+        "eye": [
+          0.0001,
+          -1.5030347507536725,
+          -0.0014030352517654565
+        ],
+        "R": [
+          [
+            0.9974696636199951,
+            0.07109366357326508,
+            -6.653203308815137e-05
+          ],
+          [
+            -0.0,
+            0.0009358359384350479,
+            0.9999995827674866
+          ],
+          [
+            0.07109369337558746,
+            -0.9974692463874817,
+            0.0009334679343737662
+          ]
+        ],
+        "T": [
+          -7.275957614183426e-12,
+          1.1641532182693481e-10,
+          1.5030354261398315
+        ]
+      }
+    ],
+    "n_points": 6
+  },
+  "14": {
+    "experiment_id": "plane_v06_2pts",
+    "prompt_used": "You are given multiple views of the SAME 3D object rendered from different camera angles. The object can have multiple dominant planes of reflective symmetry dividing it into two mirror halves.\n\nSTEP 1: Understand the plane geometry from ALL views together:\nThe symmetry plane intersects the object surface along a \"seam\" or \"spine\", a curve or line on the surface that lies exactly on the plane and divides the two mirror halves. This seam is a fixed 3D feature of the object. In each image the seam projects as a LINE at a DIFFERENT orientation and position depending on the camera angle.\n\nSTEP 2: For each image independently:\na) Look at how the object is oriented in THIS specific image. The seam may appear as a diagonal, vertical, or even nearly horizontal line.\nb) Find two points on the visible seam that are as FAR APART as possible. Good candidates are: corners where the seam meets the object boundary, the topmost and bottommost visible points of the seam, or any two clearly identifiable surface landmarks that lie exactly on the symmetry plane.\nc) Both points must be ON the object surface and ON the seam, not on either mirror half, not on the background.\n\nCRITICAL RULES:\n- The seam projected into the image is a LINE with orientation that changes per camera view. It is NOT always vertical.\n- obj_id 1 and obj_id 2 must correspond to the SAME two 3D surface points across all images. Their pixel positions will differ per image, this is correct.\n- Do NOT default to the middle of the image. The seam will rarely be centered horizontally unless the camera faces the symmetry plane directly.\n- Maximize the distance between the two points in each image to make the projected line as long as possible.\n- If the seam is not visible from a given camera angle (the camera looks directly along the plane), place the two points at the two surface locations closest to where the seam would emerge.\n- Both points must lie on the object, not on the background.\n\nSELF-CHECK before outputting: In each image, draw an imaginary line through your two points. Does that line follow the visible seam dividing the two mirror halves of the object? If both points are at X\u2248500, reconsider, the camera is likely not looking straight at the symmetry plane.\n\nOutput format (one entry per image, separated by semicolons):\n<points coords=\"1 1 X1 Y1 2 X2 Y2; 2 1 X1 Y1 2 X2 Y2; 3 1 X1 Y1 2 X2 Y2\">\n\nReturn ONLY the <points ...> block.",
+    "raw_output": "<points coords=\"1 1 295 300 2 716 320; 2 1 212 600 2 676 367; 3 1 248 650 2 629 356; 4 1 230 590 2 738 427; 5 1 205 490 2 738 467; 6 1 198 500 2 688 456; 7 1 238 477 2 788 473; 8 1 280 467 2 773 467; 9 1 212 417 2 762 410; 10 1 262 350 2 788 423; 11 1 230 423 2 742 400; 12 1 198 447 2 612 240; 13 1 228 356 2 708 277; 14 1 292 300 2 712 323\">",
+    "points_by_image": {
+      "0": [
+        {
+          "obj_id": 1,
+          "x": 295.0,
+          "y": 300.0
+        },
+        {
+          "obj_id": 2,
+          "x": 716.0,
+          "y": 320.0
+        }
+      ],
+      "1": [
+        {
+          "obj_id": 1,
+          "x": 212.0,
+          "y": 600.0
+        },
+        {
+          "obj_id": 2,
+          "x": 676.0,
+          "y": 367.0
+        }
+      ],
+      "2": [
+        {
+          "obj_id": 1,
+          "x": 248.0,
+          "y": 650.0
+        },
+        {
+          "obj_id": 2,
+          "x": 629.0,
+          "y": 356.0
+        }
+      ],
+      "3": [
+        {
+          "obj_id": 1,
+          "x": 230.0,
+          "y": 590.0
+        },
+        {
+          "obj_id": 2,
+          "x": 738.0,
+          "y": 427.0
+        }
+      ],
+      "4": [
+        {
+          "obj_id": 1,
+          "x": 205.0,
+          "y": 490.0
+        },
+        {
+          "obj_id": 2,
+          "x": 738.0,
+          "y": 467.0
+        }
+      ],
+      "5": [
+        {
+          "obj_id": 1,
+          "x": 198.0,
+          "y": 500.0
+        },
+        {
+          "obj_id": 2,
+          "x": 688.0,
+          "y": 456.0
+        }
+      ],
+      "6": [
+        {
+          "obj_id": 1,
+          "x": 238.0,
+          "y": 477.0
+        },
+        {
+          "obj_id": 2,
+          "x": 788.0,
+          "y": 473.0
+        }
+      ],
+      "7": [
+        {
+          "obj_id": 1,
+          "x": 280.0,
+          "y": 467.0
+        },
+        {
+          "obj_id": 2,
+          "x": 773.0,
+          "y": 467.0
+        }
+      ],
+      "8": [
+        {
+          "obj_id": 1,
+          "x": 212.0,
+          "y": 417.0
+        },
+        {
+          "obj_id": 2,
+          "x": 762.0,
+          "y": 410.0
+        }
+      ],
+      "9": [
+        {
+          "obj_id": 1,
+          "x": 262.0,
+          "y": 350.0
+        },
+        {
+          "obj_id": 2,
+          "x": 788.0,
+          "y": 423.0
+        }
+      ],
+      "10": [
+        {
+          "obj_id": 1,
+          "x": 230.0,
+          "y": 423.0
+        },
+        {
+          "obj_id": 2,
+          "x": 742.0,
+          "y": 400.0
+        }
+      ],
+      "11": [
+        {
+          "obj_id": 1,
+          "x": 198.0,
+          "y": 447.0
+        },
+        {
+          "obj_id": 2,
+          "x": 612.0,
+          "y": 240.0
+        }
+      ],
+      "12": [
+        {
+          "obj_id": 1,
+          "x": 228.0,
+          "y": 356.0
+        },
+        {
+          "obj_id": 2,
+          "x": 708.0,
+          "y": 277.0
+        }
+      ],
+      "13": [
+        {
+          "obj_id": 1,
+          "x": 292.0,
+          "y": 300.0
+        },
+        {
+          "obj_id": 2,
+          "x": 712.0,
+          "y": 323.0
+        }
+      ]
+    },
+    "images_sent": [
+      {
+        "img_idx": 0,
+        "filename": "IND_00_AZ_090_EL_+89.png",
+        "index": 0,
+        "azimuth": 90,
+        "elevation": 89,
+        "eye": [
+          0.0001,
+          1.5030347507536725,
+          0.0016030352517654566
+        ],
+        "R": [
+          [
+            -0.9980599880218506,
+            -0.062260594218969345,
+            -6.653202581219375e-05
+          ],
+          [
+            0.0,
+            0.001068604993633926,
+            -0.999999463558197
+          ],
+          [
+            0.06226063519716263,
+            -0.9980593323707581,
+            -0.0010665318695828319
+          ]
+        ],
+        "T": [
+          7.275957614183426e-12,
+          -0.0,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 1,
+        "filename": "IND_09_AZ_157_EL_+57.png",
+        "index": 9,
+        "azimuth": 157,
+        "elevation": 57,
+        "eye": [
+          -0.7523034840480863,
+          1.2633027461415343,
+          0.31180340050822336
+        ],
+        "R": [
+          [
+            -0.38288161158561707,
+            0.7764526009559631,
+            0.5005227327346802
+          ],
+          [
+            0.0,
+            0.5418100953102112,
+            -0.8405009508132935
+          ],
+          [
+            -0.9237973690032959,
+            -0.32181239128112793,
+            -0.20744912326335907
+          ]
+        ],
+        "T": [
+          -0.0,
+          7.450580596923828e-09,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 2,
+        "filename": "IND_17_AZ_177_EL_+44.png",
+        "index": 17,
+        "azimuth": 177,
+        "elevation": 44,
+        "eye": [
+          -1.0737664885369975,
+          1.0507498026710775,
+          0.045454387794142445
+        ],
+        "R": [
+          [
+            -0.04229385033249855,
+            0.6984596252441406,
+            0.7143985629081726
+          ],
+          [
+            0.0,
+            0.7150384187698364,
+            -0.6990851163864136
+          ],
+          [
+            -0.9991052150726318,
+            -0.02956700325012207,
+            -0.030241724103689194
+          ]
+        ],
+        "T": [
+          -3.725290298461914e-09,
+          2.561137080192566e-08,
+          1.5030354261398315
+        ]
+      },
+      {
+        "img_idx": 3,
+        "filename": "IND_26_AZ_336_EL_+32.png",
+        "index": 26,
+        "azimuth": 336,
+        "elevation": 32,
+        "eye": [
+          1.1485582563098609,
+          0.8119034045153122,
+          -0.5298514081202573
+        ],
+        "R": [
+          [
+            0.4188936948776245,
+            -0.49049872159957886,
+            -0.764159083366394
+          ],
+          [
+            -0.0,
+            0.8415522575378418,
+            -0.5401757955551147
+          ],
+          [
+            0.9080353379249573,
+            0.226276233792305,
+            0.3525208830833435
+          ]
+        ],
+        "T": [
+          2.9802322387695312e-08,
+          -7.450580596923828e-09,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 4,
+        "filename": "IND_35_AZ_132_EL_+22.png",
+        "index": 35,
+        "azimuth": 132,
+        "elevation": 22,
+        "eye": [
+          -0.9438927202731017,
+          0.57093095663255,
+          1.0208918142791665
+        ],
+        "R": [
+          [
+            -0.7342543601989746,
+            0.2578718066215515,
+            0.6279910206794739
+          ],
+          [
+            0.0,
+            0.9250473380088806,
+            -0.37985196709632874
+          ],
+          [
+            -0.6788744926452637,
+            -0.2789079546928406,
+            -0.6792200207710266
+          ]
+        ],
+        "T": [
+          5.960464477539063e-08,
+          -0.0,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 5,
+        "filename": "IND_43_AZ_152_EL_+13.png",
+        "index": 43,
+        "azimuth": 152,
+        "elevation": 13,
+        "eye": [
+          -1.2984969768185848,
+          0.3584658299839769,
+          0.6667260089534653
+        ],
+        "R": [
+          [
+            -0.45676687359809875,
+            0.21216154098510742,
+            0.8639163374900818
+          ],
+          [
+            0.0,
+            0.9711438417434692,
+            -0.23849457502365112
+          ],
+          [
+            -0.8895864486694336,
+            -0.10893642157316208,
+            -0.4435863196849823
+          ]
+        ],
+        "T": [
+          -0.0,
+          -1.4901161193847656e-08,
+          1.5030354261398315
+        ]
+      },
+      {
+        "img_idx": 6,
+        "filename": "IND_52_AZ_311_EL_+04.png",
+        "index": 52,
+        "azimuth": 311,
+        "elevation": 4,
+        "eye": [
+          0.9711268486196426,
+          0.12085165183979996,
+          -1.1407993878091784
+        ],
+        "R": [
+          [
+            0.761462390422821,
+            -0.052119288593530655,
+            -0.6461103558540344
+          ],
+          [
+            -0.0,
+            0.9967622756958008,
+            -0.08040504902601242
+          ],
+          [
+            0.6482090950012207,
+            0.06122542545199394,
+            0.7589969635009766
+          ]
+        ],
+        "T": [
+          -0.0,
+          -0.0,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 7,
+        "filename": "IND_61_AZ_107_EL_-04.png",
+        "index": 61,
+        "azimuth": 107,
+        "elevation": -4,
+        "eye": [
+          -0.4623315756898824,
+          -0.12113587582190927,
+          1.4250232751773189
+        ],
+        "R": [
+          [
+            -0.9511910676956177,
+            -0.024871554225683212,
+            0.3075985610485077
+          ],
+          [
+            0.0,
+            0.9967470169067383,
+            0.08059415221214294
+          ],
+          [
+            -0.3086024522781372,
+            0.07666044682264328,
+            -0.9480968713760376
+          ]
+        ],
+        "T": [
+          2.9802322387695312e-08,
+          -7.450580596923828e-09,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 8,
+        "filename": "IND_70_AZ_266_EL_-13.png",
+        "index": 70,
+        "azimuth": 266,
+        "elevation": -13,
+        "eye": [
+          -0.11340675734291451,
+          -0.35767711019228554,
+          -1.4554455377380437
+        ],
+        "R": [
+          [
+            0.9969781041145325,
+            -0.018486319109797478,
+            0.0754518136382103
+          ],
+          [
+            0.0,
+            0.9712725877761841,
+            0.23796981573104858
+          ],
+          [
+            -0.0776834636926651,
+            -0.2372507005929947,
+            0.9683374166488647
+          ]
+        ],
+        "T": [
+          -0.0,
+          2.9802322387695312e-08,
+          1.5030354261398315
+        ]
+      },
+      {
+        "img_idx": 9,
+        "filename": "IND_78_AZ_286_EL_-22.png",
+        "index": 78,
+        "azimuth": 286,
+        "elevation": -22,
+        "eye": [
+          0.37391838273460337,
+          -0.5706125567091729,
+          -1.3392916315228296
+        ],
+        "R": [
+          [
+            0.9631660580635071,
+            0.102088063955307,
+            -0.24877549707889557
+          ],
+          [
+            -0.0,
+            0.9251343011856079,
+            0.379640132188797
+          ],
+          [
+            0.26890745759010315,
+            -0.3656564950942993,
+            0.8910579085350037
+          ]
+        ],
+        "T": [
+          -2.9802322387695312e-08,
+          -2.9802322387695312e-08,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 10,
+        "filename": "IND_87_AZ_083_EL_-32.png",
+        "index": 87,
+        "azimuth": 83,
+        "elevation": -32,
+        "eye": [
+          0.1503452317748161,
+          -0.8126289999392505,
+          1.2554465901934788
+        ],
+        "R": [
+          [
+            -0.9929056763648987,
+            0.06428690254688263,
+            -0.10002774000167847
+          ],
+          [
+            0.0,
+            0.8412420749664307,
+            0.5406585931777954
+          ],
+          [
+            0.11890481412410736,
+            0.5368229150772095,
+            -0.8352741003036499
+          ]
+        ],
+        "T": [
+          -0.0,
+          -0.0,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 11,
+        "filename": "IND_96_AZ_241_EL_-44.png",
+        "index": 96,
+        "azimuth": 241,
+        "elevation": -44,
+        "eye": [
+          -0.5251896493970246,
+          -1.0498565913837061,
+          -0.9386653774282606
+        ],
+        "R": [
+          [
+            0.8726894855499268,
+            -0.34105610847473145,
+            0.3494192957878113
+          ],
+          [
+            0.0,
+            0.7156189680099487,
+            0.6984908580780029
+          ],
+          [
+            -0.4882756471633911,
+            -0.6095656752586365,
+            0.6245130896568298
+          ]
+        ],
+        "T": [
+          2.9802322387695312e-08,
+          -5.960464477539063e-08,
+          1.5030354261398315
+        ]
+      },
+      {
+        "img_idx": 12,
+        "filename": "IND_104_AZ_261_EL_-57.png",
+        "index": 104,
+        "azimuth": 261,
+        "elevation": -57,
+        "eye": [
+          -0.1300189804993953,
+          -1.2628098618367445,
+          -0.8046875410032658
+        ],
+        "R": [
+          [
+            0.9871965646743774,
+            -0.13401450216770172,
+            0.0865042582154274
+          ],
+          [
+            0.0,
+            0.5423184633255005,
+            0.8401730060577393
+          ],
+          [
+            -0.15950822830200195,
+            -0.8294159173965454,
+            0.5353749394416809
+          ]
+        ],
+        "T": [
+          1.4901161193847656e-08,
+          -0.0,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 13,
+        "filename": "IND_113_AZ_270_EL_-89.png",
+        "index": 113,
+        "azimuth": 270,
+        "elevation": -89,
+        "eye": [
+          0.0001,
+          -1.5030347507536725,
+          -0.0014030352517654565
+        ],
+        "R": [
+          [
+            0.9974696636199951,
+            0.07109366357326508,
+            -6.653203308815137e-05
+          ],
+          [
+            -0.0,
+            0.0009358359384350479,
+            0.9999995827674866
+          ],
+          [
+            0.07109369337558746,
+            -0.9974692463874817,
+            0.0009334679343737662
+          ]
+        ],
+        "T": [
+          -7.275957614183426e-12,
+          1.1641532182693481e-10,
+          1.5030354261398315
+        ]
+      }
+    ],
+    "n_points": 28
+  },
+  "26": {
+    "experiment_id": "plane_v06_2pts",
+    "prompt_used": "You are given multiple views of the SAME 3D object rendered from different camera angles. The object can have multiple dominant planes of reflective symmetry dividing it into two mirror halves.\n\nSTEP 1: Understand the plane geometry from ALL views together:\nThe symmetry plane intersects the object surface along a \"seam\" or \"spine\", a curve or line on the surface that lies exactly on the plane and divides the two mirror halves. This seam is a fixed 3D feature of the object. In each image the seam projects as a LINE at a DIFFERENT orientation and position depending on the camera angle.\n\nSTEP 2: For each image independently:\na) Look at how the object is oriented in THIS specific image. The seam may appear as a diagonal, vertical, or even nearly horizontal line.\nb) Find two points on the visible seam that are as FAR APART as possible. Good candidates are: corners where the seam meets the object boundary, the topmost and bottommost visible points of the seam, or any two clearly identifiable surface landmarks that lie exactly on the symmetry plane.\nc) Both points must be ON the object surface and ON the seam, not on either mirror half, not on the background.\n\nCRITICAL RULES:\n- The seam projected into the image is a LINE with orientation that changes per camera view. It is NOT always vertical.\n- obj_id 1 and obj_id 2 must correspond to the SAME two 3D surface points across all images. Their pixel positions will differ per image, this is correct.\n- Do NOT default to the middle of the image. The seam will rarely be centered horizontally unless the camera faces the symmetry plane directly.\n- Maximize the distance between the two points in each image to make the projected line as long as possible.\n- If the seam is not visible from a given camera angle (the camera looks directly along the plane), place the two points at the two surface locations closest to where the seam would emerge.\n- Both points must lie on the object, not on the background.\n\nSELF-CHECK before outputting: In each image, draw an imaginary line through your two points. Does that line follow the visible seam dividing the two mirror halves of the object? If both points are at X\u2248500, reconsider, the camera is likely not looking straight at the symmetry plane.\n\nOutput format (one entry per image, separated by semicolons):\n<points coords=\"1 1 X1 Y1 2 X2 Y2; 2 1 X1 Y1 2 X2 Y2; 3 1 X1 Y1 2 X2 Y2\">\n\nReturn ONLY the <points ...> block.",
+    "raw_output": "<points coords=\"1 1 272 594 2 727 594; 2 1 272 594 2 727 594; 3 1 272 594 2 727 594; 4 1 272 594 2 727 594; 5 1 272 594 2 727 594; 6 1 272 594 2 727 594; 7 1 272 594 2 727 594; 8 1 272 594 2 727 594; 9 1 272 594 2 727 594; 10 1 272 594 2 727 594; 11 1 272 594 2 727 594; 12 1 272 594 2 727 594; 13 1 272 594 2 727 594; 14 1 272 594 2 727 594; 15 1 272 594 2 727 594; 16 1 272 594 2 727 594; 17 1 272 594 2 727 594; 18 1 272 594 2 727 594; 19 1 272 594 2 727 594; 20 1 272 594 2 727 594; 21 1 272 594 2 727 594; 22 1 272 594 2 727 594; 23 1 272 594 2 727 594; 24 1 272 594 2 727 594; 25 1 272 594 2 727 594; 26 1 272 594 2 727 594\">",
+    "points_by_image": {
+      "0": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "1": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "2": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "3": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "4": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "5": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "6": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "7": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "8": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "9": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "10": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "11": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "12": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "13": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "14": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "15": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "16": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "17": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "18": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "19": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "20": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "21": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "22": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "23": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "24": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ],
+      "25": [
+        {
+          "obj_id": 1,
+          "x": 272.0,
+          "y": 594.0
+        },
+        {
+          "obj_id": 2,
+          "x": 727.0,
+          "y": 594.0
+        }
+      ]
+    },
+    "images_sent": [
+      {
+        "img_idx": 0,
+        "filename": "IND_00_AZ_090_EL_+89.png",
+        "index": 0,
+        "azimuth": 90,
+        "elevation": 89,
+        "eye": [
+          0.0001,
+          1.5030347507536725,
+          0.0016030352517654566
+        ],
+        "R": [
+          [
+            -0.9980599880218506,
+            -0.062260594218969345,
+            -6.653202581219375e-05
+          ],
+          [
+            0.0,
+            0.001068604993633926,
+            -0.999999463558197
+          ],
+          [
+            0.06226063519716263,
+            -0.9980593323707581,
+            -0.0010665318695828319
+          ]
+        ],
+        "T": [
+          7.275957614183426e-12,
+          -0.0,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 1,
+        "filename": "IND_05_AZ_328_EL_+65.png",
+        "index": 5,
+        "azimuth": 328,
+        "elevation": 65,
+        "eye": [
+          0.5215959158595518,
+          1.370354622479139,
+          -0.33042643704282254
+        ],
+        "R": [
+          [
+            0.5351473093032837,
+            -0.7701874375343323,
+            -0.34702831506729126
+          ],
+          [
+            -0.0,
+            0.4108016788959503,
+            -0.9117246866226196
+          ],
+          [
+            0.8447588086128235,
+            0.4879070222377777,
+            0.21983939409255981
+          ]
+        ],
+        "T": [
+          -0.0,
+          -1.4901161193847656e-08,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 2,
+        "filename": "IND_09_AZ_157_EL_+57.png",
+        "index": 9,
+        "azimuth": 157,
+        "elevation": 57,
+        "eye": [
+          -0.7523034840480863,
+          1.2633027461415343,
+          0.31180340050822336
+        ],
+        "R": [
+          [
+            -0.38288161158561707,
+            0.7764526009559631,
+            0.5005227327346802
+          ],
+          [
+            0.0,
+            0.5418100953102112,
+            -0.8405009508132935
+          ],
+          [
+            -0.9237973690032959,
+            -0.32181239128112793,
+            -0.20744912326335907
+          ]
+        ],
+        "T": [
+          -0.0,
+          7.450580596923828e-09,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 3,
+        "filename": "IND_14_AZ_125_EL_+48.png",
+        "index": 14,
+        "azimuth": 125,
+        "elevation": 48,
+        "eye": [
+          -0.5695973984600077,
+          1.129791167635581,
+          0.8113238824836508
+        ],
+        "R": [
+          [
+            -0.8184394240379333,
+            0.43190595507621765,
+            0.37896469235420227
+          ],
+          [
+            0.0,
+            0.6595360636711121,
+            -0.7516729235649109
+          ],
+          [
+            -0.5745929479598999,
+            -0.6151987314224243,
+            -0.5397902131080627
+          ]
+        ],
+        "T": [
+          -0.0,
+          -5.960464477539063e-08,
+          1.5030354261398315
+        ]
+      },
+      {
+        "img_idx": 4,
+        "filename": "IND_18_AZ_316_EL_+42.png",
+        "index": 18,
+        "azimuth": 316,
+        "elevation": 42,
+        "eye": [
+          0.7797593256348277,
+          1.0249677858573196,
+          -0.774940096477389
+        ],
+        "R": [
+          [
+            0.7049115300178528,
+            -0.4836910367012024,
+            -0.5187897086143494
+          ],
+          [
+            -0.0,
+            0.7314157485961914,
+            -0.6819318532943726
+          ],
+          [
+            0.7092952728271484,
+            0.48070162534713745,
+            0.515583336353302
+          ]
+        ],
+        "T": [
+          -0.0,
+          -0.0,
+          1.5030354261398315
+        ]
+      },
+      {
+        "img_idx": 5,
+        "filename": "IND_23_AZ_283_EL_+36.png",
+        "index": 23,
+        "azimuth": 283,
+        "elevation": 36,
+        "eye": [
+          0.26564621033732494,
+          0.8923607203062872,
+          -1.179932267918792
+        ],
+        "R": [
+          [
+            0.975581169128418,
+            -0.13040108978748322,
+            -0.17673981189727783
+          ],
+          [
+            -0.0,
+            0.8046822547912598,
+            -0.5937057137489319
+          ],
+          [
+            0.21963927149772644,
+            0.5792081356048584,
+            0.7850328087806702
+          ]
+        ],
+        "T": [
+          -0.0,
+          5.960464477539063e-08,
+          1.5030354261398315
+        ]
+      },
+      {
+        "img_idx": 6,
+        "filename": "IND_27_AZ_112_EL_+31.png",
+        "index": 27,
+        "azimuth": 112,
+        "elevation": 31,
+        "eye": [
+          -0.4948891387706599,
+          0.7835878444881108,
+          1.1832964765372342
+        ],
+        "R": [
+          [
+            -0.9225643277168274,
+            0.20115439593791962,
+            0.3292597830295563
+          ],
+          [
+            0.0,
+            0.8533509373664856,
+            -0.5213369131088257
+          ],
+          [
+            -0.3858433663845062,
+            -0.48096683621406555,
+            -0.7872710824012756
+          ]
+        ],
+        "T": [
+          -0.0,
+          5.960464477539063e-08,
+          1.5030354261398315
+        ]
+      },
+      {
+        "img_idx": 7,
+        "filename": "IND_32_AZ_080_EL_+25.png",
+        "index": 32,
+        "azimuth": 80,
+        "elevation": 25,
+        "eye": [
+          0.2293985161220451,
+          0.6504236276485588,
+          1.3354554078985996
+        ],
+        "R": [
+          [
+            -0.9855652451515198,
+            -0.07326115667819977,
+            -0.1526234894990921
+          ],
+          [
+            0.0,
+            0.9015187621116638,
+            -0.4327400326728821
+          ],
+          [
+            0.16929598152637482,
+            -0.4264935553073883,
+            -0.8885055184364319
+          ]
+        ],
+        "T": [
+          -2.9802322387695312e-08,
+          5.960464477539063e-08,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 8,
+        "filename": "IND_36_AZ_271_EL_+21.png",
+        "index": 36,
+        "azimuth": 271,
+        "elevation": 21,
+        "eye": [
+          0.006832566629958422,
+          0.5467494855519144,
+          -1.4000478695994958
+        ],
+        "R": [
+          [
+            0.9999880790710449,
+            -0.0017752314452081919,
+            -0.004545845091342926
+          ],
+          [
+            -0.0,
+            0.9314913749694824,
+            -0.3637635111808777
+          ],
+          [
+            0.004880179651081562,
+            0.36375918984413147,
+            0.9314802289009094
+          ]
+        ],
+        "T": [
+          -0.0,
+          -0.0,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 9,
+        "filename": "IND_41_AZ_238_EL_+15.png",
+        "index": 41,
+        "azimuth": 238,
+        "elevation": 15,
+        "eye": [
+          -0.7698120257389885,
+          0.4135602751272006,
+          -1.2228953614077012
+        ],
+        "R": [
+          [
+            0.8462824821472168,
+            0.14658190310001373,
+            0.5121715664863586
+          ],
+          [
+            0.0,
+            0.9614012837409973,
+            -0.27515003085136414
+          ],
+          [
+            -0.5327344536781311,
+            0.23285464942455292,
+            0.8136170506477356
+          ]
+        ],
+        "T": [
+          -5.960464477539063e-08,
+          -0.0,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 10,
+        "filename": "IND_45_AZ_067_EL_+11.png",
+        "index": 45,
+        "azimuth": 67,
+        "elevation": 11,
+        "eye": [
+          0.5548453986182519,
+          0.3045644634615348,
+          1.3632691562258215
+        ],
+        "R": [
+          [
+            -0.9262253642082214,
+            -0.07638657838106155,
+            -0.3691498935222626
+          ],
+          [
+            0.0,
+            0.9792547821998596,
+            -0.20263291895389557
+          ],
+          [
+            0.37697023153305054,
+            -0.18768374621868134,
+            -0.9070106148719788
+          ]
+        ],
+        "T": [
+          -0.0,
+          -2.9802322387695312e-08,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 11,
+        "filename": "IND_50_AZ_035_EL_+06.png",
+        "index": 50,
+        "azimuth": 35,
+        "elevation": 6,
+        "eye": [
+          1.2172094260162987,
+          0.1720508538825323,
+          0.864821043906476
+        ],
+        "R": [
+          [
+            -0.5791900753974915,
+            -0.09331421554088593,
+            -0.8098341226577759
+          ],
+          [
+            0.0,
+            0.9934268593788147,
+            -0.11446891725063324
+          ],
+          [
+            0.8151925206184387,
+            -0.06629926711320877,
+            -0.5753829479217529
+          ]
+        ],
+        "T": [
+          -0.0,
+          1.4901161193847656e-08,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 12,
+        "filename": "IND_54_AZ_226_EL_+02.png",
+        "index": 54,
+        "azimuth": 226,
+        "elevation": 2,
+        "eye": [
+          -1.0539679011446217,
+          0.06757546883023777,
+          -1.0694395450222032
+        ],
+        "R": [
+          [
+            0.7122399806976318,
+            0.031558576971292496,
+            0.7012262344360352
+          ],
+          [
+            0.0,
+            0.9989888668060303,
+            -0.044959329068660736
+          ],
+          [
+            -0.7019360065460205,
+            0.03202183544635773,
+            0.7115197777748108
+          ]
+        ],
+        "T": [
+          -0.0,
+          3.725290298461914e-09,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 13,
+        "filename": "IND_59_AZ_193_EL_-02.png",
+        "index": 59,
+        "azimuth": 193,
+        "elevation": -2,
+        "eye": [
+          -1.4633251841991048,
+          -0.0661692547733872,
+          -0.3367740430904869
+        ],
+        "R": [
+          [
+            0.22428005933761597,
+            -0.042902231216430664,
+            0.9735799431800842
+          ],
+          [
+            0.0,
+            0.9990305304527283,
+            0.044023748487234116
+          ],
+          [
+            -0.974524736404419,
+            -0.00987364910542965,
+            0.22406262159347534
+          ]
+        ],
+        "T": [
+          -0.0,
+          5.820766091346741e-09,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 14,
+        "filename": "IND_63_AZ_022_EL_-06.png",
+        "index": 63,
+        "azimuth": 22,
+        "elevation": -6,
+        "eye": [
+          1.3744758030905526,
+          -0.17349862499083965,
+          0.5829495818104609
+        ],
+        "R": [
+          [
+            -0.39045825600624084,
+            0.1062692254781723,
+            -0.9144666194915771
+          ],
+          [
+            0.0,
+            0.9933153986930847,
+            0.11543215066194534
+          ],
+          [
+            0.9206206798553467,
+            0.04507143795490265,
+            -0.3878481686115265
+          ]
+        ],
+        "T": [
+          -0.0,
+          1.1175870895385742e-08,
+          1.5030354261398315
+        ]
+      },
+      {
+        "img_idx": 15,
+        "filename": "IND_68_AZ_351_EL_-11.png",
+        "index": 68,
+        "azimuth": 351,
+        "elevation": -11,
+        "eye": [
+          1.4515085683656346,
+          -0.3056852559381114,
+          -0.24247705324694155
+        ],
+        "R": [
+          [
+            0.1647685468196869,
+            0.20059886574745178,
+            -0.9657180309295654
+          ],
+          [
+            -0.0,
+            0.9791001677513123,
+            0.2033785879611969
+          ],
+          [
+            0.9863322973251343,
+            -0.033510394394397736,
+            0.1613249033689499
+          ]
+        ],
+        "T": [
+          -0.0,
+          2.514570951461792e-08,
+          1.503035306930542
+        ]
+      },
+      {
+        "img_idx": 16,
+        "filename": "IND_72_AZ_181_EL_-15.png",
+        "index": 72,
+        "azimuth": 181,
+        "elevation": -15,
+        "eye": [
+          -1.4453009789846503,
+          -0.4123228653623659,
+          -0.014513990957075664
+        ],
+        "R": [
+          [
+            0.01004168763756752,
+            -0.27431297302246094,
+            0.9615879654884338
+          ],
+          [
+            0.0,
+            0.9616365432739258,
+            0.27432677149772644
+          ],
+          [
+            -0.9999496340751648,
+            -0.0027547040954232216,
+            0.00965645257383585
+          ]
+        ],
+        "T": [
+          9.313225746154785e-10,
+          -2.8707290766760707e-08,
+          1.5030354261398315
+        ]
+      },
+      {
+        "img_idx": 17,
+        "filename": "IND_77_AZ_148_EL_-21.png",
+        "index": 77,
+        "azimuth": 148,
+        "elevation": -21,
+        "eye": [
+          -1.1890507231822123,
+          -0.5460890730637193,
+          0.7396356015419946
+        ],
+        "R": [
+          [
+            -0.5281895995140076,
+            -0.30850812792778015,
+            0.7910995483398438
+          ],
+          [
+            0.0,
+            0.9316627979278564,
+            0.3633241355419159
+          ],
+          [
+            -0.8491264581680298,
+            0.19190402328968048,
+            -0.49209457635879517
+          ]
+        ],
+        "T": [
+          -5.960464477539063e-08,
+          -0.0,
+          1.5030354261398315
+        ]
+      },
+      {
+        "img_idx": 18,
+        "filename": "IND_81_AZ_339_EL_-25.png",
+        "index": 81,
+        "azimuth": 339,
+        "elevation": -25,
+        "eye": [
+          1.2568909175172065,
+          -0.6512539008917901,
+          -0.5051824414249806
+        ],
+        "R": [
+          [
+            0.37293410301208496,
+            0.4020337760448456,
+            -0.836234986782074
+          ],
+          [
+            -0.0,
+            0.9012534022331238,
+            0.4332923889160156
+          ],
+          [
+            0.9278577566146851,
+            -0.16158951818943024,
+            0.33610811829566956
+          ]
+        ],
+        "T": [
+          -2.9802322387695312e-08,
+          2.2351741790771484e-08,
+          1.503035306930542
+        ]
+      },
+      {
+        "img_idx": 19,
+        "filename": "IND_86_AZ_306_EL_-31.png",
+        "index": 86,
+        "azimuth": 306,
+        "elevation": -31,
+        "eye": [
+          0.7474507803600966,
+          -0.7837289308529414,
+          -1.0422101587354207
+        ],
+        "R": [
+          [
+            0.8126201033592224,
+            0.3038865923881531,
+            -0.4972941279411316
+          ],
+          [
+            -0.0,
+            0.8532935976982117,
+            0.5214307308197021
+          ],
+          [
+            0.5827937126159668,
+            -0.4237251579761505,
+            0.6934034824371338
+          ]
+        ],
+        "T": [
+          -0.0,
+          -0.0,
+          1.503035306930542
+        ]
+      },
+      {
+        "img_idx": 20,
+        "filename": "IND_90_AZ_135_EL_-36.png",
+        "index": 90,
+        "azimuth": 135,
+        "elevation": -36,
+        "eye": [
+          -0.866210477819762,
+          -0.8920252321901465,
+          0.8444442636074317
+        ],
+        "R": [
+          [
+            -0.6980531215667725,
+            -0.424960732460022,
+            0.5763073563575745
+          ],
+          [
+            0.0,
+            0.8048469424247742,
+            0.5934824347496033
+          ],
+          [
+            -0.7160459756851196,
+            0.41428229212760925,
+            -0.5618258714675903
+          ]
+        ],
+        "T": [
+          -0.0,
+          2.9802322387695312e-08,
+          1.5030354261398315
+        ]
+      },
+      {
+        "img_idx": 21,
+        "filename": "IND_95_AZ_103_EL_-43.png",
+        "index": 95,
+        "azimuth": 103,
+        "elevation": -43,
+        "eye": [
+          -0.25190358744829533,
+          -1.0252626574252548,
+          1.06981156612186
+        ],
+        "R": [
+          [
+            -0.9733799695968628,
+            -0.15634189546108246,
+            0.16759656369686127
+          ],
+          [
+            0.0,
+            0.7312327027320862,
+            0.6821280717849731
+          ],
+          [
+            -0.22919727861881256,
+            0.6639698147773743,
+            -0.711767315864563
+          ]
+        ],
+        "T": [
+          -0.0,
+          -5.960464477539063e-08,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 22,
+        "filename": "IND_99_AZ_294_EL_-48.png",
+        "index": 99,
+        "azimuth": 294,
+        "elevation": -48,
+        "eye": [
+          0.3912429399168588,
+          -1.1296915349991725,
+          -0.910956485681149
+        ],
+        "R": [
+          [
+            0.9188405275344849,
+            0.29660582542419434,
+            -0.2603018581867218
+          ],
+          [
+            -0.0,
+            0.6596115827560425,
+            0.7516066431999207
+          ],
+          [
+            0.39462903141975403,
+            -0.6906067132949829,
+            0.6060777902603149
+          ]
+        ],
+        "T": [
+          -0.0,
+          -0.0,
+          1.503035306930542
+        ]
+      },
+      {
+        "img_idx": 23,
+        "filename": "IND_104_AZ_261_EL_-57.png",
+        "index": 104,
+        "azimuth": 261,
+        "elevation": -57,
+        "eye": [
+          -0.1300189804993953,
+          -1.2628098618367445,
+          -0.8046875410032658
+        ],
+        "R": [
+          [
+            0.9871965646743774,
+            -0.13401450216770172,
+            0.0865042582154274
+          ],
+          [
+            0.0,
+            0.5423184633255005,
+            0.8401730060577393
+          ],
+          [
+            -0.15950822830200195,
+            -0.8294159173965454,
+            0.5353749394416809
+          ]
+        ],
+        "T": [
+          1.4901161193847656e-08,
+          -0.0,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 24,
+        "filename": "IND_108_AZ_090_EL_-65.png",
+        "index": 108,
+        "azimuth": 90,
+        "elevation": -65,
+        "eye": [
+          -0.00904672974587598,
+          -1.3706409434778883,
+          0.6167473403518423
+        ],
+        "R": [
+          [
+            -0.9998924732208252,
+            -0.01337494794279337,
+            0.006018972489982843
+          ],
+          [
+            0.0,
+            0.41037866473197937,
+            0.9119152426719666
+          ],
+          [
+            -0.014666875824332237,
+            0.911817193031311,
+            -0.4103344976902008
+          ]
+        ],
+        "T": [
+          -9.313225746154785e-10,
+          -0.0,
+          1.503035545349121
+        ]
+      },
+      {
+        "img_idx": 25,
+        "filename": "IND_113_AZ_270_EL_-89.png",
+        "index": 113,
+        "azimuth": 270,
+        "elevation": -89,
+        "eye": [
+          0.0001,
+          -1.5030347507536725,
+          -0.0014030352517654565
+        ],
+        "R": [
+          [
+            0.9974696636199951,
+            0.07109366357326508,
+            -6.653203308815137e-05
+          ],
+          [
+            -0.0,
+            0.0009358359384350479,
+            0.9999995827674866
+          ],
+          [
+            0.07109369337558746,
+            -0.9974692463874817,
+            0.0009334679343737662
+          ]
+        ],
+        "T": [
+          -7.275957614183426e-12,
+          1.1641532182693481e-10,
+          1.5030354261398315
+        ]
+      }
+    ],
+    "n_points": 52
+  }
+}
