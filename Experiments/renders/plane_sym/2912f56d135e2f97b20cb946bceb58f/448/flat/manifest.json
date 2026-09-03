@@ -1,0 +1,12 @@
+{
+  "mesh": "../data/objects/curated_plane_sym_obj/2912f56d135e2f97b20cb946bceb58f.obj",
+  "device": "cuda:0",
+  "fov": 60.0,
+  "image_size": 448,
+  "camera_distance": 1.6765102292480745,
+  "total_images": 114,
+  "processing_time_seconds": 2.18,
+  "processing_time_human": "0m 2.18s",
+  "illumination": "flat",
+  "illumination_value": 0.7
+}
