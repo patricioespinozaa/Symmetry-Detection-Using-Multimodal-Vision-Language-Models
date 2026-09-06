@@ -1,0 +1,39 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+For each image, place SIX points along the plane's projected trace — the line dividing the object into two mirror halves as seen from that viewpoint. These six points together define a straight line in each image.
+
+Step 1: Identify the global symmetry plane from ALL views jointly.
+Step 2: For each image, project that plane's trace and place six points along it.
+
+For each image:
+1. Find the plane's projected trace in that view (the line of bilateral symmetry as seen from that camera).
+2. Place six points along the trace, from top to bottom:
+   - obj_id 1: trace point near the TOP (upper boundary)
+   - obj_id 2: trace point at ~80% of the object's vertical extent
+   - obj_id 3: trace point at ~60% of the object's vertical extent
+   - obj_id 4: trace point at ~40% of the object's vertical extent
+   - obj_id 5: trace point at ~20% of the object's vertical extent
+   - obj_id 6: trace point near the BOTTOM (lower boundary)
+
+Each trace point is: midpoint_X = (X_left_edge + X_right_edge) / 2 at that height, where left/right is measured relative to the symmetry plane's orientation in that view.
+
+IMPORTANT RULES:
+- ALL six points MUST lie on the plane's projected trace (horizontal center of the bilateral extent at each height).
+- ALL six points MUST be inside the visible object, never on the background.
+- Use the SAME global symmetry plane consistently across all views.
+- The six points MUST be at six DIFFERENT heights, strictly ordered top (obj_id 1) to bottom (obj_id 6) in EVERY image.
+- The six points MUST be approximately collinear in each image — they should define a straight projected trace line.
+- Maximize vertical spread: obj_id 1 and obj_id 6 must be as far apart as possible in each image.
+- Do NOT place points on the silhouette edges — only at the bilateral center.
+- Infer the global plane from ALL views jointly before answering.
+- SELF-CHECK per image: your six points should form a straight line in the image following the plane trace from top to bottom of the object.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6; 2 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6; 3 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6">
+
+Where each entry is: image_index obj_id X Y (repeated for obj_id 1 through 6)
+
+Return ONLY the <points ...> block.

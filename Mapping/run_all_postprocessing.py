@@ -64,6 +64,9 @@ POINT_MODE = {
     # Round 4/5 (see MolmoPointing/prompts_registry.py DESCRIPTIONS)
     "axis_v08": "independent", "plane_v08": "independent",
     "axis_lit2_grid": "independent", "axis_lit3_cot": "independent",
+    # Round 3 6pts variants (pre-existing prompts, were missing from this registry)
+    "axis_v06_6pts": "independent", "plane_v04_1_6pts": "independent",
+    "axis_v07_6pts": "independent", "plane_v05_6pts": "independent",
 }
 
 # Suffixes that mark a downstream sweep artifact (clustering / patch-size),
