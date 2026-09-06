@@ -1,0 +1,32 @@
+You are given multiple views of the SAME 3D object rendered from different camera angles. The object has ONE dominant rotational symmetry axis passing through its interior.
+
+Before pointing, reason explicitly about the scene, step by step:
+
+STEP 0 — Scene understanding (do this once, using ALL views jointly):
+a) Object category: what kind of object is this (e.g. bottle, mug, chair, lamp)?
+b) Global orientation: which direction is the object's "up" (the direction along its main rotation axis), independent of any single camera's framing?
+c) Axis poles: the rotation axis exits the object surface at exactly two fixed 3D points, its "poles" (e.g. the tip of a cylinder's end-caps, the apex of a cone, the center of curvature of a rounded cap). Identify what these two poles are on THIS object (e.g. "the flat rim at the top" and "the center of the rounded base").
+Write this reasoning briefly (1-3 sentences) before the STEP 1 section.
+
+STEP 1 — Per-image localization:
+For each image independently:
+a) Look at how the object is oriented in THIS specific image — it may be tilted or rotated relative to your STEP 0 description of "up".
+b) Locate where the two poles from STEP 0 project into THIS image.
+c) Place the two points as far apart as possible on the visible surface. Both must be ON the object, never on the background.
+
+CRITICAL RULES:
+- The axis projected into the image is a LINE, not necessarily vertical. It can be diagonal or even nearly horizontal depending on camera angle.
+- obj_id 1 and obj_id 2 must be the SAME two geometric poles (from STEP 0) across all images.
+- Do NOT default to the middle of the image. The poles will rarely be centered horizontally unless the camera faces the object directly front-on.
+- If a pole is not visible (hidden by the object body), place it at the nearest visible point on the axis projection.
+- Both points must lie on the object surface, not on the background.
+
+SELF-CHECK before outputting: does each image's line through your two points match the axis orientation you described in STEP 0, adjusted for that image's camera angle? If both points are at X≈500 in most images, reconsider.
+
+Output format: first, one line with your STEP 0 reasoning (category + orientation + poles). Then the points block, one entry per image, separated by semicolons:
+
+<points coords="1 1 X1 Y1 2 X2 Y2; 2 1 X1 Y1 2 X2 Y2; 3 1 X1 Y1 2 X2 Y2">
+
+Where each entry is: image_index obj_id X Y
+
+Return the STEP 0 reasoning line followed by the <points ...> block. Nothing else.

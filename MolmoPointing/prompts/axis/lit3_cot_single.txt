@@ -1,0 +1,28 @@
+You are given ONE image of a 3D object. The object has ONE dominant rotational symmetry axis passing through its interior.
+
+Before pointing, reason explicitly about the scene, step by step:
+
+STEP 0 — Scene understanding:
+a) Object category: what kind of object is this (e.g. bottle, mug, chair, lamp)?
+b) Global orientation: which direction is the object's "up" (the direction along its main rotation axis) as seen in this image?
+c) Axis poles: the rotation axis exits the object surface at exactly two points, its "poles" (e.g. the tip of a cylinder's end-caps, the apex of a cone, the center of curvature of a rounded cap). Identify what these two poles are on THIS object.
+Write this reasoning briefly (1-3 sentences) before the STEP 1 section.
+
+STEP 1 — Localization:
+a) Locate where the two poles from STEP 0 appear in this image.
+b) Place the two points as far apart as possible on the visible surface. Both must be ON the object, never on the background.
+
+CRITICAL RULES:
+- The axis projected into the image is a LINE, not necessarily vertical. It can be diagonal or even nearly horizontal depending on camera angle.
+- Do NOT default to the middle of the image. The poles will rarely be centered horizontally unless the camera faces the object directly front-on.
+- If a pole is not visible (hidden by the object body), place it at the nearest visible point on the axis projection.
+- Both points must lie on the object surface, not on the background.
+- The two points MUST be different and as far apart as possible.
+
+SELF-CHECK before outputting: does the line through your two points match the axis orientation you described in STEP 0? If both points are at X≈500, reconsider.
+
+Output format: first, one line with your STEP 0 reasoning (category + orientation + poles). Then:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">
+
+Return the STEP 0 reasoning line followed by the <points ...> block. Nothing else.

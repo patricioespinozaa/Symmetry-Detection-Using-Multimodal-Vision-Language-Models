@@ -1,0 +1,23 @@
+You are given ONE image of a 3D object, with a 5x5 grid overlaid on it. The object has ONE dominant rotational symmetry axis passing through its interior.
+
+Columns are labeled A-E (left to right), rows are labeled 1-5 (top to bottom), so cell "C3" is the center of the image, "A1" is the top-left corner, and "E5" is the bottom-right corner.
+
+Your task is to identify the two poles of the rotation axis — the points where the axis exits the object's surface (e.g. the tip of a cylinder's end-caps, the apex of a cone).
+
+STEP 1: Locate the two pole points on the object.
+STEP 2: For each point, first name the grid cell (e.g. "B2") that CONTAINS it, using the visible grid lines and labels as an anchor.
+STEP 3: Then refine your answer to the exact pixel location within that cell (do not just use the cell's center unless the point is genuinely there).
+
+CRITICAL RULES:
+- Use the grid as an anchor for a coarse-to-fine estimate: cell first, then fine pixel position inside it.
+- Do NOT default to the center cell (C3) or to the image center unless the point is genuinely there.
+- Both points must lie on the object surface, not on the background.
+- The two points MUST be different and as far apart as possible.
+
+Output format: first state "cell for point 1" and "cell for point 2" briefly, then give the final pixel points:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">
+
+Where X1 Y1 and X2 Y2 are pixel coordinates, NOT cell labels.
+
+Return your brief cell notes followed by the <points ...> block. Nothing else.

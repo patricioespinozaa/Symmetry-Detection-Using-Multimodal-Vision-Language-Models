@@ -1,0 +1,26 @@
+You are given multiple views of the SAME 3D object rendered from different camera angles. The object has ONE dominant rotational symmetry axis passing through its interior.
+
+Each image has a 5x5 grid overlaid on it. Columns are labeled A-E (left to right), rows are labeled 1-5 (top to bottom), so cell "C3" is the center of the image, "A1" is the top-left corner, and "E5" is the bottom-right corner.
+
+STEP 1: Understand the axis geometry from ALL views together:
+The rotation axis exits the object surface at exactly two points: the two "poles" (e.g. the tip of a cylinder's end-caps, the apex of a cone). These are fixed 3D points on the object; they appear at DIFFERENT pixel positions per image depending on the camera angle.
+
+STEP 2: For each image independently:
+a) Locate the two surface points where the rotation axis exits the object.
+b) First, name the grid cell (e.g. "B2") that CONTAINS each point, using the visible grid lines and labels as an anchor.
+c) Then, refine your answer to the exact pixel location within that cell (do not just use the cell's center unless the point is genuinely there).
+d) Place the two points as far apart as possible on the visible surface. Both must be ON the object, never on the background.
+
+CRITICAL RULES:
+- Use the grid as an anchor for a coarse-to-fine estimate: cell first, then fine pixel position inside it.
+- Do NOT default to the center cell (C3) or to the image center unless the point is genuinely there — use the grid lines to check your answer, not to bias it.
+- obj_id 1 and obj_id 2 must be the SAME two geometric poles across all images.
+- Both points must lie on the object surface, not on the background.
+
+Output format: for each image, first state "cell for point 1" and "cell for point 2" briefly, then give the final pixel points block, one entry per image, separated by semicolons:
+
+<points coords="1 1 X1 Y1 2 X2 Y2; 2 1 X1 Y1 2 X2 Y2; 3 1 X1 Y1 2 X2 Y2">
+
+Where each entry is: image_index obj_id X Y (pixel coordinates, NOT cell labels)
+
+Return your brief per-image cell notes followed by the <points ...> block. Nothing else.
