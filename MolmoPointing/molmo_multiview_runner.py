@@ -144,6 +144,16 @@ Usage
         --flow c --experiment-id axis_v05_1_flowC \\
         --prompt-mode auto
 
+    # Grid-overlay experiment (axis_lit2_grid requires --grid-overlay)
+    CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \\
+        --renders-root ../data/renders \\
+        --symmetry-type axis_sym \\
+        --sizes 224 --lightings flat \\
+        --view-groups 1 6 14 26 \\
+        --prompt-id axis_lit2_grid --grid-overlay \\
+        --experiment-id axis_lit2_grid \\
+        --prompt-mode auto
+
     # Two GPUs
     CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \\
         --renders-root ../data/renders --symmetry-type axis_sym \\
@@ -164,7 +174,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
 from transformers import AutoModelForImageTextToText, AutoProcessor
 
@@ -273,6 +283,49 @@ OUTPUT_FILE   = "molmo_multiview.json"
 DEFAULT_VIEW_GROUPS   = [1, 6, 14, 26, 42, 62, 86, 114]
 DEFAULT_IMAGE_SIZES   = [224, 448, 1136]
 DEFAULT_ILLUMINATIONS = ["flat", "brighter", "darker"]
+
+# Grid overlay for --grid-overlay (axis_lit2_grid, EXP-LIT-2 style, MOKA arXiv:2403.03174).
+# Same 5x5 / A-E x 1-5 cell-labeling convention already validated (as a pure post-hoc
+# simulation, not a real Molmo call) in Experiments/sandbox_literatura.ipynb.
+GRID_N    = 5
+GRID_COLS = [chr(65 + i) for i in range(GRID_N)]   # ["A", "B", "C", "D", "E"]
+GRID_ROWS = list(range(1, GRID_N + 1))              # [1, 2, 3, 4, 5]
+
+
+def apply_grid_overlay(image: Image.Image, n: int = GRID_N) -> Image.Image:
+    """
+    Returns a NEW image (the input is left untouched) with an n x n grid drawn
+    on top: gridlines plus a column letter (A, B, ...) + row number (1, 2, ...)
+    label in each cell's top-left corner, e.g. "C3" for the center cell of a
+    5x5 grid. Purely a visual aid for the model's input -- does not touch the
+    underlying render on disk, so ray casting / camera geometry downstream are
+    unaffected.
+    """
+    grid_img = image.copy()
+    draw     = ImageDraw.Draw(grid_img)
+    w, h     = grid_img.size
+    step_x, step_y = w / n, h / n
+
+    line_color  = (255, 60, 60)
+    label_color = (255, 60, 60)
+    try:
+        font = ImageFont.truetype("arial.ttf", size=max(12, int(min(step_x, step_y) * 0.18)))
+    except OSError:
+        font = ImageFont.load_default()
+
+    for i in range(1, n):
+        x = round(i * step_x)
+        draw.line([(x, 0), (x, h)], fill=line_color, width=1)
+        y = round(i * step_y)
+        draw.line([(0, y), (w, y)], fill=line_color, width=1)
+
+    for row in range(n):
+        for col in range(n):
+            label = f"{GRID_COLS[col]}{GRID_ROWS[row]}"
+            x, y  = round(col * step_x) + 3, round(row * step_y) + 2
+            draw.text((x, y), label, fill=label_color, font=font)
+
+    return grid_img
 
 
 # Filename helper
@@ -854,6 +907,7 @@ def process_object(
     flow:          str = "a",
     describe_prompt:           str | None = None,
     describe_and_point_prompt: str | None = None,
+    grid_overlay:  bool = False,
 ) -> None:
     """
     Process one object across all (size, illumination, n_views) combinations.
@@ -867,6 +921,13 @@ def process_object(
     per (size, lighting) config (see prepare_flow_context) and augments
     prompt_single/prompt_multi with its result before the normal N-view
     pointing call.
+
+    grid_overlay: when True, draws the 5x5 lettered/numbered grid (see
+    apply_grid_overlay) on every image sent to the model for the main
+    N-view pointing call (used by --prompt-id axis_lit2_grid). Only affects
+    the in-memory copy sent to Molmo -- "images_sent" in the output JSON
+    still records the original render filenames, so downstream mapping
+    (which re-reads the plain PNGs) is unaffected.
     """
     output_file   = _exp_filename(OUTPUT_FILE, experiment_id)
     symmetry_type = object_dir.parent.name
@@ -920,6 +981,8 @@ def process_object(
                     Image.open(render_dir / e["filename"]).convert("RGB")
                     for e in entries
                 ]
+                if grid_overlay:
+                    images = [apply_grid_overlay(img) for img in images]
 
                 if flow == "a":
                     call_prompt_single, call_prompt_multi = prompt_single, prompt_multi
@@ -1026,6 +1089,13 @@ def parse_args() -> argparse.Namespace:
                        "(e.g. axis_v01, plane_v02). "
                        "Run `python MolmoPointing/prompts_registry.py` to list options."
                    ))
+    p.add_argument("--grid-overlay", action="store_true",
+                   help=(
+                       "Draw a 5x5 lettered/numbered grid (A-E x 1-5) on every image sent to "
+                       "the model for the main N-view call (see apply_grid_overlay). Only the "
+                       "in-memory copy sent to Molmo is affected; required for --prompt-id "
+                       "axis_lit2_grid, unused by every other prompt."
+                   ))
     p.add_argument("--max-objects", type=int, default=None,
                    help="Limit to the first N objects (sorted order). Useful for subset experiments.")
     p.add_argument("--list-prompts", action="store_true",
@@ -1106,6 +1176,15 @@ def main() -> None:
         prompt_single = entry["single"]
         prompt_multi  = entry["multi"]
 
+    if args.prompt_id == "axis_lit2_grid" and not args.grid_overlay:
+        print("[error] --prompt-id axis_lit2_grid requires --grid-overlay "
+              "(the prompt references grid cell labels that won't exist in the image otherwise).")
+        sys.exit(1)
+    if args.grid_overlay and args.prompt_id != "axis_lit2_grid":
+        print(f"[warn] --grid-overlay is set but --prompt-id is {args.prompt_id!r}, "
+              f"not 'axis_lit2_grid' -- the model will see a grid but the prompt won't mention it "
+              f"unless you wrote it that way.")
+
     # Load Flow B/C prompts, failing fast if the expected files are missing
     describe_prompt = describe_and_point_prompt = None
     if args.flow == "b":
@@ -1162,6 +1241,7 @@ def main() -> None:
             flow          = args.flow,
             describe_prompt           = describe_prompt,
             describe_and_point_prompt = describe_and_point_prompt,
+            grid_overlay  = args.grid_overlay,
         )
 
     print(f"\n[GPU {args.gpu_id}] Done.")

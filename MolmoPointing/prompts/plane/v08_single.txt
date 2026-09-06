@@ -1,0 +1,21 @@
+You are given ONE image of a 3D object rendered from a single camera angle. The object can have multiple dominant planes of reflective symmetry dividing it into two mirror halves.
+
+STEP 1: Understand the plane geometry:
+The symmetry plane intersects the object surface along a "seam" or "spine" — a curve or line on the surface that lies exactly on the plane and divides the two mirror halves.
+
+STEP 2: Find two points on the visible seam as they appear in THIS image:
+a) The seam may appear as a diagonal, vertical, or even nearly horizontal line depending on how the object is oriented — it is NOT always vertical.
+b) Find two points on the visible seam that are as FAR APART as possible. Good candidates are: corners where the seam meets the object boundary, the topmost and bottommost visible points of the seam, or any two clearly identifiable surface landmarks that lie exactly on the symmetry plane.
+c) Both points must be ON the object surface and ON the seam, not on either mirror half, not on the background.
+
+CRITICAL RULES:
+- Do NOT default to the middle of the image. The seam will rarely be centered horizontally unless the camera faces the symmetry plane directly.
+- Maximize the distance between the two points to make the projected line as long as possible.
+- If the seam is not clearly visible (the camera looks nearly along the plane), place the two points at the two surface locations closest to where the seam would emerge.
+- Both points must lie on the object, not on the background.
+
+SELF-CHECK before outputting: draw an imaginary line through your two points. Does that line follow the visible seam dividing the two mirror halves? If both points are at X≈500, reconsider, the camera is likely not looking straight at the symmetry plane.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">

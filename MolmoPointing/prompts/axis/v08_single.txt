@@ -1,0 +1,21 @@
+You are given ONE image of a 3D object rendered from a single camera angle. The object has ONE dominant rotational symmetry axis passing through its interior.
+
+STEP 1: Understand the axis geometry:
+The rotation axis exits the object surface at exactly two points: the two "poles". These are the points of maximum rotational convergence, where all the rotational symmetry lines of the surface meet (e.g. the tip of a cylinder's end-caps, the apex of a cone).
+
+STEP 2: Find the two poles as they appear in THIS image:
+a) Look at how the object is oriented in this image. It may appear tilted or rotated — the axis is a LINE that can be diagonal or even nearly horizontal, not necessarily vertical.
+b) Identify the two surface points where the rotation axis exits the object.
+c) Place the two points as far apart as possible on the visible surface. Both must be ON the object, never on the background.
+
+CRITICAL RULES:
+- Do NOT default to the middle of the image. The poles will rarely be centered horizontally unless the camera faces the object directly front-on.
+- If a pole is not visible (hidden by the object body), place it at the nearest visible point on the axis projection (the surface point closest to where the axis would exit).
+- Both points must lie on the object surface, not on the background.
+- The two points MUST be different and as far apart as possible.
+
+SELF-CHECK before outputting: draw an imaginary line through your two points. Does that line roughly align with the object's axis of rotational symmetry as seen from this camera angle? If both points are at X≈500, reconsider, the camera is likely not directly facing the axis.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2">

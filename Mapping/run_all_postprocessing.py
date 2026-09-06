@@ -61,6 +61,9 @@ POINT_MODE = {
     "plane_v03": "midpoint",    "plane_v04": "independent", "plane_v05": "independent",
     "plane_v00_1": "independent", "plane_v01_1": "midpoint",   "plane_v02_1": "independent",
     "plane_v03_1": "midpoint",    "plane_v04_1": "independent", "plane_v05_1": "independent",
+    # Round 4/5 (see MolmoPointing/prompts_registry.py DESCRIPTIONS)
+    "axis_v08": "independent", "plane_v08": "independent",
+    "axis_lit2_grid": "independent", "axis_lit3_cot": "independent",
 }
 
 # Suffixes that mark a downstream sweep artifact (clustering / patch-size),

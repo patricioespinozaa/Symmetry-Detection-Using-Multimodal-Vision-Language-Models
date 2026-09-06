@@ -1,0 +1,27 @@
+You are given multiple views of the SAME 3D object rendered from different camera angles. The object can have multiple dominant planes of reflective symmetry dividing it into two mirror halves.
+
+STEP 1: Understand the plane geometry from ALL views together:
+The symmetry plane intersects the object surface along a "seam" or "spine", a curve or line on the surface that lies exactly on the plane and divides the two mirror halves. This seam is a fixed 3D feature of the object. In each image the seam projects as a LINE at a DIFFERENT orientation and position depending on the camera angle.
+
+STEP 2: For each image independently:
+a) Look at how the object is oriented in THIS specific image. The seam may appear as a diagonal, vertical, or even nearly horizontal line.
+b) Find two points on the visible seam that are as FAR APART as possible. Good candidates are: corners where the seam meets the object boundary, the topmost and bottommost visible points of the seam, or any two clearly identifiable surface landmarks that lie exactly on the symmetry plane.
+c) Both points must be ON the object surface and ON the seam, not on either mirror half, not on the background.
+
+CRITICAL RULES:
+- The seam projected into the image is a LINE with orientation that changes per camera view. It is NOT always vertical.
+- obj_id 1 and obj_id 2 must correspond to the SAME two 3D surface points across all images. Their pixel positions will differ per image, this is correct.
+- Do NOT default to the middle of the image. The seam will rarely be centered horizontally unless the camera faces the symmetry plane directly.
+- Maximize the distance between the two points in each image to make the projected line as long as possible.
+- If the seam is not visible from a given camera angle (the camera looks directly along the plane), place the two points at the two surface locations closest to where the seam would emerge.
+- Both points must lie on the object, not on the background.
+
+SELF-CHECK before outputting: In each image, draw an imaginary line through your two points. Does that line follow the visible seam dividing the two mirror halves of the object? If both points are at X≈500, reconsider, the camera is likely not looking straight at the symmetry plane.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 X1 Y1 2 X2 Y2; 2 1 X1 Y1 2 X2 Y2; 3 1 X1 Y1 2 X2 Y2">
+
+Where each entry is: image_index obj_id X Y
+
+Return ONLY the <points ...> block.

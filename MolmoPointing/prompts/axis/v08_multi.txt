@@ -1,0 +1,26 @@
+You are given multiple views of the SAME 3D object rendered from different camera angles. The object has ONE dominant rotational symmetry axis passing through its interior.
+
+STEP 1: Understand the axis geometry from ALL views together:
+The rotation axis exits the object surface at exactly two points: the two "poles". These poles are fixed 3D points on the object. In each image they appear at DIFFERENT pixel positions depending on the camera angle. They are NOT always at the center of the image.
+
+STEP 2: For each image independently:
+a) Look at how the object is oriented in THIS specific image. The object may appear tilted or rotated.
+b) Find the two surface points where the rotation axis exits the object. To locate them: identify the tip of the object's rotational end-caps (top and bottom of a cylinder, apex of a cone, etc.). These are the points of maximum rotational convergence, where all the rotational symmetry lines of the surface meet.
+c) Place the two points as far apart as possible on the visible surface. Both must be ON the object, never on the background.
+
+CRITICAL RULES:
+- The axis projected into the image is a LINE, not necessarily vertical. It can be diagonal or even nearly horizontal depending on camera angle.
+- obj_id 1 and obj_id 2 must be the SAME two geometric poles across all images. Their pixel positions will differ per image, this is expected and correct.
+- Do NOT default to the middle of the image. The poles will rarely be centered horizontally unless the camera faces the object directly front-on.
+- If a pole is not visible (hidden by the object body), place it at the nearest visible point on the axis projection (the surface point closest to where the axis would exit).
+- Both points must lie on the object surface, not on the background.
+
+SELF-CHECK before outputting: In each image, draw an imaginary line through your two points. Does that line roughly align with the object's axis of rotational symmetry as seen from that camera angle? If both points are at X≈500, reconsider, the camera is likely not directly facing the axis.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 X1 Y1 2 X2 Y2; 2 1 X1 Y1 2 X2 Y2; 3 1 X1 Y1 2 X2 Y2">
+
+Where each entry is: image_index obj_id X Y
+
+Return ONLY the <points ...> block.
