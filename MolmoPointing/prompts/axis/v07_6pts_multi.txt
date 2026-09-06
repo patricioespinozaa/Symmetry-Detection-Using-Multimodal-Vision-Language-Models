@@ -1,0 +1,36 @@
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant rotational symmetry axis.
+
+For each image, place SIX points along the projected axis line — the centerline of the object as seen from that viewpoint. These six points together define a straight line in each image representing the axis projection.
+
+For each image:
+1. Infer the global rotation axis from ALL views jointly.
+2. Project that axis into the current view and identify the centerline.
+3. Place six points along that centerline, from top to bottom:
+   - obj_id 1: TOP pole (topmost axis point, horizontal center of topmost surface)
+   - obj_id 2: axis centerline at ~80% of object's vertical extent
+   - obj_id 3: axis centerline at ~60% of object's vertical extent
+   - obj_id 4: axis centerline at ~40% of object's vertical extent
+   - obj_id 5: axis centerline at ~20% of object's vertical extent
+   - obj_id 6: BOTTOM pole (bottommost axis point, horizontal center of bottommost surface)
+
+IMPORTANT RULES:
+- ALL six points MUST be ON the rotation axis — at the horizontal center of the object at each height, NOT on the lateral silhouette.
+- ALL six points MUST be inside the visible object, never on the background.
+- Use the SAME global axis consistently across all views.
+- The six points MUST be at six DIFFERENT heights, strictly ordered top (obj_id 1) to bottom (obj_id 6) in EVERY image.
+- The six points MUST be approximately collinear in each image — they should lie on the same projected line.
+- Maximize vertical spread: obj_id 1 and obj_id 6 must be as far apart as possible in each image.
+- At each height, the point must be equidistant from the left and right silhouette edges.
+- Do NOT place points on the lateral silhouette edges.
+- Infer the global axis from ALL views jointly before answering.
+- SELF-CHECK per image: your six points should form a straight line in the image following the object's vertical centerline.
+
+Output format (one entry per image, separated by semicolons):
+
+<points coords="1 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6; 2 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6; 3 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6">
+
+Where each entry is: image_index obj_id X Y (repeated for obj_id 1 through 6)
+
+Return ONLY the <points ...> block.

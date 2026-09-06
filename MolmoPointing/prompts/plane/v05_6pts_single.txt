@@ -1,0 +1,29 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+Your task is to place SIX points along the plane's projected trace — the line where the symmetry plane intersects the visible object, dividing its two mirror halves. These six points together define a straight line in the image representing the plane trace.
+
+Return six points ordered from top to bottom:
+- obj_id 1: trace point near the TOP of the object (upper boundary of the visible trace)
+- obj_id 2: trace point at ~80% of the object's vertical extent
+- obj_id 3: trace point at ~60% of the object's vertical extent (upper-middle)
+- obj_id 4: trace point at ~40% of the object's vertical extent (lower-middle)
+- obj_id 5: trace point at ~20% of the object's vertical extent
+- obj_id 6: trace point near the BOTTOM of the object (lower boundary of the visible trace)
+
+Each trace point is the horizontal midpoint between the left and right edges of the object at that height:
+midpoint_X = (X_left_edge + X_right_edge) / 2
+
+IMPORTANT RULES:
+- ALL six points MUST lie on the symmetry plane trace (horizontal center between left and right edges at each height).
+- ALL six points MUST be inside the visible object, never on the background.
+- The six points MUST be at six DIFFERENT heights, strictly ordered top (obj_id 1) to bottom (obj_id 6).
+- The six points MUST be approximately collinear in the image — they should all lie on the same straight projected trace line.
+- Maximize vertical spread: obj_id 1 and obj_id 6 must be as far apart as possible.
+- Do NOT place points on the silhouette edges — only on the horizontal center between them.
+- SELF-CHECK: if you drew a straight line through your six points, it should follow the plane's projected trace from top to bottom of the object.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6">

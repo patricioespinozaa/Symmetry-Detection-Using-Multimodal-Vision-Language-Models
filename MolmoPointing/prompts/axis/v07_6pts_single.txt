@@ -1,0 +1,29 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant rotational symmetry axis.
+
+Your task is to place SIX points along the projected axis line — the vertical centerline of the object as seen in this image. These six points together define a straight line in the image that represents the axis projection.
+
+Return six points ordered from top to bottom:
+- obj_id 1: TOP pole — topmost point on the axis (horizontal center of the topmost surface)
+- obj_id 2: axis centerline at ~80% of the object's vertical extent (upper region)
+- obj_id 3: axis centerline at ~60% of the object's vertical extent (upper-middle)
+- obj_id 4: axis centerline at ~40% of the object's vertical extent (lower-middle)
+- obj_id 5: axis centerline at ~20% of the object's vertical extent (lower region)
+- obj_id 6: BOTTOM pole — bottommost point on the axis (horizontal center of the bottommost surface)
+
+IMPORTANT RULES:
+- ALL six points MUST lie on the rotation axis — at the HORIZONTAL CENTER of the object at each height, NOT on the lateral silhouette.
+- ALL six points MUST be inside the visible object (on its surface), never on the background.
+- The six points MUST be at six DIFFERENT heights, strictly ordered top (obj_id 1) to bottom (obj_id 6).
+- The six points MUST be approximately collinear in the image — they should all lie on the same straight projected line.
+- Maximize the vertical spread: obj_id 1 and obj_id 6 must be as far apart as possible.
+- At each height, verify: draw an imaginary horizontal line — the point must be equidistant from the left and right silhouette edges at that height.
+- For flat tops/bottoms: place the pole at the geometric center of the face.
+- For rounded tops/bottoms: place the pole at the point equidistant from left and right silhouette edges at the topmost/bottommost extent.
+- Do NOT place points on the lateral silhouette edges.
+- SELF-CHECK: if you drew a straight line through your six points, it should follow the vertical axis of the object from top to bottom.
+
+Output ONLY:
+
+<points coords="1 1 X1 Y1 2 X2 Y2 3 X3 Y3 4 X4 Y4 5 X5 Y5 6 X6 Y6">

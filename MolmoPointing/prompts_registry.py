@@ -73,6 +73,13 @@ DESCRIPTIONS: dict[str, str] = {
     # Round 3 (6 puntos por vista + filtro fondo/objeto, ver docs/diagnostico_conditioning_axis.md S7)
     "axis_v06_6pts":  "v06 extendido a 6 puntos a lo largo del eje (poles + 4 intermedios), exige puntos dentro del objeto — compatible sin cambios con widest_pair",
     "plane_v04_1_6pts": "v04_1 extendido a 6 midpoints a lo largo de la traza, exige puntos dentro del objeto — REQUIERE extender estimate_plane_no_mesh a 3 pares (hoy solo lee obj_id 1/2)",
+    # Borrador en Experiments/sandbox_pipeline_server_updated_6_pts_v2.ipynb, nunca extraído
+    # al registro ni corrido sobre los 850 -- NO es duplicado de axis_v06_6pts/plane_v04_1_6pts:
+    # base v07/v05 (no v06/v04_1), porcentajes explícitos (20/40/60/80%) en vez de "cuarto
+    # superior/inferior", y agrega un self-check explícito de colinealidad (precursor del
+    # self-check de axis_v08/plane_v08, aplicado acá a la variante de 6 puntos).
+    "axis_v07_6pts":  "v07 (narrowest cross-section) extendido a 6 puntos con self-check de colinealidad explícito",
+    "plane_v05_6pts": "v05 (plane trace extremes) extendido a 6 puntos con self-check de colinealidad explícito",
     # Round 4 (anti-degeneración STEP1/STEP2 + auto-verificación "Do NOT default to X=500";
     # texto ya redactado y validado sobre el sandbox de Experiments/ bajo los IDs ad hoc
     # "axis_v08_2pts"/"plane_v06_2pts" — ver Experiments/sandbox_pipeline_server_updated_6_pts_v2.ipynb.
