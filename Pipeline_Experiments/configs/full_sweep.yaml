@@ -1,0 +1,46 @@
+# Runs every triangulation ablation + diagnostic over EVERY axis_sym/plane_sym
+# prompt already pointed with Molmo2 (the "molmo=850, no-mesh=0" prompts:
+# axis_v00..v08 [+ "_1"/"_6pts" variants], axis_lit2_grid, axis_lit3_cot,
+# plane_v00..v08 [+ "_1"/"_6pts" variants] -- 19 axis + 17 plane = 36 prompts,
+# auto-discovered, no need to list them by hand).
+#
+#   conda activate tesis_env
+#   python Pipeline_Experiments/run_batch.py --config Pipeline_Experiments/configs/full_sweep.yaml
+#
+# For a quick smoke test first, copy this file and set dataset.max_objects to
+# e.g. 20 -- with 36 prompts x ~5 applicable variants x 850 objects this is a
+# lot of CPU work (no GPU needed), so validate on a subset before the full run.
+
+dataset:
+  renders_root: ../data/renders
+  objects_root: ../data/objects
+  symmetry_types: [axis_sym, plane_sym]
+  sizes: [224]
+  lightings: [flat]
+  max_objects: null
+  overwrite: false
+
+experiment_ids:
+  axis_sym: auto
+  plane_sym: auto
+
+variants:
+  - variant: expA        # Bartoli & Sturm -- pixel-separation weighted triangulation
+  - variant: expB        # Wu et al. -- point-then-direction (axis only, skipped for plane_sym)
+  - variant: expC        # Recker et al. -- RANSAC 2D point-pair selection (matters most on the _6pts prompts)
+  - variant: expD        # AssemblyHands-X -- edge-penalized confidence weight
+  - variant: expE        # Hess-Flores/Zhang -- iterative residual reweighting (axis only)
+  - variant: expF        # PRS-Net-style SDE gate (plane only, needs objects_root -- real mesh)
+    max_planes: 3
+    sde_gate: 0.02
+
+diagnostics:
+  - center_bias
+
+evaluation:
+  run_evaluate: true
+  with_reference_metrics: false   # start false (SDE_ref/F1_ref via gpytoolbox is expensive over 36 x 5 x 850); flip to true for a rescoring pass once the angular-error results look sane
+  run_compare: true
+  extra_args: []
+
+results_dir: ../results

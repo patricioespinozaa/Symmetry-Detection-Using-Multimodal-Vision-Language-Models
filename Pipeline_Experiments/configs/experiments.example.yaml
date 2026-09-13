@@ -1,0 +1,63 @@
+# Pipeline_Experiments run configuration -- see Pipeline_Experiments/README.md
+# for the full field reference. Copy this file, edit the paths/lists for your
+# run, and pass it to run_batch.py:
+#
+#   python Pipeline_Experiments/run_batch.py --config Pipeline_Experiments/configs/my_run.yaml
+
+dataset:
+  renders_root: ../data/renders
+  objects_root: ../data/objects
+  symmetry_types: [axis_sym, plane_sym]
+  sizes: [224]
+  lightings: [flat]
+  max_objects: null       # null = every object; set to e.g. 20 for a quick smoke test
+  overwrite: false
+
+# Which prompt runs (--experiment-id values already used with MolmoPointing/
+# molmo_multiview_runner.py or Mapping/estimate_symmetry_no_mesh.py) to apply
+# every configured variant/diagnostic to. Use "auto" to discover every
+# molmo_multiview_<ID>.json already present under renders_root/<symmetry_type>
+# instead of listing them by hand -- this is what makes a run "apply to all
+# my prompt executions" without editing this file every time a new prompt is
+# tried.
+experiment_ids:
+  axis_sym: auto
+  # axis_sym: [axis_v06_nomesh, axis_v08_nomesh, axis_v06_6pts_nomesh]
+  plane_sym: auto
+
+# Triangulation ablations to run on top of each experiment_id above (see
+# Pipeline_Experiments/triangulation_variants/). Each entry becomes its own
+# output --experiment-id (config.build_output_experiment_id): e.g.
+# "axis_v06_nomesh" + variant expA -> "axis_v06_expA_nomesh".
+variants:
+  - variant: expA               # Bartoli & Sturm -- pixel-separation weighted triangulation
+  - variant: expB                # Wu et al. -- point-then-direction (axis only)
+  - variant: expC                # Recker et al. -- RANSAC 2D point-pair selection
+  - variant: expD                # AssemblyHands-X -- edge-penalized confidence weight
+  - variant: expE                # Hess-Flores/Zhang -- iterative residual reweighting (axis only)
+  - variant: expF                # PRS-Net-style SDE gate (plane only, needs objects_root)
+    max_planes: 3
+    sde_gate: 0.02
+  # Example of sweeping one variant over several filter policies/hparams --
+  # add as many entries as needed, each gets its own output experiment_id:
+  # - variant: expA
+  #   filter_policy: any
+  # - variant: expA
+  #   filter_policy: both
+
+# Batch-level analyses that don't produce predicted_symmetry_*.json (see
+# Pipeline_Experiments/diagnostics/). Currently: "center_bias" (X~=500 collapse
+# check, Experiments/sandbox_pipeline_server_updated_6_pts_v2.ipynb).
+diagnostics:
+  - center_bias
+
+# Whether/how to chain the existing evaluation stage after generating new
+# predictions, so one run_batch.py invocation goes all the way to an updated
+# comparison CSV.
+evaluation:
+  run_evaluate: true
+  with_reference_metrics: true    # also computes SDE_ref/F1_ref (needs gpytoolbox)
+  run_compare: true                # refresh axis_sym/plane_sym_nomesh_comparison.csv at the end
+  extra_args: []                   # any additional Mapping/evaluate.py flags, passed through verbatim
+
+results_dir: ../results
