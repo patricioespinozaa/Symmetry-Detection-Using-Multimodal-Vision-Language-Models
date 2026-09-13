@@ -86,6 +86,34 @@ needed there.
 Run only part of the pipeline with `--skip-variants` / `--skip-diagnostics` /
 `--skip-evaluate` / `--skip-compare`.
 
+## Parallelizing across CPU cores (not GPUs)
+
+Nothing in `Pipeline_Experiments` touches a GPU — the triangulation variants
+are pure numpy, and `expF`/`--with-reference-metrics` use `gpytoolbox`
+(CPU AABB tree), same as `Mapping/evaluate.py` always has. Only
+`candidates_then_select/molmo_candidates_runner.py` (EXP-LIT-1's real
+inference) needs one. So on a multi-GPU box those GPUs are irrelevant to
+`run_batch.py`; if you want it to run faster, split the CPU-bound object
+list across parallel processes with `--shard-id`/`--num-shards` instead:
+
+```bash
+# 2 shards in parallel, each doing half the objects -- must skip
+# diagnostics/evaluate/compare (they each need EVERY object's output)
+python Pipeline_Experiments/run_batch.py --config my_run.yaml \
+    --shard-id 0 --num-shards 2 --skip-diagnostics --skip-evaluate --skip-compare &
+python Pipeline_Experiments/run_batch.py --config my_run.yaml \
+    --shard-id 1 --num-shards 2 --skip-diagnostics --skip-evaluate --skip-compare &
+wait
+
+# then once, unsharded, over the now-complete object set:
+python Pipeline_Experiments/run_batch.py --config my_run.yaml --skip-variants
+```
+
+`run_batch.py` refuses to run diagnostics/evaluate/compare together with
+`--num-shards > 1` (it would score a partial object set and race two
+processes writing the same CSV) — pass the `--skip-*` flags shown above on
+every sharded invocation.
+
 ## Config schema (`configs/*.yaml`)
 
 ```yaml
