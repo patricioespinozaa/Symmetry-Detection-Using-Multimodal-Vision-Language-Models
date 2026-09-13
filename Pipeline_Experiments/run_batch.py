@@ -34,16 +34,31 @@ def _applicable_variants(config: RunConfig, symmetry_type: str) -> list[VariantC
     return [vc for vc in config.variants if symmetry_type in get_variant(vc.variant).SYMMETRY_TYPES]
 
 
-def run_variants(config: RunConfig) -> list[tuple[str, str, str]]:
+def run_variants(
+    config: RunConfig, shard_id: int = 0, num_shards: int = 1,
+) -> list[tuple[str, str, str]]:
     """ Run every configured triangulation variant over every resolved experiment_id.
+
+    Pure CPU work (numpy + gpytoolbox for expF) -- no GPU involved, so
+    "sharding" here means splitting the OBJECT list across parallel OS
+    processes on this machine's CPU cores, not across GPUs. Each shard writes
+    disjoint predicted_symmetry_<ID>.json files (one per object), so running
+    several shards concurrently is safe; only run evaluate/compare (which
+    each need EVERY object's output to exist) after all shards finish, e.g.
+    with --skip-evaluate --skip-compare on every sharded invocation and a
+    final unsharded --skip-variants pass.
 
     Args:
         * config: the loaded run configuration
+        * shard_id: this process's shard index, in [0, num_shards)
+        * num_shards: total number of parallel shards (1 = no sharding)
 
     Returns:
         * list[tuple[str, str, str]]: (symmetry_type, output_experiment_id,
           method) for every combination actually processed -- fed to
-          run_evaluate/run_compare below
+          run_evaluate/run_compare below (identical across shards, since
+          every shard sees the same experiment_ids x variants, just a
+          disjoint slice of objects)
 
     """
     generated: list[tuple[str, str, str]] = []
@@ -64,9 +79,10 @@ def run_variants(config: RunConfig) -> list[tuple[str, str, str]]:
         all_objects = sorted(d for d in symmetry_dir.iterdir() if d.is_dir())
         if config.max_objects:
             all_objects = all_objects[:config.max_objects]
+        all_objects = all_objects[shard_id::num_shards]
 
-        print(f"\n[{symmetry_type}] {len(source_ids)} source experiment_id(s) x "
-              f"{len(variants)} variant(s) x {len(all_objects)} objects")
+        print(f"\n[{symmetry_type}] shard {shard_id}/{num_shards}: {len(source_ids)} source "
+              f"experiment_id(s) x {len(variants)} variant(s) x {len(all_objects)} objects")
 
         for source_experiment_id in source_ids:
             for variant_config in variants:
@@ -184,6 +200,13 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--skip-diagnostics", action="store_true")
     p.add_argument("--skip-evaluate", action="store_true", help="Overrides evaluation.run_evaluate.")
     p.add_argument("--skip-compare", action="store_true", help="Overrides evaluation.run_compare.")
+    p.add_argument("--shard-id", type=int, default=0,
+                   help="This process's shard index (CPU parallelism across the object list -- "
+                        "no GPU is used anywhere in this module). Launch --num-shards processes "
+                        "with --shard-id 0..num_shards-1, each with --skip-evaluate --skip-compare "
+                        "--skip-diagnostics, then one final unsharded run with --skip-variants to "
+                        "run diagnostics/evaluate/compare once over the complete object set.")
+    p.add_argument("--num-shards", type=int, default=1)
     return p.parse_args()
 
 
@@ -197,9 +220,25 @@ def main() -> None:
     if args.skip_compare:
         config.run_compare = False
 
+    if args.num_shards > 1:
+        # run_evaluate/run_compare already reflect --skip-evaluate/--skip-compare
+        # (mutated above); diagnostics has no such config-level flag, so check
+        # --skip-diagnostics directly.
+        needs_full_set = (
+            config.run_evaluate or config.run_compare
+            or (config.diagnostics and not args.skip_diagnostics)
+        )
+        if needs_full_set:
+            print("[error] --num-shards > 1 together with diagnostics/evaluate/compare would "
+                  "read/score a partial object set (and race across shards writing the same "
+                  "output files). Pass --skip-diagnostics --skip-evaluate --skip-compare on every "
+                  "sharded invocation, then run once more with --skip-variants (no sharding needed "
+                  "there) to run diagnostics/evaluate/compare over the complete object set.")
+            sys.exit(1)
+
     generated: list[tuple[str, str, str]] = []
     if not args.skip_variants:
-        generated = run_variants(config)
+        generated = run_variants(config, shard_id=args.shard_id, num_shards=args.num_shards)
     if not args.skip_diagnostics:
         run_diagnostics(config)
 
