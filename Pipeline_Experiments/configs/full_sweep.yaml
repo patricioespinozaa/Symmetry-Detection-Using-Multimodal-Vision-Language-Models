@@ -2,7 +2,11 @@
 # prompt already pointed with Molmo2 (the "molmo=850, no-mesh=0" prompts:
 # axis_v00..v08 [+ "_1"/"_6pts" variants], axis_lit2_grid, axis_lit3_cot,
 # plane_v00..v08 [+ "_1"/"_6pts" variants] -- 19 axis + 17 plane = 36 prompts,
-# auto-discovered, no need to list them by hand).
+# auto-discovered, no need to list them by hand). Legacy "<X>_nomesh" duplicates
+# of a bare "<X>" prompt (same Molmo2 points, saved twice only to avoid
+# overwriting the with-mesh pipeline's output) are deduped automatically by
+# config.discover_experiment_ids -- you should see 36, not more, even if some
+# prompts also have an older "_nomesh"-suffixed twin on disk.
 #
 #   conda activate tesis_env
 #   python Pipeline_Experiments/run_batch.py --config Pipeline_Experiments/configs/full_sweep.yaml
@@ -18,7 +22,11 @@ dataset:
   sizes: [224]
   lightings: [flat]
   max_objects: null
-  overwrite: false
+  overwrite: true   # forces every process_object() call to recompute and overwrite its
+                     # predicted_symmetry_*_nomesh.json, even if one already exists on disk --
+                     # needed for a clean re-run after the expF NaN-gate fix (2026-09-14),
+                     # since resumability would otherwise silently keep any already-written,
+                     # possibly-contaminated expF output
 
 experiment_ids:
   axis_sym: auto
