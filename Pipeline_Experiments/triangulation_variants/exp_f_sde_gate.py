@@ -86,7 +86,11 @@ def detect_planes(
 
         plane_vec = normal_origin_to_plane(pred["normal"], pred["origin"])
         real_sde = calplaneloss(plane_vec, mesh_v, mesh_f, sample)
-        if real_sde > sde_gate:
+        # `real_sde > sde_gate` is False for NaN too, so without the explicit
+        # isfinite check a degenerate mesh triangle (gpytoolbox divides by a
+        # zero-area face's normal in barycentric_coordinates.py -> NaN) would
+        # silently PASS the gate instead of failing it -- reject, don't accept.
+        if not np.isfinite(real_sde) or real_sde > sde_gate:
             break   # candidate doesn't hold up against the real surface -- stop consolidating
 
         pred["sde_ref_gate"] = real_sde

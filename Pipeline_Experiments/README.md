@@ -83,6 +83,14 @@ existing comparison CSVs (and `Experiments/analisis_prompts_no_mesh.ipynb`,
 which reads them) pick up the new experiment_ids automatically — no changes
 needed there.
 
+`discover_experiment_ids` also dedupes a specific legacy pattern: if both
+`<X>` and `<X>_nomesh` exist, only `<X>` is kept. Some earlier sweeps saved
+the exact same Molmo2 points twice under two `--experiment-id` labels,
+purely so the with-mesh pipeline's output for the bare prompt_id wouldn't
+get overwritten — not two prompts to run every variant against twice. An
+`_nomesh` id with no bare counterpart is left alone (nothing to dedupe
+against).
+
 Run only part of the pipeline with `--skip-variants` / `--skip-diagnostics` /
 `--skip-evaluate` / `--skip-compare`.
 

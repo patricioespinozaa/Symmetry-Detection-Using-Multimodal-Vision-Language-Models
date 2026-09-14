@@ -14,6 +14,7 @@ from pathlib import Path
 import yaml
 
 _MOLMO_JSON_EXP_RE = re.compile(r"^molmo_multiview_(.+)\.json$")
+NOMESH_SUFFIX = "_nomesh"
 
 
 def discover_experiment_ids(renders_root: Path, symmetry_type: str) -> list[str]:
@@ -28,7 +29,12 @@ def discover_experiment_ids(renders_root: Path, symmetry_type: str) -> list[str]
         * list[str]: sorted, deduplicated experiment_id values found across
           the whole dataset. The production file (molmo_multiview.json, no
           suffix -- belongs to the with-mesh pipeline) is intentionally not
-          included.
+          included. A "<X>_nomesh" id is dropped whenever a bare "<X>" id is
+          also present: some earlier sweeps saved the exact same Molmo2
+          points twice, under two --experiment-id labels, purely so
+          evaluate.py/estimate_symmetry.py's with-mesh output for the bare
+          prompt_id wouldn't be overwritten -- identical content, not a
+          second prompt to re-run every variant against.
 
     """
     symmetry_dir = Path(renders_root) / symmetry_type
@@ -40,7 +46,12 @@ def discover_experiment_ids(renders_root: Path, symmetry_type: str) -> list[str]
         match = _MOLMO_JSON_EXP_RE.match(path.name)
         if match:
             found.add(match.group(1))
-    return sorted(found)
+
+    deduped = {
+        exp_id for exp_id in found
+        if not (exp_id.endswith(NOMESH_SUFFIX) and exp_id[: -len(NOMESH_SUFFIX)] in found)
+    }
+    return sorted(deduped)
 
 
 @dataclass
@@ -63,9 +74,6 @@ class VariantConfig:
         if self.max_planes != 1:
             parts.append(f"mp{self.max_planes}")
         return "_".join(parts)
-
-
-NOMESH_SUFFIX = "_nomesh"
 
 
 def build_output_experiment_id(source_experiment_id: str, variant_config: VariantConfig) -> str:
