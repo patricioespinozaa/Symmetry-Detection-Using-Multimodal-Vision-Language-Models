@@ -1,0 +1,41 @@
+# Smoke-test copy of plane_maxplanes3_rerun.yaml -- same config, only
+# dataset.max_objects differs (20 instead of every object). Run this first,
+# time it, and multiply by ~42.5 (850/20) to estimate the full run before
+# committing CPU time to it -- see the timing note in
+# docs/experimentos_pipeline_sin_malla.md.
+#
+#   time python Pipeline_Experiments/run_batch.py \
+#       --config Pipeline_Experiments/configs/plane_maxplanes3_rerun.smoke.yaml
+
+dataset:
+  renders_root: ../data/renders
+  objects_root: ../data/objects
+  symmetry_types: [plane_sym]
+  sizes: [224]
+  lightings: [flat]
+  max_objects: 20
+  overwrite: false
+
+experiment_ids:
+  plane_sym: auto
+
+variants:
+  - variant: expA
+    max_planes: 3
+  - variant: expC
+    max_planes: 3
+  - variant: expD
+    max_planes: 3
+  - variant: expF
+    max_planes: 3
+    sde_gate: 0.02
+
+diagnostics: []
+
+evaluation:
+  run_evaluate: true
+  with_reference_metrics: true
+  run_compare: true
+  extra_args: []
+
+results_dir: ../results
