@@ -18,6 +18,7 @@ import json
 import sys
 from collections import defaultdict
 from pathlib import Path
+from typing import Callable
 
 from tqdm import tqdm
 
@@ -75,6 +76,7 @@ def process_object(
     objects_root: Path | None = None,
     overwrite: bool = False,
     mesh_ctx_cache: dict | None = None,
+    on_error: Callable[[str, str, Exception], None] | None = None,
 ) -> None:
     """ Run one triangulation variant, for one object, across every (size, lighting, n_views) config.
 
@@ -93,6 +95,11 @@ def process_object(
         * mesh_ctx_cache: optional dict shared by the caller across objects,
           so each object's mesh/surface-sample is only built once even if
           this function runs for several (size, lighting) configs of it
+        * on_error: optional callback(object_id, n_views_key, exception),
+          invoked at every point this function would otherwise silently
+          `continue` past a failed n_views_key -- lets a diagnostic caller
+          see the real reason (see diagnostics/diagnose_missing_reason.py)
+          without changing production behavior (default None is a no-op)
 
     """
     variant = get_variant(variant_config.variant)
@@ -176,15 +183,19 @@ def process_object(
                 # single prompt run are rare (typically one config), and this
                 # matches the baseline's OWN plane-side behavior already
                 # ("known simplification", see estimate_plane_no_mesh caller).
-                best_pred, best_n = None, -1
+                best_pred, best_n, last_exc = None, -1, None
                 for points_by_image, images_sent, fov_deg, image_size in cfg_list:
                     try:
                         pred = variant.estimate_axis(points_by_image, images_sent, fov_deg, image_size)
-                    except ValueError:
+                    except ValueError as e:
+                        last_exc = e
                         continue
                     if pred["n_views_used"] > best_n:
                         best_pred, best_n = pred, pred["n_views_used"]
                 if best_pred is None:
+                    if on_error:
+                        on_error(object_dir.name, n_views_key,
+                                  last_exc or ValueError("no (size, lighting) config produced a valid pair"))
                     continue
 
                 n_views_predictions[n_views_key] = {
@@ -198,6 +209,7 @@ def process_object(
 
             else:
                 best_planes: list[dict] | None = None
+                last_exc = None
                 for points_by_image, images_sent, fov_deg, image_size in cfg_list:
                     try:
                         planes = variant.detect_planes(
@@ -207,14 +219,19 @@ def process_object(
                             dup_angle_thresh_deg=variant_config.dup_angle_thresh,
                             mesh_ctx=mesh_ctx,
                         )
-                    except ValueError:
+                    except ValueError as e:
+                        last_exc = e
                         continue
                     if not planes:
+                        last_exc = ValueError("detect_planes returned zero accepted planes")
                         continue
                     if best_planes is None or planes[0]["n_views_used"] > best_planes[0]["n_views_used"]:
                         best_planes = planes
 
                 if not best_planes:
+                    if on_error:
+                        on_error(object_dir.name, n_views_key,
+                                  last_exc or ValueError("no (size, lighting) config produced a plane"))
                     continue
 
                 n_points_total = sum(p["n_views_used"] for p in best_planes)
@@ -240,7 +257,9 @@ def process_object(
                             ],
                         },
                     }
-        except Exception:
+        except Exception as e:
+            if on_error:
+                on_error(object_dir.name, n_views_key, e)
             continue
 
     if not n_views_predictions:
