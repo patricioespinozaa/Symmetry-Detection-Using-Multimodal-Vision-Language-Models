@@ -1,0 +1,71 @@
+# Re-runs expA/expC/expD for plane_sym in multi-plane mode (max_planes=3) so
+# they become comparable against the baseline, which is ALWAYS multi-plane
+# in this dataset (Mapping/estimate_symmetry_no_mesh.py's production runs
+# used --max-planes 3; there are zero single-plane baseline rows for
+# plane_sym). Today expA/expC/expD only exist as single-plane (max_planes=1,
+# method="triangulation"), which shares no metric column with the baseline's
+# method="triangulation_multiplane" rows -- see
+# docs/experimentos_pipeline_sin_malla.md S5.4.
+#
+# Also turns on --with-reference-metrics so SDE_ref/F1_ref get computed for
+# expA/expC/expD/expF -- today those columns are populated ONLY for the 42
+# baseline rows (0/240 ablation rows), confirmed by grepping the CSV.
+#
+# Does NOT touch axis_sym (dataset.symmetry_types is plane_sym only, so
+# max_planes=3 never reaches the axis branch, which ignores it anyway) and
+# does NOT overwrite the existing single-plane expA/C/D outputs -- this
+# writes NEW *_mp3_nomesh experiment_ids alongside them (see
+# config.py::VariantConfig.output_suffix). expF already ran at max_planes=3
+# in full_sweep.yaml, so its predictions are skipped (overwrite: false) --
+# only its evaluate.py pass re-runs, now with --with-reference-metrics.
+#
+#   conda activate tesis_env
+#
+#   # 1. Smoke test first (see plane_maxplanes3_rerun.smoke.yaml, ~20 objects)
+#   #    to get a real per-object timing estimate before committing to the
+#   #    full 850-object run -- gpytoolbox's SDE_ref/F1_ref pass is the
+#   #    expensive part, not the plane consolidation itself.
+#   python Pipeline_Experiments/run_batch.py \
+#       --config Pipeline_Experiments/configs/plane_maxplanes3_rerun.smoke.yaml
+#
+#   # 2. Full run
+#   python Pipeline_Experiments/run_batch.py \
+#       --config Pipeline_Experiments/configs/plane_maxplanes3_rerun.yaml
+#
+#   # 3. New comparison CSV lands in ../results/experiments_<DD_MM_YYYY>/
+#      plane_sym_nomesh_comparison.csv -- expA/C/D_mp3 and expF rows will
+#      now have recall_planes_mean/precision_planes_mean/sde_ref_*/f1_ref
+#      populated, comparable against the baseline rows in the same file.
+
+dataset:
+  renders_root: ../data/renders
+  objects_root: ../data/objects
+  symmetry_types: [plane_sym]
+  sizes: [224]
+  lightings: [flat]
+  max_objects: null
+  overwrite: false
+
+experiment_ids:
+  plane_sym: auto
+
+variants:
+  - variant: expA
+    max_planes: 3
+  - variant: expC
+    max_planes: 3
+  - variant: expD
+    max_planes: 3
+  - variant: expF
+    max_planes: 3
+    sde_gate: 0.02
+
+diagnostics: []
+
+evaluation:
+  run_evaluate: true
+  with_reference_metrics: true
+  run_compare: true
+  extra_args: []
+
+results_dir: ../results
