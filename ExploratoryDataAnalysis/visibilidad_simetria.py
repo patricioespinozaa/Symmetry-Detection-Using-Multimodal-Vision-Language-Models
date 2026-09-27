@@ -25,7 +25,12 @@ Se calcula para cada n_v de --nv y ademas para todas las vistas ("all").
 
 Salidas:
   <prefijo>_elementos.csv   una fila por elemento de simetria (P1)
-  <prefijo>_objetos.csv     una fila por objeto, con metricas por n_v (P2)
+  <prefijo>_objetos.csv     una fila por objeto, con metricas por n_v (P2):
+                            n_buenas, frac_buenas, inds_buenas (vistas buenas)
+  <prefijo>_distribucion.csv  cuantos objetos tienen 0..n_v vistas buenas (P2b)
+  <prefijo>_vistas.csv      una fila por (objeto, vista): delta, buena y a que
+                            conjuntos n_v pertenece la vista (omitible con
+                            --sin-csv-vistas)
 
 Uso:
   python3 visibilidad_simetria.py \\
@@ -147,6 +152,8 @@ def main():
     ap.add_argument("--umbral", type=float, default=15.0,
                     help="delta maximo (grados) para contar una vista como 'buena'")
     ap.add_argument("--out-prefix", default="visibilidad")
+    ap.add_argument("--sin-csv-vistas", action="store_true",
+                    help="no generar <prefijo>_vistas.csv (una fila por objeto y vista)")
     args = ap.parse_args()
 
     eyes = load_camera_dirs(args.metadata)
@@ -159,8 +166,15 @@ def main():
             print(f"[info] n_v={k}: indices {idx}")
 
     cats = load_categories(args.categorias)
-    elem_rows, obj_rows = [], []
+    elem_rows, obj_rows, view_rows = [], [], []
     sin_elementos = []
+
+    # convencion del pipeline: elevation = asin(y/r), azimuth = atan2(z, x) en [0, 360)
+    radios = np.linalg.norm(eyes, axis=1)
+    view_el = np.degrees(np.arcsin(np.clip(eyes[:, 1] / radios, -1, 1)))
+    view_az = np.degrees(np.arctan2(eyes[:, 2], eyes[:, 0])) % 360
+    nv_keys = [k for k in selections if k != "all"]
+    sel_sets = {k: set(selections[k]) for k in nv_keys}
 
     for tipo, folder in (("axial", args.axis_dir), ("planar", args.plane_dir)):
         for txt in sorted(Path(folder).glob("*.txt")):
@@ -187,11 +201,27 @@ def main():
                    "nombre_categoria": cats.get(oid, ""), "n_elementos": len(elems)}
             for k, idx in selections.items():
                 d = best_per_view[idx]
+                buenas = [i for i, dd in zip(idx, d) if dd <= args.umbral]
                 row[f"delta_min_{k}"] = round(float(d.min()), 2)
                 row[f"delta_media_{k}"] = round(float(d.mean()), 2)
-                row[f"n_buenas_{k}"] = int((d <= args.umbral).sum())
+                row[f"n_buenas_{k}"] = len(buenas)
+                row[f"frac_buenas_{k}"] = round(len(buenas) / len(idx), 3)
                 row[f"ind_mejor_{k}"] = idx[int(np.argmin(d))]
+                if k != "all":  # la lista completa de 114 seria ilegible
+                    row[f"inds_buenas_{k}"] = " ".join(str(i) for i in buenas)
             obj_rows.append(row)
+
+            if not args.sin_csv_vistas:
+                for i in range(total):
+                    vrow = {"object_id": oid, "tipo_simetria": tipo,
+                            "nombre_categoria": cats.get(oid, ""), "ind": i,
+                            "azimuth_deg": round(float(view_az[i]), 2),
+                            "elevation_deg": round(float(view_el[i]), 2),
+                            "delta_deg": round(float(best_per_view[i]), 2),
+                            "buena": int(best_per_view[i] <= args.umbral)}
+                    for k in nv_keys:
+                        vrow[f"en_nv_{k}"] = int(i in sel_sets[k])
+                    view_rows.append(vrow)
 
     if sin_elementos:
         print(f"[aviso] {len(sin_elementos)} .txt sin elementos axis/plane legibles, ej.: {sin_elementos[:3]}")
@@ -204,6 +234,8 @@ def main():
 
     write(f"{args.out_prefix}_elementos.csv", elem_rows)
     write(f"{args.out_prefix}_objetos.csv", obj_rows)
+    if view_rows:
+        write(f"{args.out_prefix}_vistas.csv", view_rows)
 
     # ------------------------------------------------------------- resumen P1
     print("\n" + "=" * 78)
@@ -238,6 +270,36 @@ def main():
             print(f"{tipo:<8}{k:>5}{np.median(dm):>16.1f}{np.percentile(dm, 90):>15.1f}{pct:>21.1f}%")
         print()
 
+    # ------------------------------------------------------------- distribucion
+    print("=" * 78)
+    print(f"P2b. CUANTAS VISTAS BUENAS TIENE CADA OBJETO, POR CONJUNTO (delta <= {args.umbral:g} deg)")
+    print("=" * 78)
+    dist_rows = []
+    for k in nv_keys:
+        n_views = len(selections[k])
+        print(f"\nn_v = {k}")
+        print(f"  {'vistas buenas':>14}  {'axial':>14}  {'planar':>14}")
+        conteos = {}
+        for tipo in ("axial", "planar"):
+            rows = [r for r in obj_rows if r["tipo_simetria"] == tipo]
+            c = Counter(r[f"n_buenas_{k}"] for r in rows)
+            conteos[tipo] = (c, len(rows))
+            for nb in range(n_views + 1):
+                dist_rows.append({"n_v": k, "tipo_simetria": tipo, "n_buenas": nb,
+                                  "etiqueta": f"{nb}/{n_views}", "n_objetos": c.get(nb, 0),
+                                  "pct_objetos": round(100 * c.get(nb, 0) / max(1, len(rows)), 2)})
+        for nb in range(n_views + 1):
+            celdas = []
+            for tipo in ("axial", "planar"):
+                c, tot = conteos[tipo]
+                n = c.get(nb, 0)
+                celdas.append(f"{n:5d} ({100 * n / max(1, tot):5.1f}%)")
+            if any(conteos[t][0].get(nb, 0) for t in conteos):  # omitir filas vacias
+                print(f"  {f'{nb}/{n_views}':>14}  {celdas[0]:>14}  {celdas[1]:>14}")
+    write(f"{args.out_prefix}_distribucion.csv", dist_rows)
+    print(f"\n(filas con 0 objetos omitidas; distribucion completa en "
+          f"{args.out_prefix}_distribucion.csv)\n")
+
     # ------------------------------------------------------------- verificacion visual
     print("=" * 78)
     print("VERIFICACION VISUAL SUGERIDA (abre estas imagenes: deberian mostrar el eje/plano como una linea)")
@@ -249,7 +311,10 @@ def main():
             print(f"  [{tipo}] {r['object_id']}  mejor vista: IND_{r['ind_mejor_all']:02d}  "
                   f"(delta = {r['delta_min_all']} deg)")
 
-    print(f"\nSalidas: {args.out_prefix}_elementos.csv, {args.out_prefix}_objetos.csv")
+    salidas = [f"{args.out_prefix}_{s}.csv" for s in ("elementos", "objetos", "distribucion")]
+    if view_rows:
+        salidas.append(f"{args.out_prefix}_vistas.csv")
+    print(f"\nSalidas: {', '.join(salidas)}")
 
 
 if __name__ == "__main__":
