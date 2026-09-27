@@ -398,6 +398,20 @@ pero sin evidencia de haber corrido** — no se encontró ningún
 
 ## 5. Métricas obtenidas (`experiments_15_09_2026/`)
 
+> **Corrección (2026-09-26) — leer antes de usar esta sección en la tesis.**
+> Un análisis posterior (`docs/reporte_resultados_sin_malla.md`, resumen en
+> `docs/resumen_ejecutivo_sin_malla.md`) encontró que: (1) los resultados de
+> eje de esta sección son **indistinguibles de una dirección al azar**
+> (57.3° de error medio analítico; los ejes GT están rotados al azar y las
+> predicciones colapsan al eje vertical del render); (2) los de plano **no
+> se han comparado todavía contra un predictor trivial** ("siempre el plano
+> X"), que en la muestra local los supera, porque los planos GT están en
+> pose canónica; (3) las métricas de plano **excluyen los objetos sin
+> predicción**, así que las comparaciones entre filas con distinta cobertura
+> están sesgadas. Las conclusiones de §5.2bis (EXP-B) y §5.4 (EXP-F) quedan
+> corregidas abajo. Los números de esta sección siguen siendo correctos como
+> lectura de los CSV; lo que cambia es su interpretación.
+
 Todo lo que sigue se recalculó directamente de
 `experiments_15_09_2026/{axis,plane}_sym_nomesh_comparison.csv` (342 filas de
 eje, 282 de plano) en esta sesión — no son cifras citadas de memoria.
@@ -562,6 +576,15 @@ reporta solo `angular_error`/`AUC`, esta mejora queda invisible; vale la
 pena reportar `translation_error_normalized_mean` como métrica secundaria
 para los prompts `independent` de eje.
 
+> **Corregido (2026-09-26)**: la mejora de EXP-B es casi toda sobre la
+> **media** (−0.22); la **mediana** apenas cambia (Δ típico −0.003; 22
+> combinaciones mejoran y 20 empeoran). `translation_error` mide la distancia
+> del ancla a la recta GT, y el GT pasa por el origen, que es el punto al que
+> miran todas las cámaras: el ancla de EXP-B (punto más cercano a todos los
+> rayos) cae ahí sin importar si la dirección es correcta. EXP-B elimina
+> outliers del ancla del baseline; **no es evidencia de que localice mejor el
+> eje**. Ver `docs/reporte_resultados_sin_malla.md` §2.4 y §3.6.
+
 ### 5.3 Baseline de plano — ranking por prompt (multi-plano, `max_planes=3`)
 
 `recall_planes_mean` (fracción de planos GT encontrados) en el mejor
@@ -643,6 +666,17 @@ se vuelve, a veces, conservador de más con muchas vistas disponibles y
 rechaza algún plano real, no solo los espurios. Es la ablación con evidencia
 empírica más sólida de las 6 — vale la pena priorizarla para la escritura de
 resultados de plano.
+
+> **Corregido (2026-09-26)**: esta lectura no consideraba la cobertura. EXP-F
+> predice sobre **281 objetos menos en promedio** que el baseline (−75 a
+> −531), y las métricas de plano solo promedian sobre objetos con
+> predicción. Contando los objetos abstenidos como recall 0, el **recall
+> ajustado de EXP-F baja 0.078** (0 combinaciones mejoran, 23 empeoran) y el
+> F1 ajustado sube apenas +0.011. La mejora de `SDE_ref` es circular (el gate
+> filtra por `SDE_ref`) y EXP-F usa la malla para predecir. La corrida
+> `experiments_22_09_2026` (`--max-planes 3` + `f1_ref`) confirma además que
+> EXP-A/C/D no tienen efecto en plano. Ver
+> `docs/reporte_resultados_sin_malla.md` §4.5.
 
 **Desglose prompt-por-prompt de EXP-F** (14 prompts × 3 `n_views` = 42 filas,
 umbral 0.03 para contar como cambio real en vez de ruido):
