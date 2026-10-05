@@ -8,7 +8,17 @@ Coordinate conventions
 ----------------------
 - Molmo2 coords: (x, y) in [0, 1000], origin top-left, independent of the
   image's actual pixel resolution.
-- NDC: [-1, 1], top-left = (-1, +1) (OpenGL-style).
+- NDC: [-1, 1], PyTorch3D convention: +X points to the LEFT of the image and
+  +Y up, so top-left = (+1, +1).
+  CORRECCIÓN (2026-10-05): hasta esta fecha se usaba la convención de OpenGL
+  (+X a la derecha, top-left = (-1, +1)), que no coincide con los renders de
+  PyTorch3D: cada punto de Molmo2 en la posición x generaba el rayo de la
+  posición 1000 - x (espejo horizontal de cada vista). Todos los resultados
+  calculados antes de esta fecha (map_to_3d.py, estimate_symmetry_no_mesh.py,
+  Pipeline_Experiments/triangulation_variants/) usan la versión anterior,
+  que se conserva comentada en molmo_to_ndc() y project_point().
+  Verificación: la silueta proyectada con project_point() coincide con el
+  render (IoU 0.89-0.97) solo con la convención corregida.
 - PyTorch3D row-vector convention: p_cam = p_world @ R + T, so the camera
   centre in world space is C = -(R @ T).
 """
@@ -18,9 +28,22 @@ import numpy as np
 import trimesh
 
 
+# --- Versión anterior (convención OpenGL, +X a la derecha). INCORRECTA para los
+# --- renders de PyTorch3D; usada en todos los resultados previos al 2026-10-05.
+# def molmo_to_ndc(x: float, y: float) -> tuple[float, float]:
+#     """Convert Molmo2 coords (0-1000, top-left origin) to NDC ([-1, 1])."""
+#     ndc_x = (x / 1000.0) * 2.0 - 1.0
+#     ndc_y = 1.0 - (y / 1000.0) * 2.0
+#     return ndc_x, ndc_y
+
+
 def molmo_to_ndc(x: float, y: float) -> tuple[float, float]:
-    """Convert Molmo2 coords (0-1000, top-left origin) to NDC ([-1, 1])."""
-    ndc_x = (x / 1000.0) * 2.0 - 1.0
+    """Convert Molmo2 coords (0-1000, top-left origin) to NDC ([-1, 1]).
+
+    PyTorch3D convention: +X points to the left of the image, +Y up. The left
+    image edge (x = 0) maps to ndc_x = +1 and the top edge (y = 0) to ndc_y = +1.
+    """
+    ndc_x = 1.0 - (x / 1000.0) * 2.0
     ndc_y = 1.0 - (y / 1000.0) * 2.0
     return ndc_x, ndc_y
 
@@ -93,7 +116,9 @@ def project_point(
     ndc_x = (p_cam[0] / p_cam[2]) / half_tan
     ndc_y = (p_cam[1] / p_cam[2]) / half_tan
 
-    x_molmo = (ndc_x + 1.0) / 2.0 * 1000.0
+    # --- Versión anterior (inversa de la convención OpenGL), previa al 2026-10-05:
+    # x_molmo = (ndc_x + 1.0) / 2.0 * 1000.0
+    x_molmo = (1.0 - ndc_x) / 2.0 * 1000.0   # PyTorch3D: +X a la izquierda
     y_molmo = (1.0 - ndc_y) / 2.0 * 1000.0
 
     px = x_molmo / 1000.0 * image_size
@@ -182,7 +207,10 @@ def cast_ray_patch(
     for drow in range(-half, half + 1):
         for dcol in range(-half, half + 1):
             # Molmo y grows downward; NDC y grows upward, so row offsets flip sign.
-            sub_ndc_x = ndc_x + dcol * dx_ndc
+            # Versión anterior (previa al 2026-10-05): sub_ndc_x = ndc_x + dcol * dx_ndc
+            # Con +X a la izquierda, avanzar a la derecha en la imagen resta en NDC.
+            # (La grilla es simétrica, así que el promedio no cambia.)
+            sub_ndc_x = ndc_x - dcol * dx_ndc
             sub_ndc_y = ndc_y - drow * dy_ndc
 
             origin, direction = build_camera_rays(

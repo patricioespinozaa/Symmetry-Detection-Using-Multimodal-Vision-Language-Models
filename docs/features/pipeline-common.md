@@ -27,7 +27,7 @@ consistent across every script that consumes it.
 | File | Function / Class | Responsibility |
 |---|---|---|
 | `pipeline_common/__init__.py` | — | Empty; makes `pipeline_common` an importable package. No re-exports. |
-| `pipeline_common/camera.py` | `molmo_to_ndc(x, y)` | Converts Molmo2 pixel coords (0-1000, top-left origin) to NDC (`[-1, 1]`, OpenGL-style). |
+| `pipeline_common/camera.py` | `molmo_to_ndc(x, y)` | Converts Molmo2 pixel coords (0-1000, top-left origin) to NDC (`[-1, 1]`, PyTorch3D convention: +X points to the image's left, so `ndc_x = 1 - 2x/1000`). Until 2026-10-05 it used the OpenGL convention (`ndc_x = 2x/1000 - 1`), which mirrored every view horizontally; results computed before that date use the old version (kept commented in the code). Verified by `utils/verificar_convencion_ndc.py`. |
 | `pipeline_common/camera.py` | `build_camera_rays(ndc_x, ndc_y, R, T, fov_deg, image_size)` | Builds a world-space camera ray (origin + normalized direction) for a given NDC point, using the PyTorch3D row-vector convention. |
 | `pipeline_common/camera.py` | `project_point(p_world, R, T, fov_deg, image_size)` | Forward-projects a 3D world point to pixel coordinates; exact inverse of `build_camera_rays`. Flags points behind the camera. |
 | `pipeline_common/camera.py` | `cast_ray(mesh, ray_origin, ray_direction)` | Casts a single ray against a `trimesh.Trimesh`, keeping the closest intersection (hit flag, 3D point, face id). |
