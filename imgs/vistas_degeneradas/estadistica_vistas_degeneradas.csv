@@ -1,3 +1,3 @@
 tipo,objetos,umbral_deg,pct_vistas_degeneradas,pct_degeneradas_en_candidatas,pct_degeneradas_en_extremas,pct_obj_con_degenerada_en_candidatas
-axial,1,20.0,5.26,6.12,0.0,100.0
-planar,1,20.0,36.84,29.59,100.0,100.0
+axial,850,20.0,6.04,6.01,6.29,96.94
+planar,850,20.0,40.13,32.97,99.16,100.0
