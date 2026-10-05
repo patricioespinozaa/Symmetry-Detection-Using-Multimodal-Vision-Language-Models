@@ -38,6 +38,7 @@ Uso (en el servidor, desde la raíz del repo):
 import argparse
 import datetime as dt
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -119,6 +120,11 @@ def en_paralelo(tareas, jobs, dry, titulo):
 
 
 def main():
+    # Al cortar la salida con "| head", terminar en silencio en vez de lanzar
+    # BrokenPipeError (solo POSIX; en Windows no existe SIGPIPE).
+    if hasattr(signal, "SIGPIPE"):
+        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--data", required=True, help="carpeta con renders/ y objects/ (p. ej. ~/data)")
@@ -130,7 +136,8 @@ def main():
     ap.add_argument("--lighting", default="flat")
     ap.add_argument("--jobs", type=int, default=4, help="procesos en paralelo (CPU)")
     ap.add_argument("--results-dir", default=None,
-                    help="dónde guardar CSV y logs (por defecto <data>/../results_ndcfix)")
+                    help="dónde guardar CSV y logs (por defecto <repo>/../results_ndcfix, "
+                         "junto a la carpeta results/ que usan los configs)")
     ap.add_argument("--sin-variantes", action="store_true", help="solo línea base")
     ap.add_argument("--max-objects", type=int, default=None, help="prueba rápida")
     ap.add_argument("--dry-run", action="store_true", help="muestra qué haría, sin ejecutar")
@@ -142,7 +149,7 @@ def main():
 
     data = Path(args.data).expanduser().resolve()
     renders, objects = data / "renders", data / "objects"
-    results = Path(args.results_dir).expanduser() if args.results_dir else data.parent / "results_ndcfix"
+    results = Path(args.results_dir).expanduser() if args.results_dir else REPO.parent / "results_ndcfix"
     logs = results / "logs" / dt.datetime.now().strftime("%Y%m%d_%H%M%S")
     if not args.dry_run:
         logs.mkdir(parents=True, exist_ok=True)
