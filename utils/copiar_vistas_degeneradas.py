@@ -29,9 +29,9 @@ Salida (por defecto imgs/vistas_degeneradas/ en la raíz del repo):
   montaje_vistas_degeneradas.png   (si matplotlib está disponible)
 
 Uso en el servidor (desde la raíz del repo):
-  python3 utils/copiar_vistas_degeneradas.py --data-root ~/data7
-  python3 utils/copiar_vistas_degeneradas.py --data-root ~/data7 \\
-      --axis-id <id> --plane-id <id> --size 1134 --lighting flat
+  python3 utils/copiar_vistas_degeneradas.py --data-root ~/data
+  python3 utils/copiar_vistas_degeneradas.py --data-root ~/data \\
+      --axis-id <id> --plane-id <id> --size 1136 --lighting flat
 """
 import argparse
 import csv
@@ -66,24 +66,29 @@ def leer_metadata(path):
     return sorted(data, key=lambda e: int(e["index"]))
 
 
-def carpeta_render(renders, tipo, oid, size, lighting, avisar=True):
+def carpeta_render(renders, tipo, oid, size, lighting, avisar=True, respaldo=False):
+    """Carpeta <renders>/<tipo>/<oid>/<size>/<lighting>. Por defecto exige
+    exactamente esa resolución e iluminación; con respaldo=True usa la mayor
+    resolución disponible si la pedida no existe."""
     base = renders / tipo / oid
     if not base.is_dir():
         return None
     pedida = base / str(size) / lighting
     if pedida.is_dir():
         return pedida
-    # si no existe el tamaño pedido, usar el mayor disponible
     sizes = sorted((d for d in base.iterdir() if d.is_dir() and (d / lighting).is_dir()),
                    key=lambda d: int(d.name) if d.name.isdigit() else -1)
-    if not sizes:
+    if avisar:
+        disp = ", ".join(d.name for d in sizes) or "ninguna"
+        print(f"[aviso] no existe {pedida} (resoluciones con '{lighting}': {disp})")
+    if not respaldo or not sizes:
         return None
     if avisar:
-        print(f"[aviso] {pedida} no existe; uso {sizes[-1] / lighting}")
+        print(f"[aviso] uso {sizes[-1] / lighting}")
     return sizes[-1] / lighting
 
 
-def elegir_objeto(objs_dir, renders, tipo, size, lighting, criterio):
+def elegir_objeto(objs_dir, renders, tipo, size, lighting, criterio, respaldo=False):
     """Recorre las anotaciones y elige el objeto que maximiza `criterio(u)`
     entre los que tienen renders."""
     mejor = None
@@ -91,7 +96,8 @@ def elegir_objeto(objs_dir, renders, tipo, size, lighting, criterio):
         _, u = leer_anotacion(txt)
         if u is None:
             continue
-        if carpeta_render(renders, tipo, txt.stem, size, lighting, avisar=False) is None:
+        if carpeta_render(renders, tipo, txt.stem, size, lighting, avisar=False,
+                          respaldo=respaldo) is None:
             continue
         score = criterio(u)
         if mejor is None or score > mejor[0]:
@@ -234,13 +240,15 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--data-root", required=True,
-                    help="carpeta con objects/ y renders/ (p. ej. ~/data7)")
+                    help="carpeta con objects/ y renders/ (p. ej. ~/data)")
     ap.add_argument("--renders-root", default=None, help="si no está en <data-root>/renders")
     ap.add_argument("--objects-root", default=None, help="si no está en <data-root>/objects")
     ap.add_argument("--axis-id", default=None, help="objeto axial (por defecto: eje más vertical)")
     ap.add_argument("--plane-id", default=None, help="objeto planar (por defecto: normal más horizontal)")
-    ap.add_argument("--size", default="1134", help="resolución del render (por defecto 1134)")
+    ap.add_argument("--size", default="1136", help="resolución del render (por defecto 1136, la del servidor)")
     ap.add_argument("--lighting", default="flat")
+    ap.add_argument("--permitir-otra-resolucion", action="store_true",
+                    help="si no existe --size, usar la mayor resolución disponible")
     ap.add_argument("--out-dir", default=str(OUT_DEFAULT))
     ap.add_argument("--umbral", type=float, default=20.0,
                     help="grados para la estadística geométrica (por defecto 20)")
@@ -268,11 +276,13 @@ def main():
         meta_ref = leer_metadata(next(renders.glob("*/*/*/*/metadata_all.json")))
     for nombre, tipo, objs_dir, oid, criterio in casos:
         if oid is None:
-            oid = elegir_objeto(objs_dir, renders, tipo, args.size, args.lighting, criterio)
+            oid = elegir_objeto(objs_dir, renders, tipo, args.size, args.lighting, criterio,
+                                respaldo=args.permitir_otra_resolucion)
             if oid is None:
                 sys.exit(f"[error] no encontré objetos {nombre} con renders en {renders / tipo}")
         _, u = leer_anotacion(objs_dir / f"{oid}.txt")
-        src = carpeta_render(renders, tipo, oid, args.size, args.lighting)
+        src = carpeta_render(renders, tipo, oid, args.size, args.lighting,
+                             respaldo=args.permitir_otra_resolucion)
         if src is None or u is None:
             sys.exit(f"[error] faltan renders o anotación para {nombre} {oid}")
         meta = leer_metadata(src / "metadata_all.json")
