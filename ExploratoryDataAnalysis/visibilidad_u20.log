@@ -1,0 +1,112 @@
+[info] /home/pespinoz/data/renders/axis_sym/a1858315e1b17f57e1507433bf0da3de/448/flat/metadata_all.json: 114 vistas (orden por campo index); eye[0] = [0.0001, 1.3767, 0.0015]
+[info] n_v=1: indices [0]
+[info] n_v=6: indices [0, 23, 45, 68, 90, 113]
+[info] n_v=14: indices [0, 9, 17, 26, 35, 43, 52, 61, 70, 78, 87, 96, 104, 113]
+[info] n_v=26: indices [0, 5, 9, 14, 18, 23, 27, 32, 36, 41, 45, 50, 54, 59, 63, 68, 72, 77, 81, 86, 90, 95, 99, 104, 108, 113]
+
+==============================================================================
+P1. DIRECCIONES DE SIMETRIA
+==============================================================================
+
+AXIAL: 850 elementos en 850 objetos (elementos por objeto -> n objetos: {1: 850})
+  Elevacion de la direccion (0 = horizontal, 90 = vertical/Y):
+     0-15 deg:   225  #############
+    15-30 deg:   198  ############
+    30-45 deg:   166  ##########
+    45-60 deg:   143  ########
+    60-75 deg:    88  #####
+    75-90 deg:    30  ##
+  Alineados (<=5 deg) con un eje del mundo: 6/850 (0.7%)  por eje: {'X': 2, 'Y': 3, 'Z': 1}
+
+PLANAR: 1014 elementos en 850 objetos (elementos por objeto -> n objetos: {1: 692, 2: 152, 3: 6})
+  Elevacion de la direccion (0 = horizontal, 90 = vertical/Y):
+     0-15 deg:  1000  #################################################
+    15-30 deg:     0  
+    30-45 deg:     0  
+    45-60 deg:     0  
+    60-75 deg:     0  
+    75-90 deg:    14  #
+  Alineados (<=5 deg) con un eje del mundo: 1012/1014 (99.8%)  por eje: {'X': 795, 'Y': 14, 'Z': 203}
+
+==============================================================================
+P2. VISIBILIDAD DESDE LAS VISTAS SELECCIONADAS (vista buena: delta <= 20 deg)
+==============================================================================
+tipo      n_v  delta_min med.  delta_min p90   % obj con >=1 buena
+------------------------------------------------------------------
+axial       1            30.1           63.3                 35.2%
+axial       6             7.5           19.5                 91.1%
+axial      14             2.9           10.9                 99.2%
+axial      26             1.5            4.7                100.0%
+axial     all             0.3            1.1                100.0%
+
+planar      1             0.0            0.3                 99.2%
+planar      6             0.0            0.2                100.0%
+planar     14             0.0            0.2                100.0%
+planar     26             0.0            0.1                100.0%
+planar    all             0.0            0.1                100.0%
+
+==============================================================================
+P2b. CUANTAS VISTAS BUENAS TIENE CADA OBJETO, POR CONJUNTO (delta <= 20 deg)
+==============================================================================
+
+n_v = 1
+   vistas buenas           axial          planar
+             0/1    551 ( 64.8%)      7 (  0.8%)
+             1/1    299 ( 35.2%)    843 ( 99.2%)
+
+n_v = 6
+   vistas buenas           axial          planar
+             0/6     76 (  8.9%)      0 (  0.0%)
+             1/6    224 ( 26.4%)      0 (  0.0%)
+             2/6    253 ( 29.8%)      7 (  0.8%)
+             3/6    222 ( 26.1%)    690 ( 81.2%)
+             4/6     75 (  8.8%)    147 ( 17.3%)
+             5/6      0 (  0.0%)      6 (  0.7%)
+
+n_v = 14
+   vistas buenas           axial          planar
+            0/14      7 (  0.8%)      0 (  0.0%)
+            1/14     29 (  3.4%)      0 (  0.0%)
+            2/14     79 (  9.3%)      0 (  0.0%)
+            3/14     55 (  6.5%)      0 (  0.0%)
+            4/14    195 ( 22.9%)     50 (  5.9%)
+            5/14    131 ( 15.4%)      2 (  0.2%)
+            6/14    187 ( 22.0%)      3 (  0.4%)
+            7/14    138 ( 16.2%)    626 ( 73.6%)
+            8/14     29 (  3.4%)     23 (  2.7%)
+            9/14      0 (  0.0%)    136 ( 16.0%)
+           10/14      0 (  0.0%)      5 (  0.6%)
+           11/14      0 (  0.0%)      5 (  0.6%)
+
+n_v = 26
+   vistas buenas           axial          planar
+            4/26     13 (  1.5%)      0 (  0.0%)
+            5/26     43 (  5.1%)      0 (  0.0%)
+            6/26     48 (  5.6%)      0 (  0.0%)
+            7/26    136 ( 16.0%)      2 (  0.2%)
+            8/26    153 ( 18.0%)     50 (  5.9%)
+            9/26    139 ( 16.4%)      2 (  0.2%)
+           10/26    114 ( 13.4%)    615 ( 72.4%)
+           11/26     84 (  9.9%)     33 (  3.9%)
+           12/26     84 (  9.9%)      0 (  0.0%)
+           13/26     31 (  3.6%)      2 (  0.2%)
+           14/26      5 (  0.6%)      1 (  0.1%)
+           15/26      0 (  0.0%)      3 (  0.4%)
+           16/26      0 (  0.0%)    137 ( 16.1%)
+           18/26      0 (  0.0%)      1 (  0.1%)
+           20/26      0 (  0.0%)      1 (  0.1%)
+           21/26      0 (  0.0%)      3 (  0.4%)
+
+(filas con 0 objetos omitidas; distribucion completa en visibilidad_u20_distribucion.csv)
+
+==============================================================================
+VERIFICACION VISUAL SUGERIDA (abre estas imagenes: deberian mostrar el eje/plano como una linea)
+==============================================================================
+  [planar] 1074bdcb3c2032fe0f3f8b6e1796773  mejor vista: IND_00  (delta = 0.0 deg)
+  [planar] 109a19840a8fbc774c3aee8e9d3a6ffa  mejor vista: IND_00  (delta = 0.0 deg)
+  [planar] 10c484963692d3c87d40405e5ee68b4f  mejor vista: IND_113  (delta = 0.0 deg)
+  [axial] 1a963b28c5520cc737b2bb75885cfc44  mejor vista: IND_37  (delta = 0.0 deg)
+  [axial] 225d046d8f798afacba9caf4d254cef0  mejor vista: IND_18  (delta = 0.0 deg)
+  [axial] 28d35fb9035fcbfffd5c9a0fa28996b4  mejor vista: IND_52  (delta = 0.0 deg)
+
+Salidas: visibilidad_u20_elementos.csv, visibilidad_u20_objetos.csv, visibilidad_u20_distribucion.csv, visibilidad_u20_vistas.csv
