@@ -1,0 +1,48 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 Mapping/compare_results_no_mesh.py --renders-root /data/pespinoz/renders --symmetry-type axis_sym --sizes 224 --lightings flat --experiment-id axis_v00_ndcfix_nomesh axis_v00_1_ndcfix_nomesh axis_v01_ndcfix_nomesh axis_v01_1_ndcfix_nomesh axis_v02_ndcfix_nomesh axis_v02_1_ndcfix_nomesh axis_v03_ndcfix_nomesh axis_v03_1_ndcfix_nomesh axis_v04_ndcfix_nomesh axis_v04_1_ndcfix_nomesh axis_v05_ndcfix_nomesh axis_v05_1_ndcfix_nomesh axis_v06_ndcfix_nomesh axis_v07_ndcfix_nomesh --csv-dir /home/pespinoz/results_ndcfix_flujoA --no-plots --total-objects 850
+
+
+--- triangulation (eje/plano unico) ---
+              experiment        method  n_views  n_objects  angular_error_mean  angular_error_median  auc_angular  precision_5deg  precision_10deg
+axis_v00_1_ndcfix_nomesh triangulation        6        791             52.1000               56.5820       0.2003          0.0635           0.0988
+axis_v00_1_ndcfix_nomesh triangulation       14        789             53.1002               56.7888       0.1847          0.0576           0.1024
+axis_v00_1_ndcfix_nomesh triangulation       26        828             53.1876               56.5776       0.1663          0.0282           0.0718
+  axis_v00_ndcfix_nomesh triangulation        6        793             36.4013               27.2201       0.4412          0.2671           0.3835
+  axis_v00_ndcfix_nomesh triangulation       14        745             39.9372               32.4905       0.4108          0.2000           0.3588
+  axis_v00_ndcfix_nomesh triangulation       26        781             40.6877               33.5444       0.3719          0.0824           0.2376
+axis_v01_1_ndcfix_nomesh triangulation        6        827             48.2094               57.8509       0.3149          0.1894           0.2471
+axis_v01_1_ndcfix_nomesh triangulation       14        821             49.9820               57.9597       0.2721          0.1353           0.2165
+axis_v01_1_ndcfix_nomesh triangulation       26        832             51.6072               57.7861       0.2133          0.0706           0.1318
+  axis_v01_ndcfix_nomesh triangulation        6        818             49.7372               61.5802       0.3018          0.1682           0.2118
+  axis_v01_ndcfix_nomesh triangulation       14        811             53.0897               63.5850       0.2437          0.1341           0.1918
+  axis_v01_ndcfix_nomesh triangulation       26        823             52.7184               58.2627       0.2024          0.0529           0.1200
+axis_v02_1_ndcfix_nomesh triangulation        6        678             40.5831               31.0870       0.4256          0.2682           0.3741
+axis_v02_1_ndcfix_nomesh triangulation       14        675             41.5588               34.2803       0.4130          0.2471           0.3588
+axis_v02_1_ndcfix_nomesh triangulation       26        576             51.8350               56.6993       0.2912          0.0906           0.1953
+  axis_v02_ndcfix_nomesh triangulation        6        816             46.8481               54.8545       0.3547          0.2259           0.2894
+  axis_v02_ndcfix_nomesh triangulation       14        773             51.1566               65.1458       0.3068          0.2024           0.2753
+  axis_v02_ndcfix_nomesh triangulation       26        782             50.4585               58.8978       0.2653          0.0988           0.1906
+axis_v03_1_ndcfix_nomesh triangulation        6        814             48.9755               58.8514       0.3271          0.2212           0.2776
+axis_v03_1_ndcfix_nomesh triangulation       14        800             51.4114               63.4056       0.2736          0.1788           0.2388
+axis_v03_1_ndcfix_nomesh triangulation       26        782             54.2537               61.6992       0.2017          0.0671           0.1306
+  axis_v03_ndcfix_nomesh triangulation        6        805             50.3601               65.4407       0.3161          0.2235           0.2682
+  axis_v03_ndcfix_nomesh triangulation       14        798             51.4636               62.7934       0.2753          0.1706           0.2341
+  axis_v03_ndcfix_nomesh triangulation       26        764             54.0684               62.1526       0.2151          0.0624           0.1365
+axis_v04_1_ndcfix_nomesh triangulation        6        824             28.0669                9.7614       0.5537          0.3612           0.5035
+axis_v04_1_ndcfix_nomesh triangulation       14        809             29.0314                9.6506       0.5439          0.3094           0.5094
+axis_v04_1_ndcfix_nomesh triangulation       26        829             31.7585               16.4993       0.4768          0.1224           0.3318
+  axis_v04_ndcfix_nomesh triangulation        6        831             26.0447                8.6247       0.5818          0.4035           0.5271
+  axis_v04_ndcfix_nomesh triangulation       14        816             26.3972                8.4039       0.5797          0.3224           0.5494
+  axis_v04_ndcfix_nomesh triangulation       26        806             30.9346               14.7623       0.5015          0.1224           0.3388
+axis_v05_1_ndcfix_nomesh triangulation        6        804             50.8051               53.9760       0.2084          0.0671           0.1071
+axis_v05_1_ndcfix_nomesh triangulation       14        793             53.1942               56.7591       0.1853          0.0553           0.1000
+axis_v05_1_ndcfix_nomesh triangulation       26        831             55.4372               58.2507       0.1331          0.0153           0.0435
+  axis_v05_ndcfix_nomesh triangulation        6        818             40.7459               38.0696       0.3498          0.1376           0.2388
+  axis_v05_ndcfix_nomesh triangulation       14        801             43.9229               44.0330       0.3113          0.1235           0.2129
+  axis_v05_ndcfix_nomesh triangulation       26        830             49.4661               51.5132       0.2186          0.0424           0.1129
+  axis_v06_ndcfix_nomesh triangulation        6        824             26.5542                8.0871       0.5774          0.3941           0.5353
+  axis_v06_ndcfix_nomesh triangulation       14        812             27.5888                8.6208       0.5634          0.3259           0.5329
+  axis_v06_ndcfix_nomesh triangulation       26        821             30.4777               14.1936       0.4995          0.1188           0.3635
+  axis_v07_ndcfix_nomesh triangulation        6        502             55.4682               69.3927       0.2798          0.1541           0.2365
+  axis_v07_ndcfix_nomesh triangulation       14        493             54.6793               70.8029       0.2987          0.1765           0.2576
+  axis_v07_ndcfix_nomesh triangulation       26        500             61.0084               75.4162       0.1939          0.0576           0.1224
+Saved: /home/pespinoz/results_ndcfix_flujoA/experiments_06_10_2026/axis_sym_14exps_comparison.csv
