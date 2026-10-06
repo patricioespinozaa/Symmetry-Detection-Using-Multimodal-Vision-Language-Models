@@ -138,10 +138,22 @@ def main():
     ap.add_argument("--results-dir", default=None,
                     help="dónde guardar CSV y logs (por defecto <repo>/../results_ndcfix, "
                          "junto a la carpeta results/ que usan los configs)")
-    ap.add_argument("--sin-variantes", action="store_true", help="solo línea base")
+    ap.add_argument("--sin-variantes", action="store_true",
+                    help="solo línea base (sin ablaciones EXP-A..F)")
+    ap.add_argument("--modo-plano", choices=["multi", "uno", "ambos"], default="multi",
+                    help="plane_sym, línea base: 'multi' = max_planes=3 (id <X>_ndcfix_nomesh; "
+                         "recall/precisión de planos); 'uno' = max_planes=1 (id "
+                         "<X>_ndcfix_mp1_nomesh; error angular, AUC, P@theta, traslación); "
+                         "'ambos' = las dos. SDE_ref y F1_ref se calculan en todos los casos")
+    ap.add_argument("--plano-un-plano", action="store_true",
+                    help="equivalente a --modo-plano ambos (se mantiene por compatibilidad)")
     ap.add_argument("--max-objects", type=int, default=None, help="prueba rápida")
     ap.add_argument("--dry-run", action="store_true", help="muestra qué haría, sin ejecutar")
     args = ap.parse_args()
+    if args.plano_un_plano:
+        args.modo_plano = "ambos"
+    plano_multi = args.modo_plano in ("multi", "ambos")
+    plano_uno = args.modo_plano in ("uno", "ambos")
 
     if molmo_to_ndc(0, 0)[0] != 1.0:
         sys.exit("[error] pipeline_common/camera.py NO tiene la corrección NDC; actualiza el código")
@@ -160,6 +172,11 @@ def main():
     for tipo in args.tipos:
         fuentes = [s for s in discover_experiment_ids(renders, tipo) if TAG not in s]
         if args.prompts:
+            prefijo = "axis_" if tipo == "axis_sym" else "plane_"
+            pedidos = [p for p in args.prompts if p.startswith(prefijo)]
+            faltan = [p for p in pedidos if p not in fuentes]
+            if faltan:
+                print(f"[aviso] {tipo}: no encontré molmo_multiview_<ID>.json para {faltan}")
             fuentes = [s for s in fuentes if s in args.prompts]
         print(f"\n[{tipo}] {len(fuentes)} prompts: {', '.join(fuentes)}")
         for src in fuentes:
@@ -168,15 +185,26 @@ def main():
             print(f"  {src} -> {nuevo}  ({n} objetos)")
             if n == 0:
                 continue
-            # línea base
-            cmd = [PY, "Mapping/estimate_symmetry_no_mesh.py", "--renders-root", renders,
-                   "--symmetry-type", tipo, *comunes, "--experiment-id", nuevo, "--overwrite", *lim]
-            if tipo == "plane_sym":
-                cmd += ["--max-planes", "3"]
-            est.append((f"base {nuevo}", cmd, logs / f"est_{nuevo}.log"))
-            metodo = "triangulation_multiplane" if tipo == "plane_sym" else "triangulation"
-            ev.append((nuevo, tipo, metodo, True))
-            por_tipo[tipo].append(nuevo)
+            # línea base (eje; plano multiplano si corresponde)
+            if tipo == "axis_sym" or plano_multi:
+                cmd = [PY, "Mapping/estimate_symmetry_no_mesh.py", "--renders-root", renders,
+                       "--symmetry-type", tipo, *comunes, "--experiment-id", nuevo, "--overwrite", *lim]
+                if tipo == "plane_sym":
+                    cmd += ["--max-planes", "3"]
+                est.append((f"base {nuevo}", cmd, logs / f"est_{nuevo}.log"))
+                metodo = "triangulation_multiplane" if tipo == "plane_sym" else "triangulation"
+                ev.append((nuevo, tipo, metodo, True))
+                por_tipo[tipo].append(nuevo)
+            # línea base de plano con un solo plano: métricas angulares y de traslación
+            if tipo == "plane_sym" and plano_uno:
+                uno = nuevo.removesuffix(NOMESH) + "_mp1" + NOMESH
+                crear_enlaces(renders, tipo, src, uno, args.size, args.lighting, args.dry_run)
+                cmd = [PY, "Mapping/estimate_symmetry_no_mesh.py", "--renders-root", renders,
+                       "--symmetry-type", tipo, *comunes, "--experiment-id", uno,
+                       "--max-planes", "1", "--overwrite", *lim]
+                est.append((f"base1 {uno}", cmd, logs / f"est_{uno}.log"))
+                ev.append((uno, tipo, "triangulation", True))
+                por_tipo[tipo].append(uno)
             # ablaciones
             if args.sin_variantes:
                 continue
