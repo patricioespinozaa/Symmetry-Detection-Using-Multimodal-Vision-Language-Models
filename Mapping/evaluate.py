@@ -410,6 +410,35 @@ def f1_match_counts_hungarian(predicted: list[np.ndarray], gt_planes: list[np.nd
     return tp, fp, fn
 
 
+def _tau_tag(t: float) -> str:
+    """0.05 -> 't005', 0.1 -> 't010' (column-name-safe threshold tag)."""
+    return f"t{int(round(float(t) * 100)):03d}"
+
+
+def f1_per_threshold_columns(greedy_counts: dict, hungarian_counts: dict | None) -> dict:
+    """
+    Per-threshold breakdown of F1_ref, so the reported mean can be checked by
+    hand: for each tau in THRESHOLDS_INLIER, the dataset-level (tp, fp, fn)
+    of the greedy matching, its F1_tau, and the Hungarian F1_tau.
+    f1_ref == mean(f1_ref_t005, f1_ref_t010, f1_ref_t015, f1_ref_t020).
+    """
+    out = {}
+    for t, (tp, fp, fn) in greedy_counts.items():
+        tag = _tau_tag(t)
+        out[f"f1_ref_{tag}"] = round(_f1_from_counts_by_threshold({t: (tp, fp, fn)}), 4)
+        out[f"tp_{tag}"], out[f"fp_{tag}"], out[f"fn_{tag}"] = int(tp), int(fp), int(fn)
+    for t, counts in (hungarian_counts or {}).items():
+        out[f"f1_ref_hungarian_{_tau_tag(t)}"] = round(_f1_from_counts_by_threshold({t: counts}), 4)
+    return out
+
+
+F1_PER_THRESHOLD_FIELDS = (
+    [f"f1_ref_{_tau_tag(t)}" for t in THRESHOLDS_INLIER]
+    + [f"f1_ref_hungarian_{_tau_tag(t)}" for t in THRESHOLDS_INLIER]
+    + [f"{k}_{_tau_tag(t)}" for t in THRESHOLDS_INLIER for k in ("tp", "fp", "fn")]
+)
+
+
 def _f1_from_counts_by_threshold(counts_by_t: dict[float, tuple[int, int, int]]) -> float:
     """
     Mean F1 across THRESHOLDS_INLIER, given (tp, fp, fn) per threshold.
@@ -818,6 +847,10 @@ def compute_summary(all_results: dict, symmetry_type: str,
                 hungarian_counts = f1_totals[nv]["hungarian"]
                 if any(sum(c) > 0 for c in hungarian_counts.values()):
                     s["f1_ref_hungarian"] = round(_f1_from_counts_by_threshold(hungarian_counts), 4)
+                if any(sum(c) > 0 for c in greedy_counts.values()):
+                    s.update(f1_per_threshold_columns(
+                        greedy_counts,
+                        hungarian_counts if any(sum(c) > 0 for c in hungarian_counts.values()) else None))
 
             summary[nv] = s
             continue
@@ -883,6 +916,10 @@ def compute_summary(all_results: dict, symmetry_type: str,
             hungarian_counts = f1_totals[nv]["hungarian"]
             if any(sum(c) > 0 for c in hungarian_counts.values()):
                 s["f1_ref_hungarian"] = round(_f1_from_counts_by_threshold(hungarian_counts), 4)
+            if any(sum(c) > 0 for c in greedy_counts.values()):
+                s.update(f1_per_threshold_columns(
+                    greedy_counts,
+                    hungarian_counts if any(sum(c) > 0 for c in hungarian_counts.values()) else None))
 
         summary[nv] = s
     return summary
@@ -905,6 +942,7 @@ def write_csv(summary: dict, csv_path: Path, symmetry_type: str,
         ]
         if with_reference_metrics:
             fieldnames += ["sde_ref_mean", "sde_ref_min", "sde_ref_max", "f1_ref", "f1_ref_hungarian"]
+            fieldnames += F1_PER_THRESHOLD_FIELDS
     else:
         base = [
             "n_views", "n_total", "n_objects",
@@ -918,7 +956,7 @@ def write_csv(summary: dict, csv_path: Path, symmetry_type: str,
         if with_reference_metrics:
             ref_extra = ["sde_ref_mean", "sde_ref_min", "sde_ref_max"]
             if symmetry_type == "plane_sym":
-                ref_extra += ["f1_ref", "f1_ref_hungarian"]
+                ref_extra += ["f1_ref", "f1_ref_hungarian"] + F1_PER_THRESHOLD_FIELDS
 
         fieldnames = base + ref_extra
 
