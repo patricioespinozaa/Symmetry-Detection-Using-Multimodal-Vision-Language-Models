@@ -1,0 +1,9 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 Mapping/compare_results_no_mesh.py --renders-root /data/pespinoz/renders --symmetry-type axis_sym --sizes 224 --lightings flat --experiment-id axis_v05_1_flowC_ndcfix_nomesh --csv-dir /home/pespinoz/results_ndcfix_flujoC --no-plots --total-objects 850
+
+
+--- triangulation (eje/plano unico) ---
+                    experiment        method  n_views  n_objects  angular_error_mean  angular_error_median  auc_angular  precision_5deg  precision_10deg
+axis_v05_1_flowC_ndcfix_nomesh triangulation        6        374             58.2353                  90.0       0.3164          0.2529           0.3176
+axis_v05_1_flowC_ndcfix_nomesh triangulation       14        244             68.7645                  90.0       0.2138          0.1671           0.2212
+axis_v05_1_flowC_ndcfix_nomesh triangulation       26        168             76.5399                  90.0       0.1246          0.0471           0.1024
+Saved: /home/pespinoz/results_ndcfix_flujoC/experiments_06_10_2026/axis_sym_axis_v05_1_flowC_ndcfix_nomesh_comparison.csv
