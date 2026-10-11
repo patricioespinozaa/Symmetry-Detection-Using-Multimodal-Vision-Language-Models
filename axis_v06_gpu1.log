@@ -1,0 +1,33 @@
+nohup: ignoring input
+
+========== MOLMO MULTIVIEW RUNNER ==========
+Renders root  : /data/pespinoz/renders
+Symmetry type : axis_sym
+Flow          : a
+Prompt mode   : auto
+              : PROMPT_SINGLE if n_views==1, PROMPT_MULTI if n_views>1  [recommended]
+Experiment ID : axis_v06
+Prompt ID     : axis_v06
+Output file   : molmo_multiview_axis_v06.json
+GPU id/total  : 1 / 2
+Objects       : 425
+Sizes         : [448]
+Lightings     : ['flat']
+View groups   : [6, 14]
+Combinations  : 2 per object
+(Existing JSON keys are skipped automatically)
+============================================
+
+GPU 1                                                 0/425 [00:00<?]GPU 1        ████▊                                    51/425 [00:00<00:00]GPU 1        █████████▉                               105/425 [00:00<00:00]`use_fast` is set to `True` but the image processor class does not have a fast version.  Falling back to the slow version.
+[model] Loading allenai/Molmo2-8B ...
+
+Loading checkpoint shards:   0%|          | 0/8 [00:00<?, ?it/s][A
+Loading checkpoint shards:  12%|█▎        | 1/8 [00:03<00:23,  3.33s/it][A
+Loading checkpoint shards:  25%|██▌       | 2/8 [00:06<00:19,  3.17s/it][A
+Loading checkpoint shards:  38%|███▊      | 3/8 [00:09<00:15,  3.09s/it][A
+Loading checkpoint shards:  50%|█████     | 4/8 [00:12<00:12,  3.07s/it][AGPU 1        █████████▉                               105/425 [00:19<00:00]
+Loading checkpoint shards:  62%|██████▎   | 5/8 [00:15<00:09,  3.06s/it][A
+Loading checkpoint shards:  75%|███████▌  | 6/8 [00:18<00:06,  3.06s/it][A
+Loading checkpoint shards:  88%|████████▊ | 7/8 [00:21<00:02,  2.96s/it][A
+Loading checkpoint shards: 100%|██████████| 8/8 [00:22<00:00,  2.55s/it][ALoading checkpoint shards: 100%|██████████| 8/8 [00:22<00:00,  2.87s/it]
+GPU 1        ██████████▏                              108/425 [00:55<04:25]GPU 1        ██████████▎                              109/425 [01:26<07:49]GPU 1        ██████████▎                              110/425 [01:51<11:27]GPU 1        ██████████▍                              111/425 [02:17<16:22]GPU 1        ██████████▌                              112/425 [02:43<22:46]GPU 1        ██████████▋                              113/425 [03:08<30:47]GPU 1        ██████████▋                              114/425 [03:34<40:20]GPU 1        ██████████▊                              115/425 [04:00<51:15]GPU 1        ██████████▉                              116/425 [04:26<1:02:58]GPU 1        ███████████                              117/425 [04:52<1:14:47]GPU 1        ███████████                              118/425 [05:18<1:25:58]GPU 1        ███████████▏                             119/425 [05:44<1:36:02]

@@ -1,0 +1,103 @@
+
+========== MOLMO MULTIVIEW RUNNER ==========
+Renders root  : /data/pespinoz/renders
+Symmetry type : axis_sym
+Flow          : a
+Prompt mode   : auto
+              : PROMPT_SINGLE if n_views==1, PROMPT_MULTI if n_views>1  [recommended]
+Experiment ID : axis_v04
+Prompt ID     : axis_v04
+Output file   : molmo_multiview_axis_v04.json
+GPU id/total  : 0 / 1
+Objects       : 850
+Sizes         : [448]
+Lightings     : ['flat']
+View groups   : [6, 14, 26]
+Combinations  : 3 per object
+(Existing JSON keys are skipped automatically)
+============================================
+
+GPU 0                                                 0/850 [00:00<?]`use_fast` is set to `True` but the image processor class does not have a fast version.  Falling back to the slow version.
+[model] Loading allenai/Molmo2-8B ...
+
+Loading checkpoint shards:   0%|          | 0/8 [00:00<?, ?it/s][A
+Loading checkpoint shards:  12%|█▎        | 1/8 [00:02<00:18,  2.70s/it][A
+Loading checkpoint shards:  25%|██▌       | 2/8 [00:04<00:14,  2.46s/it][A
+Loading checkpoint shards:  38%|███▊      | 3/8 [00:07<00:12,  2.51s/it][A
+Loading checkpoint shards:  50%|█████     | 4/8 [00:09<00:09,  2.44s/it][A
+Loading checkpoint shards:  62%|██████▎   | 5/8 [00:12<00:07,  2.41s/it][A
+Loading checkpoint shards:  75%|███████▌  | 6/8 [00:14<00:04,  2.39s/it][A
+Loading checkpoint shards:  88%|████████▊ | 7/8 [00:16<00:02,  2.29s/it][A
+Loading checkpoint shards: 100%|██████████| 8/8 [00:18<00:00,  1.99s/it][ALoading checkpoint shards: 100%|██████████| 8/8 [00:18<00:00,  2.26s/it]
+GPU 0                                                 0/850 [00:48<?]
+[model] Ready.
+Traceback (most recent call last):
+  File "/home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/MolmoPointing/molmo_multiview_runner.py", line 1267, in <module>
+    main()
+  File "/home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/MolmoPointing/molmo_multiview_runner.py", line 1230, in main
+    process_object(
+  File "/home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/MolmoPointing/molmo_multiview_runner.py", line 998, in process_object
+    inference     = run_inference(
+  File "/home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/MolmoPointing/molmo_multiview_runner.py", line 861, in run_inference
+    else run_multi(images, prompt=prompt_multi)
+  File "/home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/MolmoPointing/molmo_multiview_runner.py", line 825, in run_multi
+    raw, n_tok    = _call_model(images, prompt)
+  File "/home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/MolmoPointing/molmo_multiview_runner.py", line 446, in _call_model
+    output_ids = model.generate(**inputs, max_new_tokens=max_new_tokens)
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/transformers/generation/utils.py", line 2564, in generate
+    result = decoding_method(
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/transformers/generation/utils.py", line 2784, in _sample
+    outputs = self(**model_inputs, return_dict=True)
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/transformers/utils/generic.py", line 918, in wrapper
+    output = func(self, *args, **kwargs)
+  File "/home/pespinoz/.cache/huggingface/modules/transformers_modules/allenai/Molmo2_hyphen_8B/e28fa28597e5ec5e0cca2201dd8ab33d48bc4a1b/modeling_molmo2.py", line 1652, in forward
+    outputs = self.model(
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/transformers/utils/generic.py", line 918, in wrapper
+    output = func(self, *args, **kwargs)
+  File "/home/pespinoz/.cache/huggingface/modules/transformers_modules/allenai/Molmo2_hyphen_8B/e28fa28597e5ec5e0cca2201dd8ab33d48bc4a1b/modeling_molmo2.py", line 1503, in forward
+    inputs_embeds, image_features = self.build_input_embeddings(
+  File "/home/pespinoz/.cache/huggingface/modules/transformers_modules/allenai/Molmo2_hyphen_8B/e28fa28597e5ec5e0cca2201dd8ab33d48bc4a1b/modeling_molmo2.py", line 1444, in build_input_embeddings
+    image_features = self.vision_backbone(images, token_pooling).to(x.device)
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/pespinoz/.cache/huggingface/modules/transformers_modules/allenai/Molmo2_hyphen_8B/e28fa28597e5ec5e0cca2201dd8ab33d48bc4a1b/modeling_molmo2.py", line 444, in forward
+    image_features = self.encode_image(images)
+  File "/home/pespinoz/.cache/huggingface/modules/transformers_modules/allenai/Molmo2_hyphen_8B/e28fa28597e5ec5e0cca2201dd8ab33d48bc4a1b/modeling_molmo2.py", line 415, in encode_image
+    image_features = self.image_vit(images)
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/pespinoz/.cache/huggingface/modules/transformers_modules/allenai/Molmo2_hyphen_8B/e28fa28597e5ec5e0cca2201dd8ab33d48bc4a1b/modeling_molmo2.py", line 342, in forward
+    hidden_states = self.transformer(x)
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/pespinoz/.cache/huggingface/modules/transformers_modules/allenai/Molmo2_hyphen_8B/e28fa28597e5ec5e0cca2201dd8ab33d48bc4a1b/modeling_molmo2.py", line 278, in forward
+    x = r(x)
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/pespinoz/.cache/huggingface/modules/transformers_modules/allenai/Molmo2_hyphen_8B/e28fa28597e5ec5e0cca2201dd8ab33d48bc4a1b/modeling_molmo2.py", line 261, in forward
+    x = x + self.attention(self.attention_norm(x))
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/pespinoz/miniconda3/envs/tesis_env/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/pespinoz/.cache/huggingface/modules/transformers_modules/allenai/Molmo2_hyphen_8B/e28fa28597e5ec5e0cca2201dd8ab33d48bc4a1b/modeling_molmo2.py", line 202, in forward
+    attn_output = F.scaled_dot_product_attention(
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 418.00 MiB. GPU 0 has a total capacity of 23.68 GiB of which 71.81 MiB is free. Including non-PyTorch memory, this process has 23.61 GiB memory in use. Of the allocated memory 22.11 GiB is allocated by PyTorch, and 1.19 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
