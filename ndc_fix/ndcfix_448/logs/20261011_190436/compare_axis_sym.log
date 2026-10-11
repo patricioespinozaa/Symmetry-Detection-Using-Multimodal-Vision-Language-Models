@@ -1,0 +1,15 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python Mapping/compare_results_no_mesh.py --renders-root /data/pespinoz/renders --symmetry-type axis_sym --sizes 448 --lightings flat --experiment-id axis_v04_ndcfix_nomesh axis_v06_ndcfix_nomesh axis_v08_ndcfix_nomesh --csv-dir ../results_ndcfix_448 --no-plots --total-objects 850
+
+
+--- triangulation (eje/plano unico) ---
+            experiment        method  n_views  n_objects  angular_error_mean  angular_error_median  auc_angular  precision_5deg  precision_10deg
+axis_v04_ndcfix_nomesh triangulation        6        832             25.1143                6.9158       0.6048          0.4447           0.5529
+axis_v04_ndcfix_nomesh triangulation       14        801             29.9553                9.8956       0.5442          0.3871           0.5000
+axis_v04_ndcfix_nomesh triangulation       26        751             47.1687               45.9164       0.2823          0.0976           0.1659
+axis_v06_ndcfix_nomesh triangulation        6        821             26.6958                7.7763       0.5837          0.4353           0.5271
+axis_v06_ndcfix_nomesh triangulation       14        801             30.5029               11.6656       0.5302          0.3647           0.4788
+axis_v06_ndcfix_nomesh triangulation       26        769             46.2006               47.1660       0.2944          0.1106           0.2035
+axis_v08_ndcfix_nomesh triangulation        6        826             29.8252                7.6575       0.5699          0.4529           0.5365
+axis_v08_ndcfix_nomesh triangulation       14        775             38.1672               21.9696       0.4693          0.3718           0.4424
+axis_v08_ndcfix_nomesh triangulation       26        784             49.5781               54.3118       0.2530          0.1247           0.1729
+Saved: ../results_ndcfix_448/experiments_11_10_2026/axis_sym_axis_v04_ndcfix_nomesh_axis_v06_ndcfix_nomesh_axis_v08_ndcfix_nomesh_comparison.csv
