@@ -1,0 +1,9 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python Mapping/compare_results_no_mesh.py --renders-root /data/pespinoz/renders --symmetry-type plane_sym --sizes 1136 --lightings flat --experiment-id plane_v05_1_ndcfix_mp1_nomesh --csv-dir /home/pespinoz/results_ndcfix_1136 --no-plots --total-objects 850
+
+
+--- triangulation (eje/plano unico) ---
+                   experiment        method  n_views  n_objects  angular_error_mean  angular_error_median  auc_angular  precision_5deg  precision_10deg
+plane_v05_1_ndcfix_mp1_nomesh triangulation        6        717             31.3452                7.5591       0.5454          0.1729           0.5941
+plane_v05_1_ndcfix_mp1_nomesh triangulation       14        463             59.6921               64.1309       0.2300          0.1471           0.1894
+plane_v05_1_ndcfix_mp1_nomesh triangulation       26        114             83.6084               90.0000       0.0190          0.0082           0.0082
+Saved: /home/pespinoz/results_ndcfix_1136/experiments_12_10_2026/plane_sym_plane_v05_1_ndcfix_mp1_nomesh_comparison.csv
