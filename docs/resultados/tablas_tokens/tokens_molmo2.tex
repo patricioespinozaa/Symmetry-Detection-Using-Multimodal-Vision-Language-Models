@@ -1,0 +1,169 @@
+% Generado por utils/generar_tablas_tokens.py. Requiere booktabs, multirow, adjustbox y \newsavebox{\tablebox}.
+
+\begin{table}[htbp]
+\centering
+\caption{Largo de la entrada de Molmo2 según el número de vistas y la resolución.}
+\label{tab:tokens_procesador}
+\begin{lrbox}{\tablebox}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{rrrrrrr}
+\toprule
+\multirow{2}{*}{Vistas} & \multicolumn{3}{c}{\texttt{axis\_v04}} & \multicolumn{3}{c}{\texttt{plane\_v05\_1}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+ & 224 px & 448 px & 1136 px & 224 px & 448 px & 1136 px \\
+\midrule
+1 & 647 & 989 & 989 & 669 & 1\,011 & 1\,011 \\
+6 & 2\,815 & 4\,867 & 4\,867 & 2\,841 & 4\,893 & 4\,893 \\
+14 & 6\,124 & 10\,912 & 10\,912 & 6\,150 & 10\,938 & 10\,938 \\
+26 & 11\,092 & 19\,984$^{\dagger}$ & 19\,984$^{\dagger}$ & 11\,118 & 20\,010$^{\dagger}$ & 20\,010$^{\dagger}$ \\
+42 & 17\,716$^{\dagger}$ & 32\,080$^{\dagger}$ & 32\,080$^{\dagger}$ & 17\,742$^{\dagger}$ & 32\,106$^{\dagger}$ & 32\,106$^{\dagger}$ \\
+62 & 25\,996$^{\dagger}$ & 47\,200$^{\ddagger}$ & 47\,200$^{\ddagger}$ & 26\,022$^{\dagger}$ & 47\,226$^{\ddagger}$ & 47\,226$^{\ddagger}$ \\
+86 & 35\,932$^{\dagger}$ & 65\,344$^{\ddagger}$ & 65\,344$^{\ddagger}$ & 35\,958$^{\dagger}$ & 65\,370$^{\ddagger}$ & 65\,370$^{\ddagger}$ \\
+114 & 47\,539$^{\ddagger}$ & 86\,527$^{\ddagger}$ & 86\,527$^{\ddagger}$ & 47\,565$^{\ddagger}$ & 86\,553$^{\ddagger}$ & 86\,553$^{\ddagger}$ \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{lrbox}
+\usebox{\tablebox}
+
+\vspace{1.5ex}
+\begin{minipage}{\wd\tablebox}
+\footnotesize
+Nota: tokens de entrada de una llamada a Molmo2 con todas las vistas juntas, contados con su procesador (\texttt{contar\_tokens\_molmo2.py}, \texttt{max\_crops} por defecto = 8). Tokens de imagen por vista: 410 a 224 px, 752 a 448 px, 752 a 1136 px; a 448 y 1136 px el procesador produce el mismo número de recortes, por lo que ambas resoluciones dan exactamente los mismos tokens. El texto aporta 237--799 (\texttt{axis\_v04}) y 259--825 (\texttt{plane\_v05\_1}) tokens. $^{\dagger}$: supera el largo de secuencia del \textit{fine-tuning} principal de Molmo2 (16\,384 tokens). $^{\ddagger}$: supera además su contexto máximo (36\,864 tokens). 
+\end{minipage}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Largo de la entrada, indicadores de saturación de Molmo2 y desempeño en simetría axial.}
+\label{tab:tokens_saturacion_axis}
+\begin{lrbox}{\tablebox}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{llrrrrrr}
+\toprule
+Resolución & Vistas & Tokens & \begin{tabular}[b]{@{}c@{}}Formato \\ sin \texttt{<points>} (\%)\end{tabular} & \begin{tabular}[b]{@{}c@{}}Vistas \\ útiles (\%)\end{tabular} & \begin{tabular}[b]{@{}c@{}}Puntos \\ duplic. (\%)\end{tabular} & Objetos & AUC$_{45^\circ}$ \\
+\midrule
+\multirow{3}{*}{224 px} & 6 & 2\,815 & 0.0 & 99.8 & 1.4 & 831 & 0.582 \\
+ & 14 & 6\,124 & 2.1 & 99.9 & 2.5 & 816 & 0.580 \\
+ & 26 & 11\,092 & 99.7 & 100.0 & 3.0 & 806 & 0.501 \\
+\midrule
+\multirow{3}{*}{448 px} & 6 & 4\,867 & 0.0 & 99.8 & 1.3 & 832 & 0.605 \\
+ & 14 & 10\,912 & 13.5 & 99.6 & 3.3 & 801 & 0.544 \\
+ & 26 & 19\,984$^{\dagger}$ & 96.2 & 100.0 & 6.2 & 751 & 0.282 \\
+\midrule
+\multirow{3}{*}{1136 px} & 6 & 4\,867 & 0.0 & 100.0 & 2.4 & 819 & 0.572 \\
+ & 14 & 10\,912 & 54.1 & 99.9 & 4.7 & 779 & 0.413 \\
+ & 26 & 19\,984$^{\dagger}$ & 100.0 & 100.0 & 5.2 & 769 & 0.184 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{lrbox}
+\usebox{\tablebox}
+
+\vspace{1.5ex}
+\begin{minipage}{\wd\tablebox}
+\footnotesize
+Nota: \textit{prompt} \texttt{axis\_v04}, Flujo A, iluminación \textit{flat}, 850 objetos; una llamada a Molmo2 por objeto con todas las vistas. Tokens: largo real de la entrada registrado por el \textit{runner} (igual en todos los objetos). Formato sin \texttt{<points>}: fracción de llamadas en que Molmo2 respondió sin la etiqueta \texttt{<points coords=...>} (en las salidas inspeccionadas, por usar \texttt{<tracks coords=...>}, el formato de \textit{tracking} de video de Molmo2). Vistas útiles: vistas con al menos 2 puntos, mínimo que exige la triangulación. Puntos duplic.: puntos con la misma $(x, y)$ que otro de la misma vista. Objetos y AUC$_{45^\circ}$: \textit{pipeline} sin malla (triangulación); objetos con predicción, de 850; el AUC imputa $90^\circ$ a los objetos sin predicción. $^{\dagger}$: supera el largo de secuencia del \textit{fine-tuning} principal de Molmo2 (16\,384 tokens). $^{\ddagger}$: supera además su contexto máximo (36\,864 tokens). 
+\end{minipage}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Largo de la entrada, indicadores de saturación de Molmo2 y desempeño en simetría planar.}
+\label{tab:tokens_saturacion_plane}
+\begin{lrbox}{\tablebox}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{llrrrrrr}
+\toprule
+Resolución & Vistas & Tokens & \begin{tabular}[b]{@{}c@{}}Formato \\ sin \texttt{<points>} (\%)\end{tabular} & \begin{tabular}[b]{@{}c@{}}Vistas \\ útiles (\%)\end{tabular} & \begin{tabular}[b]{@{}c@{}}Puntos \\ duplic. (\%)\end{tabular} & Objetos & AUC$_{45^\circ}$ \\
+\midrule
+\multirow{3}{*}{224 px} & 6 & 2\,841 & 0.0 & 100.0 & 1.3 & 796 & 0.494 \\
+ & 14 & 6\,150 & 29.8 & 99.9 & 4.9 & 684 & 0.381 \\
+ & 26 & 11\,118 & 100.0 & 100.0 & 1.9 & 827 & 0.277 \\
+\midrule
+\multirow{3}{*}{448 px} & 6 & 4\,893 & 0.0 & 99.8 & 1.6 & 742 & 0.528 \\
+ & 14 & 10\,938 & 27.2 & 99.9 & 6.7 & 540 & 0.289 \\
+ & 26 & 20\,010$^{\dagger}$ & 99.9 & 100.0 & 4.8 & 778 & 0.118 \\
+\midrule
+\multirow{3}{*}{1136 px} & 6 & 4\,893 & 0.0 & 99.9 & 1.7 & 717 & 0.545 \\
+ & 14 & 10\,938 & 63.1 & 100.0 & 6.8 & 463 & 0.230 \\
+ & 26 & -- & -- & -- & -- & 114 & 0.019 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{lrbox}
+\usebox{\tablebox}
+
+\vspace{1.5ex}
+\begin{minipage}{\wd\tablebox}
+\footnotesize
+Nota: \textit{prompt} \texttt{plane\_v05\_1}, Flujo A, iluminación \textit{flat}, 850 objetos; una llamada a Molmo2 por objeto con todas las vistas. Tokens: largo real de la entrada registrado por el \textit{runner} (igual en todos los objetos). Formato sin \texttt{<points>}: fracción de llamadas en que Molmo2 respondió sin la etiqueta \texttt{<points coords=...>} (en las salidas inspeccionadas, por usar \texttt{<tracks coords=...>}, el formato de \textit{tracking} de video de Molmo2). Vistas útiles: vistas con al menos 2 puntos, mínimo que exige la triangulación. Puntos duplic.: puntos con la misma $(x, y)$ que otro de la misma vista. Objetos y AUC$_{45^\circ}$: \textit{pipeline} sin malla (triangulación, un plano por objeto); objetos con predicción, de 850; el AUC imputa $90^\circ$ a los objetos sin predicción. $^{\dagger}$: supera el largo de secuencia del \textit{fine-tuning} principal de Molmo2 (16\,384 tokens). $^{\ddagger}$: supera además su contexto máximo (36\,864 tokens). --: sin registro de llamadas a Molmo2 en los \texttt{molmo\_multiview} analizados (1136 px con 26 vistas). 
+\end{minipage}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Llamadas a Molmo2 con salida sin \texttt{<points>} según el número de vistas, por \textit{prompt}.}
+\label{tab:tokens_formato_tracks}
+\begin{lrbox}{\tablebox}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{llrrrr}
+\toprule
+Tipo & \textit{Prompt} & 1 vista & 6 vistas & 14 vistas & 26 vistas \\
+ & \textit{Tokens (mediana)} & \textit{680} & \textit{2\,877} & \textit{6\,186} & \textit{11\,154} \\
+\midrule
+\multirow{22}{*}{Axial} & \texttt{lit2\_grid} & 0.0 & 0.0 & 0.0 & 0.4 \\
+ & \texttt{lit3\_cot} & 0.0 & 0.0 & 0.0 & 0.0 \\
+ & \texttt{v00} & 0.0 & 0.0 & 12.5 & 100.0 \\
+ & \texttt{v00\_1} & 0.0 & 0.0 & 3.3 & 97.1 \\
+ & \texttt{v01} & 0.0 & 0.0 & 0.0 & 0.0 \\
+ & \texttt{v01\_1} & 0.0 & 0.0 & 0.0 & 0.1 \\
+ & \texttt{v02} & 0.0 & 0.0 & 0.0 & 0.2 \\
+ & \texttt{v02\_1} & 0.0 & 0.1 & 11.4 & 91.5 \\
+ & \texttt{v03} & 0.0 & 0.0 & 0.0 & 0.8 \\
+ & \texttt{v03\_1} & 0.0 & 0.0 & 0.2 & 14.7 \\
+ & \texttt{v04} & 0.0 & 0.0 & 2.1 & 99.7 \\
+ & \texttt{v04\_1} & 0.0 & 0.5 & 98.0 & 100.0 \\
+ & \texttt{v04\_flowB} & -- & 0.0 & 6.3 & 62.9 \\
+ & \texttt{v05} & 0.0 & 0.0 & 0.4 & 14.5 \\
+ & \texttt{v05\_1} & 0.0 & 0.0 & 0.2 & 16.1 \\
+ & \texttt{v05\_1\_flowB} & 0.0 & 0.0 & 0.0 & 1.7 \\
+ & \texttt{v05\_1\_flowC} & 0.0 & 0.0 & 0.2 & 75.4 \\
+ & \texttt{v06} & -- & 0.0 & 80.6 & 100.0 \\
+ & \texttt{v06\_6pts} & 0.0 & 0.0 & 74.6 & 100.0 \\
+ & \texttt{v07} & -- & 0.0 & 0.0 & 15.4 \\
+ & \texttt{v07\_6pts} & 0.0 & 0.0 & 0.2 & 69.1 \\
+ & \texttt{v08} & 0.0 & 0.0 & 0.0 & 0.0 \\
+\midrule
+\multirow{20}{*}{Planar} & \texttt{v00} & 0.0 & 89.6 & 100.0 & 100.0 \\
+ & \texttt{v00\_1} & 0.0 & 0.0 & 91.9 & 100.0 \\
+ & \texttt{v01} & 0.0 & 0.0 & 0.0 & 0.0 \\
+ & \texttt{v01\_1} & 0.0 & 0.0 & 0.0 & 0.0 \\
+ & \texttt{v02} & 0.0 & 0.0 & 0.0 & 0.0 \\
+ & \texttt{v02\_1} & 0.0 & 0.0 & 0.0 & 0.0 \\
+ & \texttt{v03} & 0.0 & 0.0 & 0.0 & 48.2 \\
+ & \texttt{v03\_1} & 0.0 & 0.0 & 0.0 & 24.5 \\
+ & \texttt{v04} & 0.0 & 0.0 & 1.9 & 100.0 \\
+ & \texttt{v04\_1} & 0.0 & 0.0 & 0.0 & 0.0 \\
+ & \texttt{v04\_1\_6pts} & 0.0 & 0.0 & 0.0 & 65.5 \\
+ & \texttt{v04\_1\_flowB} & 0.0 & 0.0 & 0.0 & 0.0 \\
+ & \texttt{v04\_1\_flowC} & 0.0 & 0.0 & 0.5 & 82.9 \\
+ & \texttt{v05} & 0.0 & 0.0 & 0.0 & 61.3 \\
+ & \texttt{v05\_1} & 0.0 & 0.0 & 29.8 & 100.0 \\
+ & \texttt{v05\_1\_flowB} & -- & 0.0 & 26.9 & 64.6 \\
+ & \texttt{v05\_6pts} & 82.3 & 0.0 & 96.5 & 100.0 \\
+ & \texttt{v06} & -- & 0.0 & 0.0 & 0.0 \\
+ & \texttt{v07} & -- & 0.0 & 0.0 & 29.4 \\
+ & \texttt{v08} & 0.0 & 0.0 & 0.0 & 2.2 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{lrbox}
+\usebox{\tablebox}
+
+\vspace{1.5ex}
+\begin{minipage}{\wd\tablebox}
+\footnotesize
+Nota: porcentaje de las 850 llamadas en que Molmo2 respondió sin la etiqueta \texttt{<points coords=...>} (en las salidas inspeccionadas, por usar \texttt{<tracks coords=...>}, el formato de \textit{tracking} de video de Molmo2); resolución 224 px, iluminación \textit{flat}, \texttt{--prompt-mode auto} (1 vista: \textit{prompt} de imagen única). El \textit{parser} del \textit{runner} extrae los puntos de ambos formatos. --: combinación no ejecutada para ese \textit{prompt}. Los sufijos \texttt{flowB}/\texttt{flowC} usan los Flujos B y C.
+\end{minipage}
+\end{table}
