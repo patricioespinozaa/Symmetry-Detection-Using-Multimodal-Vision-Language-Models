@@ -1,0 +1,4 @@
+tipo,size,n_views,n_pares,error_points_medio,error_tracks_medio,diferencia_media,ic95_inf,ic95_sup,diferencia_mediana,frac_tracks_peor,frac_tracks_mejor
+axis_sym,224,14,31,26.1608,26.6065,0.4457,-6.5302,6.1605,0.1101,0.6129,0.2903
+axis_sym,224,26,5,11.0143,20.5424,9.5281,-0.2105,27.3418,0.1477,0.6,0.4
+plane_sym,224,14,349,39.0882,42.0849,2.9966,-0.6716,6.7029,0.0,0.447,0.4928

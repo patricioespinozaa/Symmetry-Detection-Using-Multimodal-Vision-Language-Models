@@ -1,0 +1,95 @@
+nohup: ignoring input
+  eval eval_s224_flat_axis_v04_ndcfix_nomesh_triangulation_results.json: 850 objetos
+  axis_sym 224px flat: 850 molmo_multiview_axis_v04.json
+  eval eval_s224_darker_axis_v04_ndcfix_nomesh_triangulation_results.json: 850 objetos
+  axis_sym 224px darker: 850 molmo_multiview_axis_v04.json
+  eval eval_s224_brighter_axis_v04_ndcfix_nomesh_triangulation_results.json: 850 objetos
+  axis_sym 224px brighter: 850 molmo_multiview_axis_v04.json
+  eval eval_s448_flat_axis_v04_ndcfix_nomesh_triangulation_results.json: 850 objetos
+  axis_sym 448px flat: 850 molmo_multiview_axis_v04.json
+  [aviso] no existe ../data/renders/axis_sym/eval_s448_darker_axis_v04_ndcfix_nomesh_triangulation_results.json: esas llamadas quedan sin error angular
+  [aviso] no existe ../data/renders/axis_sym/eval_s448_brighter_axis_v04_ndcfix_nomesh_triangulation_results.json: esas llamadas quedan sin error angular
+  eval eval_s1136_flat_axis_v04_ndcfix_nomesh_triangulation_results.json: 850 objetos
+  axis_sym 1136px flat: 850 molmo_multiview_axis_v04.json
+  [aviso] no existe ../data/renders/axis_sym/eval_s1136_darker_axis_v04_ndcfix_nomesh_triangulation_results.json: esas llamadas quedan sin error angular
+  [aviso] no existe ../data/renders/axis_sym/eval_s1136_brighter_axis_v04_ndcfix_nomesh_triangulation_results.json: esas llamadas quedan sin error angular
+  eval eval_s224_flat_plane_v05_1_ndcfix_mp1_nomesh_triangulation_results.json: 850 objetos
+  plane_sym 224px flat: 850 molmo_multiview_plane_v05_1.json
+  eval eval_s224_darker_plane_v05_1_ndcfix_mp1_nomesh_triangulation_results.json: 850 objetos
+  plane_sym 224px darker: 850 molmo_multiview_plane_v05_1.json
+  eval eval_s224_brighter_plane_v05_1_ndcfix_mp1_nomesh_triangulation_results.json: 850 objetos
+  plane_sym 224px brighter: 850 molmo_multiview_plane_v05_1.json
+  eval eval_s448_flat_plane_v05_1_ndcfix_mp1_nomesh_triangulation_results.json: 850 objetos
+  plane_sym 448px flat: 850 molmo_multiview_plane_v05_1.json
+  [aviso] no existe ../data/renders/plane_sym/eval_s448_darker_plane_v05_1_ndcfix_mp1_nomesh_triangulation_results.json: esas llamadas quedan sin error angular
+  [aviso] no existe ../data/renders/plane_sym/eval_s448_brighter_plane_v05_1_ndcfix_mp1_nomesh_triangulation_results.json: esas llamadas quedan sin error angular
+  eval eval_s1136_flat_plane_v05_1_ndcfix_mp1_nomesh_triangulation_results.json: 850 objetos
+  plane_sym 1136px flat: 850 molmo_multiview_plane_v05_1.json
+  [aviso] no existe ../data/renders/plane_sym/eval_s1136_darker_plane_v05_1_ndcfix_mp1_nomesh_triangulation_results.json: esas llamadas quedan sin error angular
+  [aviso] no existe ../data/renders/plane_sym/eval_s1136_brighter_plane_v05_1_ndcfix_mp1_nomesh_triangulation_results.json: esas llamadas quedan sin error angular
+Guardado /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/MolmoPointing/ContextLimits/resultados/tracks_llamadas.csv (24650 filas)
+Guardado /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/MolmoPointing/ContextLimits/resultados/tracks_resumen.csv (49 filas)
+Guardado /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/MolmoPointing/ContextLimits/resultados/tracks_pareado.csv (3 filas)
+
+=== 1. Índices de imagen en <tracks> ===
+  frac_empieza_en_0        0.0000  (sobre 9860 llamadas)
+  frac_fuera_de_rango      0.0000  (sobre 9860 llamadas)
+  frac_cubre_1_a_N         0.9993  (sobre 9860 llamadas)
+  frac_orden_creciente     1.0000  (sobre 9860 llamadas)
+  Cómo leerlo: empieza_en_0 y fuera_de_rango ~0 y cubre_1_a_N ~1: el índice es el 1-based de siempre y el parseo asigna cada punto a su cámara.
+
+=== 2. Movimiento entre vistas consecutivas (0-1000) ===
+  axis_sym 224px brighter 6 vistas | points: 171 (idénticos 0.06)
+  axis_sym 224px brighter 14 vistas | points: 123 (idénticos 0.15) | tracks: 97 (idénticos 0.33)
+  axis_sym 224px brighter 26 vistas | points: 11 (idénticos 0.71) | tracks: 120 (idénticos 0.24)
+  axis_sym 224px darker 6 vistas | points: 173 (idénticos 0.06)
+  axis_sym 224px darker 14 vistas | points: 129 (idénticos 0.13) | tracks: 108 (idénticos 0.20)
+  axis_sym 224px darker 26 vistas | points: 80 (idénticos 0.06) | tracks: 127 (idénticos 0.21)
+  axis_sym 224px flat 6 vistas | points: 172 (idénticos 0.06)
+  axis_sym 224px flat 14 vistas | points: 125 (idénticos 0.15) | tracks: 102 (idénticos 0.27)
+  axis_sym 224px flat 26 vistas | points: 82 (idénticos 0.25) | tracks: 123 (idénticos 0.23)
+  axis_sym 448px flat 6 vistas | points: 182 (idénticos 0.04)
+  axis_sym 448px flat 14 vistas | points: 116 (idénticos 0.20) | tracks: 134 (idénticos 0.19)
+  axis_sym 448px flat 26 vistas | points: 32 (idénticos 0.62) | tracks: 59 (idénticos 0.62)
+  axis_sym 1136px flat 6 vistas | points: 175 (idénticos 0.07)
+  axis_sym 1136px flat 14 vistas | points: 90 (idénticos 0.34) | tracks: 94 (idénticos 0.44)
+  axis_sym 1136px flat 26 vistas | tracks: 31 (idénticos 0.80)
+  plane_sym 224px brighter 6 vistas | points: 93 (idénticos 0.14)
+  plane_sym 224px brighter 14 vistas | points: 46 (idénticos 0.40) | tracks: 40 (idénticos 0.45)
+  plane_sym 224px brighter 26 vistas | tracks: 29 (idénticos 0.58)
+  plane_sym 224px darker 6 vistas | points: 101 (idénticos 0.11)
+  plane_sym 224px darker 14 vistas | points: 58 (idénticos 0.32) | tracks: 52 (idénticos 0.34)
+  plane_sym 224px darker 26 vistas | tracks: 35 (idénticos 0.53)
+  plane_sym 224px flat 6 vistas | points: 98 (idénticos 0.13)
+  plane_sym 224px flat 14 vistas | points: 53 (idénticos 0.37) | tracks: 42 (idénticos 0.44)
+  plane_sym 224px flat 26 vistas | tracks: 31 (idénticos 0.57)
+  plane_sym 448px flat 6 vistas | points: 96 (idénticos 0.11)
+  plane_sym 448px flat 14 vistas | points: 48 (idénticos 0.41) | tracks: 38 (idénticos 0.47)
+  plane_sym 448px flat 26 vistas | points: 0 (idénticos 1.00) | tracks: 7 (idénticos 0.92)
+  plane_sym 1136px flat 6 vistas | points: 77 (idénticos 0.20)
+  plane_sym 1136px flat 14 vistas | points: 24 (idénticos 0.66) | tracks: 19 (idénticos 0.73)
+  Cómo leerlo: desplazamiento mucho menor en <tracks> = el modelo sigue el punto como en un video.
+
+=== 3a. Error angular por formato, misma configuración (no pareado) ===
+  axis_sym 224px brighter 14 vistas | points n=832 AUC=0.581 med=8.9° | tracks n=18 AUC=0.513 med=11.8°
+  axis_sym 224px brighter 26 vistas | points n=2 AUC=0.575 med=19.0° | tracks n=848 AUC=0.487 med=16.3°
+  axis_sym 224px darker 14 vistas | points n=817 AUC=0.590 med=8.0° | tracks n=31 AUC=0.573 med=6.2°
+  axis_sym 224px darker 26 vistas | points n=2 AUC=0.880 med=5.4° | tracks n=848 AUC=0.503 med=14.9°
+  axis_sym 224px flat 14 vistas | points n=832 AUC=0.579 med=8.4° | tracks n=18 AUC=0.611 med=7.1°
+  axis_sym 224px flat 26 vistas | points n=3 AUC=0.855 med=5.6° | tracks n=847 AUC=0.500 med=14.8°
+  axis_sym 448px flat 14 vistas | points n=735 AUC=0.521 med=12.9° | tracks n=115 AUC=0.695 med=4.7°
+  axis_sym 448px flat 26 vistas | points n=32 AUC=0.142 med=57.3° | tracks n=818 AUC=0.288 med=45.6°
+  axis_sym 1136px flat 14 vistas | points n=390 AUC=0.388 med=34.0° | tracks n=460 AUC=0.434 med=27.7°
+  plane_sym 224px brighter 14 vistas | points n=410 AUC=0.366 med=56.0° | tracks n=440 AUC=0.386 med=48.0°
+  plane_sym 224px darker 14 vistas | points n=702 AUC=0.400 med=41.9° | tracks n=148 AUC=0.453 med=26.1°
+  plane_sym 224px flat 14 vistas | points n=597 AUC=0.384 med=48.0° | tracks n=253 AUC=0.371 med=48.0°
+  plane_sym 448px flat 14 vistas | points n=619 AUC=0.271 med=76.3° | tracks n=231 AUC=0.339 med=63.7°
+  plane_sym 448px flat 26 vistas | points n=1 AUC=0.000 med=90.0° | tracks n=849 AUC=0.119 med=45.9°
+  plane_sym 1136px flat 14 vistas | points n=314 AUC=0.214 med=90.0° | tracks n=536 AUC=0.239 med=63.9°
+  Ojo: no pareado; los objetos que disparan <tracks> pueden ser más difíciles.
+
+=== 3b. Pareado: mismo objeto, otra iluminación (tracks - points, grados) ===
+  axis_sym 224px 14 vistas | 31 pares | dif. media +0.4° [IC95 -6.5, +6.2] | tracks peor en 61%
+  axis_sym 224px 26 vistas | 5 pares | dif. media +9.5° [IC95 -0.2, +27.3] | tracks peor en 60%
+  plane_sym 224px 14 vistas | 349 pares | dif. media +3.0° [IC95 -0.7, +6.7] | tracks peor en 45%
+  Cómo leerlo: IC95 entero > 0: <tracks> empeora la predicción del mismo objeto.
