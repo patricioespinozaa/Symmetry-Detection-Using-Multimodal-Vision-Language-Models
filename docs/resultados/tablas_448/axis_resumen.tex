@@ -1,0 +1,19 @@
+% Generado por utils/generar_tablas_latex.py. Requiere booktabs, multirow, adjustbox y longtable (ranking).
+
+\begin{table}[htbp]
+\centering
+\caption{Resumen de todos los prompts del \textit{pipeline} sin malla, simetría axial (promedio sobre 6, 14, 26 vistas). Negrita: mejor valor de la columna en esta tabla. Las métricas angulares imputan $90^\circ$ a los objetos sin predicción; traslación, SDE$_{\mathrm{ref}}$ y $F1_{\mathrm{ref}}$ usan solo los objetos con predicción (de 850).}
+\label{tab:axis_resumen}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrrrrrr}
+\toprule
+Prompt & AUC$_{45^\circ}$ & Mediana ($^\circ$) & P@5$^\circ$ & P@10$^\circ$ & Trasl.\ norm. & SDE$_{\mathrm{ref}}$ & Objetos \\
+\midrule
+\multicolumn{8}{l}{\textit{448}} \\
+\quad\texttt{v04} & \textbf{0.477} & \textbf{20.9} & 0.310 & \textbf{0.406} & 0.0361 & 0.0223 & 795 \\
+\quad\texttt{v06} & 0.469 & 22.2 & 0.304 & 0.403 & 0.0322 & \textbf{0.0198} & \textbf{797} \\
+\quad\texttt{v08} & 0.431 & 28.0 & \textbf{0.316} & 0.384 & \textbf{0.0298} & 0.0345 & 795 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}

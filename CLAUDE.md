@@ -17,7 +17,10 @@ Contexto persistente para trabajar en este repo. Complementa (no duplica) a:
   [`mapping.md`](docs/features/mapping.md),
   [`consolidation-evaluation.md`](docs/features/consolidation-evaluation.md),
   [`interactive-viewer.md`](docs/features/interactive-viewer.md),
-  [`pipeline-common.md`](docs/features/pipeline-common.md).
+  [`pipeline-common.md`](docs/features/pipeline-common.md),
+  [`random-baseline.md`](docs/features/random-baseline.md) (módulo independiente
+  `RandomBaseline/`: azar uniforme sobre todos los objetos vs. resultados de
+  `evaluate.py`).
 - `docs/audits/` — auditoría de arquitectura (`architecture-audit.md`) y el log de la
   refactorización que se ejecutó a partir de ella (`refactor-log.md`).
 - `docs/code-norms.md` — normas de estilo Python (docstrings, orden de imports, type

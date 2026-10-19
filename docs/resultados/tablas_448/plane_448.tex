@@ -1,0 +1,109 @@
+% Generado por utils/generar_tablas_latex.py. Requiere booktabs, multirow, adjustbox y longtable (ranking).
+
+\begin{table}[htbp]
+\centering
+\caption{\textit{Pipeline} sin malla, simetría planar, 448: métricas angulares. Negrita: mejor valor de la columna en esta tabla. Las métricas angulares imputan $90^\circ$ a los objetos sin predicción; traslación, SDE$_{\mathrm{ref}}$ y $F1_{\mathrm{ref}}$ usan solo los objetos con predicción (de 850).}
+\label{tab:plane_448_angular}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+\multirow{2}{*}{Prompt} & \multirow{2}{*}{Vistas} & \multirow{2}{*}{AUC$_{45^\circ}$} & \multicolumn{3}{c}{Error angular ($^\circ$)} & \multicolumn{3}{c}{Precisión} \\
+\cmidrule(lr){4-6} \cmidrule(lr){7-9}
+ &  &  & Media & Mediana & Desv. & @5$^\circ$ & @10$^\circ$ & @15$^\circ$ \\
+\midrule
+\multirow{3}{*}{\texttt{v02}} & 6 & 0.501 & \textbf{30.9} & 7.8 & 31.7 & 0.169 & 0.526 & 0.540 \\
+ & 14 & 0.350 & 49.2 & 63.8 & 37.3 & \textbf{0.285} & 0.347 & 0.362 \\
+ & 26 & 0.299 & 36.0 & 43.1 & 25.1 & 0.265 & 0.274 & 0.281 \\
+\midrule
+\multirow{3}{*}{\texttt{v05\_1}} & 6 & \textbf{0.528} & 33.6 & \textbf{7.6} & 36.1 & 0.195 & \textbf{0.568} & \textbf{0.584} \\
+ & 14 & 0.289 & 55.4 & 64.9 & 36.7 & 0.198 & 0.260 & 0.289 \\
+ & 26 & 0.118 & 48.1 & 45.9 & 21.8 & 0.065 & 0.069 & 0.082 \\
+\midrule
+\multirow{3}{*}{\texttt{v06}} & 6 & 0.434 & 37.8 & 39.8 & 34.9 & 0.139 & 0.453 & 0.465 \\
+ & 14 & 0.271 & 57.6 & 64.5 & 36.5 & 0.213 & 0.258 & 0.271 \\
+ & 26 & 0.179 & 42.2 & 45.2 & 21.9 & 0.139 & 0.142 & 0.147 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{\textit{Pipeline} sin malla, simetría planar, 448: error de traslación, SDE$_{\mathrm{ref}}$ y cobertura. Negrita: mejor valor de la columna en esta tabla. Las métricas angulares imputan $90^\circ$ a los objetos sin predicción; traslación, SDE$_{\mathrm{ref}}$ y $F1_{\mathrm{ref}}$ usan solo los objetos con predicción (de 850).}
+\label{tab:plane_448_posicion}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrrrrrrrrr}
+\toprule
+\multirow{2}{*}{Prompt} & \multirow{2}{*}{Vistas} & \multicolumn{2}{c}{Err.\ trasl.} & \multicolumn{2}{c}{Err.\ trasl.\ norm.} & \multicolumn{3}{c}{SDE$_{\mathrm{ref}}$} & \multicolumn{2}{c}{Cobertura} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-9} \cmidrule(lr){10-11}
+ &  & Media & Mediana & Media & Mediana & Media & Mín. & Máx. & Objetos & Puntos \\
+\midrule
+\multirow{3}{*}{\texttt{v02}} & 6 & 0.0139 & 0.0008 & 0.0140 & 0.0008 & 0.0109 & 0.0000 & 0.4459 & 753 & 4.0 \\
+ & 14 & 0.0086 & 0.0012 & 0.0086 & 0.0012 & \textbf{0.0088} & 0.0000 & 0.0618 & 564 & 8.0 \\
+ & 26 & \textbf{0.0028} & \textbf{0.0005} & \textbf{0.0028} & \textbf{0.0005} & 0.0161 & 0.0000 & 0.0870 & \textbf{816} & 16.0 \\
+\midrule
+\multirow{3}{*}{\texttt{v05\_1}} & 6 & 0.0643 & 0.0048 & 0.0645 & 0.0048 & 0.1605 & 0.0000 & 110.0277 & 742 & 3.9 \\
+ & 14 & 0.0254 & 0.0031 & 0.0255 & 0.0031 & 0.0174 & 0.0000 & 0.3191 & 540 & 8.0 \\
+ & 26 & 0.0079 & \textbf{0.0005} & 0.0079 & \textbf{0.0005} & 0.0276 & 0.0000 & 1.4907 & 778 & 16.0 \\
+\midrule
+\multirow{3}{*}{\texttt{v06}} & 6 & 0.0191 & 0.0008 & 0.0192 & 0.0008 & 0.2956 & 0.0000 & 188.5407 & 663 & 4.0 \\
+ & 14 & 0.0102 & 0.0021 & 0.0104 & 0.0021 & 0.0090 & 0.0000 & 0.0664 & 454 & 8.0 \\
+ & 26 & 0.0034 & \textbf{0.0005} & 0.0035 & \textbf{0.0005} & 0.0206 & 0.0000 & 0.2616 & 800 & 16.0 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{\textit{Pipeline} sin malla, simetría planar, 448: $F1_{\mathrm{ref}}$ por umbral. Negrita: mejor valor de la columna en esta tabla. Las métricas angulares imputan $90^\circ$ a los objetos sin predicción; traslación, SDE$_{\mathrm{ref}}$ y $F1_{\mathrm{ref}}$ usan solo los objetos con predicción (de 850).}
+\label{tab:plane_448_f1}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+\multirow{2}{*}{Prompt} & \multirow{2}{*}{Vistas} & \multicolumn{5}{c}{$F1_{\mathrm{ref}}$ voraz} & \multicolumn{5}{c}{$F1_{\mathrm{ref}}$ húngaro} \\
+\cmidrule(lr){3-7} \cmidrule(lr){8-12}
+ &  & Prom. & $\tau{=}0.05$ & $\tau{=}0.10$ & $\tau{=}0.15$ & $\tau{=}0.20$ & Prom. & $\tau{=}0.05$ & $\tau{=}0.10$ & $\tau{=}0.15$ & $\tau{=}0.20$ \\
+\midrule
+\multirow{3}{*}{\texttt{v02}} & 6 & 0.303 & 0.026 & 0.190 & 0.491 & 0.504 & 0.329 & 0.028 & 0.206 & 0.534 & 0.548 \\
+ & 14 & 0.325 & 0.040 & \textbf{0.388} & 0.432 & 0.440 & 0.354 & 0.044 & \textbf{0.422} & 0.470 & 0.479 \\
+ & 26 & 0.233 & \textbf{0.216} & 0.233 & 0.237 & 0.245 & 0.253 & \textbf{0.235} & 0.254 & 0.258 & 0.266 \\
+\midrule
+\multirow{3}{*}{\texttt{v05\_1}} & 6 & \textbf{0.334} & 0.037 & 0.213 & \textbf{0.529} & \textbf{0.557} & \textbf{0.359} & 0.040 & 0.230 & \textbf{0.569} & \textbf{0.599} \\
+ & 14 & 0.271 & 0.092 & 0.297 & 0.339 & 0.354 & 0.291 & 0.099 & 0.320 & 0.364 & 0.382 \\
+ & 26 & 0.055 & 0.036 & 0.059 & 0.061 & 0.064 & 0.060 & 0.040 & 0.064 & 0.067 & 0.070 \\
+\midrule
+\multirow{3}{*}{\texttt{v06}} & 6 & 0.294 & 0.031 & 0.176 & 0.474 & 0.496 & 0.319 & 0.033 & 0.191 & 0.514 & 0.538 \\
+ & 14 & 0.292 & 0.020 & 0.359 & 0.387 & 0.402 & 0.319 & 0.022 & 0.393 & 0.423 & 0.439 \\
+ & 26 & 0.120 & 0.103 & 0.123 & 0.124 & 0.128 & 0.131 & 0.113 & 0.134 & 0.135 & 0.140 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{\textit{Pipeline} sin malla, simetría planar, 448: conteos TP/FP/FN del emparejamiento voraz de $F1_{\mathrm{ref}}$. Negrita: mejor valor de la columna en esta tabla. Las métricas angulares imputan $90^\circ$ a los objetos sin predicción; traslación, SDE$_{\mathrm{ref}}$ y $F1_{\mathrm{ref}}$ usan solo los objetos con predicción (de 850).}
+\label{tab:plane_448_conteos}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrrrrrrrrrrrr}
+\toprule
+\multirow{2}{*}{Prompt} & \multirow{2}{*}{Vistas} & \multicolumn{3}{c}{$\tau{=}0.05$} & \multicolumn{3}{c}{$\tau{=}0.10$} & \multicolumn{3}{c}{$\tau{=}0.15$} & \multicolumn{3}{c}{$\tau{=}0.20$} \\
+\cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11} \cmidrule(lr){12-14}
+ &  & TP & FP & FN & TP & FP & FN & TP & FP & FN & TP & FP & FN \\
+\midrule
+\multirow{3}{*}{\texttt{v02}} & 6 & 23 & 873 & 873 & 170 & 726 & 726 & 440 & 456 & 456 & 452 & 444 & 444 \\
+ & 14 & 27 & 646 & 646 & 261 & 412 & 412 & 291 & 382 & 382 & 296 & 377 & 377 \\
+ & 26 & 210 & 763 & 763 & 227 & 746 & 746 & 231 & 742 & 742 & 238 & 735 & 735 \\
+\midrule
+\multirow{3}{*}{\texttt{v05\_1}} & 6 & 32 & 835 & 835 & 185 & 682 & 682 & 459 & 408 & 408 & 483 & 384 & 384 \\
+ & 14 & 58 & 571 & 571 & 187 & 442 & 442 & 213 & 416 & 416 & 223 & 406 & 406 \\
+ & 26 & 34 & 897 & 897 & 55 & 876 & 876 & 57 & 874 & 874 & 60 & 871 & 871 \\
+\midrule
+\multirow{3}{*}{\texttt{v06}} & 6 & 24 & 760 & 760 & 138 & 646 & 646 & 372 & 412 & 412 & 389 & 395 & 395 \\
+ & 14 & 11 & 537 & 537 & 197 & 351 & 351 & 212 & 336 & 336 & 220 & 328 & 328 \\
+ & 26 & 99 & 859 & 859 & 118 & 840 & 840 & 119 & 839 & 839 & 123 & 835 & 835 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
