@@ -1,0 +1,24 @@
+% Generado por RandomBaseline/run_baseline.py latex. Requiere booktabs y adjustbox.
+
+\begin{table}[htbp]
+\centering
+\caption{Línea base aleatoria para simetría planar: la normal del plano se elige uniforme en la esfera y el plano pasa por el centro del objeto ($d=0$), sin mirar las imágenes, para los 850 objetos (todos reciben predicción; 692 con 1 plano, 152 con 2 planos y 6 con 3 planos). El error se mide contra el plano verdadero más cercano, igual que para el método, por lo que el azar es más favorable que el valor teórico de un solo plano ($57.3^\circ$). Simulación: media de 1000 conjuntos de datos simulados; IC 95\,\%: percentiles 2.5 y 97.5.}
+\label{tab:plane_azar}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrr}
+\toprule
+Métrica & Simulación & IC 95\,\% \\
+\midrule
+AUC$_{45^\circ}$ & 0.118 & [0.104, 0.132] \\
+Error angular medio ($^\circ$) & 54.6 & [53.1, 56.1] \\
+Error angular mediano ($^\circ$) & 56.0 & [53.6, 58.3] \\
+Desv.\ estándar del error ($^\circ$) & 21.8 & [21.1, 22.6] \\
+Precisión @5$^\circ$ & 0.004 & [0.001, 0.009] \\
+Precisión @10$^\circ$ & 0.018 & [0.009, 0.027] \\
+Precisión @15$^\circ$ & 0.040 & [0.028, 0.054] \\
+$F1_{\mathrm{ref}}$ voraz & 0.009 & [0.005, 0.014] \\
+$F1_{\mathrm{ref}}$ húngaro & 0.010 & [0.005, 0.015] \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}

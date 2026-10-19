@@ -1,0 +1,22 @@
+% Generado por RandomBaseline/run_baseline.py latex. Requiere booktabs y adjustbox.
+
+\begin{table}[htbp]
+\centering
+\caption{Línea base aleatoria para simetría axial: la dirección del eje se elige uniforme en la esfera, sin mirar las imágenes, para los 850 objetos (todos reciben predicción). Fórmula cerrada: valor teórico con un eje verdadero por objeto. Simulación: media de 1000 conjuntos de datos simulados, evaluados con las mismas métricas que el método; IC 95\,\%: percentiles 2.5 y 97.5.}
+\label{tab:axis_azar}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrr}
+\toprule
+Métrica & Fórmula cerrada & Simulación & IC 95\,\% \\
+\midrule
+AUC$_{45^\circ}$ & 0.100 & 0.100 & [0.085, 0.113] \\
+Error angular medio ($^\circ$) & 57.3 & 57.3 & [55.8, 58.7] \\
+Error angular mediano ($^\circ$) & 60.0 & 60.0 & [57.7, 62.1] \\
+Desv.\ estándar del error ($^\circ$) & 21.6 & 21.5 & [20.7, 22.3] \\
+Precisión @5$^\circ$ & 0.004 & 0.004 & [0.000, 0.009] \\
+Precisión @10$^\circ$ & 0.015 & 0.015 & [0.007, 0.024] \\
+Precisión @15$^\circ$ & 0.034 & 0.034 & [0.022, 0.047] \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}

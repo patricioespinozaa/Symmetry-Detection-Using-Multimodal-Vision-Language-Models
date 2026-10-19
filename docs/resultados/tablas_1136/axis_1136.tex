@@ -1,0 +1,39 @@
+% Generado por utils/generar_tablas_latex.py. Requiere booktabs, multirow, adjustbox y longtable (ranking).
+
+\begin{table}[htbp]
+\centering
+\caption{\textit{Pipeline} sin malla, simetría axial, 1136: métricas angulares. Negrita: mejor valor de la columna en esta tabla. Las métricas angulares imputan $90^\circ$ a los objetos sin predicción; traslación, SDE$_{\mathrm{ref}}$ y $F1_{\mathrm{ref}}$ usan solo los objetos con predicción (de 850).}
+\label{tab:axis_1136_angular}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+\multirow{2}{*}{Prompt} & \multirow{2}{*}{Vistas} & \multirow{2}{*}{AUC$_{45^\circ}$} & \multicolumn{3}{c}{Error angular ($^\circ$)} & \multicolumn{3}{c}{Precisión} \\
+\cmidrule(lr){4-6} \cmidrule(lr){7-9}
+ &  &  & Media & Mediana & Desv. & @5$^\circ$ & @10$^\circ$ & @15$^\circ$ \\
+\midrule
+\multirow{3}{*}{\texttt{v04}} & 6 & \textbf{0.572} & \textbf{27.1} & \textbf{9.2} & 31.1 & \textbf{0.404} & \textbf{0.521} & \textbf{0.585} \\
+ & 14 & 0.413 & 38.1 & 30.0 & 32.4 & 0.220 & 0.319 & 0.385 \\
+ & 26 & 0.184 & 52.8 & 55.1 & 27.0 & 0.029 & 0.066 & 0.119 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{\textit{Pipeline} sin malla, simetría axial, 1136: error de traslación, SDE$_{\mathrm{ref}}$ y cobertura. Negrita: mejor valor de la columna en esta tabla. Las métricas angulares imputan $90^\circ$ a los objetos sin predicción; traslación, SDE$_{\mathrm{ref}}$ y $F1_{\mathrm{ref}}$ usan solo los objetos con predicción (de 850).}
+\label{tab:axis_1136_posicion}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrrrrrrrrr}
+\toprule
+\multirow{2}{*}{Prompt} & \multirow{2}{*}{Vistas} & \multicolumn{2}{c}{Err.\ trasl.} & \multicolumn{2}{c}{Err.\ trasl.\ norm.} & \multicolumn{3}{c}{SDE$_{\mathrm{ref}}$} & \multicolumn{2}{c}{Cobertura} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-9} \cmidrule(lr){10-11}
+ &  & Media & Mediana & Media & Mediana & Media & Mín. & Máx. & Objetos & Puntos \\
+\midrule
+\multirow{3}{*}{\texttt{v04}} & 6 & 0.3617 & \textbf{0.0264} & 0.3408 & \textbf{0.0245} & \textbf{0.0137} & 0.0000 & 0.3765 & \textbf{819} & 5.9 \\
+ & 14 & \textbf{0.2833} & 0.0550 & \textbf{0.2611} & 0.0515 & 0.0200 & 0.0000 & 0.3164 & 779 & 13.9 \\
+ & 26 & 0.3011 & 0.0950 & 0.2785 & 0.0893 & 0.0341 & 0.0001 & 1.0992 & 769 & 25.9 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}

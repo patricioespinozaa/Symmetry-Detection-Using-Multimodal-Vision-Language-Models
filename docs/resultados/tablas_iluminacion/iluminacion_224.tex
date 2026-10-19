@@ -1,0 +1,69 @@
+% Generado por utils/generar_tablas_iluminacion.py. Requiere booktabs, multirow, adjustbox y \newsavebox{\tablebox}.
+
+\begin{table}[htbp]
+\centering
+\caption{Efecto de la iluminación en simetría axial con el \textit{prompt} \texttt{v04}, resolución 224px.}
+\label{tab:axis_iluminacion_v04}
+\begin{lrbox}{\tablebox}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{llrrrrrrr}
+\toprule
+Vistas & Iluminación & Objetos & AUC$_{45^\circ}$ & \begin{tabular}[b]{@{}c@{}}Mediana \\ ($^\circ$)\end{tabular} & P@5$^\circ$ & P@10$^\circ$ & \begin{tabular}[b]{@{}c@{}}Trasl. \\ norm.\end{tabular} & SDE$_{\mathrm{ref}}$ \\
+\midrule
+\multirow{3}{*}{6} & \textit{flat} & 831 & 0.582 & 8.6 & \textbf{0.404} & 0.527 & 0.0250 & 0.0125 \\
+ & \textit{darker} & 832 & 0.585 & 8.4 & 0.398 & 0.531 & 0.0264 & 0.0127 \\
+ & \textit{brighter} & \textbf{837} & \textbf{0.588} & 8.2 & 0.389 & 0.532 & 0.0229 & 0.0126 \\
+\midrule
+\multirow{3}{*}{14} & \textit{flat} & 816 & 0.580 & 8.4 & 0.322 & 0.549 & \textbf{0.0212} & 0.0101 \\
+ & \textit{darker} & 822 & \textbf{0.588} & \textbf{8.1} & 0.325 & \textbf{0.564} & 0.0241 & \textbf{0.0100} \\
+ & \textit{brighter} & 824 & 0.580 & 8.9 & 0.320 & 0.538 & 0.0227 & 0.0104 \\
+\midrule
+\multirow{3}{*}{26} & \textit{flat} & 806 & 0.501 & 14.8 & 0.122 & 0.339 & 0.0451 & 0.0215 \\
+ & \textit{darker} & 813 & 0.504 & 14.8 & 0.118 & 0.332 & 0.0472 & 0.0209 \\
+ & \textit{brighter} & 808 & 0.487 & 16.3 & 0.098 & 0.326 & 0.0461 & 0.0177 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{lrbox}
+\usebox{\tablebox}
+
+\vspace{1.5ex}
+\begin{minipage}{\wd\tablebox}
+\footnotesize
+Nota: Iluminación: valor de gris uniforme de la malla (\textit{flat} 0.7, \textit{darker} 0.3, \textit{brighter} 0.95). Negrita: mejor valor de la columna. Las métricas angulares imputan $90^\circ$ a los objetos sin predicción; la traslación y SDE$_{\mathrm{ref}}$ usan solo los objetos con predicción. Objetos: cobertura, de 850.
+\end{minipage}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Efecto de la iluminación en simetría planar con el \textit{prompt} \texttt{v05\_1}, resolución 224px.}
+\label{tab:plane_iluminacion_v05_1}
+\begin{lrbox}{\tablebox}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{llrrrrrrr}
+\toprule
+Vistas & Iluminación & Objetos & \begin{tabular}[b]{@{}c@{}}$F1_{\mathrm{ref}}$ \\ voraz\end{tabular} & \begin{tabular}[b]{@{}c@{}}$F1_{\mathrm{ref}}$ \\ húngaro\end{tabular} & AUC$_{45^\circ}$ & P@10$^\circ$ & \begin{tabular}[b]{@{}c@{}}Err.\ medio \\ ($^\circ$)\end{tabular} & SDE$_{\mathrm{ref}}$ \\
+\midrule
+\multirow{3}{*}{6} & \textit{flat} & 796 & 0.288 & 0.314 & 0.494 & 0.518 & 34.7 & 0.0111 \\
+ & \textit{darker} & 806 & \textbf{0.300} & \textbf{0.326} & \textbf{0.502} & \textbf{0.525} & 34.2 & \textbf{0.0100} \\
+ & \textit{brighter} & 792 & 0.283 & 0.306 & 0.493 & 0.500 & \textbf{33.5} & 0.0107 \\
+\midrule
+\multirow{3}{*}{14} & \textit{flat} & 684 & 0.281 & 0.305 & 0.381 & 0.349 & 44.6 & 0.0119 \\
+ & \textit{darker} & 713 & 0.282 & 0.306 & 0.409 & 0.385 & 42.6 & 0.0160 \\
+ & \textit{brighter} & 689 & 0.286 & 0.309 & 0.376 & 0.347 & 44.4 & 0.0124 \\
+\midrule
+\multirow{3}{*}{26} & \textit{flat} & 827 & 0.142 & 0.154 & 0.277 & 0.174 & 39.7 & 0.0256 \\
+ & \textit{darker} & \textbf{831} & 0.135 & 0.146 & 0.281 & 0.167 & 40.3 & 0.0257 \\
+ & \textit{brighter} & 830 & 0.145 & 0.158 & 0.288 & 0.182 & 38.9 & 0.0238 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{lrbox}
+\usebox{\tablebox}
+
+\vspace{1.5ex}
+\begin{minipage}{\wd\tablebox}
+\footnotesize
+Nota: Iluminación: valor de gris uniforme de la malla (\textit{flat} 0.7, \textit{darker} 0.3, \textit{brighter} 0.95). Se predice un plano por objeto. Negrita: mejor valor de la columna. Las métricas angulares imputan $90^\circ$ a los objetos sin predicción; SDE$_{\mathrm{ref}}$ y $F1_{\mathrm{ref}}$ usan solo los objetos con predicción. Objetos: cobertura, de 850.
+\end{minipage}
+\end{table}
