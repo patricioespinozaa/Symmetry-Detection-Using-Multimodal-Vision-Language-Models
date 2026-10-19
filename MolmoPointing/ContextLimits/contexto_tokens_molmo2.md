@@ -30,13 +30,15 @@ tipo, iluminación `flat`, Flujo A, `--prompt-mode auto`, 1 plano por objeto):
 Tres observaciones:
 
 1. **Con 6 vistas, más resolución no perjudica** (incluso ayuda: el plano pasa de 0,494 a
-   0,545). El problema no es la resolución en sí, sino su **interacción con el número de
-   vistas**: lo que crece es el largo total de la entrada.
+   0,545). El problema aparece en la **interacción entre resolución y número de vistas**.
 2. Con 26 vistas, la caída es monótona con la resolución en ambos tipos de simetría
-   (eje 0,50 → 0,28 → 0,18; plano 0,28 → 0,12 → 0,02).
+   (eje 0,50 → 0,28 → 0,18; plano 0,28 → 0,12 → 0,02). Pero 448 y 1136 px producen
+   exactamente los mismos tokens (sección 4), así que la caída de 448 a 1136 px no se explica
+   por el largo de la entrada.
 3. **Plano a 1136 px con 26 vistas colapsa también en cobertura**: solo 114 de 850 objetos
-   tienen predicción. Es la combinación con la entrada más larga, y el síntoma sugiere salidas
-   vacías, cortadas o con vistas sin los puntos necesarios para triangular (sección 3).
+   tienen predicción. Su entrada tiene el mismo largo que la de 448 px con 26 vistas (778
+   objetos con predicción), así que la causa tampoco es el largo (ver el pendiente de la
+   sección 4).
 
 Con más vistas, el resultado debería mejorar, porque la triangulación tiene más rayos.
 
@@ -99,36 +101,46 @@ Por eso, además del largo de la entrada, interesa medir **cuántas vistas queda
 
 ---
 
-## 4. Estimación de tokens (a confirmar con el script)
+## 4. Tokens medidos y primeros hallazgos
 
-El paper no reporta cuántos tokens produce cada imagen. Esta es una estimación:
+Resultados en `MolmoPointing/ContextLimits/resultados/` (CSV de los dos modos) y tablas LaTeX
+en `docs/resultados/tablas_tokens/tokens_molmo2.tex`, generadas con
+`python utils/generar_tablas_tokens.py`. El conteo del procesador coincide con
+`n_input_tokens` de las corridas en las 31 combinaciones comparables.
 
-- Un recorte de 378 px → 27 × 27 parches → con pooling 2 × 2, **~196 tokens por recorte**,
-  más algunos tokens especiales (separadores de columna, inicio y fin de imagen).
-- **224 px:** menor que 378, así que el procesador **agranda** la imagen. Probablemente
-  1 recorte + global → **~400 tokens por imagen**.
-- **448 px:** probablemente 4 recortes + global → **~1.000 tokens por imagen**.
-- **1136 px:** necesitaría más de 8 recortes; se limita a 8 y se reduce la imagen →
-  **~1.800 tokens por imagen**.
-- El texto (prompts `axis_v04` y `plane_v05_1`, de ~1.100–1.500 caracteres) suma solo
-  unos **~300–400 tokens**. En los Flujos B y C hay que sumar la descripción.
+Tokens de entrada por llamada (`axis_v04`; `plane_v05_1` suma 26 tokens de texto):
 
-Total estimado por llamada (todas las vistas juntas):
+| Resolución | Tokens por imagen | 6 vistas | 14 vistas | 26 vistas |
+|---|---|---|---|---|
+| 224 px | 410 | 2.815 | 6.124 | 11.092 |
+| 448 px | 752 | 4.867 | 10.912 | **19.984** (> 16.384) |
+| 1136 px | 752 | 4.867 | 10.912 | **19.984** (> 16.384) |
 
-| Resolución | 6 vistas | 14 vistas | 26 vistas |
-|---|---|---|---|
-| 224 px | ~2.400 | ~5.600 | ~10.400 |
-| 448 px | ~6.000 | ~14.000 | **~26.000** (> 16.384) |
-| 1136 px | ~10.800 | **~25.200** (> 16.384) | **~46.800** (> 36.864, excede el contexto) |
+Ninguna combinación evaluada (6/14/26 vistas) supera el contexto máximo de 36.864. Eso
+pasa recién con 62 vistas a 448/1136 px y con 114 a 224 px. No se pierde ninguna imagen
+(`imagenes_perdidas = 0`). El texto aporta solo 237–825 tokens.
 
-Las celdas en negrita coinciden con las mayores caídas de la sección 1: 448 y 1136 px con
-26 vistas, y 1136 px con 14. La única combinación que supera el contexto máximo
-(1136 px, 26 vistas) es la del colapso de cobertura del plano (114/850).
+**Hallazgo 1: 448 y 1136 px dan exactamente los mismos tokens.** El procesador produce el
+mismo número de recortes para ambas resoluciones. Aun así, a igual largo de entrada, 1136 px
+rinde peor (eje con 14 vistas: AUC 0,544 vs. 0,413; con 26: 0,282 vs. 0,184). **El largo del
+contexto no explica la diferencia entre 448 y 1136 px**: tiene que haber otra causa, por
+ejemplo cómo se reduce y recorta una imagen de 1136 px.
 
-**Esta tabla ya no hace falta estimarla.** El runner guarda en cada llamada el largo real
-de la entrada (`n_input_tokens` en cada clave `n_views` de `molmo_multiview_<EXP>.json`;
-también se resume en `token_counts_<EXP>.txt`). El script puede leerlo directamente
-(modo `json`, sección 5).
+**Hallazgo 2: con muchas imágenes, Molmo2 cambia de formato de salida.** En vez de
+`<points coords=...>` responde con `<tracks coords=...>`, su formato de *tracking* de video.
+El parser del runner extrae los puntos igual, porque solo busca `coords=`. Con `axis_v04` a
+26 vistas pasa en ~100 % de las llamadas en las tres resoluciones. Con 14 vistas, la
+frecuencia crece con la resolución: 2 % (224), 14 % (448) y 54 % (1136). El cambio de formato
+no implica por sí solo un mal resultado: eje a 224 px con 26 vistas usa `<tracks>` en casi
+todas las llamadas y mantiene AUC 0,50.
+
+**Hallazgo 3: las vistas útiles no son el cuello de botella.** En `axis_v04` y `plane_v05_1`,
+≥ 99,6 % de las vistas reciben al menos 2 puntos en todas las combinaciones. Sí crecen con las
+vistas los puntos duplicados dentro de una vista (1–2 % con 6 vistas, hasta ~7 % con 14–26).
+
+**Pendiente:** el CSV de las corridas no tiene llamadas de `plane_v05_1` a 1136 px con
+26 vistas, pero la evaluación sí reporta 114 objetos. Hay que revisar en el servidor dónde
+quedaron esos `molmo_multiview` y por qué faltan los otros 736 objetos.
 
 ---
 
@@ -169,7 +181,9 @@ Los IDs de tokens de imagen se tomaron del `config.json` de Molmo2-8B
 ### Modo `json` (corridas existentes, sin `transformers`)
 
 Recorre `<renders_root>/<symmetry_type>/<obj>/<size>/<lighting>/molmo_multiview*.json` y
-agrupa por `symmetry_type × experimento × size × lighting × n_views`:
+agrupa por `symmetry_type × experimento × size × lighting × n_views`. Salta los JSON que son
+enlaces simbólicos (los `<X>_ndcfix_nomesh` y `<X>_nomesh` de `utils/rerun_ndcfix_completo.py`
+apuntan al `molmo_multiview_<X>.json` original); `--incluir-enlaces` los cuenta igual.
 
 | Columna | Qué significa |
 |---|---|
@@ -179,7 +193,9 @@ agrupa por `symmetry_type × experimento × size × lighting × n_views`:
 | `frac_vistas_utiles` | Vistas con **≥ 2 puntos** / vistas enviadas: las que puede usar la triangulación |
 | `puntos_por_vista` | Puntos parseados por vista enviada |
 | `frac_puntos_duplicados` | Puntos con la misma (x, y) que otro de la misma vista |
-| `frac_salidas_sin_bloque` | Llamadas cuya salida no contiene `<points` (vacía, cortada o en prosa) |
+| `frac_formato_points` / `frac_formato_tracks` | Llamadas que respondieron con `<points coords=...>` / con `<tracks coords=...>` (formato de *tracking* de video) |
+| `frac_salidas_sin_coords` | Llamadas sin ningún bloque `coords=` (vacías o en prosa) |
+| `frac_salidas_cortadas` | Llamadas que abren `coords="` y nunca lo cierran (p. ej. por `max_new_tokens`) |
 | `frac_llamadas_fuera_de_rango` | Llamadas con algún índice de imagen fuera de `[1, N]` en la salida cruda: señal directa de confusión de índices |
 
 **Ojo con los Flujos B y C:** su `n_input_tokens` incluye los tokens de la llamada previa
@@ -214,13 +230,10 @@ python contar_tokens_molmo2.py --modo json --renders-root /ruta/renders \
 1. **Compara ambos modos.** `tokens_total` (procesador) debería coincidir con
    `tokens_media` (json) para el mismo prompt, resolución y número de vistas en el Flujo A.
    Si no coinciden, el armado del mensaje en `contar` se desvió del de `_call_model`.
-2. **El modo `procesador` no se ha probado** en el entorno local, porque no tiene
-   `transformers` ni el modelo. Si `max_crops` no tiene efecto, revisa el nombre del atributo
-   en el `Molmo2ImageProcessor` descargado. El modo `json` sí se probó localmente con un
-   JSON sintético.
-3. **Revisa primero `imagenes_perdidas`** en 1136 px con 14 y 26 vistas. Si es mayor que
-   cero, el modelo nunca vio esas vistas. La triangulación de esas corridas sería inválida,
-   porque combina puntos con cámaras que no corresponden.
+   Verificado: coinciden en las 31 combinaciones comparables (`generar_tablas_tokens.py`
+   lo comprueba cada vez).
+2. **`imagenes_perdidas` es 0** en todas las combinaciones medidas: el modelo recibe todas
+   las vistas.
 
 ---
 
@@ -229,8 +242,8 @@ python contar_tokens_molmo2.py --modo json --renders-root /ruta/renders \
 | Paso | Qué hacer | Estado |
 |---|---|---|
 | 1 | Confirmar cómo se envían las vistas | ✅ Una sola llamada; texto primero y después las imágenes (`_call_model`, `--prompt-mode auto`) |
-| 2 | Medir los tokens reales | ✅ Ya registrados por el runner (`n_input_tokens`); falta correr `--modo json` en el servidor |
-| 3 | Indicadores de saturación en las corridas existentes | Implementado en `--modo json`; falta correrlo |
+| 2 | Medir los tokens reales | ✅ Medidos con ambos modos (sección 4) |
+| 3 | Indicadores de saturación en las corridas existentes | ✅ Corrido. Volver a correr `--modo json` con la versión actual para tener `frac_formato_tracks` |
 | 4 | Graficar métricas contra los tokens totales | Pendiente |
 | 5 | Experimentos de control en una muestra pequeña | Pendiente |
 
@@ -279,13 +292,14 @@ vista conserva su cámara en `images_sent`.
 
 ## 8. Cómo podría redactarse en la tesis
 
-Si los pasos 4 y 5 confirman la hipótesis:
+Con lo medido hasta ahora (sección 4), una redacción que los datos sostienen:
 
-> El deterioro del desempeño al aumentar el número de vistas y la resolución coincide con
-> entradas que superan el largo de secuencia usado en el entrenamiento de Molmo2
-> (16.384 tokens) y el número de imágenes por ejemplo de sus datos multi-imagen (2 a 5). Con
-> pocas vistas, mayor resolución no perjudica, lo que indica que la causa es el largo total
-> de la entrada y no la resolución por sí misma.
+> El deterioro del desempeño al aumentar el número de vistas coincide con entradas fuera de
+> la distribución de entrenamiento de Molmo2: más imágenes por ejemplo que en sus datos
+> multi-imagen (2 a 5) y, a 448 y 1136 px con 26 vistas, más tokens que el largo de secuencia
+> de su *fine-tuning* principal (16.384). Con muchas imágenes, el modelo además cambia a su
+> formato de salida de *tracking* de video (`<tracks>`). El largo de la entrada no explica por
+> sí solo la diferencia entre 448 y 1136 px, que producen el mismo número de tokens.
 
 Si el control "conjunta vs. separada" muestra que las llamadas por vista rinden mejor, eso
 además justifica cambiar el pipeline a una llamada por vista (`--prompt-mode single`).

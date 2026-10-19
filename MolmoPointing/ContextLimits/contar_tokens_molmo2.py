@@ -79,6 +79,10 @@ RESOLUCIONES_POR_DEFECTO = [224, 448, 1136]
 MIN_PUNTOS_POR_VISTA = 2
 
 RE_COORDS = re.compile(r'coords="([^"]*)"')
+# Etiqueta de apertura de la salida (<points ...>, <tracks ...>). Con muchas
+# imágenes Molmo2 cambia a <tracks>, su formato de tracking de video; el parser
+# del runner lo acepta igual porque solo busca coords="...".
+RE_ETIQUETA = re.compile(r"<\s*(\w+)\s+coords=")
 
 
 # ---------------------------------------------------------------------------
@@ -209,7 +213,9 @@ def indicadores_llamada(entrada):
     duplicados = sum(
         len(pts) - len({(p["x"], p["y"]) for p in pts}) for pts in puntos.values()
     )
-    sin_bloque = sum(1 for r in raws if "<points" not in r)
+    etiquetas = [m.group(1) if (m := RE_ETIQUETA.search(r)) else None for r in raws]
+    # Cortada: abre coords=" pero nunca lo cierra (p. ej. por max_new_tokens).
+    cortadas = sum(1 for r in raws if 'coords="' in r and not RE_COORDS.search(r))
     fuera_rango = 0
     if not isinstance(raw, list) and n_imagenes > 1:
         fuera_rango = sum(1 for i in indices_crudos(raw) if i < 1 or i > n_imagenes)
@@ -223,7 +229,10 @@ def indicadores_llamada(entrada):
         "frac_vistas_utiles": vistas_utiles / max(n_imagenes, 1),
         "puntos_por_vista": n_pts / max(n_imagenes, 1),
         "frac_puntos_duplicados": duplicados / max(n_pts, 1),
-        "salida_sin_bloque": sin_bloque > 0,
+        "formato_points": all(e == "points" for e in etiquetas),
+        "formato_tracks": any(e == "tracks" for e in etiquetas),
+        "sin_coords": any(e is None for e in etiquetas),
+        "cortada": cortadas > 0,
         "grupos_fuera_de_rango": fuera_rango,
     }
 
@@ -240,6 +249,10 @@ def modo_json(args):
     for sym in args.symmetry_types:
         # <renders_root>/<symmetry_type>/<object_id>/<size>/<lighting>/molmo_multiview*.json
         for ruta in sorted((raiz / sym).glob("*/*/*/molmo_multiview*.json")):
+            # Los <X>_ndcfix_nomesh (utils/rerun_ndcfix_completo.py) son enlaces al
+            # JSON original: mismas llamadas a Molmo2, no se cuentan dos veces.
+            if ruta.is_symlink() and not args.incluir_enlaces:
+                continue
             exp = experimento_de(ruta.name)
             if args.experimentos and exp not in args.experimentos:
                 continue
@@ -274,7 +287,10 @@ def modo_json(args):
             "frac_vistas_utiles": media("frac_vistas_utiles"),
             "puntos_por_vista": media("puntos_por_vista"),
             "frac_puntos_duplicados": media("frac_puntos_duplicados"),
-            "frac_salidas_sin_bloque": media("salida_sin_bloque"),
+            "frac_formato_points": media("formato_points"),
+            "frac_formato_tracks": media("formato_tracks"),
+            "frac_salidas_sin_coords": media("sin_coords"),
+            "frac_salidas_cortadas": media("cortada"),
             "frac_llamadas_fuera_de_rango": round(float(np.mean(
                 [c["grupos_fuera_de_rango"] > 0 for c in llamadas])), 4),
         }
@@ -288,7 +304,8 @@ def modo_json(args):
                 "n_llamadas", "flow", "prompt_mode", "tokens_media", "tokens_min",
                 "tokens_max", "frac_supera_largo_sft", "frac_supera_contexto_max",
                 "frac_vistas_con_puntos", "frac_vistas_utiles", "puntos_por_vista",
-                "frac_puntos_duplicados", "frac_salidas_sin_bloque",
+                "frac_puntos_duplicados", "frac_formato_points", "frac_formato_tracks",
+                "frac_salidas_sin_coords", "frac_salidas_cortadas",
                 "frac_llamadas_fuera_de_rango"]
     return filas, columnas
 
@@ -312,6 +329,9 @@ def main():
     p.add_argument("--symmetry-types", nargs="+", default=["axis_sym", "plane_sym"])
     p.add_argument("--experimentos", nargs="+", default=None,
                    help="Filtra por experiment_id (p. ej. axis_v04 plane_v05_1). Por defecto, todos.")
+    p.add_argument("--incluir-enlaces", action="store_true",
+                   help="Cuenta también los molmo_multiview_*.json que son enlaces simbólicos "
+                        "(p. ej. <X>_ndcfix_nomesh); por defecto se saltan.")
     p.add_argument("--salida", default=None,
                    help="CSV de salida (por defecto tokens_molmo2.csv o saturacion_corridas.csv).")
     args = p.parse_args()
