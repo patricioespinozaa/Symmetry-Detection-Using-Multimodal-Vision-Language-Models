@@ -1,0 +1,47 @@
+% Generado por utils/generar_tablas_modo_envio.py. Requiere booktabs, multirow, adjustbox y \newsavebox{\tablebox}.
+
+\begin{table}[htbp]
+\centering
+\caption{\textit{Pipeline} sin malla, simetría axial, \texttt{v04}/\texttt{v05\_1}: todas las vistas en una llamada; \texttt{\_single\_oct26}: una vista por llamada: métricas angulares. Negrita: mejor valor de la columna en esta tabla. Las métricas angulares imputan $90^\circ$ a los objetos sin predicción; traslación, SDE$_{\mathrm{ref}}$ y $F1_{\mathrm{ref}}$ usan solo los objetos con predicción (de 850).}
+\label{tab:axis_modo_envio_angular}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+\multirow{2}{*}{Prompt} & \multirow{2}{*}{Vistas} & \multirow{2}{*}{AUC$_{45^\circ}$} & \multicolumn{3}{c}{Error angular ($^\circ$)} & \multicolumn{3}{c}{Precisión} \\
+\cmidrule(lr){4-6} \cmidrule(lr){7-9}
+ &  &  & Media & Mediana & Desv. & @5$^\circ$ & @10$^\circ$ & @15$^\circ$ \\
+\midrule
+\multirow{3}{*}{\texttt{v04}} & 6 & \textbf{0.582} & \textbf{26.0} & 8.6 & 30.1 & \textbf{0.404} & 0.527 & 0.584 \\
+ & 14 & 0.580 & 26.4 & \textbf{8.4} & 30.2 & 0.322 & \textbf{0.549} & \textbf{0.609} \\
+ & 26 & 0.501 & 30.9 & 14.8 & 29.9 & 0.122 & 0.339 & 0.505 \\
+\midrule
+\multirow{3}{*}{\texttt{v04\_single\_oct26}} & 6 & 0.467 & 32.3 & 20.6 & 29.6 & 0.243 & 0.354 & 0.441 \\
+ & 14 & 0.479 & 31.4 & 18.5 & 29.2 & 0.219 & 0.378 & 0.462 \\
+ & 26 & 0.495 & 30.8 & 15.6 & 29.5 & 0.228 & 0.398 & 0.495 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{\textit{Pipeline} sin malla, simetría axial, \texttt{v04}/\texttt{v05\_1}: todas las vistas en una llamada; \texttt{\_single\_oct26}: una vista por llamada: error de traslación, SDE$_{\mathrm{ref}}$ y cobertura. Negrita: mejor valor de la columna en esta tabla. Las métricas angulares imputan $90^\circ$ a los objetos sin predicción; traslación, SDE$_{\mathrm{ref}}$ y $F1_{\mathrm{ref}}$ usan solo los objetos con predicción (de 850).}
+\label{tab:axis_modo_envio_posicion}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrrrrrrrrr}
+\toprule
+\multirow{2}{*}{Prompt} & \multirow{2}{*}{Vistas} & \multicolumn{2}{c}{Err.\ trasl.} & \multicolumn{2}{c}{Err.\ trasl.\ norm.} & \multicolumn{3}{c}{SDE$_{\mathrm{ref}}$} & \multicolumn{2}{c}{Cobertura} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-9} \cmidrule(lr){10-11}
+ &  & Media & Mediana & Media & Mediana & Media & Mín. & Máx. & Objetos & Puntos \\
+\midrule
+\multirow{3}{*}{\texttt{v04}} & 6 & 0.2791 & 0.0269 & 0.2636 & 0.0250 & 0.0125 & 0.0000 & 0.3330 & 831 & 6.0 \\
+ & 14 & 0.1463 & 0.0233 & 0.1394 & 0.0212 & \textbf{0.0101} & 0.0000 & 0.2094 & 816 & 13.8 \\
+ & 26 & 0.1904 & 0.0499 & 0.1789 & 0.0451 & 0.0215 & 0.0001 & 1.3934 & 806 & 25.8 \\
+\midrule
+\multirow{3}{*}{\texttt{v04\_single\_oct26}} & 6 & 0.2205 & 0.0358 & 0.2094 & 0.0324 & 0.0201 & 0.0000 & 0.3153 & \textbf{850} & 6.0 \\
+ & 14 & 0.0972 & 0.0270 & 0.0914 & 0.0252 & 0.0157 & 0.0000 & 0.3635 & \textbf{850} & 14.0 \\
+ & 26 & \textbf{0.0555} & \textbf{0.0230} & \textbf{0.0518} & \textbf{0.0206} & 0.0124 & 0.0000 & 0.1996 & \textbf{850} & 25.9 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
