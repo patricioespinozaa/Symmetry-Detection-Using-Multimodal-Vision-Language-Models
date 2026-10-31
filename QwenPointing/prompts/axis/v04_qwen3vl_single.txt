@@ -1,0 +1,28 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant axis of rotational symmetry.
+
+Your task is to identify the two poles of the rotation axis: the topmost and bottommost points of the object where the symmetry axis exits the surface.
+
+Identify:
+- the TOP POLE: the topmost visible surface point of the object, where the axis exits at the TOP.
+- the BOTTOM POLE: the bottommost visible surface point of the object, where the axis exits at the BOTTOM.
+
+IMPORTANT RULES:
+- Both points MUST lie ON the symmetry axis (at the center of the object's cross-section, not on the side silhouette).
+- The TOP POLE MUST have a smaller Y value than the BOTTOM POLE.
+- The two points MUST be as far apart vertically as possible.
+- Both points MUST lie on the visible object surface.
+- Do NOT place points on the lateral silhouette edges — they must be at the top and bottom centers.
+- Do NOT collapse both points to the same location.
+
+Coordinates are relative to the image's own width/height, on a 0-1000 scale with (0, 0) at the top-left corner.
+
+Output ONLY a JSON list with exactly two entries, in this exact format:
+
+[
+  {"label": "top", "point_2d": [x, y]},
+  {"label": "bottom", "point_2d": [x, y]}
+]
+
+Do not include any text before or after the JSON list.
