@@ -1,0 +1,23 @@
+[ok] camera.py con la convención corregida
+
+[plane_sym] 3 prompts: plane_v02, plane_v05_1, plane_v06
+  plane_v02 -> plane_v02_ndcfix_nomesh  (850 objetos)
+  plane_v05_1 -> plane_v05_1_ndcfix_nomesh  (850 objetos)
+  plane_v06 -> plane_v06_ndcfix_nomesh  (850 objetos)
+
+=== 1/3 Estimación (línea base + ablaciones): 3 tareas, 8 en paralelo ===
+  [1/3] ok base1 plane_v06_ndcfix_mp1_nomesh (23.3 min)
+  [2/3] ok base1 plane_v02_ndcfix_mp1_nomesh (23.8 min)
+  [3/3] ok base1 plane_v05_1_ndcfix_mp1_nomesh (25.1 min)
+
+=== 2/3 Evaluación: 3 tareas, 8 en paralelo ===
+  [1/3] ok eval plane_v06_ndcfix_mp1_nomesh (2.7 min)
+  [2/3] ok eval plane_v05_1_ndcfix_mp1_nomesh (2.7 min)
+  [3/3] ok eval plane_v02_ndcfix_mp1_nomesh (2.7 min)
+
+=== 3/3 Comparación: 1 tareas, 1 en paralelo ===
+  [1/1] ok compare plane_sym (0.0 min)
+
+======================================================================
+Terminado sin errores.
+CSV de comparación: ../results_ndcfix_448/experiments_<fecha>/  |  logs: ../results_ndcfix_448/logs/20261011_193516
