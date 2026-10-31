@@ -1,0 +1,65 @@
+% Generado por utils/generar_tablas_modo_envio.py. Requiere booktabs, multirow, adjustbox y \newsavebox{\tablebox}.
+
+\begin{table}[htbp]
+\centering
+\caption{Envío de todas las vistas en una llamada frente a una vista por llamada, simetría axial, \textit{prompt} \texttt{v04}, resolución 224px.}
+\label{tab:axis_modo_envio_v04}
+\begin{lrbox}{\tablebox}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{llrrrrrrr}
+\toprule
+Vistas & Envío & Objetos & AUC$_{45^\circ}$ & \begin{tabular}[b]{@{}c@{}}Mediana \\ ($^\circ$)\end{tabular} & P@5$^\circ$ & P@10$^\circ$ & \begin{tabular}[b]{@{}c@{}}Trasl. \\ norm.\end{tabular} & SDE$_{\mathrm{ref}}$ \\
+\midrule
+\multirow{2}{*}{6} & Multiimagen & 831 & \textbf{0.582} & 8.6 & \textbf{0.404} & 0.527 & 0.0250 & 0.0125 \\
+ & Una por llamada & \textbf{850} & 0.467 & 20.6 & 0.243 & 0.354 & 0.0324 & 0.0201 \\
+\midrule
+\multirow{2}{*}{14} & Multiimagen & 816 & 0.580 & \textbf{8.4} & 0.322 & \textbf{0.549} & 0.0212 & \textbf{0.0101} \\
+ & Una por llamada & \textbf{850} & 0.479 & 18.5 & 0.219 & 0.378 & 0.0252 & 0.0157 \\
+\midrule
+\multirow{2}{*}{26} & Multiimagen & 806 & 0.501 & 14.8 & 0.122 & 0.339 & 0.0451 & 0.0215 \\
+ & Una por llamada & \textbf{850} & 0.495 & 15.6 & 0.228 & 0.398 & \textbf{0.0206} & 0.0124 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{lrbox}
+\usebox{\tablebox}
+
+\vspace{1.5ex}
+\begin{minipage}{\wd\tablebox}
+\footnotesize
+Nota: Multiimagen: las $n_v$ vistas se envían a Molmo2 en una sola llamada, con el \textit{prompt} multivista. Una por llamada: cada vista se envía por separado, con el \textit{prompt} de imagen única, y los puntos se reúnen antes de la triangulación. Negrita: mejor valor de la columna. Las métricas angulares imputan $90^\circ$ a los objetos sin predicción; la traslación y SDE$_{\mathrm{ref}}$ usan solo los objetos con predicción. Objetos: cobertura, de 850.
+\end{minipage}
+\end{table}
+
+
+
+\begin{table}[htbp]
+\centering
+\caption{Envío de todas las vistas en una llamada frente a una vista por llamada, simetría planar, \textit{prompt} \texttt{v05\_1}, resolución 224px.}
+\label{tab:plane_modo_envio_v05_1}
+\begin{lrbox}{\tablebox}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{llrrrrrrr}
+\toprule
+Vistas & Envío & Objetos & \begin{tabular}[b]{@{}c@{}}$F1_{\mathrm{ref}}$ \\ voraz\end{tabular} & \begin{tabular}[b]{@{}c@{}}$F1_{\mathrm{ref}}$ \\ húngaro\end{tabular} & AUC$_{45^\circ}$ & P@10$^\circ$ & \begin{tabular}[b]{@{}c@{}}Err.\ medio \\ ($^\circ$)\end{tabular} & SDE$_{\mathrm{ref}}$ \\
+\midrule
+\multirow{2}{*}{6} & Multiimagen & 796 & 0.288 & 0.314 & 0.494 & 0.518 & 34.7 & 0.0111 \\
+ & Una por llamada & \textbf{850} & 0.331 & 0.360 & 0.586 & \textbf{0.595} & 25.5 & \textbf{0.0050} \\
+\midrule
+\multirow{2}{*}{14} & Multiimagen & 684 & 0.281 & 0.305 & 0.381 & 0.349 & 44.6 & 0.0119 \\
+ & Una por llamada & \textbf{850} & \textbf{0.376} & \textbf{0.409} & \textbf{0.592} & 0.554 & \textbf{25.2} & 0.0075 \\
+\midrule
+\multirow{2}{*}{26} & Multiimagen & 827 & 0.142 & 0.154 & 0.277 & 0.174 & 39.7 & 0.0256 \\
+ & Una por llamada & \textbf{850} & 0.029 & 0.031 & 0.259 & 0.067 & 47.0 & 0.0079 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{lrbox}
+\usebox{\tablebox}
+
+\vspace{1.5ex}
+\begin{minipage}{\wd\tablebox}
+\footnotesize
+Nota: Multiimagen: las $n_v$ vistas se envían a Molmo2 en una sola llamada, con el \textit{prompt} multivista. Una por llamada: cada vista se envía por separado, con el \textit{prompt} de imagen única, y los puntos se reúnen antes de la triangulación. Se predice un plano por objeto. Negrita: mejor valor de la columna. Las métricas angulares imputan $90^\circ$ a los objetos sin predicción; SDE$_{\mathrm{ref}}$ y $F1_{\mathrm{ref}}$ usan solo los objetos con predicción. Objetos: cobertura, de 850.
+\end{minipage}
+\end{table}

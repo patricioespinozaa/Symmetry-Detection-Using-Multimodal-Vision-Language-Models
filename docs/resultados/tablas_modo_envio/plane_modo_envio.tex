@@ -1,0 +1,93 @@
+% Generado por utils/generar_tablas_modo_envio.py. Requiere booktabs, multirow, adjustbox y \newsavebox{\tablebox}.
+
+\begin{table}[htbp]
+\centering
+\caption{\textit{Pipeline} sin malla, simetría planar, \texttt{v04}/\texttt{v05\_1}: todas las vistas en una llamada; \texttt{\_single\_oct26}: una vista por llamada: métricas angulares. Negrita: mejor valor de la columna en esta tabla. Las métricas angulares imputan $90^\circ$ a los objetos sin predicción; traslación, SDE$_{\mathrm{ref}}$ y $F1_{\mathrm{ref}}$ usan solo los objetos con predicción (de 850).}
+\label{tab:plane_modo_envio_angular}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+\multirow{2}{*}{Prompt} & \multirow{2}{*}{Vistas} & \multirow{2}{*}{AUC$_{45^\circ}$} & \multicolumn{3}{c}{Error angular ($^\circ$)} & \multicolumn{3}{c}{Precisión} \\
+\cmidrule(lr){4-6} \cmidrule(lr){7-9}
+ &  &  & Media & Mediana & Desv. & @5$^\circ$ & @10$^\circ$ & @15$^\circ$ \\
+\midrule
+\multirow{3}{*}{\texttt{v05\_1}} & 6 & 0.494 & 34.7 & 8.4 & 35.1 & 0.214 & 0.518 & 0.536 \\
+ & 14 & 0.381 & 44.6 & 48.0 & 36.1 & 0.262 & 0.349 & 0.386 \\
+ & 26 & 0.277 & 39.7 & 42.0 & 25.3 & 0.162 & 0.174 & 0.195 \\
+\midrule
+\multirow{3}{*}{\texttt{v05\_1\_single\_oct26}} & 6 & 0.586 & 25.5 & \textbf{7.1} & 29.4 & 0.267 & \textbf{0.595} & \textbf{0.619} \\
+ & 14 & \textbf{0.592} & \textbf{25.2} & 7.4 & 29.7 & \textbf{0.431} & 0.554 & 0.591 \\
+ & 26 & 0.259 & 47.0 & 38.9 & 28.8 & 0.008 & 0.067 & 0.154 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{\textit{Pipeline} sin malla, simetría planar, \texttt{v04}/\texttt{v05\_1}: todas las vistas en una llamada; \texttt{\_single\_oct26}: una vista por llamada: error de traslación, SDE$_{\mathrm{ref}}$ y cobertura. Negrita: mejor valor de la columna en esta tabla. Las métricas angulares imputan $90^\circ$ a los objetos sin predicción; traslación, SDE$_{\mathrm{ref}}$ y $F1_{\mathrm{ref}}$ usan solo los objetos con predicción (de 850).}
+\label{tab:plane_modo_envio_posicion}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrrrrrrrrr}
+\toprule
+\multirow{2}{*}{Prompt} & \multirow{2}{*}{Vistas} & \multicolumn{2}{c}{Err.\ trasl.} & \multicolumn{2}{c}{Err.\ trasl.\ norm.} & \multicolumn{3}{c}{SDE$_{\mathrm{ref}}$} & \multicolumn{2}{c}{Cobertura} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-9} \cmidrule(lr){10-11}
+ &  & Media & Mediana & Media & Mediana & Media & Mín. & Máx. & Objetos & Puntos \\
+\midrule
+\multirow{3}{*}{\texttt{v05\_1}} & 6 & 0.0441 & 0.0049 & 0.0442 & 0.0049 & 0.0111 & 0.0000 & 0.2476 & 796 & 3.9 \\
+ & 14 & \textbf{0.0175} & 0.0030 & \textbf{0.0177} & 0.0030 & 0.0119 & 0.0000 & 0.1782 & 684 & 8.0 \\
+ & 26 & 0.0193 & \textbf{0.0008} & 0.0193 & \textbf{0.0008} & 0.0256 & 0.0000 & 1.2305 & 827 & 15.8 \\
+\midrule
+\multirow{3}{*}{\texttt{v05\_1\_single\_oct26}} & 6 & 0.0193 & 0.0035 & 0.0193 & 0.0035 & \textbf{0.0050} & 0.0000 & 0.2012 & \textbf{850} & 4.0 \\
+ & 14 & 0.0255 & 0.0081 & 0.0255 & 0.0081 & 0.0075 & 0.0000 & 0.4290 & \textbf{850} & 8.0 \\
+ & 26 & 0.0248 & 0.0177 & 0.0249 & 0.0178 & 0.0079 & 0.0001 & 0.1977 & \textbf{850} & 15.3 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{\textit{Pipeline} sin malla, simetría planar, \texttt{v04}/\texttt{v05\_1}: todas las vistas en una llamada; \texttt{\_single\_oct26}: una vista por llamada: $F1_{\mathrm{ref}}$ por umbral. Negrita: mejor valor de la columna en esta tabla. Las métricas angulares imputan $90^\circ$ a los objetos sin predicción; traslación, SDE$_{\mathrm{ref}}$ y $F1_{\mathrm{ref}}$ usan solo los objetos con predicción (de 850).}
+\label{tab:plane_modo_envio_f1}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+\multirow{2}{*}{Prompt} & \multirow{2}{*}{Vistas} & \multicolumn{5}{c}{$F1_{\mathrm{ref}}$ voraz} & \multicolumn{5}{c}{$F1_{\mathrm{ref}}$ húngaro} \\
+\cmidrule(lr){3-7} \cmidrule(lr){8-12}
+ &  & Prom. & $\tau{=}0.05$ & $\tau{=}0.10$ & $\tau{=}0.15$ & $\tau{=}0.20$ & Prom. & $\tau{=}0.05$ & $\tau{=}0.10$ & $\tau{=}0.15$ & $\tau{=}0.20$ \\
+\midrule
+\multirow{3}{*}{\texttt{v05\_1}} & 6 & 0.288 & 0.046 & 0.205 & 0.438 & 0.465 & 0.314 & 0.051 & 0.223 & 0.476 & 0.506 \\
+ & 14 & 0.281 & 0.096 & 0.304 & 0.353 & 0.372 & 0.305 & 0.104 & 0.330 & 0.383 & 0.403 \\
+ & 26 & 0.142 & 0.127 & 0.141 & 0.146 & 0.154 & 0.154 & 0.138 & 0.153 & 0.159 & 0.168 \\
+\midrule
+\multirow{3}{*}{\texttt{v05\_1\_single\_oct26}} & 6 & 0.331 & 0.045 & 0.294 & \textbf{0.476} & \textbf{0.508} & 0.360 & 0.049 & 0.320 & \textbf{0.518} & \textbf{0.553} \\
+ & 14 & \textbf{0.376} & \textbf{0.214} & \textbf{0.374} & 0.445 & 0.471 & \textbf{0.409} & \textbf{0.233} & \textbf{0.407} & 0.484 & 0.513 \\
+ & 26 & 0.029 & 0.000 & 0.010 & 0.029 & 0.079 & 0.031 & 0.000 & 0.011 & 0.031 & 0.082 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{\textit{Pipeline} sin malla, simetría planar, \texttt{v04}/\texttt{v05\_1}: todas las vistas en una llamada; \texttt{\_single\_oct26}: una vista por llamada: conteos TP/FP/FN del emparejamiento voraz de $F1_{\mathrm{ref}}$. Negrita: mejor valor de la columna en esta tabla. Las métricas angulares imputan $90^\circ$ a los objetos sin predicción; traslación, SDE$_{\mathrm{ref}}$ y $F1_{\mathrm{ref}}$ usan solo los objetos con predicción (de 850).}
+\label{tab:plane_modo_envio_conteos}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrrrrrrrrrrrr}
+\toprule
+\multirow{2}{*}{Prompt} & \multirow{2}{*}{Vistas} & \multicolumn{3}{c}{$\tau{=}0.05$} & \multicolumn{3}{c}{$\tau{=}0.10$} & \multicolumn{3}{c}{$\tau{=}0.15$} & \multicolumn{3}{c}{$\tau{=}0.20$} \\
+\cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11} \cmidrule(lr){12-14}
+ &  & TP & FP & FN & TP & FP & FN & TP & FP & FN & TP & FP & FN \\
+\midrule
+\multirow{3}{*}{\texttt{v05\_1}} & 6 & 44 & 904 & 904 & 194 & 754 & 754 & 415 & 533 & 533 & 441 & 507 & 507 \\
+ & 14 & 78 & 731 & 731 & 246 & 563 & 563 & 286 & 523 & 523 & 301 & 508 & 508 \\
+ & 26 & 125 & 863 & 863 & 139 & 849 & 849 & 144 & 844 & 844 & 152 & 836 & 836 \\
+\midrule
+\multirow{3}{*}{\texttt{v05\_1\_single\_oct26}} & 6 & 46 & 968 & 968 & 298 & 716 & 716 & 483 & 531 & 531 & 515 & 499 & 499 \\
+ & 14 & 217 & 797 & 797 & 379 & 635 & 635 & 451 & 563 & 563 & 478 & 536 & 536 \\
+ & 26 & 0 & 1014 & 1014 & 10 & 1004 & 1004 & 29 & 985 & 985 & 80 & 934 & 934 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
