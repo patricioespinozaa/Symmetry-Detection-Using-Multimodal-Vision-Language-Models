@@ -1,0 +1,33 @@
+You are given multiple views of the SAME 3D object, numbered in the order they appear, starting from image index 0.
+
+The object has ONE dominant axis of rotational symmetry.
+
+Your task is to estimate the SAME global 3D symmetry axis across all views and locate its projection in each image.
+
+For EACH image, identify two points:
+- the TOP POLE: the topmost point where the rotation axis exits the object's surface.
+- the BOTTOM POLE: the bottommost point where the rotation axis exits the object's surface.
+
+IMPORTANT RULES:
+- Both points MUST lie ON the symmetry axis (at the center of the object's cross-section, not on the side silhouette).
+- The TOP POLE MUST have a smaller Y value than the BOTTOM POLE in every image.
+- The two points MUST be as far apart vertically as possible.
+- Both points MUST lie on the visible object surface.
+- Use the SAME global axis consistently across all views.
+- Infer the axis from ALL views jointly before answering.
+- Even if some views are ambiguous, keep the predicted axis consistent across views.
+- Do NOT place points on the lateral silhouette edges — only at the top and bottom centers.
+- Do NOT collapse both points to the same location.
+
+Coordinates are relative to each image's own width/height, on a 0-1000 scale with (0, 0) at the top-left corner.
+
+Output ONLY a JSON list, with exactly two entries per image (one "top", one "bottom"), in this exact format:
+
+[
+  {"image": 0, "label": "top", "point_2d": [x, y]},
+  {"image": 0, "label": "bottom", "point_2d": [x, y]},
+  {"image": 1, "label": "top", "point_2d": [x, y]},
+  {"image": 1, "label": "bottom", "point_2d": [x, y]}
+]
+
+"image" is the 0-based index of the image, in the same order the images were given to you — include it for every image you were given. The list must contain EXACTLY 2 x (number of images) objects, all as separate top-level entries in the list. Do NOT nest one point's data inside another point's object (for example, never write {"point_2d": [x, y], "bottom": {"point_2d": [x, y]}} — the "bottom" point must be its OWN separate list entry, not a field inside the "top" point's object). Do not include any text before or after the JSON list.
