@@ -1,0 +1,4 @@
+experiment,method,n_views,n_total,n_objects,angular_error_mean,angular_error_median,angular_error_std,translation_error_mean,translation_error_median,translation_error_std,translation_error_normalized_mean,translation_error_normalized_median,auc_angular,n_points_mean,precision_5deg,precision_10deg,precision_15deg,sde_ref_mean,sde_ref_min,sde_ref_max
+qwen3vl,triangulation,6,850,849,40.6686,35.5507,26.2601,0.551364,0.178335,0.962526,0.52112,0.164964,0.3105,5.95,0.0376,0.1188,0.2129,0.03981702,9.9e-05,0.64469182
+qwen3vl,triangulation,14,850,850,39.8919,34.9956,26.0508,0.282959,0.11902,0.465054,0.267293,0.108211,0.3179,13.86,0.0353,0.1118,0.2294,0.03563582,8.751e-05,0.4315143
+qwen3vl,triangulation,26,850,850,39.3783,33.2617,26.6771,0.180159,0.102061,0.383666,0.171412,0.092811,0.3326,25.76,0.0729,0.1329,0.2329,0.02770994,5.663e-05,0.48961022
