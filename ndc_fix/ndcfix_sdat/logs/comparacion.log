@@ -1,0 +1,41 @@
+
+=== 6 vistas ===
+Métrica        Actual      S_dat
+Objetos           796        796
+AUC45           0.494      0.631
+Mediana           8.4        4.0
+Media            34.7       28.8
+P@10            0.518      0.663
+F1 voraz        0.288      0.490
+F1 hung.        0.314      0.533
+SDE_ref        0.0112     0.0079
+Dif. de error (S_dat - actual, n=850): -5.84 grados, IC 95% [-6.97, -4.67]
+Objetos: mejoran 404, empeoran 94 (margen de 1 grado)
+
+=== 14 vistas ===
+Métrica        Actual      S_dat
+Objetos           684        684
+AUC45           0.381      0.540
+Mediana          48.0        6.2
+Media            44.6       36.0
+P@10            0.349      0.556
+F1 voraz        0.281      0.442
+F1 hung.        0.305      0.479
+SDE_ref        0.0118     0.0111
+Dif. de error (S_dat - actual, n=850): -8.52 grados, IC 95% [-10.28, -6.75]
+Objetos: mejoran 220, empeoran 113 (margen de 1 grado)
+
+=== 26 vistas ===
+Métrica        Actual      S_dat
+Objetos           827        827
+AUC45           0.277      0.603
+Mediana          42.0        9.1
+Media            39.7       25.3
+P@10            0.174      0.519
+F1 voraz        0.142      0.403
+F1 hung.        0.154      0.439
+SDE_ref        0.0257     0.0168
+Dif. de error (S_dat - actual, n=850): -14.40 grados, IC 95% [-15.76, -13.03]
+Objetos: mejoran 506, empeoran 133 (margen de 1 grado)
+
+Guardado: ndc_fix/ndcfix_sdat/comparacion_sdat.csv
