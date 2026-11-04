@@ -1,0 +1,4 @@
+experiment,method,n_views,n_total,n_objects,angular_error_mean,angular_error_median,angular_error_std,translation_error_mean,translation_error_median,translation_error_std,translation_error_normalized_mean,translation_error_normalized_median,auc_angular,n_points_mean,precision_5deg,precision_10deg,precision_15deg,sde_ref_mean,sde_ref_min,sde_ref_max
+molmopoint,triangulation,6,850,842,27.1874,11.718,29.8752,0.096068,0.021344,0.416663,0.090427,0.019253,0.5585,4.98,0.3435,0.4682,0.5518,0.02647473,4.15e-06,1.23475083
+molmopoint,triangulation,14,850,849,25.2357,10.4271,28.6704,0.039855,0.015288,0.088617,0.037027,0.014189,0.5832,11.57,0.3506,0.4906,0.5788,0.02018783,2.9e-06,1.75093872
+molmopoint,triangulation,26,850,850,22.4564,7.7089,27.6807,0.028522,0.013611,0.04046,0.02621,0.012549,0.6261,21.46,0.3918,0.5576,0.6259,0.01121602,5.23e-06,0.43656076
