@@ -54,6 +54,17 @@ Usage
         --sizes 224 --lightings flat \\
         --experiment-id plane_v02_nomesh \\
         --overwrite
+
+    # MolmoPoint / Qwen3-VL (reads molmopoint_multiview.json / qwen3vl_multiview.json from
+    # MolmoPointPointing/ / QwenPointing/ instead of Molmo2's molmo_multiview.json; writes
+    # predicted_symmetry_molmopoint.json / predicted_symmetry_qwen3vl.json, never colliding
+    # with Molmo2's own predicted_symmetry.json):
+    python Mapping/estimate_symmetry_no_mesh.py \\
+        --renders-root ../data/renders \\
+        --symmetry-type axis_sym \\
+        --sizes 224 --lightings flat \\
+        --model molmopoint \\
+        --overwrite
 """
 from __future__ import annotations
 
@@ -85,6 +96,18 @@ MOLMO_JSON    = "molmo_multiview.json"
 MANIFEST_FILE = "manifest.json"
 OUTPUT_FILE   = "predicted_symmetry.json"
 METHOD_KEY    = "triangulation"
+
+# Which VLM's inference output to read -- see --model. "molmo2" (default) keeps
+# MOLMO_JSON's own name for exact backward compatibility; the others read the
+# files MolmoPointPointing/molmopoint_multiview_runner.py and
+# QwenPointing/qwen3vl_multiview_runner.py write (same points_by_image/images_sent
+# schema, so none of the triangulation logic below needs to know which model
+# produced its input).
+MODEL_INPUT_FILES = {
+    "molmo2":     MOLMO_JSON,
+    "molmopoint": "molmopoint_multiview.json",
+    "qwen3vl":    "qwen3vl_multiview.json",
+}
 
 DEFAULT_SIZES       = [224, 448, 1136]
 DEFAULT_LIGHTINGS   = ["flat", "brighter", "darker"]
@@ -362,6 +385,18 @@ def detect_planes_no_mesh(
 
 # ── Per-object estimation ─────────────────────────────────────────────────────
 
+def output_suffix(model: str, experiment_id: str | None) -> str | None:
+    """
+    Combine --model's tag with --experiment-id into one suffix for OUTPUT_FILE.
+    "molmo2" contributes no tag (so predicted_symmetry.json's name is unchanged
+    for existing production runs); any other model's own tag is included so its
+    triangulated output never collides with molmo2's predicted_symmetry.json or
+    with another model's.
+    """
+    parts = [p for p in (model if model != "molmo2" else None, experiment_id) if p]
+    return "_".join(parts) if parts else None
+
+
 def process_object(
     object_dir:    Path,
     symmetry_type: str,
@@ -369,13 +404,14 @@ def process_object(
     lightings:     list[str],
     overwrite:     bool = False,
     experiment_id: str | None = None,
+    model:         str = "molmo2",
     edge_on_thresh: float = EDGE_ON_THRESH_DEFAULT,
     max_planes:    int = 1,
     filter_off_object: bool = False,
     min_points_on_object: int = MIN_POINTS_ON_OBJECT_DEFAULT,
 ) -> None:
-    input_file  = exp_filename(MOLMO_JSON, experiment_id)
-    output_file = exp_filename(OUTPUT_FILE, experiment_id)
+    input_file  = exp_filename(MODEL_INPUT_FILES[model], experiment_id)
+    output_file = exp_filename(OUTPUT_FILE, output_suffix(model, experiment_id))
     output_path = object_dir / output_file
     if output_path.exists() and not overwrite:
         return
@@ -538,11 +574,19 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--num-gpus", type=int, default=1)
     p.add_argument("--overwrite", action="store_true",
                    help="Overwrite existing predicted_symmetry.json files")
+    p.add_argument("--model", choices=list(MODEL_INPUT_FILES), default="molmo2",
+                   help="Which VLM's inference output to triangulate. molmo2 (default) reads "
+                        "molmo_multiview*.json -- unchanged production behavior. molmopoint/qwen3vl "
+                        "read molmopoint_multiview*.json / qwen3vl_multiview*.json (from "
+                        "MolmoPointPointing/ and QwenPointing/) and tag the output "
+                        "predicted_symmetry_<model>[_<experiment_id>].json so it never collides "
+                        "with molmo2's own predicted_symmetry.json or with another model's.")
     p.add_argument("--experiment-id", default=None,
-                   help="Reads molmo_multiview_<ID>.json, writes predicted_symmetry_<ID>.json. "
-                        "Use a DIFFERENT id than any with-mesh run to avoid confusion (e.g. "
-                        "'axis_v02_nomesh' vs. the with-mesh pipeline's 'axis_v02') -- both "
-                        "write to distinct files, there is no collision either way.")
+                   help="Reads <input>_<ID>.json (where <input> depends on --model), writes "
+                        "predicted_symmetry[_<model>]_<ID>.json. Use a DIFFERENT id than any "
+                        "with-mesh run to avoid confusion (e.g. 'axis_v02_nomesh' vs. the "
+                        "with-mesh pipeline's 'axis_v02') -- both write to distinct files, there "
+                        "is no collision either way.")
     p.add_argument("--max-objects", type=int, default=None,
                    help="Limit to the first N objects (sorted order).")
     p.add_argument("--edge-on-thresh", type=float, default=EDGE_ON_THRESH_DEFAULT,
@@ -579,9 +623,12 @@ def main() -> None:
         all_objects = all_objects[:args.max_objects]
     objects = all_objects[args.gpu_id :: args.num_gpus]
 
-    output_file = exp_filename(OUTPUT_FILE, args.experiment_id)
+    input_file  = exp_filename(MODEL_INPUT_FILES[args.model], args.experiment_id)
+    output_file = exp_filename(OUTPUT_FILE, output_suffix(args.model, args.experiment_id))
     print(f"\nFitting {args.symmetry_type} symmetry (SIN malla / triangulation) for {len(objects)} objects...")
+    print(f"Model           : {args.model}")
     print(f"Sizes/lightings : {args.sizes} / {args.lightings}")
+    print(f"Input file      : {input_file}")
     print(f"Output file     : {output_file}")
     if args.experiment_id:
         print(f"Experiment ID   : {args.experiment_id}")
@@ -600,6 +647,7 @@ def main() -> None:
             lightings            = args.lightings,
             overwrite            = args.overwrite,
             experiment_id        = args.experiment_id,
+            model                = args.model,
             edge_on_thresh       = args.edge_on_thresh,
             max_planes           = args.max_planes,
             filter_off_object    = args.filter_off_object,

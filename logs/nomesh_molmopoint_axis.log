@@ -1,0 +1,10 @@
+
+Fitting axis_sym symmetry (SIN malla / triangulation) for 850 objects...
+Model           : molmopoint
+Sizes/lightings : [224] / ['flat']
+Input file      : molmopoint_multiview.json
+Output file     : predicted_symmetry_molmopoint.json
+(skip existing)
+  0%|          | 0/850 [00:00<?, ?obj/s] 19%|█▊        | 158/850 [00:00<00:00, 1576.34obj/s] 43%|████▎     | 363/850 [00:00<00:00, 1853.22obj/s] 72%|███████▏  | 609/850 [00:00<00:00, 2127.41obj/s] 97%|█████████▋| 822/850 [00:04<00:00, 138.47obj/s] 100%|██████████| 850/850 [00:06<00:00, 124.94obj/s]
+
+[GPU 0] Done.
