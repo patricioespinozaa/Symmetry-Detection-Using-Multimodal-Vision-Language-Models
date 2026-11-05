@@ -19,6 +19,14 @@ COMPARED_METRICS: dict[str, bool] = {
     "f1_ref": True,
     "f1_ref_hungarian": True,
 }
+MULTIPLANE_METRICS: dict[str, bool] = {
+    "recall_planes_mean": True,
+    "precision_planes_mean": True,
+    "recall_adj": True,
+    "f1_adj": True,
+    "f1_ref": True,
+    "f1_ref_hungarian": True,
+}
 CI_PERCENTILES = (2.5, 97.5)
 ALPHA = 0.025
 
