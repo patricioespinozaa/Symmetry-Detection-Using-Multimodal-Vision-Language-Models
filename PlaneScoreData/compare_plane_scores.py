@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# Compara dos experimentos de plano evaluados por Mapping/evaluate.py: métricas agregadas del CSV
-# de Mapping/compare_results_no_mesh.py y diferencia objeto a objeto del error angular, imputando
-# 90 grados a los objetos sin predicción (misma convención que evaluate.py).
+# Compara dos experimentos de eje o plano evaluados por Mapping/evaluate.py: métricas agregadas de
+# los CSV de Mapping/compare_results_no_mesh.py y diferencia objeto a objeto del error angular,
+# imputando 90 grados a los objetos sin predicción (misma convención que evaluate.py).
 import argparse
 import csv
 import json
@@ -51,8 +51,8 @@ def comparar_pareado(base: dict[str, float], nuevo: dict[str, float]) -> dict[st
     """ Resume la diferencia de error angular (nuevo - base) sobre los mismos objetos.
 
     Args:
-        * base: error por objeto del criterio actual
-        * nuevo: error por objeto del criterio nuevo
+        * base: error por objeto de la línea base
+        * nuevo: error por objeto del método nuevo
 
     Returns:
         * dict[str, float]: tamaño, diferencia media e IC 95%, y objetos que mejoran o empeoran
@@ -76,10 +76,11 @@ def comparar_pareado(base: dict[str, float], nuevo: dict[str, float]) -> dict[st
 
 def main() -> None:
     """ Imprime la comparación y la guarda en un CSV. """
-    parser = argparse.ArgumentParser(description="Compara dos criterios de selección de normal.")
+    parser = argparse.ArgumentParser(description="Compara un método nuevo con su línea base.")
     parser.add_argument("--renders-root", type=Path, required=True)
-    parser.add_argument("--comparison-csv", type=Path, required=True,
-                        help="CSV de compare_results_no_mesh.py con ambos experimentos")
+    parser.add_argument("--symmetry-type", choices=["axis_sym", "plane_sym"], default="plane_sym")
+    parser.add_argument("--comparison-csv", type=Path, nargs="+", required=True,
+                        help="CSV de compare_results_no_mesh.py que contienen ambos experimentos")
     parser.add_argument("--base-id", required=True)
     parser.add_argument("--new-id", required=True)
     parser.add_argument("--size", type=int, default=224)
@@ -87,26 +88,31 @@ def main() -> None:
     parser.add_argument("--salida", type=Path, required=True, help="CSV de salida")
     args = parser.parse_args()
 
-    with open(args.comparison_csv, encoding="utf-8", newline="") as archivo:
-        filas = {(f["experiment"], int(f["n_views"])): f for f in csv.DictReader(archivo)
-                 if f["method"] == METODO}
+    filas = {}
+    for ruta_csv in args.comparison_csv:
+        with open(ruta_csv, encoding="utf-8", newline="") as archivo:
+            filas.update({(f["experiment"], int(f["n_views"])): f for f in csv.DictReader(archivo)
+                          if f["method"] == METODO})
     vistas = sorted({n for exp, n in filas if exp == args.base_id}
                     & {n for exp, n in filas if exp == args.new_id})
     if not vistas:
         raise ValueError(f"{args.comparison_csv}: no hay vistas comunes a ambos experimentos")
 
-    ruta_eval = args.renders_root / "plane_sym" / "eval_s{}_{}_{}_{}_results.json"
+    ruta_eval = args.renders_root / args.symmetry_type / "eval_s{}_{}_{}_{}_results.json"
     filas_salida = []
     for n_views in vistas:
         print(f"\n=== {n_views} vistas ===")
-        print(f"{'Métrica':10s} {'Actual':>10s} {'S_dat':>10s}")
+        print(f"{'Métrica':10s} {'Base':>10s} {'Nuevo':>10s}")
         fila_salida = {"n_views": n_views}
         for columna, nombre, formato in METRICAS:
-            base = float(filas[(args.base_id, n_views)][columna])
-            nuevo = float(filas[(args.new_id, n_views)][columna])
+            base = filas[(args.base_id, n_views)].get(columna)
+            nuevo = filas[(args.new_id, n_views)].get(columna)
+            if not base or not nuevo:  # F1 no existe en eje
+                continue
+            base, nuevo = float(base), float(nuevo)
             print(f"{nombre:10s} {formato.format(base):>10s} {formato.format(nuevo):>10s}")
-            fila_salida[f"{columna}_actual"] = base
-            fila_salida[f"{columna}_sdat"] = nuevo
+            fila_salida[f"{columna}_base"] = base
+            fila_salida[f"{columna}_nuevo"] = nuevo
 
         errores = [
             errores_por_objeto(Path(str(ruta_eval).format(args.size, args.lighting, exp, METODO)),
@@ -114,7 +120,7 @@ def main() -> None:
             for exp in (args.base_id, args.new_id)
         ]
         pareado = comparar_pareado(errores[0], errores[1])
-        print(f"Dif. de error (S_dat - actual, n={pareado['n']}): {pareado['dif_media']:+.2f} "
+        print(f"Dif. de error (nuevo - base, n={pareado['n']}): {pareado['dif_media']:+.2f} "
               f"grados, IC 95% [{pareado['ic_inf']:+.2f}, {pareado['ic_sup']:+.2f}]")
         print(f"Objetos: mejoran {pareado['mejoran']}, empeoran {pareado['empeoran']} "
               f"(margen de {MARGEN_GRADOS:.0f} grado)")
