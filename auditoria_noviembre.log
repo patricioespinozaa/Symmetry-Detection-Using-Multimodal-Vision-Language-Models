@@ -1,0 +1,325 @@
+=== axis_v00_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 841 | recalculados 31
+Entrada: molmo_multiview_axis_v00_ndcfix_nomesh.json -> molmo_multiview_axis_v00.json (850)
+Predicciones por vistas: [(6, 793), (14, 745), (26, 781)]
+Evaluadas por vistas   : [(6, 793), (14, 745), (26, 781)]
+[ok] Sin problemas.
+=== axis_v00_1_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 843 | recalculados 31
+Entrada: molmo_multiview_axis_v00_1_ndcfix_nomesh.json -> molmo_multiview_axis_v00_1.json (850)
+Predicciones por vistas: [(6, 791), (14, 789), (26, 828)]
+Evaluadas por vistas   : [(6, 791), (14, 789), (26, 828)]
+[ok] Sin problemas.
+=== axis_v01_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 847 | recalculados 31
+Entrada: molmo_multiview_axis_v01_ndcfix_nomesh.json -> molmo_multiview_axis_v01.json (850)
+Predicciones por vistas: [(6, 818), (14, 811), (26, 823)]
+Evaluadas por vistas   : [(6, 818), (14, 811), (26, 823)]
+[ok] Sin problemas.
+=== axis_v01_1_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 850 | recalculados 31
+Entrada: molmo_multiview_axis_v01_1_ndcfix_nomesh.json -> molmo_multiview_axis_v01_1.json (850)
+Predicciones por vistas: [(6, 827), (14, 821), (26, 832)]
+Evaluadas por vistas   : [(6, 827), (14, 821), (26, 832)]
+[ok] Sin problemas.
+=== axis_v02_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 847 | recalculados 31
+Entrada: molmo_multiview_axis_v02_ndcfix_nomesh.json -> molmo_multiview_axis_v02.json (850)
+Predicciones por vistas: [(6, 816), (14, 773), (26, 782)]
+Evaluadas por vistas   : [(6, 816), (14, 773), (26, 782)]
+[ok] Sin problemas.
+=== axis_v02_1_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 809 | recalculados 31
+Entrada: molmo_multiview_axis_v02_1_ndcfix_nomesh.json -> molmo_multiview_axis_v02_1.json (850)
+Predicciones por vistas: [(6, 678), (14, 675), (26, 576)]
+Evaluadas por vistas   : [(6, 678), (14, 675), (26, 576)]
+[ok] Sin problemas.
+=== axis_v03_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 840 | recalculados 31
+Entrada: molmo_multiview_axis_v03_ndcfix_nomesh.json -> molmo_multiview_axis_v03.json (850)
+Predicciones por vistas: [(6, 805), (14, 798), (26, 764)]
+Evaluadas por vistas   : [(6, 805), (14, 798), (26, 764)]
+[ok] Sin problemas.
+=== axis_v03_1_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 842 | recalculados 31
+Entrada: molmo_multiview_axis_v03_1_ndcfix_nomesh.json -> molmo_multiview_axis_v03_1.json (850)
+Predicciones por vistas: [(6, 814), (14, 800), (26, 782)]
+Evaluadas por vistas   : [(6, 814), (14, 800), (26, 782)]
+[ok] Sin problemas.
+=== axis_v04_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 849 | recalculados 31
+Entrada: molmo_multiview_axis_v04_ndcfix_nomesh.json -> molmo_multiview_axis_v04.json (850)
+Predicciones por vistas: [(6, 831), (14, 816), (26, 806)]
+Evaluadas por vistas   : [(6, 831), (14, 816), (26, 806)]
+[ok] Sin problemas.
+=== axis_v04_1_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 847 | recalculados 31
+Entrada: molmo_multiview_axis_v04_1_ndcfix_nomesh.json -> molmo_multiview_axis_v04_1.json (850)
+Predicciones por vistas: [(6, 824), (14, 809), (26, 829)]
+Evaluadas por vistas   : [(6, 824), (14, 809), (26, 829)]
+[ok] Sin problemas.
+=== axis_v05_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 847 | recalculados 31
+Entrada: molmo_multiview_axis_v05_ndcfix_nomesh.json -> molmo_multiview_axis_v05.json (850)
+Predicciones por vistas: [(6, 818), (14, 801), (26, 830)]
+Evaluadas por vistas   : [(6, 818), (14, 801), (26, 830)]
+[ok] Sin problemas.
+=== axis_v05_1_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 849 | recalculados 31
+Entrada: molmo_multiview_axis_v05_1_ndcfix_nomesh.json -> molmo_multiview_axis_v05_1.json (850)
+Predicciones por vistas: [(6, 804), (14, 793), (26, 831)]
+Evaluadas por vistas   : [(6, 804), (14, 793), (26, 831)]
+[ok] Sin problemas.
+=== axis_v06_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 848 | recalculados 31
+Entrada: molmo_multiview_axis_v06_ndcfix_nomesh.json -> molmo_multiview_axis_v06.json (850)
+Predicciones por vistas: [(6, 824), (14, 812), (26, 821)]
+Evaluadas por vistas   : [(6, 824), (14, 812), (26, 821)]
+[ok] Sin problemas.
+=== axis_v07_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 679 | recalculados 31
+Entrada: molmo_multiview_axis_v07_ndcfix_nomesh.json -> molmo_multiview_axis_v07.json (850)
+Predicciones por vistas: [(6, 502), (14, 493), (26, 500)]
+Evaluadas por vistas   : [(6, 502), (14, 493), (26, 500)]
+[ok] Sin problemas.
+=== axis_v08_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 848 | recalculados 31
+Entrada: molmo_multiview_axis_v08_ndcfix_nomesh.json -> molmo_multiview_axis_v08.json (850)
+Predicciones por vistas: [(6, 829), (14, 813), (26, 829)]
+Evaluadas por vistas   : [(6, 829), (14, 813), (26, 829)]
+[ok] Sin problemas.
+=== axis_v04_s448_flat_ndcfix_expE_nomesh (448px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 848 | recalculados 31
+Entrada: molmo_multiview_axis_v04_ndcfix_nomesh.json -> molmo_multiview_axis_v04.json (850)
+Predicciones por vistas: [(6, 831), (14, 800), (26, 750)]
+Evaluadas por vistas   : [(6, 831), (14, 800), (26, 750)]
+[ok] Sin problemas.
+=== axis_v06_s448_flat_ndcfix_expE_nomesh (448px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 846 | recalculados 31
+Entrada: molmo_multiview_axis_v06_ndcfix_nomesh.json -> molmo_multiview_axis_v06.json (850)
+Predicciones por vistas: [(6, 818), (14, 799), (26, 766)]
+Evaluadas por vistas   : [(6, 818), (14, 799), (26, 766)]
+[ok] Sin problemas.
+=== axis_v08_s448_flat_ndcfix_expE_nomesh (448px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 844 | recalculados 31
+Entrada: molmo_multiview_axis_v08_ndcfix_nomesh.json -> molmo_multiview_axis_v08.json (850)
+Predicciones por vistas: [(6, 821), (14, 771), (26, 779)]
+Evaluadas por vistas   : [(6, 821), (14, 771), (26, 779)]
+[ok] Sin problemas.
+=== axis_v04_s1136_flat_ndcfix_expE_nomesh (1136px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 845 | recalculados 31
+Entrada: molmo_multiview_axis_v04_ndcfix_nomesh.json -> molmo_multiview_axis_v04.json (850)
+Predicciones por vistas: [(6, 816), (14, 775), (26, 765)]
+Evaluadas por vistas   : [(6, 816), (14, 775), (26, 765)]
+[ok] Sin problemas.
+=== axis_v04_s224_darker_ndcfix_expE_nomesh (224px, darker, expE)
+Objetos 850 | con puntos 850 | con predicción 849 | recalculados 31
+Entrada: molmo_multiview_axis_v04_ndcfix_nomesh.json -> molmo_multiview_axis_v04.json (850)
+Predicciones por vistas: [(6, 831), (14, 822), (26, 812)]
+Evaluadas por vistas   : [(6, 831), (14, 822), (26, 812)]
+[ok] Sin problemas.
+=== axis_v04_s224_brighter_ndcfix_expE_nomesh (224px, brighter, expE)
+Objetos 850 | con puntos 850 | con predicción 848 | recalculados 31
+Entrada: molmo_multiview_axis_v04_ndcfix_nomesh.json -> molmo_multiview_axis_v04.json (850)
+Predicciones por vistas: [(6, 835), (14, 824), (26, 807)]
+Evaluadas por vistas   : [(6, 835), (14, 824), (26, 807)]
+[ok] Sin problemas.
+=== axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 850 | recalculados 31
+Entrada: molmo_multiview_axis_v04_single_oct26_ndcfix_nomesh.json -> molmo_multiview_axis_v04_single_oct26.json (850)
+Predicciones por vistas: [(6, 850), (14, 850), (26, 850)]
+Evaluadas por vistas   : [(6, 850), (14, 850), (26, 850)]
+[ok] Sin problemas.
+=== axis_v04_flowB_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 848 | recalculados 31
+Entrada: molmo_multiview_axis_v04_flowB_ndcfix_nomesh.json -> molmo_multiview_axis_v04_flowB.json (850)
+Predicciones por vistas: [(6, 836), (14, 827), (26, 823)]
+Evaluadas por vistas   : [(6, 836), (14, 827), (26, 823)]
+[ok] Sin problemas.
+=== axis_v05_1_flowB_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 849 | recalculados 31
+Entrada: molmo_multiview_axis_v05_1_flowB_ndcfix_nomesh.json -> molmo_multiview_axis_v05_1_flowB.json (850)
+Predicciones por vistas: [(6, 809), (14, 817), (26, 838)]
+Evaluadas por vistas   : [(6, 809), (14, 817), (26, 838)]
+[ok] Sin problemas.
+=== axis_v05_1_flowC_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 421 | recalculados 31
+Entrada: molmo_multiview_axis_v05_1_flowC_ndcfix_nomesh.json -> molmo_multiview_axis_v05_1_flowC.json (850)
+Predicciones por vistas: [(6, 374), (14, 244), (26, 168)]
+Evaluadas por vistas   : [(6, 374), (14, 244), (26, 168)]
+[ok] Sin problemas.
+=== axis_v04_molmopoint_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 850 | recalculados 31
+Entrada: molmopoint_multiview.json -> molmopoint_multiview.json (850)
+Predicciones por vistas: [(6, 842), (14, 849), (26, 850)]
+Evaluadas por vistas   : [(6, 842), (14, 849), (26, 850)]
+[ok] Sin problemas.
+=== axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 850 | recalculados 31
+Entrada: qwen3vl_multiview.json -> qwen3vl_multiview.json (850)
+Predicciones por vistas: [(6, 849), (14, 850), (26, 850)]
+Evaluadas por vistas   : [(6, 849), (14, 850), (26, 850)]
+[ok] Sin problemas.
+=== plane_v00_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 850 | recalculados 31
+Entrada: molmo_multiview_plane_v00_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v00.json (850)
+Predicciones por vistas: [(6, 833), (14, 777), (26, 810)]
+Evaluadas por vistas   : [(6, 833), (14, 777), (26, 810)]
+[ok] Sin problemas.
+=== plane_v00_1_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 848 | recalculados 31
+Entrada: molmo_multiview_plane_v00_1_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v00_1.json (850)
+Predicciones por vistas: [(6, 737), (14, 582), (26, 837)]
+Evaluadas por vistas   : [(6, 737), (14, 582), (26, 837)]
+[ok] Sin problemas.
+=== plane_v01_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 850 | recalculados 31
+Entrada: molmo_multiview_plane_v01_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v01.json (850)
+Predicciones por vistas: [(6, 846), (14, 846), (26, 840)]
+Evaluadas por vistas   : [(6, 846), (14, 846), (26, 840)]
+[ok] Sin problemas.
+=== plane_v01_1_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 850 | recalculados 31
+Entrada: molmo_multiview_plane_v01_1_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v01_1.json (850)
+Predicciones por vistas: [(6, 847), (14, 847), (26, 844)]
+Evaluadas por vistas   : [(6, 847), (14, 847), (26, 844)]
+[ok] Sin problemas.
+=== plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 850 | recalculados 31
+Entrada: molmo_multiview_plane_v02_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v02.json (850)
+Predicciones por vistas: [(6, 792), (14, 658), (26, 828)]
+Evaluadas por vistas   : [(6, 792), (14, 658), (26, 828)]
+[ok] Sin problemas.
+=== plane_v02_1_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 842 | recalculados 31
+Entrada: molmo_multiview_plane_v02_1_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v02_1.json (850)
+Predicciones por vistas: [(6, 717), (14, 544), (26, 779)]
+Evaluadas por vistas   : [(6, 717), (14, 544), (26, 779)]
+[ok] Sin problemas.
+=== plane_v03_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 849 | recalculados 31
+Entrada: molmo_multiview_plane_v03_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v03.json (850)
+Predicciones por vistas: [(6, 843), (14, 840), (26, 823)]
+Evaluadas por vistas   : [(6, 843), (14, 840), (26, 823)]
+[ok] Sin problemas.
+=== plane_v03_1_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 850 | recalculados 31
+Entrada: molmo_multiview_plane_v03_1_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v03_1.json (850)
+Predicciones por vistas: [(6, 838), (14, 841), (26, 826)]
+Evaluadas por vistas   : [(6, 838), (14, 841), (26, 826)]
+[ok] Sin problemas.
+=== plane_v04_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 838 | recalculados 31
+Entrada: molmo_multiview_plane_v04_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v04.json (850)
+Predicciones por vistas: [(6, 648), (14, 641), (26, 756)]
+Evaluadas por vistas   : [(6, 648), (14, 641), (26, 756)]
+[ok] Sin problemas.
+=== plane_v04_1_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 818 | recalculados 31
+Entrada: molmo_multiview_plane_v04_1_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v04_1.json (850)
+Predicciones por vistas: [(6, 707), (14, 553), (26, 687)]
+Evaluadas por vistas   : [(6, 707), (14, 553), (26, 687)]
+[ok] Sin problemas.
+=== plane_v05_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 850 | recalculados 31
+Entrada: molmo_multiview_plane_v05_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v05.json (850)
+Predicciones por vistas: [(6, 839), (14, 812), (26, 848)]
+Evaluadas por vistas   : [(6, 839), (14, 812), (26, 848)]
+[ok] Sin problemas.
+=== plane_v05_1_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 849 | recalculados 31
+Entrada: molmo_multiview_plane_v05_1_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v05_1.json (850)
+Predicciones por vistas: [(6, 796), (14, 684), (26, 827)]
+Evaluadas por vistas   : [(6, 796), (14, 684), (26, 827)]
+[ok] Sin problemas.
+=== plane_v06_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 849 | recalculados 31
+Entrada: molmo_multiview_plane_v06_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v06.json (850)
+Predicciones por vistas: [(6, 730), (14, 531), (26, 822)]
+Evaluadas por vistas   : [(6, 730), (14, 531), (26, 822)]
+[ok] Sin problemas.
+=== plane_v07_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 817 | recalculados 31
+Entrada: molmo_multiview_plane_v07_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v07.json (850)
+Predicciones por vistas: [(6, 652), (14, 501), (26, 709)]
+Evaluadas por vistas   : [(6, 652), (14, 501), (26, 709)]
+[ok] Sin problemas.
+=== plane_v08_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 850 | recalculados 31
+Entrada: molmo_multiview_plane_v08_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v08.json (850)
+Predicciones por vistas: [(6, 841), (14, 844), (26, 844)]
+Evaluadas por vistas   : [(6, 841), (14, 844), (26, 844)]
+[ok] Sin problemas.
+=== plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh (448px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 849 | recalculados 31
+Entrada: molmo_multiview_plane_v02_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v02.json (850)
+Predicciones por vistas: [(6, 752), (14, 563), (26, 815)]
+Evaluadas por vistas   : [(6, 752), (14, 563), (26, 815)]
+[ok] Sin problemas.
+=== plane_v05_1_s448_flat_ndcfix_sdat_mp1_nomesh (448px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 843 | recalculados 31
+Entrada: molmo_multiview_plane_v05_1_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v05_1.json (850)
+Predicciones por vistas: [(6, 736), (14, 537), (26, 771)]
+Evaluadas por vistas   : [(6, 736), (14, 537), (26, 771)]
+[ok] Sin problemas.
+=== plane_v06_s448_flat_ndcfix_sdat_mp1_nomesh (448px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 839 | recalculados 31
+Entrada: molmo_multiview_plane_v06_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v06.json (850)
+Predicciones por vistas: [(6, 655), (14, 453), (26, 790)]
+Evaluadas por vistas   : [(6, 655), (14, 453), (26, 790)]
+[ok] Sin problemas.
+=== plane_v05_1_s1136_flat_ndcfix_sdat_mp1_nomesh (1136px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 728 | recalculados 31
+Entrada: molmo_multiview_plane_v05_1_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v05_1.json (850)
+Predicciones por vistas: [(6, 646), (14, 423)]
+Evaluadas por vistas   : [(6, 646), (14, 423)]
+[ok] Sin problemas.
+=== plane_v05_1_s224_darker_ndcfix_sdat_mp1_nomesh (224px, darker, sdat)
+Objetos 850 | con puntos 850 | con predicción 849 | recalculados 31
+Entrada: molmo_multiview_plane_v05_1_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v05_1.json (850)
+Predicciones por vistas: [(6, 805), (14, 713), (26, 830)]
+Evaluadas por vistas   : [(6, 805), (14, 713), (26, 830)]
+[ok] Sin problemas.
+=== plane_v05_1_s224_brighter_ndcfix_sdat_mp1_nomesh (224px, brighter, sdat)
+Objetos 850 | con puntos 850 | con predicción 849 | recalculados 31
+Entrada: molmo_multiview_plane_v05_1_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v05_1.json (850)
+Predicciones por vistas: [(6, 791), (14, 689), (26, 829)]
+Evaluadas por vistas   : [(6, 791), (14, 689), (26, 829)]
+[ok] Sin problemas.
+=== plane_v05_1_single_oct26_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 850 | recalculados 31
+Entrada: molmo_multiview_plane_v05_1_single_oct26_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v05_1_single_oct26.json (850)
+Predicciones por vistas: [(6, 850), (14, 850), (26, 850)]
+Evaluadas por vistas   : [(6, 850), (14, 850), (26, 850)]
+[ok] Sin problemas.
+=== plane_v04_1_flowB_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 830 | recalculados 31
+Entrada: molmo_multiview_plane_v04_1_flowB_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v04_1_flowB.json (850)
+Predicciones por vistas: [(6, 668), (14, 578), (26, 755)]
+Evaluadas por vistas   : [(6, 668), (14, 578), (26, 755)]
+[ok] Sin problemas.
+=== plane_v05_1_flowB_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 848 | recalculados 31
+Entrada: molmo_multiview_plane_v05_1_flowB_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v05_1_flowB.json (850)
+Predicciones por vistas: [(6, 787), (14, 681), (26, 837)]
+Evaluadas por vistas   : [(6, 787), (14, 681), (26, 837)]
+[ok] Sin problemas.
+=== plane_v04_1_flowC_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 362 | recalculados 31
+Entrada: molmo_multiview_plane_v04_1_flowC_ndcfix_mp1_nomesh.json -> molmo_multiview_plane_v04_1_flowC.json (850)
+Predicciones por vistas: [(6, 316), (14, 163), (26, 167)]
+Evaluadas por vistas   : [(6, 316), (14, 163), (26, 167)]
+[ok] Sin problemas.
+=== plane_v05_1_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 850 | recalculados 31
+Entrada: molmopoint_multiview.json -> molmopoint_multiview.json (850)
+Predicciones por vistas: [(6, 813), (14, 850), (26, 850)]
+Evaluadas por vistas   : [(6, 813), (14, 850), (26, 850)]
+[ok] Sin problemas.
+=== plane_v05_1_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh (224px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 850 | recalculados 31
+Entrada: qwen3vl_multiview.json -> qwen3vl_multiview.json (850)
+Predicciones por vistas: [(6, 845), (14, 848), (26, 850)]
+Evaluadas por vistas   : [(6, 845), (14, 848), (26, 850)]
+[ok] Sin problemas.
+Corridas con problemas: 0 de 54
