@@ -1,0 +1,41 @@
+
+=== 6 vistas ===
+Métrica          Base      Nuevo
+Objetos           813        813
+AUC45           0.650      0.691
+Mediana           9.1        7.7
+Media            20.5       18.3
+P@10            0.533      0.571
+F1 voraz        0.332      0.388
+F1 hung.        0.360      0.422
+SDE_ref        0.0048     0.0038
+Dif. de error (nuevo - base, n=850): -2.15 grados, IC 95% [-3.13, -1.21]
+Objetos: mejoran 235, empeoran 131 (margen de 1 grado)
+
+=== 14 vistas ===
+Métrica          Base      Nuevo
+Objetos           850        850
+AUC45           0.678      0.739
+Mediana           5.5        5.1
+Media            18.3       15.1
+P@10            0.653      0.702
+F1 voraz        0.435      0.464
+F1 hung.        0.473      0.505
+SDE_ref        0.0052     0.0031
+Dif. de error (nuevo - base, n=850): -3.19 grados, IC 95% [-4.68, -1.69]
+Objetos: mejoran 170, empeoran 187 (margen de 1 grado)
+
+=== 26 vistas ===
+Métrica          Base      Nuevo
+Objetos           850        850
+AUC45           0.297      0.633
+Mediana          35.0       10.9
+Media            40.6       19.4
+P@10            0.080      0.472
+F1 voraz        0.044      0.278
+F1 hung.        0.048      0.302
+SDE_ref        0.0107     0.0045
+Dif. de error (nuevo - base, n=850): -21.27 grados, IC 95% [-23.17, -19.37]
+Objetos: mejoran 667, empeoran 127 (margen de 1 grado)
+
+Guardado: resultados_finales/molmopoint/pareado/plane_v05_1_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh.csv

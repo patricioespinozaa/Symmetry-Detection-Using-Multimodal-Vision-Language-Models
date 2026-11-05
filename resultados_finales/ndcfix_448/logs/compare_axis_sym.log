@@ -1,0 +1,13 @@
+
+--- triangulation (eje/plano unico) ---
+                           experiment        method  n_views  n_objects  angular_error_mean  angular_error_median  auc_angular  precision_5deg  precision_10deg
+axis_v04_s448_flat_ndcfix_expE_nomesh triangulation        6        831             25.2383                6.2743       0.6075          0.4576           0.5706
+axis_v04_s448_flat_ndcfix_expE_nomesh triangulation       14        800             29.9183                9.0755       0.5464          0.3871           0.5106
+axis_v04_s448_flat_ndcfix_expE_nomesh triangulation       26        750             46.5835               45.2346       0.2922          0.1094           0.1800
+axis_v06_s448_flat_ndcfix_expE_nomesh triangulation        6        818             26.8235                6.6092       0.5883          0.4541           0.5518
+axis_v06_s448_flat_ndcfix_expE_nomesh triangulation       14        799             30.4515               11.7684       0.5334          0.3788           0.4859
+axis_v06_s448_flat_ndcfix_expE_nomesh triangulation       26        766             46.0525               47.1315       0.3001          0.1318           0.2165
+axis_v08_s448_flat_ndcfix_expE_nomesh triangulation        6        821             30.3506                6.7172       0.5698          0.4600           0.5494
+axis_v08_s448_flat_ndcfix_expE_nomesh triangulation       14        771             38.5545               23.7465       0.4709          0.3824           0.4494
+axis_v08_s448_flat_ndcfix_expE_nomesh triangulation       26        779             49.3033               52.8837       0.2588          0.1376           0.1753
+Saved: resultados_finales/ndcfix_448/experiments_05_11_2026/axis_sym_axis_v04_s448_flat_ndcfix_expE_nomesh_axis_v06_s448_flat_ndcfix_expE_nomesh_axis_v08_s448_flat_ndcfix_expE_nomesh_comparison.csv

@@ -1,0 +1,7 @@
+
+--- triangulation (eje/plano unico) ---
+                                               experiment        method  n_views  n_objects  angular_error_mean  angular_error_median  auc_angular  precision_5deg  precision_10deg
+plane_v05_1_single_oct26_s224_flat_ndcfix_sdat_mp1_nomesh triangulation        6        850             19.2755                4.2933       0.7157          0.5871           0.7200
+plane_v05_1_single_oct26_s224_flat_ndcfix_sdat_mp1_nomesh triangulation       14        850             20.5282                4.8569       0.6893          0.5224           0.6812
+plane_v05_1_single_oct26_s224_flat_ndcfix_sdat_mp1_nomesh triangulation       26        850             31.3533               20.8777       0.4825          0.1553           0.2929
+Saved: resultados_finales/ndcfix_single_oct26/experiments_05_11_2026/plane_sym_plane_v05_1_single_oct26_s224_flat_ndcfix_sdat_mp1_nomesh_comparison.csv

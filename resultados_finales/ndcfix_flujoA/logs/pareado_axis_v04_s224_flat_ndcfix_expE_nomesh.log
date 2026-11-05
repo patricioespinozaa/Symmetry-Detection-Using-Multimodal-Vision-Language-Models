@@ -1,0 +1,35 @@
+
+=== 6 vistas ===
+Métrica          Base      Nuevo
+Objetos           831        831
+AUC45           0.582      0.590
+Mediana           8.6        7.4
+Media            26.0       25.8
+P@10            0.527      0.554
+SDE_ref        0.0125     0.0123
+Dif. de error (nuevo - base, n=850): -0.24 grados, IC 95% [-0.48, +0.02]
+Objetos: mejoran 88, empeoran 77 (margen de 1 grado)
+
+=== 14 vistas ===
+Métrica          Base      Nuevo
+Objetos           816        816
+AUC45           0.580      0.581
+Mediana           8.4        8.1
+Media            26.4       26.4
+P@10            0.549      0.549
+SDE_ref        0.0101     0.0101
+Dif. de error (nuevo - base, n=850): +0.04 grados, IC 95% [-0.16, +0.26]
+Objetos: mejoran 92, empeoran 89 (margen de 1 grado)
+
+=== 26 vistas ===
+Métrica          Base      Nuevo
+Objetos           806        806
+AUC45           0.501      0.506
+Mediana          14.8       14.6
+Media            30.9       30.9
+P@10            0.339      0.358
+SDE_ref        0.0215     0.0217
+Dif. de error (nuevo - base, n=850): -0.02 grados, IC 95% [-0.24, +0.20]
+Objetos: mejoran 130, empeoran 95 (margen de 1 grado)
+
+Guardado: resultados_finales/ndcfix_flujoA/pareado/axis_v04_s224_flat_ndcfix_expE_nomesh.csv

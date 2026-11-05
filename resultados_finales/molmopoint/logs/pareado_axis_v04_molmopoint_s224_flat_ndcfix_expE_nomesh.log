@@ -1,0 +1,35 @@
+
+=== 6 vistas ===
+Métrica          Base      Nuevo
+Objetos           842        842
+AUC45           0.558      0.574
+Mediana          11.7        9.2
+Media            27.2       26.5
+P@10            0.468      0.509
+SDE_ref        0.0265     0.0245
+Dif. de error (nuevo - base, n=850): -0.66 grados, IC 95% [-0.94, -0.38]
+Objetos: mejoran 154, empeoran 83 (margen de 1 grado)
+
+=== 14 vistas ===
+Métrica          Base      Nuevo
+Objetos           849        849
+AUC45           0.583      0.620
+Mediana          10.4        6.0
+Media            25.2       23.9
+P@10            0.491      0.574
+SDE_ref        0.0202     0.0169
+Dif. de error (nuevo - base, n=850): -1.32 grados, IC 95% [-1.69, -0.95]
+Objetos: mejoran 311, empeoran 128 (margen de 1 grado)
+
+=== 26 vistas ===
+Métrica          Base      Nuevo
+Objetos           850        850
+AUC45           0.626      0.672
+Mediana           7.7        4.2
+Media            22.5       20.8
+P@10            0.558      0.642
+SDE_ref        0.0112     0.0070
+Dif. de error (nuevo - base, n=850): -1.69 grados, IC 95% [-2.05, -1.34]
+Objetos: mejoran 395, empeoran 113 (margen de 1 grado)
+
+Guardado: resultados_finales/molmopoint/pareado/axis_v04_molmopoint_s224_flat_ndcfix_expE_nomesh.csv
