@@ -183,9 +183,27 @@ if [ "$LISTAR" = "1" ]; then
     exit 0
 fi
 
+if [ "${AUDITAR:-0}" = "1" ]; then
+    # Solo lee archivos. Opcional: DESDE="2026-11-05 00:00" y MUESTRA=30.
+    fallas=0
+    for fila in $filas_activas; do
+        IFS='|' read -r tipo _ size luz base <<< "$fila"
+        if [ "$tipo" = "axis_sym" ]; then estimador=expE; else estimador=sdat; fi
+        "$PY" PlaneScoreData/audit_run.py --renders-root "$(raiz_renders "$base")" \
+            --symmetry-type "$tipo" --input-id "$(id_alias "$tipo" "$base" "$size" "$luz")" \
+            --expected-input "$(archivo_entrada "$base")" \
+            --output-id "$(id_final "$tipo" "$base" "$size" "$luz")" --estimador "$estimador" \
+            --size "$size" --lighting "$luz" --muestra "${MUESTRA:-30}" \
+            ${DESDE:+--desde "$DESDE"} || fallas=$((fallas + 1))
+    done
+    echo "Corridas con problemas: $fallas de $(echo "$filas_activas" | wc -l)"
+    [ "$fallas" -eq 0 ]
+    exit $?
+fi
+
 mkdir -p "$OUT/logs"
 rm -f "$ERRORES"
-echo "Renders Molmo2 : $(readlink -f "$R" 2>/dev/null || echo "$R")"
+echo "Renders Molmo2: $(readlink -f "$R" 2>/dev/null || echo "$R")"
 echo "Renders modelos: $(readlink -f "$R_MODELOS" 2>/dev/null || echo "$R_MODELOS")"
 
 total=$(echo "$filas_activas" | wc -l)
