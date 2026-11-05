@@ -1,0 +1,16 @@
+
+--- triangulation (eje/plano unico) ---
+                              experiment        method  n_views  n_objects  angular_error_mean  angular_error_median  auc_angular  precision_5deg  precision_10deg
+             axis_v04_ndcfix_expE_nomesh triangulation        6        831             25.8096                7.3734       0.5896          0.4118           0.5541
+             axis_v04_ndcfix_expE_nomesh triangulation       14        816             26.4421                8.0722       0.5809          0.3235           0.5494
+             axis_v04_ndcfix_expE_nomesh triangulation       26        806             30.9172               14.5836       0.5061          0.1306           0.3576
+                  axis_v04_ndcfix_nomesh triangulation        6        831             26.0447                8.6247       0.5818          0.4035           0.5271
+                  axis_v04_ndcfix_nomesh triangulation       14        816             26.3972                8.4039       0.5797          0.3224           0.5494
+                  axis_v04_ndcfix_nomesh triangulation       26        806             30.9346               14.7623       0.5015          0.1224           0.3388
+axis_v04_single_oct26_ndcfix_expE_nomesh triangulation        6        850             31.6485               14.6470       0.4963          0.2976           0.4318
+axis_v04_single_oct26_ndcfix_expE_nomesh triangulation       14        850             30.0772               12.5331       0.5202          0.3353           0.4706
+axis_v04_single_oct26_ndcfix_expE_nomesh triangulation       26        850             29.5349               10.6391       0.5352          0.3659           0.4929
+     axis_v04_single_oct26_ndcfix_nomesh triangulation        6        850             32.3180               20.5900       0.4672          0.2435           0.3541
+     axis_v04_single_oct26_ndcfix_nomesh triangulation       14        850             31.4168               18.5341       0.4788          0.2188           0.3776
+     axis_v04_single_oct26_ndcfix_nomesh triangulation       26        850             30.7945               15.5957       0.4947          0.2282           0.3976
+Saved: ndc_fix_axial_expE/experiments_04_11_2026/axis_sym_4exps_comparison.csv
