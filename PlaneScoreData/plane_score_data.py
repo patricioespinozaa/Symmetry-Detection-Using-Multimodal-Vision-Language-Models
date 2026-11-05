@@ -272,6 +272,8 @@ def procesar_objeto(
             },
         }
     if not predicciones:
+        # Sin esto, un archivo de una corrida anterior quedaría y evaluate.py lo leería como actual.
+        salida.unlink(missing_ok=True)
         return "sin_prediccion"
 
     documento = {
