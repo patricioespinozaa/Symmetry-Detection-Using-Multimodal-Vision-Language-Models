@@ -1,0 +1,3 @@
+n_views,n_objects_base,n_objects_nuevo,auc_angular_base,auc_angular_nuevo,angular_error_median_base,angular_error_median_nuevo,angular_error_mean_base,angular_error_mean_nuevo,precision_10deg_base,precision_10deg_nuevo,f1_ref_base,f1_ref_nuevo,f1_ref_hungarian_base,f1_ref_hungarian_nuevo,sde_ref_mean_base,sde_ref_mean_nuevo,n,dif_media,ic_inf,ic_sup,mejoran,empeoran
+6,717.0,646.0,0.5454,0.6056,7.5591,4.231,31.3452,32.3327,0.5941,0.64,0.3565,0.5998,0.3838,0.6421,0.01702378,0.00905829,850,0.9875416470588235,-0.7466014529411767,2.719459576470588,408,113
+14,463.0,423.0,0.23,0.3916,64.1309,90.0,59.6921,51.9058,0.1894,0.4188,0.2243,0.5268,0.2443,0.5728,0.01205549,0.00328773,850,-7.786240117647058,-9.816817044117647,-5.728196491176472,224,78

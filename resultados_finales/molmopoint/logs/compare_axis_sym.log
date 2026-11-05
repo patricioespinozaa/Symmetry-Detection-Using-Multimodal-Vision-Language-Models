@@ -1,0 +1,7 @@
+
+--- triangulation (eje/plano unico) ---
+                                      experiment        method  n_views  n_objects  angular_error_mean  angular_error_median  auc_angular  precision_5deg  precision_10deg
+axis_v04_molmopoint_s224_flat_ndcfix_expE_nomesh triangulation        6        842             26.5276                9.1713       0.5735          0.3859           0.5094
+axis_v04_molmopoint_s224_flat_ndcfix_expE_nomesh triangulation       14        849             23.9198                5.9867       0.6197          0.4576           0.5741
+axis_v04_molmopoint_s224_flat_ndcfix_expE_nomesh triangulation       26        850             20.7664                4.2085       0.6720          0.5412           0.6424
+Saved: resultados_finales/molmopoint/experiments_05_11_2026/axis_sym_axis_v04_molmopoint_s224_flat_ndcfix_expE_nomesh_comparison.csv

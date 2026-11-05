@@ -1,0 +1,7 @@
+
+--- triangulation (eje/plano unico) ---
+                                   experiment        method  n_views  n_objects  angular_error_mean  angular_error_median  auc_angular  precision_5deg  precision_10deg
+axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh triangulation        6        849             40.8479               35.3623       0.3216          0.0471           0.1318
+axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh triangulation       14        850             40.0782               33.5106       0.3307          0.0482           0.1388
+axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh triangulation       26        850             39.8498               33.5674       0.3457          0.0871           0.1541
+Saved: resultados_finales/qwen3vl/experiments_05_11_2026/axis_sym_axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh_comparison.csv

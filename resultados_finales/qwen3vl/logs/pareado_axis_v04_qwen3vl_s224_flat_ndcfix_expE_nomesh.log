@@ -1,0 +1,35 @@
+
+=== 6 vistas ===
+Métrica          Base      Nuevo
+Objetos           849        849
+AUC45           0.310      0.322
+Mediana          35.6       35.4
+Media            40.7       40.8
+P@10            0.119      0.132
+SDE_ref        0.0398     0.0395
+Dif. de error (nuevo - base, n=850): +0.18 grados, IC 95% [-0.21, +0.58]
+Objetos: mejoran 150, empeoran 186 (margen de 1 grado)
+
+=== 14 vistas ===
+Métrica          Base      Nuevo
+Objetos           850        850
+AUC45           0.318      0.331
+Mediana          35.0       33.5
+Media            39.9       40.1
+P@10            0.112      0.139
+SDE_ref        0.0356     0.0356
+Dif. de error (nuevo - base, n=850): +0.19 grados, IC 95% [-0.15, +0.52]
+Objetos: mejoran 190, empeoran 242 (margen de 1 grado)
+
+=== 26 vistas ===
+Métrica          Base      Nuevo
+Objetos           850        850
+AUC45           0.333      0.346
+Mediana          33.3       33.6
+Media            39.4       39.8
+P@10            0.133      0.154
+SDE_ref        0.0277     0.0275
+Dif. de error (nuevo - base, n=850): +0.47 grados, IC 95% [+0.12, +0.82]
+Objetos: mejoran 218, empeoran 243 (margen de 1 grado)
+
+Guardado: resultados_finales/qwen3vl/pareado/axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh.csv

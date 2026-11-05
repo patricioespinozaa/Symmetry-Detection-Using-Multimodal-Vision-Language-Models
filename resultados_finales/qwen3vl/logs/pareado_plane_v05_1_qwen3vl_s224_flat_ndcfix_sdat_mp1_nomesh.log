@@ -1,0 +1,41 @@
+
+=== 6 vistas ===
+Métrica          Base      Nuevo
+Objetos           845        845
+AUC45           0.799      0.871
+Mediana           5.7        3.1
+Media            11.8        8.8
+P@10            0.893      0.927
+F1 voraz        0.494      0.662
+F1 hung.        0.537      0.720
+SDE_ref        0.0022     0.0006
+Dif. de error (nuevo - base, n=850): -3.06 grados, IC 95% [-3.55, -2.58]
+Objetos: mejoran 495, empeoran 40 (margen de 1 grado)
+
+=== 14 vistas ===
+Métrica          Base      Nuevo
+Objetos           848        848
+AUC45           0.700      0.842
+Mediana           4.3        4.0
+Media            17.3        9.8
+P@10            0.699      0.869
+F1 voraz        0.464      0.563
+F1 hung.        0.505      0.613
+SDE_ref        0.0044     0.0011
+Dif. de error (nuevo - base, n=850): -7.49 grados, IC 95% [-8.85, -6.16]
+Objetos: mejoran 148, empeoran 17 (margen de 1 grado)
+
+=== 26 vistas ===
+Métrica          Base      Nuevo
+Objetos           850        850
+AUC45           0.330      0.597
+Mediana          30.7       16.1
+Media            32.7       20.4
+P@10            0.018      0.197
+F1 voraz        0.008      0.092
+F1 hung.        0.009      0.100
+SDE_ref        0.0141     0.0059
+Dif. de error (nuevo - base, n=850): -12.30 grados, IC 95% [-13.26, -11.38]
+Objetos: mejoran 770, empeoran 57 (margen de 1 grado)
+
+Guardado: resultados_finales/qwen3vl/pareado/plane_v05_1_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh.csv

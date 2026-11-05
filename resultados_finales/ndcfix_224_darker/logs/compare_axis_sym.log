@@ -1,0 +1,7 @@
+
+--- triangulation (eje/plano unico) ---
+                             experiment        method  n_views  n_objects  angular_error_mean  angular_error_median  auc_angular  precision_5deg  precision_10deg
+axis_v04_s224_darker_ndcfix_expE_nomesh triangulation        6        831             26.1651                7.4748       0.5885          0.4129           0.5447
+axis_v04_s224_darker_ndcfix_expE_nomesh triangulation       14        822             25.9187                7.7319       0.5910          0.3235           0.5729
+axis_v04_s224_darker_ndcfix_expE_nomesh triangulation       26        812             30.3004               14.7922       0.5078          0.1188           0.3459
+Saved: resultados_finales/ndcfix_224_darker/experiments_05_11_2026/axis_sym_axis_v04_s224_darker_ndcfix_expE_nomesh_comparison.csv

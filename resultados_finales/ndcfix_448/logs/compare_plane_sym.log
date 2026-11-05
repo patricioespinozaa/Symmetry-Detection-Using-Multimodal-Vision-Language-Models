@@ -1,0 +1,13 @@
+
+--- triangulation (eje/plano unico) ---
+                                  experiment        method  n_views  n_objects  angular_error_mean  angular_error_median  auc_angular  precision_5deg  precision_10deg
+  plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh triangulation        6        752             20.1695                3.0980       0.7423          0.7224           0.7835
+  plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh triangulation       14        563             38.1472                5.0623       0.5363          0.4812           0.5788
+  plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh triangulation       26        815             12.3327                2.5715       0.8270          0.8388           0.8565
+plane_v05_1_s448_flat_ndcfix_sdat_mp1_nomesh triangulation        6        736             30.4309                4.3591       0.6117          0.5541           0.6482
+plane_v05_1_s448_flat_ndcfix_sdat_mp1_nomesh triangulation       14        537             49.8739               76.6676       0.3979          0.3059           0.4059
+plane_v05_1_s448_flat_ndcfix_sdat_mp1_nomesh triangulation       26        771             24.7021                2.7279       0.6681          0.6518           0.6694
+  plane_v06_s448_flat_ndcfix_sdat_mp1_nomesh triangulation        6        655             28.9563                3.2351       0.6464          0.6376           0.6776
+  plane_v06_s448_flat_ndcfix_sdat_mp1_nomesh triangulation       14        453             47.9451               84.9592       0.4363          0.3824           0.4682
+  plane_v06_s448_flat_ndcfix_sdat_mp1_nomesh triangulation       26        790             17.6790                2.6944       0.7479          0.7494           0.7647
+Saved: resultados_finales/ndcfix_448/experiments_05_11_2026/plane_sym_plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh_plane_v05_1_s448_flat_ndcfix_sdat_mp1_nomesh_plane_v06_s448_flat_ndcfix_sdat_mp1_nomesh_comparison.csv
