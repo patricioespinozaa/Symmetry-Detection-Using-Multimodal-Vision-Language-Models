@@ -24,6 +24,7 @@ implemented; the paired Wilcoxon test (option B) was removed.
 | `RandomBaseline/simulation.py` | `GroundTruth`, `load_ground_truth` | GT labels parsed with `evaluate.parse_true_label`, NaN-padded to `(N, K, 3)` vectors and `(N, K, 4)` reference-convention planes |
 | `RandomBaseline/simulation.py` | `random_directions`, `best_match_errors`, `f1_counts`, `summarize_errors` | Vectorized scoring identical to `evaluate_axis`/`evaluate_plane` (best match, rounded to 4 dp), `f1_match_counts`/`f1_match_counts_hungarian` (single predicted plane) and `compute_summary` (mean/median/std, `auc_from_errors`, precision with strict `<`) |
 | `RandomBaseline/simulation.py` | `simulate_random_baseline` | R simulated datasets: all objects, a fixed coverage mask, or a random subset of `n_objects` per repetition |
+| `RandomBaseline/multiplane.py` | `random_plane_sets`, `draw_plane_counts`, `multiset_scores`, `multiset_f1_counts`, `adjusted_metrics`, `simulate_random_multiplane` | Random baseline for `triangulation_multiplane`: a set of separated random planes per object, scored like `evaluate_plane_multiset` and `f1_match_counts`/`f1_match_counts_hungarian` |
 | `RandomBaseline/significance.py` | `compare_metric` | Option A: 95% interval, one-sided empirical p, z, normal-approximation p |
 | `RandomBaseline/latex_tables.py` | `axis_table`, `plane_table` | LaTeX tables (booktabs + adjustbox, same style as `utils/generar_tablas_latex.py`) of the random baseline on the full dataset |
 | `RandomBaseline/run_baseline.py` | `run_reference`, `run_compare`, `run_latex`, `compare_summary_csv`, `compare_eval_results` | CLI (`reference` / `compare` / `latex`) |
@@ -51,7 +52,12 @@ implemented; the paired Wilcoxon test (option B) was removed.
 - `latex --out-dir` (default `docs/resultados/tablas_azar/`): `azar_axis.tex`
   (`tab:axis_azar`: closed form, simulation, 95% interval) and
   `azar_plane.tex` (`tab:plane_azar`: simulation and 95% interval; F1_ref
-  rows included). Full coverage.
+  rows included). Full coverage. `azar_plane_multi.tex` (`tab:plane_azar_multi`):
+  recall, precision and F1_ref with 1, 2 and 3 random planes per object.
+- `cap4 --out` (default `Tesis_DCC_MDS/cap4_baselines.tex`): one file with six
+  tables and `tab:base_*` labels, the three random tables above plus the fixed
+  world-axis predictors of `Pipeline_Experiments/diagnostics/trivial_baselines.py`
+  (`tab:base_axis_fijos`, `tab:base_plane_fijos`, `tab:base_plane_fijos_multi`).
 
 ## Key Decisions
 
@@ -85,13 +91,28 @@ implemented; the paired Wilcoxon test (option B) was removed.
   mentions it only as the reason the simulated value is lower.
 - **Common random numbers.** All rows use the same `--seed`, so differences
   between experiments are not caused by different random draws.
+- **The multi-plane random predictor uses the method's number of planes.**
+  Plane count drives recall and precision, so a fixed count would not be a fair
+  reference. `--eval-results` gives the exact count per object; objects the
+  method missed draw a count from the method's own counts under
+  `--coverage-mode all`. `--summary-csv` only knows the mean.
+- **Planes of one object stay at least 15 deg apart**
+  (`DUP_ANGLE_THRESH_DEFAULT`), because `detect_planes_no_mesh` never keeps two
+  planes closer than that. Without this the random predictor would waste planes
+  on near-duplicates that the method cannot produce, and be easier to beat.
+- **Coverage-adjusted metrics are compared too.** `recall_adj` and `f1_adj` use
+  the thesis definition (`R_adj = R * N_obj / 850`, `F1_adj` from `R_adj` and
+  `P`). Raw recall, precision and F1_ref leave missing objects out of the method,
+  so these two are the fair comparison when coverage is low.
 
 ## Known Limitations
 
-- **Multi-plane rows** (`triangulation_multiplane`, `--max-planes > 1`;
-  recall/precision over plane sets) are skipped. The random equivalent would
-  need to draw as many planes as the method predicted per object, which is
-  not implemented.
+- **Multi-plane rows from a summary CSV are approximate.** With only the mean
+  plane count, the random predictor gets counts as even as possible (a mean of
+  2.36 gives only 2s and 3s), while the method may mix 1, 2 and 3. Use
+  `--eval-results` for exact counts.
+- **The separation rule assumes the default duplicate threshold.** Runs with
+  another `dup_angle_thresh` need a different `min_separation_deg`.
 - **SDE_ref and translation errors** have no random baseline here. SDE_ref
   would need meshes and gpytoolbox; translation errors depend on the `d = 0`
   choice and say nothing about information content.

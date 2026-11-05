@@ -16,9 +16,10 @@ dataset. Solo lee las etiquetas `.txt`, así que no necesita renders, GPU ni mal
 |---|---|
 | `chance.py` | Valores cerrados del azar (1 eje/plano GT), con cobertura `c` |
 | `simulation.py` | Carga el GT, muestrea direcciones y puntúa como `evaluate.py` (vectorizado) |
+| `multiplane.py` | Azar multiplano: varios planos separados por objeto, puntuados como `evaluate.py` |
 | `significance.py` | Compara el método con el azar: IC 95 %, p empírico y z |
 | `latex_tables.py` | Tablas LaTeX del azar (axial y planar por separado) |
-| `run_baseline.py` | CLI: subcomandos `reference`, `compare` y `latex` |
+| `run_baseline.py` | CLI: subcomandos `reference`, `compare`, `latex` y `cap4` |
 | `tests/test_random_baseline.py` | Comprueba que el código vectorizado da lo mismo que `evaluate.py` y que coincide con las fórmulas cerradas |
 
 ## Uso
@@ -39,8 +40,18 @@ python RandomBaseline/run_baseline.py compare --objects-root <objects_root> \
     --symmetry-type plane_sym \
     --eval-results <renders_root>/plane_sym/eval_s448_default_<EXP>_triangulation_results.json
 
-# 3. Tablas LaTeX del azar -> docs/resultados/tablas_azar/azar_axis.tex y azar_plane.tex
+# 3. Tablas LaTeX del azar -> docs/resultados/tablas_azar/
+#    azar_axis.tex, azar_plane.tex y azar_plane_multi.tex
 python RandomBaseline/run_baseline.py latex --objects-root ../data/objects
+
+# 3b. Un solo .tex con ambos baselines (azar y ejes fijos), etiquetas tab:base_*
+#     -> Tesis_DCC_MDS/cap4_baselines.tex (cambia la ruta con --out)
+python RandomBaseline/run_baseline.py cap4 --objects-root ../data/objects
+
+# 4. Azar multiplano con 1, 2 y 3 planos por objeto, sobre el dataset real
+python RandomBaseline/run_baseline.py reference --objects-root ../data/objects \
+    --symmetry-type plane_sym --n-planes 1 2 3 \
+    --out RandomBaseline/outputs/random_baseline_multiplane.csv
 
 # Tests (no necesitan datos)
 python RandomBaseline/tests/test_random_baseline.py
@@ -59,6 +70,12 @@ Opciones comunes: `--repetitions` (por defecto 1000) y `--seed` (por defecto 0).
 
 Ojo con F1_ref: `evaluate.py` no cuenta los objetos sin predicción en el F1 del
 método. Con `all`, el F1 del azar sí incluye todos los objetos.
+
+**Filas multiplano (`triangulation_multiplane`):** el azar predice tantos planos
+como el método, separados al menos 15° entre sí, y se compara en recall, precisión,
+F1_ref, `recall_adj` y `f1_adj`. Con `--eval-results` usa el número exacto de planos
+por objeto; con `--summary-csv` solo conoce la media y reparte los planos de la forma
+más pareja posible, así que el resultado es aproximado.
 
 `compare` escribe una fila por `(experimento, método, n_views, métrica)`.
 Necesita `numpy` y lo que ya importa `evaluate.py` (`trimesh`, `tqdm`). Todo

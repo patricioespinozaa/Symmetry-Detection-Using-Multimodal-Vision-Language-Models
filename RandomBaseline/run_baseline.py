@@ -11,11 +11,19 @@
 #              method keeps its 90 deg imputation for the objects it missed:
 #              the strictest comparison for the method. --coverage-mode matched
 #              gives the random predictor the method's coverage instead.
-#   latex:     LaTeX tables of the random baseline on the full dataset, one
-#              for axial and one for planar symmetry.
+#              Multi-plane rows are compared against a random predictor with
+#              the method's number of planes (RandomBaseline/multiplane.py).
+#   latex:     LaTeX tables of the random baseline on the full dataset: axial,
+#              planar with one plane, and planar with several planes.
+#   cap4:      one .tex with both baselines on the full dataset: random predictors
+#              and fixed world-axis predictors (Pipeline_Experiments/diagnostics/
+#              trivial_baselines.py), by default Tesis_DCC_MDS/cap4_baselines.tex.
 #
 #   python RandomBaseline/run_baseline.py reference --objects-root ../data/objects
+#   python RandomBaseline/run_baseline.py reference --objects-root ../data/objects \
+#       --symmetry-type plane_sym --n-planes 1 2 3
 #   python RandomBaseline/run_baseline.py latex --objects-root ../data/objects
+#   python RandomBaseline/run_baseline.py cap4 --objects-root ../data/objects
 #   python RandomBaseline/run_baseline.py compare --objects-root ../data/objects \
 #       --symmetry-type axis_sym --summary-csv <comparison.csv> [...]
 #   python RandomBaseline/run_baseline.py compare --objects-root ../data/objects \
@@ -34,12 +42,22 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import chance  # noqa: E402
 import latex_tables  # noqa: E402
-from significance import COMPARED_METRICS, compare_metric  # noqa: E402
+from significance import COMPARED_METRICS, MULTIPLANE_METRICS, compare_metric  # noqa: E402
 from simulation import (  # noqa: E402
-    ANGULAR_THRESHOLDS, AUC_ANGULAR_MAX, GroundTruth,
-    load_ground_truth, simulate_random_baseline,
+    ANGULAR_THRESHOLDS, AUC_ANGULAR_MAX, GroundTruth, best_match_errors,
+    load_ground_truth, simulate_random_baseline, summarize_errors,
+)
+from multiplane import (  # noqa: E402
+    DUP_ANGLE_THRESH_DEFAULT, adjusted_metrics, simulate_random_multiplane,
 )
 from evaluate import compute_summary  # noqa: E402
+
+REPO = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO / "Pipeline_Experiments" / "diagnostics"))
+from trivial_baselines import (  # noqa: E402
+    AXIS_PREDICTORS, PLANE_PREDICTORS, WORLD_AXES, load_labels, orientation_report,
+    score_plane_predictor,
+)
 
 SYMMETRY_TYPES = ("axis_sym", "plane_sym")
 REFERENCE_METRICS = ["angular_error_mean", "angular_error_median", "angular_error_std",
@@ -49,7 +67,12 @@ COVERAGE_MODES = ("all", "matched")
 COMPARE_FIELDS = ["experiment", "method", "n_views", "n_total", "n_objects", "coverage",
                   "random_coverage",
                   "metric", "method_value", "random_mean", "random_std", "random_ci_low",
-                  "random_ci_high", "z", "p_empirical", "p_normal", "better_than_random"]
+                  "random_ci_high", "z", "p_empirical", "p_normal", "better_than_random",
+                  "n_planes_mean"]
+LATEX_N_PLANES = (1, 2, 3)
+CAP4_OUTPUT = REPO / "Tesis_DCC_MDS" / "cap4_baselines.tex"
+CAP4_HEADER = ("% Generado por RandomBaseline/run_baseline.py cap4. "
+               "Requiere booktabs y adjustbox.\n\n")
 
 
 def _to_float(value: str | float | None) -> float | None:
@@ -85,8 +108,27 @@ def _gt_profile(gt: GroundTruth) -> str:
     return f"{gt.n_objects} objects ({parts})"
 
 
+def method_multiplane_metrics(values: dict, coverage: float) -> dict[str, float | None]:
+    """ A method's multi-plane summary values plus its coverage-adjusted recall and F1.
+
+    Args:
+        * values: summary values, already parsed into floats or None
+        * coverage: fraction of objects the method predicted
+
+    Returns:
+        * dict[str, float | None]: value per MULTIPLANE_METRICS key
+
+    """
+    metrics = {m: values.get(m) for m in MULTIPLANE_METRICS}
+    recall, precision = values.get("recall_planes_mean"), values.get("precision_planes_mean")
+    if recall is not None and precision is not None:
+        metrics.update(adjusted_metrics(recall, precision, coverage))
+    return metrics
+
+
 def compare_rows(gt: GroundTruth, base: dict, method_metrics: dict[str, float | None],
-                 random_metrics: dict[str, np.ndarray]) -> list[dict]:
+                 random_metrics: dict[str, np.ndarray],
+                 compared: dict[str, bool] = COMPARED_METRICS) -> list[dict]:
     """ Build one output row per metric present for both the method and the random baseline.
 
     Args:
@@ -94,13 +136,14 @@ def compare_rows(gt: GroundTruth, base: dict, method_metrics: dict[str, float | 
         * base: experiment/method/n_views/coverage columns shared by every row
         * method_metrics: the method's summary values
         * random_metrics: simulated random-baseline values per metric
+        * compared: metric -> True when higher is better
 
     Returns:
         * list[dict]: rows with COMPARE_FIELDS columns
 
     """
     rows = []
-    for metric, higher_is_better in COMPARED_METRICS.items():
+    for metric, higher_is_better in compared.items():
         if metric.startswith("f1_ref") and gt.symmetry_type != "plane_sym":
             continue
         value = method_metrics.get(metric)
@@ -162,10 +205,50 @@ def run_reference(args: argparse.Namespace) -> None:
                 ci = f"[{row['random_ci_low']:.4f}, {row['random_ci_high']:.4f}]"
                 print(f"{coverage:>8.3f} {metric:<22} {closed:>12} "
                       f"{row['random_mean']:>10.4f} {ci:>19}")
+            if symmetry_type == "plane_sym":
+                rows.extend(reference_multiplane_rows(gt, args, coverage, n_with))
     print("\n* closed form assumes ONE GT element per object; the simulation uses the real "
           "GT planes (best match), so for plane_sym the simulated column is the valid one.")
     if args.out:
-        _write_csv(rows, Path(args.out), list(rows[0].keys()))
+        _write_csv(rows, Path(args.out), list(dict.fromkeys(k for r in rows for k in r)))
+
+
+def reference_multiplane_rows(gt: GroundTruth, args: argparse.Namespace, coverage: float,
+                              n_with: int) -> list[dict]:
+    """ Chance scores with a fixed number of random planes per object (--n-planes).
+
+    Args:
+        * gt: plane_sym ground truth
+        * args: parsed CLI arguments of the "reference" subcommand
+        * coverage: fraction of objects that receive planes
+        * n_with: number of objects that receive planes
+
+    Returns:
+        * list[dict]: one row per (n_planes, metric)
+
+    """
+    rows = []
+    for n_planes in args.n_planes:
+        simulated = simulate_random_multiplane(gt, args.repetitions, args.seed,
+                                               n_with_prediction=n_with, mean_planes=n_planes)
+        for metric in MULTIPLANE_METRICS:
+            values = simulated[metric]
+            row = {
+                "symmetry_type": gt.symmetry_type,
+                "n_objects_gt": gt.n_objects,
+                "coverage": coverage,
+                "n_planes": n_planes,
+                "metric": metric,
+                "random_mean": float(values.mean()),
+                "random_std": float(values.std(ddof=1)),
+                "random_ci_low": float(np.percentile(values, 2.5)),
+                "random_ci_high": float(np.percentile(values, 97.5)),
+            }
+            rows.append(row)
+            ci = f"[{row['random_ci_low']:.4f}, {row['random_ci_high']:.4f}]"
+            print(f"{coverage:>8.3f} {f'{metric} K={n_planes}':<26} {'-':>8} "
+                  f"{row['random_mean']:>10.4f} {ci:>19}")
+    return rows
 
 
 def compare_summary_csv(gt: GroundTruth, csv_path: Path, args: argparse.Namespace) -> list[dict]:
@@ -174,6 +257,8 @@ def compare_summary_csv(gt: GroundTruth, csv_path: Path, args: argparse.Namespac
     With --coverage-mode all the random predictor answers all n_total objects.
     With matched, only n_total/n_objects are known per row, so which objects
     the random predictor answers is redrawn at random in every repetition.
+    Multi-plane rows only report the mean planes per object, so the random
+    predictor keeps that mean with counts as even as possible.
 
     Args:
         * gt: ground truth of the full dataset (must have n_total objects)
@@ -189,18 +274,23 @@ def compare_summary_csv(gt: GroundTruth, csv_path: Path, args: argparse.Namespac
 
     rows, cache = [], {}
     for r in csv_rows:
-        if _to_float(r.get("n_planes_predicted_mean")) is not None:
-            print(f"  [skip] {csv_path.name} nv={r['n_views']}: multi-plane row "
-                  "(recall/precision over plane sets), no single-plane random baseline")
-            continue
         n_total, n_objects = int(r["n_total"]), int(r["n_objects"])
         if n_total != gt.n_objects:
             raise ValueError(f"{csv_path.name}: n_total={n_total} but {gt.n_objects} GT labels; "
                              "use --eval-results to get the exact object list")
         n_random = n_total if args.coverage_mode == "all" else n_objects
-        if n_random not in cache:
-            cache[n_random] = simulate_random_baseline(gt, args.repetitions, args.seed,
-                                                       n_with_prediction=n_random)
+        mean_planes = _to_float(r.get("n_planes_predicted_mean"))
+        if mean_planes is not None:
+            key = (n_random, mean_planes)
+            if key not in cache:
+                cache[key] = simulate_random_multiplane(gt, args.repetitions, args.seed,
+                                                        n_with_prediction=n_random,
+                                                        mean_planes=mean_planes)
+        else:
+            key = n_random
+            if key not in cache:
+                cache[key] = simulate_random_baseline(gt, args.repetitions, args.seed,
+                                                      n_with_prediction=n_random)
         base = {
             "experiment": r.get("experiment") or csv_path.stem,
             "method": r.get("method", ""),
@@ -210,8 +300,14 @@ def compare_summary_csv(gt: GroundTruth, csv_path: Path, args: argparse.Namespac
             "coverage": n_objects / n_total,
             "random_coverage": n_random / n_total,
         }
-        method_metrics = {m: _to_float(r.get(m)) for m in COMPARED_METRICS}
-        rows.extend(compare_rows(gt, base, method_metrics, cache[n_random]))
+        if mean_planes is not None:
+            base["n_planes_mean"] = mean_planes
+            values = {m: _to_float(r.get(m)) for m in MULTIPLANE_METRICS}
+            method_metrics = method_multiplane_metrics(values, n_objects / n_total)
+            rows.extend(compare_rows(gt, base, method_metrics, cache[key], MULTIPLANE_METRICS))
+        else:
+            method_metrics = {m: _to_float(r.get(m)) for m in COMPARED_METRICS}
+            rows.extend(compare_rows(gt, base, method_metrics, cache[key]))
     return rows
 
 
@@ -220,7 +316,9 @@ def compare_eval_results(objects_root: Path, symmetry_type: str, json_path: Path
     """ Compare an eval_*_results.json against the random baseline.
 
     With --coverage-mode matched the random predictor answers exactly the
-    objects the method answered; with all, every object.
+    objects the method answered; with all, every object. In multi-plane rows
+    the random predictor gets the method's plane count on each object, and
+    objects the method missed draw a count from the method's own counts.
 
     Method metrics are recomputed with evaluate.compute_summary from the same
     per-object results, so they match the summary CSV evaluate.py wrote.
@@ -244,14 +342,19 @@ def compare_eval_results(objects_root: Path, symmetry_type: str, json_path: Path
 
     rows = []
     for nv, s in summary.items():
-        if "n_planes_predicted_mean" in s:
-            print(f"  [skip] {json_path.name} nv={nv}: multi-plane results")
-            continue
         per_object = [(objects[oid] or {}).get(nv, {}) for oid in object_ids]
         has_prediction = np.array([m.get("status") == "ok" for m in per_object])
         random_mask = has_prediction if args.coverage_mode == "matched" else None
-        random_metrics = simulate_random_baseline(gt, args.repetitions, args.seed,
-                                                  has_prediction=random_mask)
+        is_multiplane = "n_planes_predicted_mean" in s
+        if is_multiplane:
+            plane_counts = np.array([m.get("n_planes_predicted", 0) if m.get("status") == "ok"
+                                     else 0 for m in per_object])
+            random_metrics = simulate_random_multiplane(gt, args.repetitions, args.seed,
+                                                        has_prediction=random_mask,
+                                                        plane_counts=plane_counts)
+        else:
+            random_metrics = simulate_random_baseline(gt, args.repetitions, args.seed,
+                                                      has_prediction=random_mask)
         base = {
             "experiment": json_path.stem,
             "method": data.get("method", ""),
@@ -261,7 +364,12 @@ def compare_eval_results(objects_root: Path, symmetry_type: str, json_path: Path
             "coverage": float(has_prediction.mean()),
             "random_coverage": float(has_prediction.mean()) if random_mask is not None else 1.0,
         }
-        rows.extend(compare_rows(gt, base, s, random_metrics))
+        if is_multiplane:
+            base["n_planes_mean"] = s["n_planes_predicted_mean"]
+            method_metrics = method_multiplane_metrics(s, float(has_prediction.mean()))
+            rows.extend(compare_rows(gt, base, method_metrics, random_metrics, MULTIPLANE_METRICS))
+        else:
+            rows.extend(compare_rows(gt, base, s, random_metrics))
     return rows
 
 
@@ -293,7 +401,7 @@ def run_compare(args: argparse.Namespace) -> None:
 
 
 def run_latex(args: argparse.Namespace) -> None:
-    """ Write the random-baseline LaTeX tables (azar_axis.tex, azar_plane.tex).
+    """ Write the random-baseline LaTeX tables (azar_axis, azar_plane, azar_plane_multi).
 
     Args:
         * args: parsed CLI arguments of the "latex" subcommand
@@ -313,6 +421,109 @@ def run_latex(args: argparse.Namespace) -> None:
             path = out_dir / "azar_plane.tex"
         path.write_text(latex_tables.HEADER + table, encoding="utf-8")
         print(f"{symmetry_type}: {_gt_profile(gt)} -> Saved: {path}")
+        if symmetry_type == "plane_sym":
+            multi = {k: simulate_random_multiplane(gt, args.repetitions, args.seed, mean_planes=k)
+                     for k in LATEX_N_PLANES}
+            table = latex_tables.plane_multi_table(gt, multi, args.repetitions,
+                                                   DUP_ANGLE_THRESH_DEFAULT)
+            path = out_dir / "azar_plane_multi.tex"
+            path.write_text(latex_tables.HEADER + table, encoding="utf-8")
+            print(f"{symmetry_type}: multi-plane -> Saved: {path}")
+
+
+def fixed_axis_scores(gt: GroundTruth, predictors: list[str]) -> dict[str, dict[str, float]]:
+    """ Angular metrics of predicting the same world axis for every object.
+
+    Args:
+        * gt: ground truth; the error is measured against the closest GT element
+        * predictors: world-axis names
+
+    Returns:
+        * dict[str, dict[str, float]]: LaTeX predictor label -> summarize_errors output
+
+    """
+    scores = {}
+    for name in predictors:
+        directions = np.tile(WORLD_AXES[name], (gt.n_objects, 1))
+        errors = best_match_errors(directions, gt.vectors)
+        scores[f"Siempre ${name}$"] = summarize_errors(errors)
+    return scores
+
+
+def cap4_tables(objects_root: Path, repetitions: int, seed: int) -> list[str]:
+    """ Build the tables of both baselines, random and fixed world axes.
+
+    Args:
+        * objects_root: folder holding curated_*_sym_obj/
+        * repetitions: simulated datasets per random baseline
+        * seed: RNG seed
+
+    Returns:
+        * list[str]: LaTeX tables, with tab:base_* labels so that they can coexist with cap4.tex
+
+    """
+    axis_gt = load_ground_truth(objects_root, "axis_sym")
+    plane_gt = load_ground_truth(objects_root, "plane_sym")
+    print(f"axis_sym: {_gt_profile(axis_gt)}\nplane_sym: {_gt_profile(plane_gt)}")
+
+    closed_form = chance.analytic_summary(ANGULAR_THRESHOLDS, AUC_ANGULAR_MAX)
+    axis_random = simulate_random_baseline(axis_gt, repetitions, seed)
+    plane_random = simulate_random_baseline(plane_gt, repetitions, seed)
+    multi_random = {k: simulate_random_multiplane(plane_gt, repetitions, seed, mean_planes=k)
+                    for k in LATEX_N_PLANES}
+
+    plane_labels = load_labels(objects_root, "plane_sym")
+    by_axis = orientation_report(plane_labels, "normal")
+    n_x, n_normals = by_axis["by_axis"].get("X", 0), by_axis["n_elements"]
+    plane_sets = []
+    for axes in PLANE_PREDICTORS:
+        row = score_plane_predictor(plane_labels, axes)
+        name = axes if len(axes) == 1 else r"\{" + ",".join(axes) + r"\}"
+        plane_sets.append({**row, "predictor": f"Siempre ${name}$"})
+
+    return [
+        latex_tables.axis_table(axis_gt, axis_random, closed_form, repetitions)
+        .replace("tab:axis_azar", "tab:base_axis_azar"),
+        latex_tables.trivial_angular_table(
+            fixed_axis_scores(axis_gt, AXIS_PREDICTORS),
+            "Línea base de ejes fijos para simetría axial: se predice siempre el mismo eje del "
+            f"mundo, sin mirar las imágenes, para los {axis_gt.n_objects} objetos.",
+            "tab:base_axis_fijos"),
+        latex_tables.plane_table(plane_gt, plane_random, repetitions)
+        .replace("tab:plane_azar", "tab:base_plane_azar"),
+        latex_tables.plane_multi_table(plane_gt, multi_random, repetitions,
+                                       DUP_ANGLE_THRESH_DEFAULT)
+        .replace("tab:plane_azar_multi", "tab:base_plane_azar_multi"),
+        latex_tables.trivial_angular_table(
+            fixed_axis_scores(plane_gt, list(WORLD_AXES)),
+            "Línea base de ejes fijos para simetría planar, un plano por objeto: la normal es "
+            f"siempre el mismo eje del mundo y el plano pasa por el origen, para los "
+            f"{plane_gt.n_objects} objetos. El error se mide contra el plano verdadero más "
+            f"cercano. {n_x} de las {n_normals} normales verdaderas están más cerca de $X$ que "
+            "de los otros ejes.",
+            "tab:base_plane_fijos"),
+        latex_tables.trivial_plane_set_table(
+            plane_sets,
+            "Línea base de ejes fijos para simetría planar por conjunto de planos: se predicen "
+            "siempre los mismos planos del mundo, que pasan por el origen, para los "
+            f"{plane_gt.n_objects} objetos. Recall y precisión usan el emparejamiento voraz a "
+            r"$15^\circ$ de la evaluación multiplano.",
+            "tab:base_plane_fijos_multi"),
+    ]
+
+
+def run_cap4(args: argparse.Namespace) -> None:
+    """ Write one .tex with the tables of both baselines.
+
+    Args:
+        * args: parsed CLI arguments of the "cap4" subcommand
+
+    """
+    tables = cap4_tables(Path(args.objects_root), args.repetitions, args.seed)
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(CAP4_HEADER + "\n".join(tables), encoding="utf-8")
+    print(f"Saved: {out} ({len(tables)} tables)")
 
 
 def parse_args() -> argparse.Namespace:
@@ -334,6 +545,8 @@ def parse_args() -> argparse.Namespace:
                      default=list(SYMMETRY_TYPES))
     ref.add_argument("--coverage", type=float, nargs="+", default=[1.0],
                      help="fraction(s) of objects that receive a prediction")
+    ref.add_argument("--n-planes", type=int, nargs="+", default=[],
+                     help="also score plane_sym with this many random planes per object")
     ref.add_argument("--out", default=None, help="optional CSV path")
 
     cmp_ = sub.add_parser("compare", parents=[common],
@@ -354,6 +567,10 @@ def parse_args() -> argparse.Namespace:
                      default=list(SYMMETRY_TYPES))
     tex.add_argument("--out-dir", default="docs/resultados/tablas_azar")
 
+    cap4 = sub.add_parser("cap4", parents=[common],
+                          help="one .tex with the random and the fixed-axis baselines")
+    cap4.add_argument("--out", default=str(CAP4_OUTPUT))
+
     args = p.parse_args()
     if args.command == "compare" and not (args.summary_csv or args.eval_results):
         p.error("compare needs --summary-csv and/or --eval-results")
@@ -367,6 +584,8 @@ def main() -> None:
         run_reference(args)
     elif args.command == "latex":
         run_latex(args)
+    elif args.command == "cap4":
+        run_cap4(args)
     else:
         run_compare(args)
 

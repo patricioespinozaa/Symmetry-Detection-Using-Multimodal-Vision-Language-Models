@@ -22,6 +22,16 @@ ROWS = {
     "f1_ref_hungarian": (r"$F1_{\mathrm{ref}}$ húngaro", "{:.3f}"),
 }
 LABEL = {"axis_sym": "tab:axis_azar", "plane_sym": "tab:plane_azar"}
+LABEL_MULTIPLANE = "tab:plane_azar_multi"
+TRIVIAL_ANGULAR_METRICS = ("auc_angular", "angular_error_mean", "angular_error_median",
+                           *[f"precision_{t}deg" for t in ANGULAR_THRESHOLDS])
+# metric -> row label; the adjusted metrics equal the raw ones at full coverage
+MULTIPLANE_ROWS = {
+    "recall_planes_mean": r"Recall a $15^\circ$",
+    "precision_planes_mean": r"Precisión a $15^\circ$",
+    "f1_ref": ROWS["f1_ref"][0],
+    "f1_ref_hungarian": ROWS["f1_ref_hungarian"][0],
+}
 
 
 def _wrap(caption: str, label: str, alignment: str, header: str, body: list[str]) -> str:
@@ -135,3 +145,80 @@ def plane_table(gt: GroundTruth, simulated: dict[str, np.ndarray], repetitions: 
     )
     header = r"Métrica & Simulación & IC 95\,\% \\"
     return _wrap(caption, LABEL["plane_sym"], "lrr", header, body)
+
+
+def trivial_angular_table(scores: dict[str, dict[str, float]], caption: str, label: str) -> str:
+    """ Angular metrics of fixed world-axis predictors, one row per predictor.
+
+    Args:
+        * scores: predictor label -> simulation.summarize_errors output
+        * caption: text of \\caption
+        * label: text of \\label
+
+    Returns:
+        * str: LaTeX table
+
+    """
+    metrics = [m for m in ROWS if m in TRIVIAL_ANGULAR_METRICS]
+    body = []
+    for name, values in scores.items():
+        cells = [ROWS[m][1].format(values[m]) for m in metrics]
+        body.append(f"{name} & " + " & ".join(cells) + r" \\")
+    header = "Predictor & " + " & ".join(ROWS[m][0] for m in metrics) + r" \\"
+    return _wrap(caption, label, "l" + "r" * len(metrics), header, body)
+
+
+def trivial_plane_set_table(rows: list[dict], caption: str, label: str) -> str:
+    """ Plane-set metrics of fixed world-plane predictors, one row per predictor.
+
+    Args:
+        * rows: trivial_baselines.score_plane_predictor outputs, 'predictor' already in LaTeX
+        * caption: text of \\caption
+        * label: text of \\label
+
+    Returns:
+        * str: LaTeX table
+
+    """
+    metrics = list(MULTIPLANE_ROWS)
+    body = []
+    for row in rows:
+        cells = [f"{row[m]:.3f}" for m in metrics]
+        body.append(f"{row['predictor']} & {row['n_planes_predicted']} & "
+                    + " & ".join(cells) + r" \\")
+    columns = ["Predictor", "Planos", *MULTIPLANE_ROWS.values()]
+    return _wrap(caption, label, "lr" + "r" * len(metrics), " & ".join(columns) + r" \\", body)
+
+
+def plane_multi_table(gt: GroundTruth, simulated: dict[int, dict[str, np.ndarray]],
+                      repetitions: int, min_separation_deg: float) -> str:
+    """ Random-baseline table for multi-plane predictions, one column per planes per object.
+
+    Args:
+        * gt: plane_sym ground truth (object count and planes per object)
+        * simulated: planes per object -> simulate_random_multiplane output at full coverage
+        * repetitions: number of simulated datasets
+        * min_separation_deg: smallest angle allowed between planes of one object
+
+    Returns:
+        * str: LaTeX table
+
+    """
+    fmt = "{:.3f}"
+    body = []
+    for metric, label in MULTIPLANE_ROWS.items():
+        cells = [f"{fmt.format(s[metric].mean())} {_interval(s[metric], fmt)}"
+                 for s in simulated.values()]
+        body.append(f"{label} & " + " & ".join(cells) + r" \\")
+    caption = (
+        "Línea base aleatoria para simetría planar en modo multiplano: cada objeto recibe "
+        "un número fijo de planos con normales uniformes en la esfera, que pasan por el "
+        rf"centro del objeto ($d=0$) y están separados al menos ${min_separation_deg:g}^\circ$ "
+        f"entre sí, sin mirar las imágenes, para los {gt.n_objects} objetos "
+        f"({_profile_text(gt)}). Recall y precisión usan el emparejamiento voraz a "
+        r"$15^\circ$ de la evaluación multiplano. Cada celda: media de "
+        f"{repetitions} conjuntos de datos simulados " + r"e IC 95\,\% (percentiles 2.5 y 97.5)."
+    )
+    columns = [f"{k} {'plano' if k == 1 else 'planos'} por objeto" for k in simulated]
+    header = "Métrica & " + " & ".join(columns) + r" \\"
+    return _wrap(caption, LABEL_MULTIPLANE, "l" + "r" * len(columns), header, body)
