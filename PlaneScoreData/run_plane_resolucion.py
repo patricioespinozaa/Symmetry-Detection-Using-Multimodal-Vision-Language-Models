@@ -10,6 +10,10 @@
 #
 # Por defecto usa plane_v00_1, plane_v04 y plane_v02 a 448px y escribe en
 # resultados_finales/plane_448px/. Otra resolución: --size 1136 --prompts plane_v04 ...
+#
+# A 448px o más, 26 vistas no caben en una GPU de 24 GB. Se pueden correr por partes:
+#   python3 PlaneScoreData/run_plane_resolucion.py molmo --gpus 1 --vistas-molmo 6 14
+#   python3 PlaneScoreData/run_plane_resolucion.py todo --gpus todas   # sin fijar GPU: usa todas
 import argparse
 import csv
 import datetime as dt
@@ -34,6 +38,7 @@ VISTAS = (6, 14, 26)
 TOTAL_OBJETOS = 850
 PROMPTS_DEFECTO = ("plane_v00_1", "plane_v04", "plane_v02")
 PY = sys.executable
+TODAS_LAS_GPUS = "todas"
 TOLERANCIA = 1e-6
 # Columnas que dependen solo de los puntos y el estimador; sirven para comparar corridas repetidas.
 COLUMNAS_CONTROL = ("n_objects", "angular_error_mean", "angular_error_median", "auc_angular",
@@ -238,17 +243,19 @@ def inferir(args: argparse.Namespace, pendientes: list[str]) -> None:
 
     """
     logs = args.salida / "logs"
+    sufijo = "_".join(str(v) for v in args.vistas_molmo)
 
     def correr_en_gpu(gpu: str, prompts: list[str]) -> None:
         """ Corre en orden los prompts asignados a una GPU. """
+        entorno = None if gpu == TODAS_LAS_GPUS else {"CUDA_VISIBLE_DEVICES": gpu}
         for prompt in prompts:
             respaldar_tokens(args.renders_root, prompt, args.size)
             correr([PY, "MolmoPointing/molmo_multiview_runner.py",
                     "--renders-root", args.renders_root, "--symmetry-type", TIPO,
                     "--sizes", args.size, "--lightings", LUZ,
-                    "--view-groups", *VISTAS, "--prompt-mode", "auto", "--flow", "a",
+                    "--view-groups", *args.vistas_molmo, "--prompt-mode", "auto", "--flow", "a",
                     "--prompt-id", prompt, "--experiment-id", prompt, "--yes"],
-                   logs / f"molmo_{prompt}.log", {"CUDA_VISIBLE_DEVICES": gpu})
+                   logs / f"molmo_{prompt}_vistas_{sufijo}.log", entorno)
 
     asignacion = {gpu: pendientes[i::len(args.gpus)] for i, gpu in enumerate(args.gpus)}
     with ThreadPoolExecutor(max_workers=len(args.gpus)) as grupo:
@@ -407,10 +414,15 @@ def main() -> None:
     parser.add_argument("--prompts", nargs="+", default=list(PROMPTS_DEFECTO))
     parser.add_argument("--carpeta", default=None,
                         help="subcarpeta de resultados_finales; por defecto plane_<size>px")
-    parser.add_argument("--gpus", nargs="+", default=["0"], help="ids de GPU para Molmo2")
+    parser.add_argument("--gpus", nargs="+", default=["0"],
+                        help=f"ids de GPU para Molmo2, o '{TODAS_LAS_GPUS}' para no fijar ninguna")
+    parser.add_argument("--vistas-molmo", type=int, nargs="+", default=list(VISTAS),
+                        choices=VISTAS, help="grupos de vistas que corre la etapa molmo")
     parser.add_argument("--jobs", type=int, default=12, help="procesos de S_dat")
     args = parser.parse_args()
     args.salida = REPO / "resultados_finales" / (args.carpeta or f"plane_{args.size}px")
+    if TODAS_LAS_GPUS in args.gpus and len(args.gpus) > 1:
+        parser.error(f"--gpus {TODAS_LAS_GPUS} no se combina con otros ids")
     if "_nomesh" in "".join(args.prompts) or not all(p.startswith("plane_") for p in args.prompts):
         parser.error("--prompts recibe ids de prompt planar, como plane_v04")
 
