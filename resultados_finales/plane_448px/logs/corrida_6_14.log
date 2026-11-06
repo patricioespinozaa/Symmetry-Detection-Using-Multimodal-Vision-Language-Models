@@ -1,0 +1,12 @@
+nohup: ignoring input
+plane_v00_1 a 448px: renders 850, completos 0, parciales 1, sin JSON 849 -> id final plane_v00_1_s448_flat_ndcfix_sdat_mp1_nomesh
+plane_v04 a 448px: renders 850, completos 0, parciales 0, sin JSON 850 -> id final plane_v04_s448_flat_ndcfix_sdat_mp1_nomesh
+plane_v02 a 448px: renders 850, completos 850, parciales 0, sin JSON 0 -> id final plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh
+[ok] Inferencia pendiente: ['plane_v00_1', 'plane_v04']
+[22:14:45] molmo_plane_v00_1_vistas_6_14
+[04:25:14] molmo_plane_v04_vistas_6_14
+plane_v00_1 a 448px: renders 850, completos 0, parciales 850, sin JSON 0 -> id final plane_v00_1_s448_flat_ndcfix_sdat_mp1_nomesh
+plane_v04 a 448px: renders 850, completos 0, parciales 850, sin JSON 0 -> id final plane_v04_s448_flat_ndcfix_sdat_mp1_nomesh
+plane_v02 a 448px: renders 850, completos 850, parciales 0, sin JSON 0 -> id final plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh
+[ok] Inferencia pendiente: ['plane_v00_1', 'plane_v04']
+Terminó sin errores.
