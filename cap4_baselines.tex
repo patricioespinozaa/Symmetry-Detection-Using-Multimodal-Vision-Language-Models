@@ -1,0 +1,117 @@
+% Generado por RandomBaseline/run_baseline.py cap4. Requiere booktabs y adjustbox.
+
+\begin{table}[htbp]
+\centering
+\caption{Línea base aleatoria para simetría axial: la dirección del eje se elige uniforme en la esfera, sin mirar las imágenes, para los 850 objetos (todos reciben predicción). Fórmula cerrada: valor teórico con un eje verdadero por objeto. Simulación: media de 1000 conjuntos de datos simulados, evaluados con las mismas métricas que el método; IC 95\,\%: percentiles 2.5 y 97.5.}
+\label{tab:base_axis_azar}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrr}
+\toprule
+Métrica & Fórmula cerrada & Simulación & IC 95\,\% \\
+\midrule
+AUC$_{45^\circ}$ & 0.100 & 0.100 & [0.085, 0.113] \\
+Error angular medio ($^\circ$) & 57.3 & 57.3 & [55.8, 58.7] \\
+Error angular mediano ($^\circ$) & 60.0 & 60.0 & [57.7, 62.1] \\
+Desv.\ estándar del error ($^\circ$) & 21.6 & 21.5 & [20.7, 22.3] \\
+Precisión @5$^\circ$ & 0.004 & 0.004 & [0.000, 0.009] \\
+Precisión @10$^\circ$ & 0.015 & 0.015 & [0.007, 0.024] \\
+Precisión @15$^\circ$ & 0.034 & 0.034 & [0.022, 0.047] \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Línea base de ejes fijos para simetría axial: se predice siempre el mismo eje del mundo, sin mirar las imágenes, para los 850 objetos.}
+\label{tab:base_axis_fijos}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrrrrr}
+\toprule
+Predictor & AUC$_{45^\circ}$ & Error angular medio ($^\circ$) & Error angular mediano ($^\circ$) & Precisión @5$^\circ$ & Precisión @10$^\circ$ & Precisión @15$^\circ$ \\
+\midrule
+Siempre $X$ & 0.098 & 57.5 & 60.5 & 0.002 & 0.013 & 0.034 \\
+Siempre $Y$ & 0.105 & 57.0 & 59.9 & 0.004 & 0.013 & 0.035 \\
+Siempre $Z$ & 0.096 & 57.7 & 60.5 & 0.001 & 0.009 & 0.024 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Línea base aleatoria para simetría planar: la normal del plano se elige uniforme en la esfera y el plano pasa por el centro del objeto ($d=0$), sin mirar las imágenes, para los 850 objetos (todos reciben predicción; 692 con 1 plano, 152 con 2 planos y 6 con 3 planos). El error se mide contra el plano verdadero más cercano, igual que para el método, por lo que el azar es más favorable que el valor teórico de un solo plano ($57.3^\circ$). Simulación: media de 1000 conjuntos de datos simulados; IC 95\,\%: percentiles 2.5 y 97.5.}
+\label{tab:base_plane_azar}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrr}
+\toprule
+Métrica & Simulación & IC 95\,\% \\
+\midrule
+AUC$_{45^\circ}$ & 0.118 & [0.104, 0.132] \\
+Error angular medio ($^\circ$) & 54.6 & [53.1, 56.1] \\
+Error angular mediano ($^\circ$) & 56.0 & [53.6, 58.3] \\
+Desv.\ estándar del error ($^\circ$) & 21.8 & [21.1, 22.6] \\
+Precisión @5$^\circ$ & 0.004 & [0.001, 0.009] \\
+Precisión @10$^\circ$ & 0.018 & [0.009, 0.027] \\
+Precisión @15$^\circ$ & 0.040 & [0.028, 0.054] \\
+$F1_{\mathrm{ref}}$ voraz & 0.009 & [0.005, 0.014] \\
+$F1_{\mathrm{ref}}$ húngaro & 0.010 & [0.005, 0.015] \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Línea base aleatoria para simetría planar en modo multiplano: cada objeto recibe un número fijo de planos con normales uniformes en la esfera, que pasan por el centro del objeto ($d=0$) y están separados al menos $15^\circ$ entre sí, sin mirar las imágenes, para los 850 objetos (692 con 1 plano, 152 con 2 planos y 6 con 3 planos). Recall y precisión usan el emparejamiento voraz a $15^\circ$ de la evaluación multiplano. Cada celda: media de 1000 conjuntos de datos simulados e IC 95\,\% (percentiles 2.5 y 97.5).}
+\label{tab:base_plane_azar_multi}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrr}
+\toprule
+Métrica & 1 plano por objeto & 2 planos por objeto & 3 planos por objeto \\
+\midrule
+Recall a $15^\circ$ & 0.034 [0.023, 0.046] & 0.067 [0.052, 0.083] & 0.100 [0.082, 0.118] \\
+Precisión a $15^\circ$ & 0.040 [0.027, 0.054] & 0.040 [0.031, 0.049] & 0.040 [0.033, 0.047] \\
+$F1_{\mathrm{ref}}$ voraz & 0.009 [0.005, 0.015] & 0.012 [0.008, 0.017] & 0.014 [0.010, 0.018] \\
+$F1_{\mathrm{ref}}$ húngaro & 0.010 [0.005, 0.015] & 0.014 [0.009, 0.019] & 0.016 [0.012, 0.020] \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Línea base de ejes fijos para simetría planar, un plano por objeto: la normal es siempre el mismo eje del mundo y el plano pasa por el origen, para los 850 objetos. El error se mide contra el plano verdadero más cercano. 796 de las 1014 normales verdaderas están más cerca de $X$ que de los otros ejes.}
+\label{tab:base_plane_fijos}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrrrrr}
+\toprule
+Predictor & AUC$_{45^\circ}$ & Error angular medio ($^\circ$) & Error angular mediano ($^\circ$) & Precisión @5$^\circ$ & Precisión @10$^\circ$ & Precisión @15$^\circ$ \\
+\midrule
+Siempre $X$ & 0.931 & 5.8 & 0.0 & 0.935 & 0.936 & 0.936 \\
+Siempre $Y$ & 0.016 & 88.4 & 90.0 & 0.016 & 0.016 & 0.016 \\
+Siempre $Z$ & 0.224 & 69.7 & 90.0 & 0.225 & 0.226 & 0.226 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Línea base de ejes fijos para simetría planar por conjunto de planos: se predicen siempre los mismos planos del mundo, que pasan por el origen, para los 850 objetos. Recall y precisión usan el emparejamiento voraz a $15^\circ$ de la evaluación multiplano.}
+\label{tab:base_plane_fijos_multi}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrrrr}
+\toprule
+Predictor & Planos & Recall a $15^\circ$ & Precisión a $15^\circ$ & $F1_{\mathrm{ref}}$ voraz & $F1_{\mathrm{ref}}$ húngaro \\
+\midrule
+Siempre $X$ & 1 & 0.849 & 0.936 & 0.783 & 0.852 \\
+Siempre $Y$ & 1 & 0.012 & 0.017 & 0.014 & 0.015 \\
+Siempre $Z$ & 1 & 0.132 & 0.226 & 0.200 & 0.205 \\
+Siempre $\{X,Z\}$ & 2 & 0.982 & 0.581 & 0.887 & 0.726 \\
+Siempre $\{X,Y\}$ & 2 & 0.861 & 0.476 & 0.719 & 0.596 \\
+Siempre $\{X,Y,Z\}$ & 3 & 0.993 & 0.393 & 0.824 & 0.561 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
