@@ -1,0 +1,15 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 Mapping/compare_results_no_mesh.py --renders-root /data/pespinoz/renders --symmetry-type plane_sym --sizes 448 --lightings flat --experiment-id plane_v00_1_s448_flat_ndcfix_sdat_mp1_nomesh plane_v04_s448_flat_ndcfix_sdat_mp1_nomesh plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh --csv-dir /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_448px --no-plots --total-objects 850
+
+
+--- triangulation (eje/plano unico) ---
+                                  experiment        method  n_views  n_objects  angular_error_mean  angular_error_median  auc_angular  precision_5deg  precision_10deg
+plane_v00_1_s448_flat_ndcfix_sdat_mp1_nomesh triangulation        6        642             29.8674                3.1815       0.6404          0.6306           0.6718
+plane_v00_1_s448_flat_ndcfix_sdat_mp1_nomesh triangulation       14        543             39.6654                5.0301       0.5227          0.4941           0.5659
+plane_v00_1_s448_flat_ndcfix_sdat_mp1_nomesh triangulation       26        820             13.1346                2.6726       0.8088          0.8329           0.8424
+  plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh triangulation        6        752             20.1695                3.0980       0.7423          0.7224           0.7835
+  plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh triangulation       14        563             38.1472                5.0623       0.5363          0.4812           0.5788
+  plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh triangulation       26        815             12.3327                2.5715       0.8270          0.8388           0.8565
+  plane_v04_s448_flat_ndcfix_sdat_mp1_nomesh triangulation        6        464             44.7772                6.4258       0.4844          0.4906           0.5141
+  plane_v04_s448_flat_ndcfix_sdat_mp1_nomesh triangulation       14        460             47.4746               64.8283       0.4416          0.4282           0.4835
+  plane_v04_s448_flat_ndcfix_sdat_mp1_nomesh triangulation       26        827             12.9288                2.6905       0.7917          0.7953           0.8024
+Saved: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_448px/experiments_07_11_2026/plane_sym_plane_v00_1_s448_flat_ndcfix_sdat_mp1_nomesh_plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh_plane_v04_s448_flat_ndcfix_sdat_mp1_nomesh_comparison.csv
