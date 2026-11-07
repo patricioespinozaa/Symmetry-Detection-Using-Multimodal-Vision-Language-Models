@@ -1,0 +1,34 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 MolmoPointing/molmo_multiview_runner.py --renders-root /data/pespinoz/renders --symmetry-type plane_sym --sizes 1136 --lightings flat --view-groups 6 14 26 --prompt-mode auto --flow a --prompt-id plane_v04 --experiment-id plane_v04 --yes
+
+
+========== MOLMO MULTIVIEW RUNNER ==========
+Renders root  : /data/pespinoz/renders
+Symmetry type : plane_sym
+Flow          : a
+Prompt mode   : auto
+              : PROMPT_SINGLE if n_views==1, PROMPT_MULTI if n_views>1  [recommended]
+Experiment ID : plane_v04
+Prompt ID     : plane_v04
+Output file   : molmo_multiview_plane_v04.json
+GPU id/total  : 0 / 1
+Objects       : 850
+Sizes         : [1136]
+Lightings     : ['flat']
+View groups   : [6, 14, 26]
+Combinations  : 3 per object
+(Existing JSON keys are skipped automatically)
+============================================
+
+GPU 0                                                 0/850 [00:00<?]`use_fast` is set to `True` but the image processor class does not have a fast version.  Falling back to the slow version.
+[model] Loading allenai/Molmo2-8B ...
+
+Loading checkpoint shards:   0%|          | 0/8 [00:00<?, ?it/s][A
+Loading checkpoint shards:  12%|█▎        | 1/8 [00:03<00:22,  3.16s/it][A
+Loading checkpoint shards:  25%|██▌       | 2/8 [00:06<00:19,  3.24s/it][A
+Loading checkpoint shards:  38%|███▊      | 3/8 [00:09<00:16,  3.24s/it][A
+Loading checkpoint shards:  50%|█████     | 4/8 [00:12<00:12,  3.22s/it][A
+Loading checkpoint shards:  62%|██████▎   | 5/8 [00:16<00:09,  3.28s/it][A
+Loading checkpoint shards:  75%|███████▌  | 6/8 [00:19<00:06,  3.37s/it][A
+Loading checkpoint shards:  88%|████████▊ | 7/8 [00:23<00:03,  3.33s/it][A
+Loading checkpoint shards: 100%|██████████| 8/8 [00:24<00:00,  2.83s/it][ALoading checkpoint shards: 100%|██████████| 8/8 [00:24<00:00,  3.10s/it]
+GPU 0                                                 1/850 [01:59<28:12:35]GPU 0                                                 2/850 [03:26<23:40:23]GPU 0        ▏                                        3/850 [04:54<22:13:24]GPU 0        ▏                                        4/850 [06:20<21:25:36]GPU 0        ▏                                        5/850 [07:46<20:57:56]
