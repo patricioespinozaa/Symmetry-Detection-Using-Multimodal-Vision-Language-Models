@@ -17,3 +17,24 @@ plane_v04: 850 enlaces -> plane_v04_s448_flat_ndcfix_sdat_mp1_nomesh
 [17:45:54] eval_plane_v04_s448_flat_ndcfix_sdat_mp1_nomesh
 plane_v02: 850 enlaces -> plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh
 [17:49:25] est_plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh
+[17:51:56] eval_plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh
+[17:55:13] compare_plane_sym
+[17:55:17] audit_plane_v00_1_s448_flat_ndcfix_sdat_mp1_nomesh
+[17:56:07] audit_plane_v04_s448_flat_ndcfix_sdat_mp1_nomesh
+[17:56:56] audit_plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh
+[ok] plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh, 6 vistas: igual a ndcfix_448
+[ok] plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh, 14 vistas: igual a ndcfix_448
+[ok] plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh, 26 vistas: igual a ndcfix_448
+
+Resultados: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_448px/experiments_07_11_2026/plane_sym_final_comparison.csv
+experimento                                        vistas  obj    AUC     F1   P@10
+plane_v00_1_s448_flat_ndcfix_sdat_mp1_nomesh            6  642  0.640  0.651  0.672
+plane_v00_1_s448_flat_ndcfix_sdat_mp1_nomesh           14  543  0.523  0.541  0.566
+plane_v00_1_s448_flat_ndcfix_sdat_mp1_nomesh           26  820  0.809  0.716  0.842
+plane_v04_s448_flat_ndcfix_sdat_mp1_nomesh              6  464  0.484  0.702  0.514
+plane_v04_s448_flat_ndcfix_sdat_mp1_nomesh             14  460  0.442  0.568  0.483
+plane_v04_s448_flat_ndcfix_sdat_mp1_nomesh             26  827  0.792  0.674  0.802
+plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh              6  752  0.742  0.634  0.783
+plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh             14  563  0.536  0.540  0.579
+plane_v02_s448_flat_ndcfix_sdat_mp1_nomesh             26  815  0.827  0.730  0.857
+Terminó sin errores.
