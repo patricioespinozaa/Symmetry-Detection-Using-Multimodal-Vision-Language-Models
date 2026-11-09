@@ -5,13 +5,13 @@
 # auditoría, una comparación pareada contra plane_v02 a 224px/flat, y sube la carpeta a GitHub.
 #
 #   python3 PlaneScoreData/run_plane_v02_224.py chequeo                      # solo lee
-#   python3 PlaneScoreData/run_plane_v02_224.py todo --gpu 0 --experimentos qwen3vl darker single
+#   python3 PlaneScoreData/run_plane_v02_224.py todo --gpu 0 --experimentos darker single qwen3vl
 #   python3 PlaneScoreData/run_plane_v02_224.py todo --gpu 1 --experimentos brighter flujoB flujoC
 #
 # Cada experimento corre fijo en una GPU. Dos colas pueden correr a la vez en GPUs distintas: escriben
 # archivos distintos y el paso de git usa un candado para no chocar.
-# MolmoPoint no se repite: su prompt de un objetivo por consulta ("top/bottom of the seam") ya es
-# el de v02, así que daría el mismo resultado que la corrida existente.
+# MolmoPoint y Qwen3-VL usan versiones de v02 adaptadas a cada modelo (MolmoPointPointing/prompts y
+# QwenPointing/prompts); MolmoPoint hace una consulta por punto (superior e inferior).
 import argparse
 import csv
 import datetime as dt
@@ -52,13 +52,23 @@ EXPERIMENTOS = {
                      modo="single", flujo="a"),
     "qwen3vl":  dict(luz="flat", modelo="qwen", exp=f"{PROMPT}_qwen3vl", prompt=f"{PROMPT}_qwen3vl",
                      modo="single", flujo=None),
+    "molmopoint": dict(luz="flat", modelo="molmopoint", exp=f"{PROMPT}_molmopoint",
+                       prompt=f"{PROMPT}_molmopoint", modo="single", flujo=None),
+}
+
+# Runner, prefijo del JSON y prefijo del conteo de tokens de cada modelo.
+MODELOS = {
+    "molmo": ("MolmoPointing/molmo_multiview_runner.py", "molmo_multiview", "token_counts"),
+    "qwen": ("QwenPointing/qwen3vl_multiview_runner.py", "qwen3vl_multiview",
+             "token_counts_qwen3vl"),
+    "molmopoint": ("MolmoPointPointing/molmopoint_multiview_runner.py", "molmopoint_multiview",
+                   "token_counts_molmopoint"),
 }
 
 
 def archivo_puntos(e: dict) -> str:
     """ JSON que escribe el runner del modelo. """
-    base = "molmo_multiview" if e["modelo"] == "molmo" else "qwen3vl_multiview"
-    return f"{base}_{e['exp']}.json"
+    return f"{MODELOS[e['modelo']][1]}_{e['exp']}.json"
 
 
 def id_alias(e: dict) -> str:
@@ -152,12 +162,9 @@ def inferir(args: argparse.Namespace, nombre: str, logs: Path) -> None:
     comunes = ["--renders-root", args.renders_root, "--symmetry-type", TIPO, "--sizes", SIZE,
                "--lightings", e["luz"], "--view-groups", *VISTAS, "--prompt-mode", e["modo"],
                "--prompt-id", e["prompt"], "--experiment-id", e["exp"], "--yes"]
-    if e["modelo"] == "molmo":
-        comando = [PY, "MolmoPointing/molmo_multiview_runner.py", *comunes, "--flow", e["flujo"]]
-        tokens = f"token_counts_{e['exp']}.txt"
-    else:
-        comando = [PY, "QwenPointing/qwen3vl_multiview_runner.py", *comunes]
-        tokens = f"token_counts_qwen3vl_{e['exp']}.txt"
+    runner, _, prefijo_tokens = MODELOS[e["modelo"]]
+    comando = [PY, runner, *comunes, *(["--flow", e["flujo"]] if e["modelo"] == "molmo" else [])]
+    tokens = f"{prefijo_tokens}_{e['exp']}.txt"
     correr(comando, logs / f"inferencia_{nombre}.log", {"CUDA_VISIBLE_DEVICES": str(args.gpu)})
     origen = args.renders_root / TIPO / tokens
     if origen.exists():  # darker y brighter comparten el nombre; se guarda la copia de cada uno
