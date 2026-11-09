@@ -1,0 +1,6 @@
+nohup: ignoring input
+plane_v00_1 a 1136px: renders 850, completos 850, parciales 0, sin JSON 0 -> id final plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh
+plane_v04 a 1136px: renders 850, completos 24, parciales 1, sin JSON 825 -> id final plane_v04_s1136_flat_ndcfix_sdat_mp1_nomesh
+plane_v02 a 1136px: renders 850, completos 0, parciales 0, sin JSON 850 -> id final plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh
+[ok] Inferencia pendiente: ['plane_v04', 'plane_v02']
+[18:23:51] molmo_plane_v04_vistas_6_14_26[error] falló molmo_plane_v04_vistas_6_14_26 (código 1); revisa /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_1136px/logs/molmo_plane_v04_vistas_6_14_26.log

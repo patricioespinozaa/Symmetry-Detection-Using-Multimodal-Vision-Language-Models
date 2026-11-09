@@ -1,0 +1,26 @@
+nohup: ignoring input
+plane_v00_1 a 1136px: renders 850, completos 850, parciales 0, sin JSON 0 -> id final plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh
+plane_v02 a 1136px: renders 850, completos 132, parciales 0, sin JSON 718 -> id final plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh
+[ok] Inferencia pendiente: ['plane_v02']
+[22:07:58] molmo_plane_v02_vistas_6_14_2[eplane_v00_1 a 1136px: renders 850, completos 850, parciales 0, sin JSON 0 -> id final plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh
+plane_v02 a 1136px: renders 850, completos 850, parciales 0, sin JSON 0 -> id final plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh
+[ok] Inferencia pendiente: ninguna
+plane_v00_1: 850 enlaces -> plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh
+[10:16:49] est_plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh
+[10:19:26] eval_plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh
+plane_v02: 850 enlaces -> plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh
+[10:23:08] est_plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh
+[10:25:40] eval_plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh
+[10:28:52] compare_plane_sym
+[10:28:54] audit_plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh
+[10:29:46] audit_plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh
+
+Resultados: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_1136px/experiments_09_11_2026/plane_sym_final_comparison.csv
+experimento                                        vistas  obj    AUC     F1   P@10
+plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh           6  567  0.570  0.645  0.601
+plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh          14  526  0.515  0.561  0.567
+plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh          26  843  0.823  0.700  0.846
+plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh             6  673  0.689  0.684  0.729
+plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh            14  499  0.484  0.547  0.521
+plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh            26  836  0.846  0.734  0.875
+Terminó sin errores.
