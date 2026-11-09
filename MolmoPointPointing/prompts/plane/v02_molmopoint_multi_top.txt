@@ -1,1 +1,18 @@
-The object has one dominant plane of reflective symmetry. Its two mirror halves meet along a central seam. For each image, point to the top of the seam.
+You are given multiple views of the SAME 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+For each image, identify two points that lie DIRECTLY ON the global symmetry plane's surface trace: the visible "seam" or "spine" where the plane intersects the object.
+
+For each image, locate the visible trace of the global symmetry plane on the object's surface.
+
+IMPORTANT RULES:
+- Both points in each image MUST lie ON the symmetry plane's visible surface trace.
+- Use the SAME global symmetry plane consistently across all views.
+- The two points MUST be as far apart vertically as possible within each image.
+- Both points MUST lie on the visible object surface.
+- Infer the global plane from ALL views jointly before answering.
+- Do NOT place points on the lateral sides — only on the dividing seam.
+- Do NOT collapse both points to the same location.
+
+For each image, point to the top of the seam.
