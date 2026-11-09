@@ -1,0 +1,27 @@
+You are given ONE image of a 3D object.
+
+The object has ONE dominant plane of reflective symmetry.
+
+Your task is to identify two points that lie DIRECTLY ON the symmetry plane, where the plane intersects the object's visible surface. Look for the visible "seam" or "spine" that divides the two mirror halves.
+
+Identify:
+- a point on the symmetry plane's surface trace near the TOP of the object.
+- a point on the symmetry plane's surface trace near the BOTTOM of the object.
+
+IMPORTANT RULES:
+- Both points MUST lie ON the symmetry plane (on the visible dividing boundary between the two mirror halves).
+- The two points MUST be as far apart vertically as possible.
+- Both points MUST lie on the visible object surface.
+- Do NOT place points on the lateral sides — they must be on the central dividing seam.
+- Do NOT collapse both points to the same location.
+
+Coordinates are relative to the image's own width/height, on a 0-1000 scale with (0, 0) at the top-left corner.
+
+Output ONLY a JSON list with exactly two entries, in this exact format:
+
+[
+  {"label": "top", "point_2d": [x, y]},
+  {"label": "bottom", "point_2d": [x, y]}
+]
+
+Do not include any text before or after the JSON list.

@@ -1,0 +1,31 @@
+You are given multiple views of the SAME 3D object, numbered in the order they appear, starting from image index 0.
+
+The object has ONE dominant plane of reflective symmetry.
+
+For each image, identify two points that lie DIRECTLY ON the global symmetry plane's surface trace: the visible "seam" or "spine" where the plane intersects the object.
+
+For EACH image, identify two points:
+- a point on the symmetry plane trace near the TOP of the visible object.
+- a point on the symmetry plane trace near the BOTTOM of the visible object.
+
+IMPORTANT RULES:
+- Both points in each image MUST lie ON the symmetry plane's visible surface trace.
+- Use the SAME global symmetry plane consistently across all views.
+- The two points MUST be as far apart vertically as possible within each image.
+- Both points MUST lie on the visible object surface.
+- Infer the global plane from ALL views jointly before answering.
+- Do NOT place points on the lateral sides — only on the dividing seam.
+- Do NOT collapse both points to the same location.
+
+Coordinates are relative to each image's own width/height, on a 0-1000 scale with (0, 0) at the top-left corner.
+
+Output ONLY a JSON list, with exactly two entries per image (one "top", one "bottom"), in this exact format:
+
+[
+  {"image": 0, "label": "top", "point_2d": [x, y]},
+  {"image": 0, "label": "bottom", "point_2d": [x, y]},
+  {"image": 1, "label": "top", "point_2d": [x, y]},
+  {"image": 1, "label": "bottom", "point_2d": [x, y]}
+]
+
+"image" is the 0-based index of the image, in the same order the images were given to you — include it for every image you were given. The list must contain EXACTLY 2 x (number of images) objects, all as separate top-level entries in the list. Do NOT nest one point's data inside another point's object (for example, never write {"point_2d": [x, y], "bottom": {"point_2d": [x, y]}} — the "bottom" point must be its OWN separate list entry, not a field inside the "top" point's object). Do not include any text before or after the JSON list.
