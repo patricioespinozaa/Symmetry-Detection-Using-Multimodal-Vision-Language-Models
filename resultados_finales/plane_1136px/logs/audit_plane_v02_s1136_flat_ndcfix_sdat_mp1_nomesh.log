@@ -1,0 +1,8 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 PlaneScoreData/audit_run.py --renders-root /data/pespinoz/renders --symmetry-type plane_sym --input-id plane_v02_s1136_flat_ndcfix_mp1_nomesh --expected-input molmo_multiview_plane_v02.json --output-id plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh --estimador sdat --size 1136 --lighting flat --desde 2026-11-09 10:16
+
+=== plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh (1136px, flat, sdat)
+Objetos 850 | con puntos 850 | con predicción 848 | recalculados 31
+Entrada: molmo_multiview_plane_v02.json -> molmo_multiview_plane_v02.json (850)
+Predicciones por vistas: [(6, 673), (14, 499), (26, 836)]
+Evaluadas por vistas   : [(6, 673), (14, 499), (26, 836)]
+[ok] Sin problemas.
