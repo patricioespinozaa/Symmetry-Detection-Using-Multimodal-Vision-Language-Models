@@ -1,0 +1,6 @@
+# Token counts per n_views — experiment: plane_v02
+# prompt_mode: auto  sizes: [224]  lightings: ['brighter']
+ n_views  n_objects      mean       min       max
+       6        850      2829      2829      2829
+      14        850      6138      6138      6138
+      26        850     11106     11106     11106
