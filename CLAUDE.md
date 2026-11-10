@@ -14,6 +14,11 @@ Contexto persistente para trabajar en este repo. Complementa (no duplica) a:
   [`exploratory-data-analysis.md`](docs/features/exploratory-data-analysis.md),
   [`images-generator.md`](docs/features/images-generator.md),
   [`molmo-pointing.md`](docs/features/molmo-pointing.md),
+  [`molmopoint-qwen3vl-pointing.md`](docs/features/molmopoint-qwen3vl-pointing.md)
+  (módulos independientes `MolmoPointPointing/`/`QwenPointing/`: MolmoPoint-8B
+  y Qwen3-VL-8B-Instruct como backends de pointing adicionales a Molmo2,
+  reutilizando el mismo pipeline sin malla; incluye guía de replicación en
+  otro servidor),
   [`mapping.md`](docs/features/mapping.md),
   [`consolidation-evaluation.md`](docs/features/consolidation-evaluation.md),
   [`interactive-viewer.md`](docs/features/interactive-viewer.md),
