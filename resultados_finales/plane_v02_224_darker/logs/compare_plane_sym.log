@@ -1,0 +1,9 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 Mapping/compare_results_no_mesh.py --renders-root /data/pespinoz/renders --symmetry-type plane_sym --sizes 224 --lightings darker --experiment-id plane_v02_s224_darker_ndcfix_sdat_mp1_nomesh --csv-dir /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_darker --no-plots --total-objects 850
+
+
+--- triangulation (eje/plano unico) ---
+                                  experiment        method  n_views  n_objects  angular_error_mean  angular_error_median  auc_angular  precision_5deg  precision_10deg
+plane_v02_s224_darker_ndcfix_sdat_mp1_nomesh triangulation        6        805             16.0710                3.0118       0.7868          0.7553           0.8353
+plane_v02_s224_darker_ndcfix_sdat_mp1_nomesh triangulation       14        668             29.1321                4.8403       0.6272          0.5412           0.6600
+plane_v02_s224_darker_ndcfix_sdat_mp1_nomesh triangulation       26        830             13.7606                2.6459       0.7738          0.6953           0.7435
+Saved: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_darker/experiments_10_11_2026/plane_sym_plane_v02_s224_darker_ndcfix_sdat_mp1_nomesh_comparison.csv
