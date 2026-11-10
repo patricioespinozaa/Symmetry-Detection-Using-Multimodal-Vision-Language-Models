@@ -11,7 +11,9 @@
 # Cada experimento corre fijo en una GPU. Dos colas pueden correr a la vez en GPUs distintas: escriben
 # archivos distintos y el paso de git usa un candado para no chocar.
 # MolmoPoint y Qwen3-VL usan versiones de v02 adaptadas a cada modelo (MolmoPointPointing/prompts y
-# QwenPointing/prompts); MolmoPoint hace una consulta por punto (superior e inferior).
+# QwenPointing/prompts); MolmoPoint hace una consulta por punto (superior e inferior). MolmoPoint
+# tiene dos versiones: "molmopoint" (texto completo de v02) y "molmopoint_frase" (una frase, como el
+# MolmoPoint axial v04 existente).
 import argparse
 import csv
 import datetime as dt
@@ -54,6 +56,10 @@ EXPERIMENTOS = {
                      modo="single", flujo=None),
     "molmopoint": dict(luz="flat", modelo="molmopoint", exp=f"{PROMPT}_molmopoint",
                        prompt=f"{PROMPT}_molmopoint", modo="single", flujo=None),
+    # Versión de una frase, con el mismo formato que el MolmoPoint axial v04 existente. Su texto
+    # coincide con el de plane_v05_1_molmopoint.
+    "molmopoint_frase": dict(luz="flat", modelo="molmopoint", exp=f"{PROMPT}_molmopoint_frase",
+                             prompt=f"{PROMPT}_molmopoint_frase", modo="single", flujo=None),
 }
 
 # Runner, prefijo del JSON y prefijo del conteo de tokens de cada modelo.
