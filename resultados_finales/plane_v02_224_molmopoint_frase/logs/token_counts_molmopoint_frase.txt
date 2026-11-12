@@ -1,0 +1,6 @@
+# Token counts per n_views — experiment: plane_v02_molmopoint_frase
+# model: allenai/MolmoPoint-8B  prompt_mode: single  sizes: [224]  lightings: ['flat']
+ n_views  n_objects      mean       min       max
+       6        850      5244      5244      5244
+      14        850     12236     12236     12236
+      26        850     22724     22724     22724
