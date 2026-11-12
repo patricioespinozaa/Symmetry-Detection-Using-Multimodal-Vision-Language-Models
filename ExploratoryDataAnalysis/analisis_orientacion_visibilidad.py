@@ -28,7 +28,8 @@ Salidas en --out-dir:
   orientacion_resumen.csv / .tex          estadisticos por tipo de simetria
   orientacion_por_categoria.csv           alineacion por categoria
   visibilidad_resumen.csv / .tex          delta_min y vistas buenas por n_v
-  fig_orientacion_esfera.pdf/.png         proyeccion de igual area (centro = +Y)
+  fig_orientacion_esfera.pdf/.png         esfera 3D de direcciones (vertical = +Y)
+  fig_orientacion_esfera_planos.pdf/.png  idem, planar dibujado como planos (cuadrados)
   fig_orientacion_componentes.pdf/.png    histogramas de |u.X|, |u.Y|, |u.Z|
   fig_orientacion_eje_cercano.pdf/.png    ECDF del angulo al eje mas cercano
   fig_visibilidad_delta.pdf/.png          delta_min (mediana, p10-p90) vs n_v
@@ -191,43 +192,169 @@ def tex_orientacion(res, path):
     Path(path).write_text("\n".join(lineas), encoding="utf-8")
 
 
-def fig_esfera(el, out):
-    """Proyeccion azimutal de igual area centrada en +Y (direcciones sin signo
-    plegadas al hemisferio uy >= 0). Uniforme en la esfera => uniforme en el disco."""
-    fig, axs = plt.subplots(1, 2, figsize=(6.3, 3.3))
-    R = math.sqrt(2)
-    for ax, tipo in zip(axs, TIPOS):
-        u = el.loc[el.tipo_simetria == tipo, ["ux", "uy", "uz"]].to_numpy().copy()
-        u[u[:, 1] < 0] *= -1
-        theta = np.arccos(np.clip(u[:, 1], -1, 1))
-        rho = 2 * np.sin(theta / 2)
-        h = np.hypot(u[:, 0], u[:, 2])
-        h[h == 0] = 1
-        x, y = rho * u[:, 0] / h, rho * u[:, 2] / h
-        t = np.linspace(0, 2 * np.pi, 361)
-        for elev in (15, 45, 75):  # anillos de elevacion sobre el plano XZ
-            r = 2 * math.sin(math.radians(90 - elev) / 2)
-            ax.plot(r * np.cos(t), r * np.sin(t), color=GRID, lw=0.6, zorder=1)
-            ax.text(r * math.cos(math.radians(60)), r * math.sin(math.radians(60)),
-                    f"{elev}°", color=TXT_2, fontsize=7, ha="left", va="bottom")
-        ax.plot(R * np.cos(t), R * np.sin(t), color=TXT_2, lw=0.8, zorder=1)
-        ax.plot([-R, R], [0, 0], color=GRID, lw=0.6, zorder=1)
-        ax.plot([0, 0], [-R, R], color=GRID, lw=0.6, zorder=1)
-        ax.scatter(x, y, s=9, color=COLOR[tipo], alpha=0.55, linewidths=0, zorder=3)
-        for lbl, (lx, ly) in {"X": (R + 0.08, 0), "Z": (0, R + 0.08),
-                              "Y": (0.06, 0.06)}.items():
-            ax.text(lx, ly, lbl, color=TXT_1, fontsize=8.5, fontweight="bold",
-                    ha="left" if lbl != "Z" else "center",
-                    va="center" if lbl != "Z" else "bottom")
-        ax.set_title(f"{ETIQUETA[tipo]}  (n = {len(u)})")
-        ax.set_aspect("equal")
-        ax.set_xlim(-R - 0.25, R + 0.3)
-        ax.set_ylim(-R - 0.15, R + 0.3)
-        ax.axis("off")
-    fig.text(0.5, 0.04, "Centro: dirección vertical (+Y, el «arriba» de las cámaras). "
-             "Borde: direcciones horizontales. Anillos: elevación sobre el plano XZ.",
-             ha="center", color=TXT_2, fontsize=7.5)
-    guardar(fig, out, "fig_orientacion_esfera")
+def cuadrados_planos(u, h=1.0):
+    """Esquinas (N,4,3), en coordenadas del mundo, de cuadrados de semilado h
+    centrados en el origen y perpendiculares a cada normal u. Los lados se alinean
+    con los dos ejes del mundo mas perpendiculares a u (proyectados al plano)."""
+    esquinas = []
+    for n in u:
+        k = np.argsort(np.abs(n))[0]  # eje del mundo mas perpendicular a n
+        e1 = np.eye(3)[k] - (np.eye(3)[k] @ n) * n
+        e1 /= np.linalg.norm(e1)
+        e2 = np.cross(n, e1)
+        esquinas.append([h * (s1 * e1 + s2 * e2)
+                         for s1, s2 in ((1, 1), (-1, 1), (-1, -1), (1, -1))])
+    return np.array(esquinas)
+
+
+def fig_esfera(el, out, elev=20, azim=-50, planos=False, cap_deg=5.0):
+    """Direcciones sin signo sobre la esfera unidad, en 3D. Cada direccion se
+    dibuja en sus dos extremos (+u y -u). El eje vertical del dibujo es +Y del
+    mundo (el «arriba» de las camaras). Puntos y lineas del hemisferio posterior
+    (respecto del observador) se atenuan para dar profundidad.
+
+    planos=True: en el panel planar, en vez de las normales se dibuja cada plano
+    como un cuadrado que atraviesa la esfera (contorno tenue por plano; relleno
+    del plano medio de cada grupo segun el eje del mundo mas cercano a la normal).
+    Se guarda como fig_orientacion_esfera_planos.
+
+    cap_deg: en el panel planar se sombrea un casquete de ese radio angular
+    alrededor de cada eje del mundo con normales (None/0 para omitirlo)."""
+    from mpl_toolkits.mplot3d.art3d import Line3DCollection, Poly3DCollection
+    def a_plot(v):  # mundo (X, Y, Z) -> dibujo (X, Z, Y): Y queda vertical
+        return v[..., [0, 2, 1]]
+
+    e, a = np.radians(elev), np.radians(azim)
+    vista = np.array([np.cos(e) * np.cos(a), np.cos(e) * np.sin(a), np.sin(e)])
+
+    def curva(ax, pts, color, lw, z_front, z_back, ls_back=(0, (2, 2))):
+        """Dibuja una curva sobre la esfera partiendo en tramos frontal/posterior."""
+        frente = pts @ vista >= 0
+        for mascara, z, ls, alpha in ((frente, z_front, "-", 1.0),
+                                      (~frente, z_back, ls_back, 0.55)):
+            p = np.where(mascara[:, None], pts, np.nan)
+            ax.plot(p[:, 0], p[:, 1], p[:, 2], color=color, lw=lw, ls=ls,
+                    alpha=alpha, zorder=z)
+
+    t = np.linspace(0, 2 * np.pi, 361)
+    fig = plt.figure(figsize=(6.6, 2.9))
+    for i, tipo in enumerate(TIPOS):
+        ax = fig.add_subplot(1, 2, i + 1, projection="3d", computed_zorder=False)
+        u = el.loc[el.tipo_simetria == tipo, ["ux", "uy", "uz"]].to_numpy()
+
+        # Esfera de referencia: superficie tenue + paralelos y meridianos cada 30°
+        th, ph = np.meshgrid(np.linspace(0, np.pi, 60), np.linspace(0, 2 * np.pi, 120))
+        ax.plot_surface(np.sin(th) * np.cos(ph), np.sin(th) * np.sin(ph), np.cos(th),
+                        color="#f1f0ec", alpha=0.35, linewidth=0, shade=False, zorder=0)
+        for lat in (-60, -30, 30, 60):
+            r, h = np.cos(np.radians(lat)), np.sin(np.radians(lat))
+            curva(ax, np.c_[r * np.cos(t), r * np.sin(t), np.full_like(t, h)],
+                  GRID, 0.5, 3, 1)
+        for lon in range(0, 180, 30):
+            c, s = np.cos(np.radians(lon)), np.sin(np.radians(lon))
+            curva(ax, np.c_[np.cos(t) * c, np.cos(t) * s, np.sin(t)], GRID, 0.5, 3, 1)
+        # Ecuador = plano horizontal XZ del mundo (destacado)
+        curva(ax, np.c_[np.cos(t), np.sin(t), np.zeros_like(t)], REF, 0.9, 3, 1)
+
+        # Planar: casquete de cap_deg grados alrededor de cada eje del mundo que
+        # tiene normales (en ambos extremos, como los puntos) -> tolerancia visible
+        if tipo == "planar" and cap_deg:
+            cerc = np.abs(u).argmax(axis=1)
+            ca, sa = np.cos(np.radians(cap_deg)), np.sin(np.radians(cap_deg))
+            for k in range(3):
+                if not (cerc == k).any():
+                    continue
+                for signo in (1, -1):
+                    d = a_plot(signo * np.eye(3)[k])
+                    e1 = np.cross(d, [0, 0, 1.0] if abs(d[2]) < 0.9 else [1.0, 0, 0])
+                    e1 /= np.linalg.norm(e1)
+                    e2 = np.cross(d, e1)
+                    borde = ca * d + sa * (np.outer(np.cos(t), e1) + np.outer(np.sin(t), e2))
+                    frente_c = d @ vista >= 0
+                    ax.add_collection3d(Poly3DCollection(
+                        [borde], facecolors=COLOR[tipo], edgecolors="none",
+                        alpha=0.22 if frente_c else 0.08, zorder=3.5 if frente_c else 1.5))
+                    ax.plot(*borde.T, color=TXT_2, lw=0.6,
+                            ls="-" if frente_c else (0, (2, 2)),
+                            alpha=0.9 if frente_c else 0.4, zorder=3.6 if frente_c else 1.6)
+
+        if tipo == "planar" and planos:
+            # Un contorno tenue por plano (la superposicion marca la densidad)...
+            ax.add_collection3d(Line3DCollection(
+                [np.r_[c, c[:1]] for c in a_plot(cuadrados_planos(u))],
+                colors=COLOR[tipo], linewidths=0.4, alpha=0.18, zorder=2.6))
+            # ...y el plano medio de cada grupo, relleno
+            esq_planos = a_plot(cuadrados_planos(u)).reshape(-1, 3)
+            cerc = np.abs(u).argmax(axis=1)
+            for k in range(3):
+                g = u[cerc == k]
+                if len(g) == 0:
+                    continue
+                g = g * np.sign(g[:, k])[:, None]  # mismo signo antes de promediar
+                n = g.mean(axis=0)
+                n /= np.linalg.norm(n)
+                frac = len(g) / len(u)  # opacidad y grosor segun la proporcion de planos
+                ax.add_collection3d(Poly3DCollection(
+                    a_plot(cuadrados_planos(n[None])), facecolors=COLOR[tipo],
+                    edgecolors="none", alpha=0.04 + 0.32 * frac, zorder=2.5 + frac))
+                ax.add_collection3d(Line3DCollection(
+                    [np.r_[c, c[:1]] for c in a_plot(cuadrados_planos(n[None]))],
+                    colors=COLOR[tipo], linewidths=0.4 + 1.0 * frac,
+                    alpha=0.35 + 0.6 * frac, zorder=2.55 + frac))
+        else:
+            # Puntos: +u y -u (todos los elementos del tipo, mismo color y simbolo)
+            p = a_plot(np.r_[u, -u])
+            frente = p @ vista >= 0
+            s = 6 if tipo == "axial" else 9
+            ax.scatter(*p[~frente].T, s=s * 0.8, color=COLOR[tipo], alpha=0.22,
+                       linewidths=0, zorder=2, depthshade=False)
+            ax.scatter(*p[frente].T, s=s, color=COLOR[tipo], alpha=0.85,
+                       edgecolors="white", linewidths=0.25, zorder=4, depthshade=False)
+
+        # Silueta de la esfera (gran circulo perpendicular a la vista)
+        b1 = np.cross(vista, [0, 0, 1.0]); b1 /= np.linalg.norm(b1)
+        b2 = np.cross(vista, b1)
+        sil = np.outer(np.cos(t), b1) + np.outer(np.sin(t), b2)
+        ax.plot(*sil.T, color=TXT_2, lw=0.8, zorder=3)
+        ax._pts_contenido = sil  # para recortar la figura al contenido
+        if tipo == "planar" and planos:
+            ax._pts_contenido = np.r_[sil, esq_planos]
+
+        # Ejes del mundo, por fuera de la silueta: con proyeccion ortografica, un
+        # punto r*d se ve a distancia r*|d_perp| del centro, asi que la flecha
+        # empieza donde esa distancia supera 1 (borde de la esfera en pantalla).
+        if tipo == "planar":
+            cerc = np.abs(u).argmax(axis=1)
+            conteo = {nom: int((cerc == k).sum()) for k, nom in enumerate(AXES)}
+        for nombre, d in (("X", (1, 0, 0)), ("Y", (0, 1, 0)), ("Z", (0, 0, 1))):
+            d = a_plot(np.array(d, dtype=float))
+            perp = np.sqrt(max(1 - (d @ vista) ** 2, 1e-6))
+            r0, r1, rl = 1.06 / perp, 1.30 / perp, 1.38 / perp
+            ax.quiver(*(r0 * d), *((r1 - r0) * d), color=TXT_1, lw=0.9,
+                      arrow_length_ratio=0.3, zorder=5)
+            vertical = nombre == "Y"
+            ax.text(*(rl * d), nombre, color=TXT_1, fontsize=9, fontweight="bold",
+                    ha="center" if vertical else "left",
+                    va="bottom" if vertical else "center", zorder=6)
+            if tipo == "planar":  # conteo de normales junto al eje correspondiente
+                ax.text(*(rl * d), f"    $\\pm${nombre}: {conteo[nombre]}" if vertical
+                        else f"\n\n$\\pm${nombre}: {conteo[nombre]}",
+                        color=TXT_2, fontsize=7.5, ha="left",
+                        va="bottom" if vertical else "center", zorder=6)
+
+        ax.view_init(elev=elev, azim=azim)
+        ax.set_proj_type("ortho")
+        ax.set_box_aspect((1, 1, 1), zoom=1.05)
+        lim = 1.15
+        ax.set_xlim(-lim, lim); ax.set_ylim(-lim, lim); ax.set_zlim(-lim, lim)
+        ax.set_axis_off()
+        titulo = "Planar (planos)" if (tipo == "planar" and planos) else ETIQUETA[tipo]
+        ax.set_title(f"({'ab'[i]}) {titulo}, n = {len(u)}", y=1.06, pad=0,
+                     fontsize=10)
+
+    fig.subplots_adjust(left=0, right=1, top=0.93, bottom=0.0, wspace=0.0)
+    guardar(fig, out, "fig_orientacion_esfera_planos" if planos else "fig_orientacion_esfera",
+            recorte=bbox_contenido(fig))
 
 
 def fig_componentes(el, out):
@@ -386,9 +513,38 @@ def fig_visibilidad_buenas(obj, n_total, umbral, out):
 
 
 # ----------------------------------------------------------------- util / main
-def guardar(fig, out, nombre):
+def bbox_contenido(fig, pad=0.06):
+    """Recuadro (pulgadas) que encierra solo lo dibujado en los ejes 3D: el
+    bbox 'tight' de matplotlib incluye la caja 3D completa y deja margenes vacios."""
+    from matplotlib.transforms import Bbox
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+    cajas = []
+    from mpl_toolkits.mplot3d import proj3d
+    for ax in fig.axes:
+        cajas.append(ax.title.get_window_extent(r))
+        for art in ax.texts:  # Text3D: medir en su posicion proyectada y restaurar
+            x0, y0 = art.get_position()
+            x, y, _ = proj3d.proj_transform(x0, y0, art._z, ax.get_proj())
+            art.set_position((x, y))
+            cajas.append(art.get_window_extent(r))
+            art.set_position((x0, y0))
+        # Puntos 3D de referencia (silueta, cuadrados) proyectados a pantalla
+        pts = getattr(ax, "_pts_contenido", None)
+        if pts is not None:
+            x, y, _ = proj3d.proj_transform(*pts.T, ax.get_proj())
+            cajas.append(Bbox.null())
+            cajas[-1].update_from_data_xy(ax.transData.transform(np.c_[x, y]), ignore=True)
+    b = Bbox.union(cajas).transformed(fig.dpi_scale_trans.inverted())
+    return Bbox.from_extents(b.x0 - pad, b.y0 - pad, b.x1 + pad, b.y1 + pad)
+
+
+def guardar(fig, out, nombre, recorte=None):
     for ext in ("pdf", "png"):
-        fig.savefig(out / f"{nombre}.{ext}")
+        if recorte is None:
+            fig.savefig(out / f"{nombre}.{ext}")
+        else:
+            fig.savefig(out / f"{nombre}.{ext}", bbox_inches=recorte)
     plt.close(fig)
     print(f"[fig] {out / nombre}.pdf")
 
@@ -425,6 +581,7 @@ def main():
     tex_visibilidad(res_v, args.umbral, out / "visibilidad_resumen.tex")
 
     fig_esfera(el, out)
+    fig_esfera(el, out, planos=True)
     fig_componentes(el, out)
     fig_eje_cercano(el, ang_unif, out)
     fig_visibilidad_delta(obj, args.n_total, args.umbral, out)

@@ -14,6 +14,8 @@
 # QwenPointing/prompts); MolmoPoint hace una consulta por punto (superior e inferior). MolmoPoint
 # tiene dos versiones: "molmopoint" (texto completo de v02) y "molmopoint_frase" (una frase, como el
 # MolmoPoint axial v04 existente).
+# "axis_molmopoint" corre MolmoPoint en eje con el texto completo de axis_v04 (solo cambia el formato
+# de salida). Usa EXP-E en vez de S_dat y se compara contra axis_v04 de Molmo2 a 224px/flat.
 import argparse
 import csv
 import datetime as dt
@@ -27,19 +29,22 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "PlaneScoreData"))
-from run_plane_resolucion import (correr, get_prompt, molmo_to_ndc,  # noqa: E402
-                                  renombrar_comparacion)
+from run_plane_resolucion import correr, get_prompt, molmo_to_ndc  # noqa: E402
 
-TIPO = "plane_sym"
 SIZE = 224
 VISTAS = (6, 14, 26)
 TOTAL_OBJETOS = 850
 PROMPT = "plane_v02"
 PY = sys.executable
 RAMA = "refactor"
-ID_REFERENCIA = f"{PROMPT}_s{SIZE}_flat_ndcfix_sdat_mp1_nomesh"
-CSV_REFERENCIA = (REPO / "resultados_finales" / "ndcfix_flujoA" / "experiments_05_11_2026"
-                  / "plane_sym_final_comparison.csv")
+CARPETA_REFERENCIA = REPO / "resultados_finales" / "ndcfix_flujoA" / "experiments_05_11_2026"
+# Por tipo: id de la línea base de Molmo2 a 224px/flat y su CSV de comparación.
+REFERENCIA = {
+    "plane_sym": (f"{PROMPT}_s{SIZE}_flat_ndcfix_sdat_mp1_nomesh",
+                  CARPETA_REFERENCIA / "plane_sym_final_comparison.csv"),
+    "axis_sym": (f"axis_v04_s{SIZE}_flat_ndcfix_expE_nomesh",
+                 CARPETA_REFERENCIA / "axis_sym_final_comparison.csv"),
+}
 
 # nombre: carpeta de resultados, iluminación, modelo, id del experimento, prompt, modo y flujo.
 EXPERIMENTOS = {
@@ -60,7 +65,13 @@ EXPERIMENTOS = {
     # coincide con el de plane_v05_1_molmopoint.
     "molmopoint_frase": dict(luz="flat", modelo="molmopoint", exp=f"{PROMPT}_molmopoint_frase",
                              prompt=f"{PROMPT}_molmopoint_frase", modo="single", flujo=None),
+    # Eje: texto completo de axis_v04 con el formato de MolmoPoint.
+    "axis_molmopoint": dict(tipo="axis_sym", luz="flat", modelo="molmopoint",
+                            exp="axis_v04_molmopoint_completo",
+                            prompt="axis_v04_molmopoint_completo", modo="single", flujo=None),
 }
+for _e in EXPERIMENTOS.values():
+    _e.setdefault("tipo", "plane_sym")
 
 # Runner, prefijo del JSON y prefijo del conteo de tokens de cada modelo.
 MODELOS = {
@@ -79,22 +90,25 @@ def archivo_puntos(e: dict) -> str:
 
 def id_alias(e: dict) -> str:
     """ Id del enlace de entrada del post-procesamiento. """
-    return f"{e['exp']}_s{SIZE}_{e['luz']}_ndcfix_mp1_nomesh"
+    sufijo = "nomesh" if e["tipo"] == "axis_sym" else "mp1_nomesh"
+    return f"{e['exp']}_s{SIZE}_{e['luz']}_ndcfix_{sufijo}"
 
 
 def id_final(e: dict) -> str:
-    """ Id de las predicciones y evaluaciones de S_dat. """
-    return f"{e['exp']}_s{SIZE}_{e['luz']}_ndcfix_sdat_mp1_nomesh"
+    """ Id de las predicciones y evaluaciones (S_dat en plano, EXP-E en eje). """
+    sufijo = "expE_nomesh" if e["tipo"] == "axis_sym" else "sdat_mp1_nomesh"
+    return f"{e['exp']}_s{SIZE}_{e['luz']}_ndcfix_{sufijo}"
 
 
 def carpeta_salida(nombre: str) -> Path:
     """ Carpeta de resultados_finales de un experimento. """
-    return REPO / "resultados_finales" / f"plane_v02_224_{nombre}"
+    prefijo = "axis_v04" if EXPERIMENTOS[nombre]["tipo"] == "axis_sym" else "plane_v02"
+    return REPO / "resultados_finales" / f"{prefijo}_224_{nombre}"
 
 
-def carpetas_render(renders: Path, luz: str) -> list[Path]:
-    """ Carpetas 224/<luz> de plane_sym con metadatos de cámara. """
-    return [d for d in sorted((renders / TIPO).glob(f"*/{SIZE}/{luz}"))
+def carpetas_render(renders: Path, e: dict) -> list[Path]:
+    """ Carpetas 224/<luz> del tipo del experimento con metadatos de cámara. """
+    return [d for d in sorted((renders / e["tipo"]).glob(f"*/{SIZE}/{e['luz']}"))
             if (d / "metadata_all.json").exists()]
 
 
@@ -113,9 +127,10 @@ def revisar(renders: Path, nombre: str) -> int:
 
     """
     e = EXPERIMENTOS[nombre]
-    carpetas = carpetas_render(renders, e["luz"])
+    carpetas = carpetas_render(renders, e)
     if len(carpetas) != TOTAL_OBJETOS:
-        sys.exit(f"[error] {nombre}: {len(carpetas)} renders a {SIZE}px/{e['luz']}")
+        sys.exit(f"[error] {nombre}: {len(carpetas)} renders de {e['tipo']} a "
+                 f"{SIZE}px/{e['luz']}")
     completos, problemas = 0, []
     # En los flujos B y C el texto enviado incluye la descripción, así que no se compara.
     texto = (get_prompt(e["prompt"])["multi" if e["modo"] == "auto" else "single"]
@@ -151,11 +166,11 @@ def chequear(args: argparse.Namespace) -> dict[str, int]:
     """ Valida código, renders y JSON de cada experimento pedido. No escribe nada. """
     if molmo_to_ndc(0, 0)[0] != 1.0:
         sys.exit("[error] pipeline_common/camera.py no tiene la corrección NDC")
-    if not CSV_REFERENCIA.exists():
-        sys.exit(f"[error] falta {CSV_REFERENCIA}")
     estado = {}
     for nombre in args.experimentos:
         e = EXPERIMENTOS[nombre]
+        if not REFERENCIA[e["tipo"]][1].exists():
+            sys.exit(f"[error] falta {REFERENCIA[e['tipo']][1]}")
         estado[nombre] = revisar(args.renders_root, nombre)
         print(f"{nombre:9} {e['luz']:8} {archivo_puntos(e):45} completos {estado[nombre]:>3}/"
               f"{TOTAL_OBJETOS} -> {id_final(e)}")
@@ -165,14 +180,14 @@ def chequear(args: argparse.Namespace) -> dict[str, int]:
 def inferir(args: argparse.Namespace, nombre: str, logs: Path) -> None:
     """ Corre el modelo en la GPU pedida. Retoma lo que falte. """
     e = EXPERIMENTOS[nombre]
-    comunes = ["--renders-root", args.renders_root, "--symmetry-type", TIPO, "--sizes", SIZE,
-               "--lightings", e["luz"], "--view-groups", *VISTAS, "--prompt-mode", e["modo"],
+    comunes = ["--renders-root", args.renders_root, "--symmetry-type", e["tipo"],
+               "--sizes", SIZE, "--lightings", e["luz"], "--view-groups", *VISTAS, "--prompt-mode", e["modo"],
                "--prompt-id", e["prompt"], "--experiment-id", e["exp"], "--yes"]
     runner, _, prefijo_tokens = MODELOS[e["modelo"]]
     comando = [PY, runner, *comunes, *(["--flow", e["flujo"]] if e["modelo"] == "molmo" else [])]
     tokens = f"{prefijo_tokens}_{e['exp']}.txt"
     correr(comando, logs / f"inferencia_{nombre}.log", {"CUDA_VISIBLE_DEVICES": str(args.gpu)})
-    origen = args.renders_root / TIPO / tokens
+    origen = args.renders_root / e["tipo"] / tokens
     if origen.exists():  # darker y brighter comparten el nombre; se guarda la copia de cada uno
         shutil.copy2(origen, logs / f"token_counts_{nombre}.txt")
 
@@ -180,7 +195,7 @@ def inferir(args: argparse.Namespace, nombre: str, logs: Path) -> None:
 def crear_alias(renders: Path, e: dict) -> int:
     """ Enlaza molmo_multiview_<alias>.json con los puntos del experimento. """
     nombre, creados = f"molmo_multiview_{id_alias(e)}.json", 0
-    for carpeta in carpetas_render(renders, e["luz"]):
+    for carpeta in carpetas_render(renders, e):
         if not (carpeta / archivo_puntos(e)).exists():
             continue
         enlace = carpeta / nombre
@@ -194,46 +209,75 @@ def crear_alias(renders: Path, e: dict) -> int:
 
 
 def posprocesar(args: argparse.Namespace, nombre: str, salida: Path) -> None:
-    """ S_dat, evaluación, comparación, auditoría y pareado contra plane_v02 a 224px/flat. """
+    """ Estimación, evaluación, comparación, auditoría y pareado contra Molmo2 a 224px/flat. """
     e, logs = EXPERIMENTOS[nombre], salida / "logs"
+    tipo = e["tipo"]
     inicio = f"{dt.datetime.now():%Y-%m-%d %H:%M}"
     final, luz = id_final(e), e["luz"]
     print(f"{nombre}: {crear_alias(args.renders_root, e)} enlaces -> {final}", flush=True)
-    correr([PY, "PlaneScoreData/plane_score_data.py", "--renders-root", args.renders_root,
-            "--input-id", id_alias(e), "--output-id", final, "--criterio", "datos",
-            "--size", SIZE, "--lighting", luz, "--jobs", args.jobs, "--overwrite"],
-           logs / f"est_{final}.log")
+    if tipo == "axis_sym":  # escribe <alias sin _nomesh>_expE_nomesh, que es id_final
+        correr([PY, "Pipeline_Experiments/estimate_symmetry_variants.py", "--renders-root",
+                args.renders_root, "--symmetry-type", tipo, "--sizes", SIZE, "--lightings", luz,
+                "--experiment-id", id_alias(e), "--variant", "expE", "--overwrite"],
+               logs / f"est_{final}.log")
+    else:
+        correr([PY, "PlaneScoreData/plane_score_data.py", "--renders-root", args.renders_root,
+                "--input-id", id_alias(e), "--output-id", final, "--criterio", "datos",
+                "--size", SIZE, "--lighting", luz, "--jobs", args.jobs, "--overwrite"],
+               logs / f"est_{final}.log")
     correr([PY, "Mapping/evaluate.py", "--renders-root", args.renders_root,
-            "--objects-root", args.objects_root, "--symmetry-type", TIPO, "--sizes", SIZE,
+            "--objects-root", args.objects_root, "--symmetry-type", tipo, "--sizes", SIZE,
             "--lightings", luz, "--experiment-id", final, "--method", "triangulation",
             "--with-reference-metrics"], logs / f"eval_{final}.log")
     correr([PY, "Mapping/compare_results_no_mesh.py", "--renders-root", args.renders_root,
-            "--symmetry-type", TIPO, "--sizes", SIZE, "--lightings", luz,
+            "--symmetry-type", tipo, "--sizes", SIZE, "--lightings", luz,
             "--experiment-id", final, "--csv-dir", salida, "--no-plots",
-            "--total-objects", TOTAL_OBJETOS], logs / f"compare_{TIPO}.log")
-    ruta = renombrar_comparacion(salida)
+            "--total-objects", TOTAL_OBJETOS], logs / f"compare_{tipo}.log")
+    ruta = renombrar_comparacion(salida, tipo)
     with open(ruta, newline="", encoding="utf-8") as archivo:
         filas = {(f["experiment"], f["n_views"]): f for f in csv.DictReader(archivo)}
     faltan = [v for v in VISTAS if (final, str(v)) not in filas]
     if faltan:
         raise ValueError(f"faltan filas de {final} en {ruta}: {faltan} vistas")
     correr([PY, "PlaneScoreData/audit_run.py", "--renders-root", args.renders_root,
-            "--symmetry-type", TIPO, "--input-id", id_alias(e),
-            "--expected-input", archivo_puntos(e), "--output-id", final, "--estimador", "sdat",
+            "--symmetry-type", tipo, "--input-id", id_alias(e),
+            "--expected-input", archivo_puntos(e), "--output-id", final,
+            "--estimador", "expE" if tipo == "axis_sym" else "sdat",
             "--size", SIZE, "--lighting", luz, "--desde", inicio], logs / f"audit_{final}.log")
     if luz == "flat":  # el pareado lee ambas evaluaciones con la misma iluminación
         (salida / "pareado").mkdir(exist_ok=True)
+        id_base, csv_base = REFERENCIA[tipo]
         correr([PY, "PlaneScoreData/compare_plane_scores.py", "--renders-root",
-                args.renders_root, "--symmetry-type", TIPO, "--comparison-csv", CSV_REFERENCIA,
-                ruta, "--base-id", ID_REFERENCIA, "--new-id", final, "--size", SIZE,
+                args.renders_root, "--symmetry-type", tipo, "--comparison-csv", csv_base,
+                ruta, "--base-id", id_base, "--new-id", final, "--size", SIZE,
                 "--lighting", luz, "--salida", salida / "pareado" / f"{final}.csv"],
                logs / f"pareado_{final}.log")
     print(f"\n{nombre}: {ruta}")
     print(f"{'vistas':>6} {'obj':>4} {'AUC':>6} {'F1':>6} {'P@10':>6}")
     for v in VISTAS:
         f = filas[(final, str(v))]
+        f1 = f"{float(f['f1_ref']):6.3f}" if f.get("f1_ref") else "     -"  # no hay F1 en eje
         print(f"{v:>6} {f['n_objects']:>4} {float(f['auc_angular']):6.3f} "
-              f"{float(f['f1_ref']):6.3f} {float(f['precision_10deg']):6.3f}")
+              f"{f1} {float(f['precision_10deg']):6.3f}")
+
+
+def renombrar_comparacion(salida: Path, tipo: str) -> Path:
+    """ Deja el CSV más reciente como <tipo>_final_comparison.csv.
+
+    Args:
+        * salida: carpeta de resultados
+        * tipo: 'axis_sym' o 'plane_sym'
+
+    Returns:
+        * Path: ruta final del CSV
+
+    """
+    origen = max(salida.glob(f"experiments_*/{tipo}_*comparison.csv"),
+                 key=lambda ruta: ruta.stat().st_mtime)
+    destino = origen.with_name(f"{tipo}_final_comparison.csv")
+    if origen != destino:
+        os.replace(origen, destino)
+    return destino
 
 
 def subir(nombre: str, salida: Path) -> None:
@@ -247,7 +291,7 @@ def subir(nombre: str, salida: Path) -> None:
         if subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=REPO).returncode == 0:
             print(f"{nombre}: nada nuevo que subir")
             return
-        subprocess.run(["git", "commit", "-m", f"Add plane_v02 224px results: {nombre}"],
+        subprocess.run(["git", "commit", "-m", f"Add {salida.name.split('_224_')[0]} 224px results: {nombre}"],
                        cwd=REPO, check=True)
         subprocess.run(["git", "push", "origin", RAMA], cwd=REPO, check=True)
         print(f"{nombre}: SUBIDO A GITHUB", flush=True)
