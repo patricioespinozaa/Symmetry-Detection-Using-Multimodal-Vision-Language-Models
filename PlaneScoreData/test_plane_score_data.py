@@ -10,7 +10,8 @@ from pathlib import Path
 
 import numpy as np
 
-from plane_score_data import VISTAS_DEFECTO, estimate_plane, procesar_objeto, score_datos
+from plane_score_data import (VISTAS_DEFECTO, consolidar_planos, estimate_plane, procesar_objeto,
+                              score_datos)
 
 from estimate_symmetry_no_mesh import METHOD_KEY, estimate_plane_no_mesh  # noqa: E402
 from evaluate import evaluate_object  # noqa: E402
@@ -164,6 +165,54 @@ def test_flujo_de_archivos() -> None:
             fila = next(csv.DictReader(archivo))
         assert float(fila["dif_media"]) == -10.0
         assert int(fila["mejoran"]) == 1 and int(fila["empeoran"]) == 0
+
+
+def test_multiplano_conserva_el_primer_plano() -> None:
+    """ El primer plano de la consolidación es el de estimate_plane y no hay duplicados. """
+    for n_vistas in VISTAS_DEFECTO:
+        camaras = camaras_fibonacci(n_vistas)
+        puntos = puntos_de_traza(camaras, 10.0)
+        unico = estimate_plane(puntos, camaras, FOV, TAM, "datos")
+        for maximo in (1, 2, 3):
+            planos = consolidar_planos(puntos, camaras, FOV, TAM, "datos", maximo)
+            assert 1 <= len(planos) <= maximo
+            assert planos[0]["normal"] == unico["normal"]
+            for a in range(len(planos)):
+                for b in range(a + 1, len(planos)):
+                    coseno = abs(np.dot(planos[a]["normal"], planos[b]["normal"]))
+                    assert np.degrees(np.arccos(min(1.0, coseno))) >= 15.0
+
+
+def test_multiplano_en_archivo() -> None:
+    """ Con max_planes la salida agrega triangulation_multiplane y evaluate.py la lee. """
+    with tempfile.TemporaryDirectory() as raiz:
+        objeto = Path(raiz) / "plane_sym" / "obj"
+        render = objeto / "224" / "flat"
+        render.mkdir(parents=True)
+        grupos = {str(n): {"images_sent": camaras_fibonacci(n)} for n in VISTAS_DEFECTO}
+        for grupo in grupos.values():
+            grupo["points_by_image"] = puntos_de_traza(grupo["images_sent"], 5.0)
+        (render / "molmo_multiview_plane_x.json").write_text(json.dumps(grupos), encoding="utf-8")
+        assert procesar_objeto(objeto, "plane_x", "uno", TAM, "flat", "datos", VISTAS_DEFECTO,
+                               False) == "escrito"
+        assert procesar_objeto(objeto, "plane_x", "mp3", TAM, "flat", "datos", VISTAS_DEFECTO,
+                               False, max_planes=3) == "escrito"
+        uno = json.loads((objeto / "predicted_symmetry_uno.json").read_text("utf-8"))
+        mp3 = json.loads((objeto / "predicted_symmetry_mp3.json").read_text("utf-8"))
+        for n in ("6", "14", "26"):
+            assert "triangulation_multiplane" not in uno["n_views_predictions"][n]
+            entrada = mp3["n_views_predictions"][n]
+            assert entrada["triangulation"] == uno["n_views_predictions"][n]["triangulation"]
+            planos = entrada["triangulation_multiplane"]["planes"]
+            assert planos[0]["normal"] == entrada["triangulation"]["normal"]
+        evaluadas = evaluate_object(
+            objeto, {"elements": [{"normal": [1.0, 0.0, 0.0], "origin": [0.0, 0.0, 0.0]}]},
+            "plane_sym", np.random.default_rng(0).normal(size=(200, 3)),
+            "triangulation_multiplane", predicted_file="predicted_symmetry_mp3.json",
+        )
+        # En esta escena S_dat solo recupera el plano con 26 vistas (ver la prueba anterior).
+        assert all(evaluadas[n]["status"] == "ok" for n in ("6", "14", "26")), evaluadas
+        assert evaluadas["26"]["n_planes_matched"] == 1, evaluadas
 
 
 if __name__ == "__main__":

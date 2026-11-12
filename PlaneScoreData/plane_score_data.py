@@ -3,6 +3,8 @@
 # 'datos' (S_dat, docs/hallazgo_seleccion_normal_plano.md) o 'camaras' (score_normal del flujo
 # principal, usado como control). No modifica Mapping/: solo importa de ahí y escribe un
 # predicted_symmetry_<ID>.json nuevo, legible por Mapping/evaluate.py.
+# Con --max-planes N agrega también "triangulation_multiplane": hasta N planos con la misma
+# consolidación secuencial de detect_planes_no_mesh, pero eligiendo cada plano con el criterio pedido.
 import argparse
 import json
 import os
@@ -21,6 +23,7 @@ sys.path.insert(0, str(REPO))
 sys.path.insert(0, str(REPO / "Mapping"))
 from estimate_symmetry_no_mesh import (  # noqa: E402
     DEFAULT_FOV,
+    DUP_ANGLE_THRESH_DEFAULT,
     EDGE_ON_THRESH_DEFAULT,
     MANIFEST_FILE,
     METHOD_KEY,
@@ -194,6 +197,49 @@ def estimate_plane(
     }
 
 
+def consolidar_planos(
+    points_by_image: dict, images_sent: list[dict], fov_deg: float, image_size: int,
+    criterio: str, max_planes: int, dup_angle_thresh_deg: float = DUP_ANGLE_THRESH_DEFAULT,
+) -> list[dict]:
+    """ Busca hasta max_planes planos con la consolidación secuencial de detect_planes_no_mesh.
+
+    Estima el plano 1 con estimate_plane, quita del conjunto sus vistas de canto y repite con las
+    vistas restantes. Se detiene si quedan menos de 4 vistas, si el ajuste falla o si el plano nuevo
+    está a menos de dup_angle_thresh_deg de uno ya aceptado.
+
+    Args:
+        * points_by_image: puntos por índice de vista
+        * images_sent: cámaras por índice de vista
+        * fov_deg: campo de visión en grados
+        * image_size: lado de la imagen en píxeles
+        * criterio: 'datos' o 'camaras'
+        * max_planes: número máximo de planos
+        * dup_angle_thresh_deg: ángulo bajo el cual un plano cuenta como duplicado
+
+    Returns:
+        * list[dict]: planos en el orden en que se encontraron; el primero es el de estimate_plane
+
+    """
+    conjunto = {
+        int(k) for k, pts in points_by_image.items()
+        if get_point_by_obj_id(pts, 1) is not None and get_point_by_obj_id(pts, 2) is not None
+    }
+    planos: list[dict] = []
+    while len(planos) < max_planes and len(conjunto) >= 4:
+        subconjunto = {k: v for k, v in points_by_image.items() if int(k) in conjunto}
+        try:
+            plano = estimate_plane(subconjunto, images_sent, fov_deg, image_size, criterio)
+        except (ValueError, np.linalg.LinAlgError):
+            break
+        normal = np.asarray(plano["normal"])
+        cosenos = [abs(float(np.dot(normal, p["normal"]))) for p in planos]
+        if any(np.degrees(np.arccos(min(1.0, c))) < dup_angle_thresh_deg for c in cosenos):
+            break
+        planos.append(plano)
+        conjunto -= set(plano["good_views"])
+    return planos
+
+
 def leer_grupos(
     object_dir: Path, id_entrada: str, size: int, lighting: str, vistas: list[int],
 ) -> tuple[dict, float, int]:
@@ -228,7 +274,7 @@ def leer_grupos(
 
 def procesar_objeto(
     object_dir: Path, id_entrada: str, id_salida: str, size: int, lighting: str,
-    criterio: str, vistas: list[int], overwrite: bool,
+    criterio: str, vistas: list[int], overwrite: bool, max_planes: int | None = None,
 ) -> str:
     """ Estima el plano de cada grupo de vistas y escribe predicted_symmetry_<id_salida>.json.
 
@@ -241,6 +287,8 @@ def procesar_objeto(
         * criterio: 'datos' o 'camaras'
         * vistas: grupos de vistas que se procesan
         * overwrite: recalcula aunque la salida ya exista
+        * max_planes: si se indica, agrega la clave triangulation_multiplane con hasta ese
+          número de planos; "triangulation" queda igual (el primer plano)
 
     Returns:
         * str: 'omitido', 'sin_prediccion' o 'escrito'
@@ -261,6 +309,16 @@ def procesar_objeto(
                                    image_size, criterio)
         except (ValueError, np.linalg.LinAlgError):
             continue
+        multiplano = {}
+        if max_planes is not None:
+            planos = consolidar_planos(points_by_image, grupo.get("images_sent", []), fov_deg,
+                                       image_size, criterio, max_planes)
+            multiplano = {f"{METHOD_KEY}_multiplane": {
+                "planes": [{"normal": p["normal"], "origin": p["origin"],
+                            "n_views_used": p["n_views_used"], "n_candidates": p["n_candidates"],
+                            "good_views": p["good_views"]} for p in planos],
+                "plane_score": criterio, "max_planes": max_planes,
+            }}
         predicciones[clave] = {
             "n_points_raw": plano["n_views_used"],
             "n_points_fit": plano["n_views_used"],
@@ -270,6 +328,7 @@ def procesar_objeto(
                 "n_candidates": plano["n_candidates"], "plane_score": criterio,
                 "n_inliers": None, "sde": None, "accepted": None,
             },
+            **multiplano,
         }
     if not predicciones:
         # Sin esto, un archivo de una corrida anterior quedaría y evaluate.py lo leería como actual.
@@ -302,6 +361,8 @@ def main() -> None:
     parser.add_argument("--jobs", type=int, default=8)
     parser.add_argument("--max-objects", type=int, default=None)
     parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("--max-planes", type=int, default=None,
+                        help="agrega triangulation_multiplane con hasta N planos")
     args = parser.parse_args()
 
     objetos = sorted(d for d in (args.renders_root / "plane_sym").iterdir() if d.is_dir())
@@ -311,6 +372,8 @@ def main() -> None:
     print(f"Entrada   : {exp_filename(MOLMO_JSON, args.input_id)}")
     print(f"Salida    : {exp_filename(OUTPUT_FILE, args.output_id)}")
     print(f"Criterio  : {args.criterio}  ({args.size}px, {args.lighting}, vistas {args.vistas})")
+    if args.max_planes is not None:
+        print(f"Planos    : hasta {args.max_planes} (triangulation_multiplane)")
 
     tarea = partial(_procesar_con_args, args=args)
     with Pool(args.jobs) as pool:
@@ -322,7 +385,7 @@ def main() -> None:
 def _procesar_con_args(object_dir: Path, args: argparse.Namespace) -> str:
     """ Adapta procesar_objeto a los argumentos de la línea de comandos. """
     return procesar_objeto(object_dir, args.input_id, args.output_id, args.size, args.lighting,
-                           args.criterio, args.vistas, args.overwrite)
+                           args.criterio, args.vistas, args.overwrite, args.max_planes)
 
 
 if __name__ == "__main__":

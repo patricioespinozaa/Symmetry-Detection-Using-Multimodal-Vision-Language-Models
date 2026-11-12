@@ -5,6 +5,7 @@
 #
 #   python utils/generar_tablas_noviembre.py
 #   python utils/generar_tablas_noviembre.py --salida otra/ruta.tex
+#   python utils/generar_tablas_noviembre.py --solo plane_448 --salida Tesis_DCC_MDS/x.tex
 #
 # Solo usa la biblioteca estándar. Requiere en el preámbulo: booktabs, multirow, adjustbox y
 # \newsavebox{\tablebox}.
@@ -160,9 +161,11 @@ VARIANTES = [f"{p}_1" for p in BASE]
 ADICIONALES = ["v06", "v07", "v08"]
 SELECCION = {
     "axis_sym": {"prompt": "v04", "resolucion_448": ["v04", "v06", "v08"],
+                 "carpeta_448": "ndcfix_448",
                  "flujo_b": "v04_flowB", "flujo_c": "v05_1_flowC", "respaldo_c": "v05\\_1",
                  "traza": "del eje"},
-    "plane_sym": {"prompt": "v05_1", "resolucion_448": ["v02", "v05_1", "v06"],
+    "plane_sym": {"prompt": "v05_1", "resolucion_448": ["v00_1", "v04", "v02"],
+                  "carpeta_448": "plane_448px",
                   "flujo_b": "v05_1_flowB", "flujo_c": "v04_1_flowC", "respaldo_c": "v04\\_1",
                   "traza": "del plano"},
 }
@@ -563,7 +566,7 @@ def tablas_tipo(tipo: str) -> list[tuple[str, str]]:
         f"Ranking de desempeño de prompt por número de vistas en el Flujo A en {nombre}, "
         f"{config_224}", f"{corto}_top_224", f"{METODO[tipo]} {nota_top}")))
 
-    resolucion = {448: (cargar("ndcfix_448", tipo), seleccion["resolucion_448"]),
+    resolucion = {448: (cargar(seleccion["carpeta_448"], tipo), seleccion["resolucion_448"]),
                   1136: (cargar("ndcfix_1136", tipo), [prompt])}
     bloques_resolucion = bloques_tipo + (["conteos"] if tipo == "plane_sym" else [])
     for bloque in bloques_resolucion:
@@ -640,7 +643,12 @@ def main() -> None:
     """ Escribe todas las tablas de Noviembre en un único .tex. """
     parser = argparse.ArgumentParser(description="Tablas LaTeX desde resultados_finales/.")
     parser.add_argument("--salida", type=Path, default=SALIDA, help="archivo .tex de salida")
+    parser.add_argument("--solo", default=None,
+                        help="escribe solo las tablas cuya etiqueta empieza con tab:nov_<SOLO>")
     args = parser.parse_args()
+    if args.solo and args.salida.resolve() == SALIDA.resolve():
+        parser.error("--solo requiere --salida, para no reemplazar el archivo completo")
+    filtro = rf"\label{{tab:nov_{args.solo}" if args.solo else None
 
     lineas = ["% Generado por utils/generar_tablas_noviembre.py desde resultados_finales/.",
               "% Requiere booktabs, multirow, adjustbox y \\newsavebox{\\tablebox}.", ""]
@@ -649,6 +657,8 @@ def main() -> None:
         lineas += [f"% {'=' * 70}", f"% {TITULO_TIPO[tipo].capitalize()}", f"% {'=' * 70}", ""]
         previa = None
         for seccion, tabla in tablas_tipo(tipo):
+            if filtro and filtro not in tabla:
+                continue
             if seccion != previa:
                 lineas += [f"% --- {seccion}", ""]
                 previa = seccion

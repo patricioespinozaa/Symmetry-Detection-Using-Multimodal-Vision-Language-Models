@@ -1,0 +1,3 @@
+tipo_simetria,n_objetos,n_elementos,pct_a_5deg,pct_a_5deg_esperado_uniforme,pct_a_15deg,pct_a_15deg_esperado_uniforme,angulo_eje_cercano_mediana,cercano_X,cercano_Y,cercano_Z,chi2_eje_cercano,p_chi2_eje_cercano,media_abs_uX,ks_D_X,ks_p_X,media_abs_uY,ks_D_Y,ks_p_Y,media_abs_uZ,ks_D_Z,ks_p_Z
+axial,850,850,0.7,1.1,9.3,10.3,33.3,272,295,283,0.9,0.6268432161974874,0.497,0.02,0.8653140912917519,0.503,0.029,0.4578502238684593,0.496,0.019,0.9073321035841463
+planar,850,1014,99.8,1.1,100.0,10.3,0.0,796,14,204,984.3,1.8209598403531693e-214,0.785,0.782,0.0,0.015,0.957,0.0,0.202,0.776,0.0
