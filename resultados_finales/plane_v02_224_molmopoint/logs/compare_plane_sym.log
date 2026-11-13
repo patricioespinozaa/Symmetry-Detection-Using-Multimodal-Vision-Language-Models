@@ -1,0 +1,9 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 Mapping/compare_results_no_mesh.py --renders-root /data/pespinoz/renders --symmetry-type plane_sym --sizes 224 --lightings flat --experiment-id plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh --csv-dir /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_molmopoint --no-plots --total-objects 850
+
+
+--- triangulation (eje/plano unico) ---
+                                           experiment        method  n_views  n_objects  angular_error_mean  angular_error_median  auc_angular  precision_5deg  precision_10deg
+plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh triangulation        6        850             30.3387               21.2247       0.4765          0.2329           0.3529
+plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh triangulation       14        850             32.9402               16.5433       0.4925          0.2482           0.4071
+plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh triangulation       26        850             41.1083               35.5580       0.3545          0.1388           0.2494
+Saved: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_molmopoint/experiments_13_11_2026/plane_sym_plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh_comparison.csv
