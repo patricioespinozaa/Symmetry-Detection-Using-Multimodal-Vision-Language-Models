@@ -1,0 +1,8 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 PlaneScoreData/audit_run.py --renders-root /data/pespinoz/renders --symmetry-type axis_sym --input-id axis_v04_molmopoint_completo_s224_flat_ndcfix_nomesh --expected-input molmopoint_multiview_axis_v04_molmopoint_completo.json --output-id axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh --estimador expE --size 224 --lighting flat --desde 2026-11-13 08:55
+
+=== axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh (224px, flat, expE)
+Objetos 850 | con puntos 850 | con predicción 850 | recalculados 31
+Entrada: molmopoint_multiview_axis_v04_molmopoint_completo.json -> molmopoint_multiview_axis_v04_molmopoint_completo.json (850)
+Predicciones por vistas: [(6, 850), (14, 850), (26, 850)]
+Evaluadas por vistas   : [(6, 850), (14, 850), (26, 850)]
+[ok] Sin problemas.

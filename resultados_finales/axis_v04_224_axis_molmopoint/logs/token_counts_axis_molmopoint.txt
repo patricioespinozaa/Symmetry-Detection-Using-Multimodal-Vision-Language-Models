@@ -1,0 +1,6 @@
+# Token counts per n_views — experiment: axis_v04_molmopoint_completo
+# model: allenai/MolmoPoint-8B  prompt_mode: single  sizes: [224]  lightings: ['flat']
+ n_views  n_objects      mean       min       max
+       6        850      6900      6900      6900
+      14        850     16100     16100     16100
+      26        850     29900     29900     29900
