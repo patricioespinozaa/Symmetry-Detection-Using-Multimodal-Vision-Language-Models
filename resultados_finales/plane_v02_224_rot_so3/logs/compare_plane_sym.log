@@ -1,0 +1,9 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 Mapping/compare_results_no_mesh.py --renders-root /data/pespinoz/renders_rot_so3 --symmetry-type plane_sym --sizes 224 --lightings flat --experiment-id plane_v02_rot_so3_s224_flat_ndcfix_sdat_mp1_nomesh --csv-dir /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_rot_so3 --no-plots --total-objects 850
+
+
+--- triangulation (eje/plano unico) ---
+                                        experiment        method  n_views  n_objects  angular_error_mean  angular_error_median  auc_angular  precision_5deg  precision_10deg
+plane_v02_rot_so3_s224_flat_ndcfix_sdat_mp1_nomesh triangulation        6        753             62.2511               67.2785       0.0970          0.0059           0.0212
+plane_v02_rot_so3_s224_flat_ndcfix_sdat_mp1_nomesh triangulation       14        670             64.7030               71.5445       0.0906          0.0035           0.0165
+plane_v02_rot_so3_s224_flat_ndcfix_sdat_mp1_nomesh triangulation       26        770             59.7464               62.5344       0.1020          0.0035           0.0176
+Saved: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_rot_so3/experiments_13_11_2026/plane_sym_plane_v02_rot_so3_s224_flat_ndcfix_sdat_mp1_nomesh_comparison.csv
