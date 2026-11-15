@@ -1,1 +1,29 @@
 nohup: ignoring input
+plane_v00_1 a 1136px: renders 850, completos 850, parciales 0, sin JSON 0 -> id final plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh
+plane_v02 a 1136px: renders 850, completos 850, parciales 0, sin JSON 0 -> id final plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh
+[ok] Inferencia pendiente: ninguna
+Terminó sin errores.
+plane_v00_1 a 1136px: renders 850, completos 850, parciales 0, sin JSON 0 -> id final plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh
+plane_v02 a 1136px: renders 850, completos 850, parciales 0, sin JSON 0 -> id final plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh
+[ok] Inferencia pendiente: ninguna
+plane_v00_1: 850 enlaces -> plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh
+[11:10:08] est_plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh
+[11:12:45] eval_plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh
+plane_v02: 850 enlaces -> plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh
+[11:16:25] est_plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh
+[11:18:59] eval_plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh
+[11:22:11] compare_plane_sym
+[11:22:12] audit_plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh
+[11:23:05] audit_plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh
+
+Resultados: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_1136px/experiments_09_11_2026/plane_sym_final_comparison.csv
+experimento                                        vistas  obj    AUC     F1   P@10
+plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh           6  567  0.570  0.645  0.601
+plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh          14  526  0.515  0.561  0.567
+plane_v00_1_s1136_flat_ndcfix_sdat_mp1_nomesh          26  843  0.823  0.700  0.846
+plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh             6  673  0.689  0.684  0.729
+plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh            14  499  0.484  0.547  0.521
+plane_v02_s1136_flat_ndcfix_sdat_mp1_nomesh            26  836  0.846  0.734  0.875
+Terminó sin errores.
+error: cannot pull with rebase: You have unstaged changes.
+error: please commit or stash them.

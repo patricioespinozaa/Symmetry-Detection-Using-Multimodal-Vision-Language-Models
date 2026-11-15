@@ -1,0 +1,16 @@
+  100/692
+  200/692
+  300/692
+  400/692
+  500/692
+  600/692
+
+pointing2d_original: 62830 puntos de 691 objetos
+acierto = punto a <= 3% de la diagonal del objeto de la linea de simetria GT
+    delta  puntos modelo med  acierto  azar med  acierto columna med  acierto
+      0-5   14503      0.007     0.75     0.134     0.17      0.007     0.76
+     5-15    8757      0.028     0.53     0.114     0.18      0.027     0.53
+    15-30   12401      0.061     0.31     0.110     0.18      0.063     0.30
+    30-60   20667      0.092     0.22     0.106     0.18      0.094     0.22
+    60-90    6502      0.138     0.12     0.128     0.13      0.141     0.12
+    todas   62830      0.051     0.40     0.115     0.17      0.051     0.39

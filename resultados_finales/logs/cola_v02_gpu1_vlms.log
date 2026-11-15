@@ -1,0 +1,38 @@
+nohup: ignoring input
+qwen3vl   flat     qwen3vl_multiview_plane_v02_qwen3vl.json      completos   0/850 -> plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh
+
+=== [10/11 19:51] qwen3vl en GPU 1
+[19:51:40] inferencia_qwen3vl
+qwen3vl: 850 enlaces -> plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh
+[19:25:20] est_plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh
+[19:28:03] eval_plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh
+[19:31:31] compare_plane_sym
+[19:31:33] audit_plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh
+[19:32:24] pareado_plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh
+From github.com:patricioespinozaa/Symmetry-Detection-Using-Multimodal-Vision-Language-Models
+ * branch              refactor   -> FETCH_HEAD
+Created autostash: 4f20ef29
+Current branch refactor is up to date.
+Applied autostash.
+[refactor f292117c] Add plane_v02 224px results: qwen3vl
+ 9 files changed, 135 insertions(+)
+ create mode 100644 resultados_finales/plane_v02_224_qwen3vl/experiments_11_11_2026/plane_sym_final_comparison.csv
+ create mode 100644 resultados_finales/plane_v02_224_qwen3vl/logs/audit_plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh.log
+ create mode 100644 resultados_finales/plane_v02_224_qwen3vl/logs/compare_plane_sym.log
+ create mode 100644 resultados_finales/plane_v02_224_qwen3vl/logs/est_plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh.log
+ create mode 100644 resultados_finales/plane_v02_224_qwen3vl/logs/eval_plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh.log
+ create mode 100644 resultados_finales/plane_v02_224_qwen3vl/logs/inferencia_qwen3vl.log
+ create mode 100644 resultados_finales/plane_v02_224_qwen3vl/logs/pareado_plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh.log
+ create mode 100644 resultados_finales/plane_v02_224_qwen3vl/logs/token_counts_qwen3vl.txt
+ create mode 100644 resultados_finales/plane_v02_224_qwen3vl/pareado/plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh.csv
+To github.com:patricioespinozaa/Symmetry-Detection-Using-Multimodal-Vision-Language-Models.git
+   0fdfddcd..f292117c  refactor -> refactor
+
+qwen3vl: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_qwen3vl/experiments_11_11_2026/plane_sym_final_comparison.csv
+vistas  obj    AUC     F1   P@10
+     6  827  0.850  0.662  0.905
+    14  839  0.822  0.537  0.812
+    26  850  0.591  0.084  0.179
+qwen3vl: SUBIDO A GITHUB
+
+Cola terminada sin errores: qwen3vl

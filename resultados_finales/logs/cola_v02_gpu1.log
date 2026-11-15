@@ -1,0 +1,70 @@
+nohup: ignoring input
+brighter  brighter molmo_multiview_plane_v02.json                completos   1/850 -> plane_v02_s224_brighter_ndcfix_sdat_mp1_nomesh
+flujoC    flat     molmo_multiview_plane_v02_flowC.json          completos   0/850 -> plane_v02_flowC_s224_flat_ndcfix_sdat_mp1_nomesh
+
+=== [09/11 12:17] brighter en GPU 1
+[12:17:27] inferencia_brighter
+brighter: 850 enlaces -> plane_v02_s224_brighter_ndcfix_sdat_mp1_nomesh
+[02:25:08] est_plane_v02_s224_brighter_ndcfix_sdat_mp1_nomesh
+[02:27:44] eval_plane_v02_s224_brighter_ndcfix_sdat_mp1_nomesh
+[02:31:27] compare_plane_sym
+[02:31:29] audit_plane_v02_s224_brighter_ndcfix_sdat_mp1_nomesh
+From github.com:patricioespinozaa/Symmetry-Detection-Using-Multimodal-Vision-Language-Models
+ * branch              refactor   -> FETCH_HEAD
+Created autostash: 526fb89a
+Current branch refactor is up to date.
+Applied autostash.
+[refactor e684f7b9] Add plane_v02 224px results: brighter
+ 7 files changed, 97 insertions(+)
+ create mode 100644 resultados_finales/plane_v02_224_brighter/experiments_10_11_2026/plane_sym_final_comparison.csv
+ create mode 100644 resultados_finales/plane_v02_224_brighter/logs/audit_plane_v02_s224_brighter_ndcfix_sdat_mp1_nomesh.log
+ create mode 100644 resultados_finales/plane_v02_224_brighter/logs/compare_plane_sym.log
+ create mode 100644 resultados_finales/plane_v02_224_brighter/logs/est_plane_v02_s224_brighter_ndcfix_sdat_mp1_nomesh.log
+ create mode 100644 resultados_finales/plane_v02_224_brighter/logs/eval_plane_v02_s224_brighter_ndcfix_sdat_mp1_nomesh.log
+ create mode 100644 resultados_finales/plane_v02_224_brighter/logs/inferencia_brighter.log
+ create mode 100644 resultados_finales/plane_v02_224_brighter/logs/token_counts_brighter.txt
+To github.com:patricioespinozaa/Symmetry-Detection-Using-Multimodal-Vision-Language-Models.git
+   c520785c..e684f7b9  refactor -> refactor
+
+brighter: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_brighter/experiments_10_11_2026/plane_sym_final_comparison.csv
+vistas  obj    AUC     F1   P@10
+     6  790  0.777  0.643  0.824
+    14  631  0.603  0.549  0.642
+    26  828  0.789  0.632  0.772
+brighter: SUBIDO A GITHUB
+
+=== [10/11 02:32] flujoC en GPU 1
+[02:32:25] inferencia_flujoC
+flujoC: 850 enlaces -> plane_v02_flowC_s224_flat_ndcfix_sdat_mp1_nomesh
+[17:27:11] est_plane_v02_flowC_s224_flat_ndcfix_sdat_mp1_nomesh
+[17:29:19] eval_plane_v02_flowC_s224_flat_ndcfix_sdat_mp1_nomesh
+[17:32:58] compare_plane_sym
+[17:33:00] audit_plane_v02_flowC_s224_flat_ndcfix_sdat_mp1_nomesh
+[17:33:46] pareado_plane_v02_flowC_s224_flat_ndcfix_sdat_mp1_nomesh
+From github.com:patricioespinozaa/Symmetry-Detection-Using-Multimodal-Vision-Language-Models
+ * branch              refactor   -> FETCH_HEAD
+Created autostash: 367f760f
+Current branch refactor is up to date.
+Applied autostash.
+[refactor 670d8550] Add plane_v02 224px results: flujoC
+ 9 files changed, 143 insertions(+)
+ create mode 100644 resultados_finales/plane_v02_224_flujoC/experiments_10_11_2026/plane_sym_final_comparison.csv
+ create mode 100644 resultados_finales/plane_v02_224_flujoC/logs/audit_plane_v02_flowC_s224_flat_ndcfix_sdat_mp1_nomesh.log
+ create mode 100644 resultados_finales/plane_v02_224_flujoC/logs/compare_plane_sym.log
+ create mode 100644 resultados_finales/plane_v02_224_flujoC/logs/est_plane_v02_flowC_s224_flat_ndcfix_sdat_mp1_nomesh.log
+ create mode 100644 resultados_finales/plane_v02_224_flujoC/logs/eval_plane_v02_flowC_s224_flat_ndcfix_sdat_mp1_nomesh.log
+ create mode 100644 resultados_finales/plane_v02_224_flujoC/logs/inferencia_flujoC.log
+ create mode 100644 resultados_finales/plane_v02_224_flujoC/logs/pareado_plane_v02_flowC_s224_flat_ndcfix_sdat_mp1_nomesh.log
+ create mode 100644 resultados_finales/plane_v02_224_flujoC/logs/token_counts_flujoC.txt
+ create mode 100644 resultados_finales/plane_v02_224_flujoC/pareado/plane_v02_flowC_s224_flat_ndcfix_sdat_mp1_nomesh.csv
+To github.com:patricioespinozaa/Symmetry-Detection-Using-Multimodal-Vision-Language-Models.git
+   d361b5d9..670d8550  refactor -> refactor
+
+flujoC: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_flujoC/experiments_10_11_2026/plane_sym_final_comparison.csv
+vistas  obj    AUC     F1   P@10
+     6  842  0.366  0.249  0.373
+    14  772  0.265  0.203  0.271
+    26  830  0.213  0.119  0.172
+flujoC: SUBIDO A GITHUB
+
+Cola terminada sin errores: brighter, flujoC

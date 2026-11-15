@@ -1,0 +1,38 @@
+nohup: ignoring input
+axis_molmopoint flat     molmopoint_multiview_axis_v04_molmopoint_completo.json completos   0/850 -> axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh
+
+=== [12/11 09:38] axis_molmopoint en GPU 1
+[09:38:05] inferencia_axis_molmopoint
+axis_molmopoint: 850 enlaces -> axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh
+[08:56:00] est_axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh
+[08:57:06] eval_axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh
+[09:00:00] compare_axis_sym
+[09:00:02] audit_axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh
+[09:00:08] pareado_axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh
+From github.com:patricioespinozaa/Symmetry-Detection-Using-Multimodal-Vision-Language-Models
+ * branch              refactor   -> FETCH_HEAD
+Created autostash: f347448f
+Current branch refactor is up to date.
+Applied autostash.
+[refactor 15cf9761] Add axis_v04 224px results: axis_molmopoint
+ 9 files changed, 134 insertions(+)
+ create mode 100644 resultados_finales/axis_v04_224_axis_molmopoint/experiments_13_11_2026/axis_sym_final_comparison.csv
+ create mode 100644 resultados_finales/axis_v04_224_axis_molmopoint/logs/audit_axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh.log
+ create mode 100644 resultados_finales/axis_v04_224_axis_molmopoint/logs/compare_axis_sym.log
+ create mode 100644 resultados_finales/axis_v04_224_axis_molmopoint/logs/est_axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh.log
+ create mode 100644 resultados_finales/axis_v04_224_axis_molmopoint/logs/eval_axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh.log
+ create mode 100644 resultados_finales/axis_v04_224_axis_molmopoint/logs/inferencia_axis_molmopoint.log
+ create mode 100644 resultados_finales/axis_v04_224_axis_molmopoint/logs/pareado_axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh.log
+ create mode 100644 resultados_finales/axis_v04_224_axis_molmopoint/logs/token_counts_axis_molmopoint.txt
+ create mode 100644 resultados_finales/axis_v04_224_axis_molmopoint/pareado/axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh.csv
+To github.com:patricioespinozaa/Symmetry-Detection-Using-Multimodal-Vision-Language-Models.git
+   e2d1e275..15cf9761  refactor -> refactor
+
+axis_molmopoint: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/axis_v04_224_axis_molmopoint/experiments_13_11_2026/axis_sym_final_comparison.csv
+vistas  obj    AUC     F1   P@10
+     6  850  0.618      -  0.584
+    14  850  0.647      -  0.617
+    26  850  0.656      -  0.628
+axis_molmopoint: SUBIDO A GITHUB
+
+Cola terminada sin errores: axis_molmopoint

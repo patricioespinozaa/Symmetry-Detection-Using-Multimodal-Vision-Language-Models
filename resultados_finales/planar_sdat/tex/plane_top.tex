@@ -1,0 +1,24 @@
+% Generado por utils/generar_tablas_seleccion.py. No editar a mano.
+\begin{table}[H]
+\centering
+\caption{Ranking de las 3 mejores configuraciones del Flujo A en simetría planar, resolución 224px, iluminación \textit{flat}, envío multiimagen.}
+\label{tab:plane_top}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{0.95}
+
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}rlrcrrrrrr@{}}
+\toprule
+\# & Prompt & Vistas & Crit. & \begin{tabular}[b]{@{}c@{}}$F1_{\mathrm{ref}}$ \\ voraz\end{tabular} & AUC$_{45^\circ}$ & P@10$^\circ$ & Objetos & SDE$_{\mathrm{ref}}$ & \begin{tabular}[b]{@{}c@{}}Err.\ medio \\ ($^\circ$)\end{tabular} \\
+\midrule
+1 & \texttt{v07} & 26 & 6 & \textbf{0.725} & 0.710 & 0.734 & 709 & 0.0017 & 22.5 \\
+2 & \texttt{v00\_1} & 6 & 4 & 0.663 & \textbf{0.740} & \textbf{0.785} & 737 & \textbf{0.0012} & 20.5 \\
+3 & \texttt{v04} & 26 & 4 & 0.670 & 0.736 & 0.720 & \textbf{756} & 0.0018 & \textbf{18.6} \\
+\bottomrule
+\end{tabular*}
+
+\vspace{0.5ex}
+\begin{minipage}{\textwidth}
+Nota: Crit.: número del criterio que resolvió la posición. Imputación y cobertura según la Sección~\ref{sec:sm_cobertura}.
+\end{minipage}
+\end{table}

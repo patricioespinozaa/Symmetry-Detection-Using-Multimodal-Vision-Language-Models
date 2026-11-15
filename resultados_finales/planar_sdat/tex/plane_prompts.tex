@@ -1,0 +1,25 @@
+% Generado por utils/generar_tablas_seleccion.py. No editar a mano.
+\begin{table}[H]
+\centering
+\caption{Promedio por \textit{prompt} sobre 6, 14 y 26 vistas, en las mismas condiciones.}
+\label{tab:plane_top_prompts}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{0.95}
+
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}rlcrrrrrr@{}}
+\toprule
+\# & Prompt & Crit. & AUC$_{45^\circ}$ & \begin{tabular}[b]{@{}c@{}}$F1_{\mathrm{ref}}$ \\ voraz\end{tabular} & P@10$^\circ$ & Objetos & SDE$_{\mathrm{ref}}$ & \begin{tabular}[b]{@{}c@{}}Err.\ medio \\ ($^\circ$)\end{tabular} \\
+\midrule
+1 & \texttt{v00\_1} & 4 & 0.696 & 0.615 & 0.721 & 719 & 0.0022 & 23.2 \\
+2 & \texttt{v04} & 2 & 0.678 & 0.653 & 0.702 & 682 & \textbf{0.0014} & 25.2 \\
+3 & \texttt{v02} & 1 & \textbf{0.727} & 0.600 & \textbf{0.751} & \textbf{759} & 0.0022 & \textbf{19.9} \\
+4 & \texttt{v04\_1} & 4 & 0.644 & \textbf{0.658} & 0.677 & 649 & 0.0015 & 28.5 \\
+\bottomrule
+\end{tabular*}
+
+\vspace{0.5ex}
+\begin{minipage}{\textwidth}
+Nota: Crit.: criterio que resolvió la posición, según el orden de las columnas.
+\end{minipage}
+\end{table}
