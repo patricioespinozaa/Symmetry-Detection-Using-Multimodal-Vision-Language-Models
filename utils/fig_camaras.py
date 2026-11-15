@@ -2,7 +2,7 @@
 Figura: renderizado multivista con muestreo de Fibonacci sobre una esfera.
 (a) 114 cámaras distribuidas sobre la esfera, todas orientadas hacia el origen.
 (b) Geometría de una cámara: centro C = -R T, ejes locales (columnas de R),
-    frustum (FoV = 60°), azimut y elevación, y parámetros guardados por vista.
+    frustum (FoV = 60°), azimut y elevación.
 
 Usa la misma convención que ImagesGenerator/export_fibonacci_views.py y
 PyTorch3D (look_at_view_transform):
@@ -24,6 +24,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.transforms import Bbox
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 plt.rcParams.update({
@@ -187,20 +188,24 @@ def make_figure():
              ha="center", fontsize=12)
     fig.text(0.74, 0.93, "(b) Geometría de una cámara virtual", ha="center",
              fontsize=12)
-
-    # parámetros que se guardan por vista (mismas notaciones que la tesis)
-    ax2.text2D(
-        0.5, 0.0,
-        "Por vista se guarda: "
-        r"$R\in\mathbb{R}^{3\times 3}$ (columnas $x_{cam}, y_{cam}, z_{cam}$), "
-        r"$T\in\mathbb{R}^{3}$, $\mathbf{C}=-R\,T$,"
-        "\n"
-        "azimut y elevación;  " r"$z_{cam}$" " = eje óptico.  "
-        r"Convenio de vector-fila: $p_{\mathrm{cam}} = p_{\mathrm{world}}\,R + T$",
-        transform=ax2.transAxes, ha="center", va="bottom", fontsize=9,
-        linespacing=1.6,
-        bbox=dict(boxstyle="round,pad=0.45", facecolor="0.97", edgecolor="0.7"))
     return fig
+
+
+def caja_contenido(fig, pad=0.08, dpi=100):
+    """Recuadro (en pulgadas) del contenido visible de la figura.
+
+    bbox_inches="tight" no sirve con ejes 3D: incluye el área completa de los
+    ejes aunque esté en blanco. Aquí se dibuja la figura una vez, se buscan los
+    píxeles que no son blancos y se devuelve ese recuadro con un margen.
+    """
+    fig.set_dpi(dpi)
+    fig.canvas.draw()
+    img = np.asarray(fig.canvas.buffer_rgba())[:, :, :3]
+    filas, cols = np.nonzero((img < 250).any(axis=2))
+    alto = img.shape[0]
+    x0, x1 = cols.min() / dpi - pad, (cols.max() + 1) / dpi + pad
+    y0, y1 = (alto - filas.max() - 1) / dpi - pad, (alto - filas.min()) / dpi + pad
+    return Bbox.from_extents(x0, y0, x1, y1)
 
 
 def main():
@@ -215,8 +220,9 @@ def main():
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
     fig = make_figure()
-    fig.savefig(out / f"{args.name}.pdf", bbox_inches="tight")
-    fig.savefig(out / f"{args.name}.png", dpi=600, bbox_inches="tight")
+    caja = caja_contenido(fig)
+    fig.savefig(out / f"{args.name}.pdf", bbox_inches=caja)
+    fig.savefig(out / f"{args.name}.png", dpi=600, bbox_inches=caja)
     print(f"ok: {out / args.name}.pdf / .png")
 
 
