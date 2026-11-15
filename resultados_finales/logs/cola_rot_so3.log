@@ -1,0 +1,43 @@
+[13/11 16:17] esperando inferencia (PIDs [2100957, 2100958])
+[13/11 23:06] inferencia terminada
+[13/11 23:06] 850/850 objetos con 6/14/26 vistas; post-procesando
+rot_so3: 850 enlaces -> plane_v02_rot_so3_s224_flat_ndcfix_sdat_mp1_nomesh
+[23:06:20] est_plane_v02_rot_so3_s224_flat_ndcfix_sdat_mp1_nomesh
+[23:08:34] eval_plane_v02_rot_so3_s224_flat_ndcfix_sdat_mp1_nomesh
+[23:12:57] compare_plane_sym
+[23:12:59] audit_plane_v02_rot_so3_s224_flat_ndcfix_sdat_mp1_nomesh
+[23:13:44] pareado_plane_v02_rot_so3_s224_flat_ndcfix_sdat_mp1_nomesh
+From github.com:patricioespinozaa/Symmetry-Detection-Using-Multimodal-Vision-Language-Models
+ * branch              refactor   -> FETCH_HEAD
+Created autostash: 701c2049
+Current branch refactor is up to date.
+Applied autostash.
+[refactor e9521f40] Add plane_v02 224px results: rot_so3 (planar meshes with random SO(3) rotation)
+ 17 files changed, 3804 insertions(+)
+ create mode 100644 ExploratoryDataAnalysis/rotar_mallas.py
+ create mode 100644 ImagesGenerator/data_render_subset.py
+ create mode 100644 ImagesGenerator/export_fibonacci_views_subset.py
+ create mode 100644 MolmoPointPointing/molmopoint_multiview_runner_subset.py
+ create mode 100644 MolmoPointing/molmo_multiview_runner_subset.py
+ create mode 100644 PlaneScoreData/run_plane_v02_224_rot_so3.py
+ create mode 100644 QwenPointing/qwen3vl_multiview_runner_subset.py
+ create mode 100644 resultados_finales/plane_v02_224_rot_so3/experiments_13_11_2026/plane_sym_final_comparison.csv
+ create mode 100644 resultados_finales/plane_v02_224_rot_so3/logs/audit_plane_v02_rot_so3_s224_flat_ndcfix_sdat_mp1_nomesh.log
+ create mode 100644 resultados_finales/plane_v02_224_rot_so3/logs/compare_plane_sym.log
+ create mode 100644 resultados_finales/plane_v02_224_rot_so3/logs/est_plane_v02_rot_so3_s224_flat_ndcfix_sdat_mp1_nomesh.log
+ create mode 100644 resultados_finales/plane_v02_224_rot_so3/logs/eval_plane_v02_rot_so3_s224_flat_ndcfix_sdat_mp1_nomesh.log
+ create mode 100644 resultados_finales/plane_v02_224_rot_so3/logs/inferencia_gpu0.log
+ create mode 100644 resultados_finales/plane_v02_224_rot_so3/logs/inferencia_gpu1.log
+ create mode 100644 resultados_finales/plane_v02_224_rot_so3/logs/pareado_plane_v02_rot_so3_s224_flat_ndcfix_sdat_mp1_nomesh.log
+ create mode 100644 resultados_finales/plane_v02_224_rot_so3/logs/token_counts_rot_so3.txt
+ create mode 100644 resultados_finales/plane_v02_224_rot_so3/pareado/plane_v02_rot_so3_s224_flat_ndcfix_sdat_mp1_nomesh.csv
+To github.com:patricioespinozaa/Symmetry-Detection-Using-Multimodal-Vision-Language-Models.git
+   9240ccb8..e9521f40  refactor -> refactor
+
+rot_so3: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_rot_so3/experiments_13_11_2026/plane_sym_final_comparison.csv
+vistas  obj    AUC     F1   P@10
+     6  753  0.097  0.013  0.021
+    14  670  0.091  0.010  0.017
+    26  770  0.102  0.009  0.018
+[13/11 23:13] rot_so3: SUBIDO A GITHUB
+[13/11 23:13] rot_so3: terminado sin errores
