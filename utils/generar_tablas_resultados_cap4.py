@@ -1,0 +1,580 @@
+#!/usr/bin/env python3
+# Genera las tablas del capítulo de Resultados (cap4.tex, esqueleto "Resultados") con los
+# resultados finales del pipeline sin malla: eje con EXP-E y plano con S_dat, un plano por objeto,
+# todos posteriores a la corrección NDC. Escribe un .tex por tabla en Tesis_DCC_MDS/tablas_resultados/
+# y un registro JSON con la procedencia de cada celda (CSV, fila y columna, o la fórmula de las
+# celdas derivadas). utils/verificar_tablas_resultados_cap4.py vuelve a leer las fuentes y comprueba
+# cada celda.
+#
+#   python utils/generar_tablas_resultados_cap4.py
+#
+# Solo usa la biblioteca estándar. Requiere en el preámbulo: booktabs, multirow, adjustbox y
+# \newsavebox{\tablebox}. No modifica cap4.tex.
+import ast
+import csv
+import json
+import re
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[1]
+RES = REPO / "resultados_finales"
+SALIDA = REPO / "Tesis_DCC_MDS" / "tablas_resultados"
+REGISTRO = SALIDA / "registro_celdas.json"
+AZAR_CSV = REPO / "RandomBaseline" / "outputs" / "random_baseline_reference.csv"
+TRIVIALES_LOG = RES / "logs" / "triviales.log"
+VISTAS = [6, 14, 26]
+TOTAL = 850
+FECHA_MINIMA = (2026, 11, 5)          # recálculo completo tras la corrección NDC (5/10/2026)
+ID_FINAL = re.compile(r"^(axis|plane)_(.+)_s(\d+)_([a-z]+)_ndcfix_(expE|sdat_mp1)_nomesh$")
+# Constantes del azar analítico para una dirección uniforme (Sección sm_azar del Cap. 3)
+AZAR_MEDIA, AZAR_DESV = 57.2958, 21.5597
+FORMATOS = {"auc": "{:.3f}", "grados": "{:.1f}", "prec": "{:.3f}", "f1": "{:.3f}",
+            "obj": "{:.0f}", "sde": "{:.4f}", "entero": "{:.0f}", "z": "{:.1f}"}
+TIPOS = {"axis_sym": "eje", "plane_sym": "plano"}
+METODO = {"axis_sym": "El eje se estima con EXP-E.",
+          "plane_sym": r"La normal se elige con $S_{\mathrm{dat}}$ y se predice un plano por objeto."}
+NOTA_ANG = r"Las métricas angulares usan los 850 objetos e imputan $90^\circ$ a los objetos sin predicción."
+NOTA_F1 = r"$F1_{\mathrm{ref}}$ y SDE$_{\mathrm{ref}}$ usan solo los objetos con predicción."
+NEGRITA = "Negrita: mejor valor de la columna."
+REF = r"224~px, iluminación \textit{flat}, envío multiimagen y Flujo~A"
+
+registro: dict[str, list] = {}
+
+
+def rel(ruta: Path) -> str:
+    """ Ruta relativa al repositorio, con barras normales. """
+    return ruta.relative_to(REPO).as_posix()
+
+
+def csv_final(carpeta: str, tipo: str) -> Path:
+    """ CSV final de una carpeta, comprobando que sea único y posterior al recálculo NDC. """
+    rutas = sorted((RES / carpeta).glob(f"experiments_*/{tipo}_final_comparison.csv"))
+    if len(rutas) != 1:
+        raise ValueError(f"{carpeta}/{tipo}: se esperaba un CSV final, hay {len(rutas)}")
+    d, m, a = map(int, re.search(r"experiments_(\d+)_(\d+)_(\d+)", str(rutas[0])).groups())
+    if (a, m, d) < FECHA_MINIMA:
+        raise ValueError(f"{rutas[0]}: anterior al recálculo con la corrección NDC")
+    return rutas[0]
+
+
+def leer_final(ruta: Path) -> dict[tuple[str, int], dict]:
+    """ Filas del CSV final por (id, vistas), validando id, estimador y n_total. """
+    filas = {}
+    with open(ruta, encoding="utf-8", newline="") as f:
+        for fila in csv.DictReader(f):
+            if fila["method"] != "triangulation":
+                continue
+            if not ID_FINAL.match(fila["experiment"]):
+                raise ValueError(f"{ruta}: id fuera de la versión final {fila['experiment']}")
+            if int(fila["n_total"]) != TOTAL:
+                raise ValueError(f"{ruta}: n_total {fila['n_total']}")
+            filas[(fila["experiment"], int(fila["n_views"]))] = fila
+    return filas
+
+
+_cache: dict[Path, dict] = {}
+
+
+def celda(carpeta: str, tipo: str, exp_id: str, vistas: int, columna: str) -> dict | None:
+    """ Celda de un CSV final, con su procedencia; None si esa combinación no existe. """
+    ruta = csv_final(carpeta, tipo)
+    datos = _cache.setdefault(ruta, leer_final(ruta))
+    fila = datos.get((exp_id, vistas))
+    if fila is None or fila.get(columna) in (None, ""):
+        return None
+    return {"v": float(fila[columna]), "t": {"fuente": "final", "csv": rel(ruta), "experiment": exp_id,
+                                             "n_views": vistas, "columna": columna}}
+
+
+def celda_pareado(ruta: Path, vistas: int, columna: str) -> dict:
+    """ Celda de un CSV pareado (compare_plane_scores.py). """
+    with open(ruta, encoding="utf-8", newline="") as f:
+        fila = next(r for r in csv.DictReader(f) if int(r["n_views"]) == vistas)
+    return {"v": float(fila[columna]), "t": {"fuente": "pareado", "csv": rel(ruta),
+                                             "n_views": vistas, "columna": columna}}
+
+
+def celda_azar(tipo: str, metrica: str, columna: str) -> dict:
+    """ Celda de RandomBaseline/outputs/random_baseline_reference.csv con cobertura 1.0. """
+    with open(AZAR_CSV, encoding="utf-8", newline="") as f:
+        fila = next(r for r in csv.DictReader(f) if r["symmetry_type"] == tipo
+                    and float(r["coverage"]) == 1.0 and r["metric"] == metrica)
+    return {"v": float(fila[columna]), "t": {"fuente": "azar", "csv": rel(AZAR_CSV), "tipo": tipo,
+                                             "metrica": metrica, "columna": columna}}
+
+
+def triviales() -> dict[str, list[dict]]:
+    """ Predictores triviales por tipo, leídos del registro de trivial_baselines.py. """
+    salida, tipo = {}, None
+    for linea in TRIVIALES_LOG.read_text(encoding="utf-8").splitlines():
+        m = re.match(r"=== (axis_sym|plane_sym):", linea)
+        if m:
+            tipo = m.group(1)
+            salida[tipo] = []
+        elif tipo and linea.strip().startswith("{'predictor'"):
+            salida[tipo].append(ast.literal_eval(linea.strip()))
+    return salida
+
+
+def celda_trivial(tipo: str, predictor: str, clave: str) -> dict:
+    """ Celda de un predictor trivial, con su procedencia. """
+    fila = next(p for p in triviales()[tipo] if p["predictor"] == predictor)
+    return {"v": float(fila[clave]), "t": {"fuente": "log", "archivo": rel(TRIVIALES_LOG),
+                                           "tipo": tipo, "predictor": predictor, "clave": clave}}
+
+
+def derivada(valor: float, formula: str, entradas: list[dict]) -> dict:
+    """ Celda calculada a partir de otras; el verificador repite el cálculo. """
+    return {"v": valor, "t": {"fuente": "derivada", "formula": formula,
+                              "entradas": [e["t"] for e in entradas]}}
+
+
+def media(celdas: list[dict | None]) -> dict | None:
+    """ Media de las celdas presentes (None si no hay ninguna). """
+    validas = [c for c in celdas if c is not None]
+    if not validas:
+        return None
+    return derivada(sum(c["v"] for c in validas) / len(validas), "media", validas)
+
+
+def formatear(c: dict | None, formato: str) -> str:
+    """ Formatea una celda; un valor que redondea a cero se escribe sin signo ('-0.0' -> '0.0'). """
+    if c is None:
+        return "--"
+    texto = FORMATOS[formato].format(c["v"])
+    return texto.lstrip("-") if float(texto) == 0 else texto
+
+
+def columna_celdas(celdas: list[dict | None], formato: str, mayor: bool | None) -> list[str]:
+    """ Formatea una columna y pone en negrita el mejor valor (y sus empates). """
+    textos = [formatear(c, formato) for c in celdas]
+    validos = [c["v"] for c in celdas if c is not None]
+    if mayor is None or len(validos) < 2:
+        return textos
+    mejor = FORMATOS[formato].format(max(validos) if mayor else min(validos))
+    return [rf"\textbf{{{t}}}" if t == mejor else t for t in textos]
+
+
+def tabla(nombre: str, titulo: str, encabezado: list[str], filas: list[tuple[list[str], list]],
+          columnas: list[tuple[str, bool | None]], nota: str, separar: list[int] | None = None) -> str:
+    """ Escribe la tabla y registra la procedencia de cada celda numérica.
+
+    Args:
+        * nombre: archivo (sin .tex) y etiqueta tab:res_<nombre>
+        * titulo: título de la tabla
+        * encabezado: líneas del encabezado
+        * filas: (celdas de texto iniciales, celdas numéricas)
+        * columnas: (formato, mayor_es_mejor) de cada columna numérica
+        * nota: nota al pie
+        * separar: índices de fila antes de los que va un \\midrule
+
+    """
+    por_columna = [[f[1][j] for f in filas] for j in range(len(columnas))]
+    textos = [columna_celdas(cs, fmt, mayor) for cs, (fmt, mayor) in zip(por_columna, columnas)]
+    cuerpo, entradas = [], []
+    for i, (inicio, celdas) in enumerate(filas):
+        if separar and i in separar:
+            cuerpo.append(r"\midrule")
+        cuerpo.append(" & ".join(inicio + [textos[j][i] for j in range(len(columnas))]) + r" \\")
+        for j, c in enumerate(celdas):
+            if c is not None:
+                entradas.append({"fila": i, "columna": j, "texto": formatear(c, columnas[j][0]),
+                                 "formato": columnas[j][0], "traza": c["t"]})
+    registro[nombre] = entradas
+    fuentes = sorted({e["traza"].get("csv") or e["traza"].get("archivo") or "derivada"
+                      for e in entradas})
+    alineacion = "l" * len(filas[0][0]) + "r" * len(columnas)
+    lineas = [f"% Generado por utils/generar_tablas_resultados_cap4.py. No editar a mano.",
+              "% Fuentes:"] + [f"%   {f}" for f in fuentes] + [
+        r"\begin{table}[htbp]", r"\centering", rf"\caption{{{titulo}}}",
+        rf"\label{{tab:res_{nombre}}}", r"\begin{lrbox}{\tablebox}",
+        r"\begin{adjustbox}{max width=\textwidth}", rf"\begin{{tabular}}{{{alineacion}}}",
+        r"\toprule", *encabezado, r"\midrule", *cuerpo, r"\bottomrule", r"\end{tabular}",
+        r"\end{adjustbox}", r"\end{lrbox}", r"\usebox{\tablebox}", "", r"\vspace{1.5ex}",
+        r"\begin{minipage}{\wd\tablebox}", r"\footnotesize", f"Nota: {nota}", r"\end{minipage}",
+        r"\end{table}", ""]
+    SALIDA.mkdir(parents=True, exist_ok=True)
+    (SALIDA / f"{nombre}.tex").write_text("\n".join(lineas), encoding="utf-8", newline="\n")
+    return nombre
+
+
+def apilar(texto: str) -> str:
+    partes = texto.split("|")
+    return texto if len(partes) == 1 else (r"\begin{tabular}[b]{@{}c@{}}" + r" \\ ".join(partes)
+                                           + r"\end{tabular}")
+
+
+def tt(prompt: str) -> str:
+    return rf"\texttt{{{prompt.replace('_', chr(92) + '_')}}}"
+
+
+def ident(tipo: str, prompt: str, size: int = 224, luz: str = "flat") -> str:
+    corto = "axis" if tipo == "axis_sym" else "plane"
+    sufijo = "expE_nomesh" if tipo == "axis_sym" else "sdat_mp1_nomesh"
+    return f"{corto}_{prompt}_s{size}_{luz}_ndcfix_{sufijo}"
+
+
+# Columnas de las tablas comparativas por condición
+COMP = {
+    "axis_sym": [("n_objects", "Objetos", "obj", True), ("auc_angular", r"AUC$_{45^\circ}$", "auc", True),
+                 ("angular_error_median", r"Mediana|($^\circ$)", "grados", False),
+                 ("precision_5deg", r"P@5$^\circ$", "prec", True),
+                 ("precision_10deg", r"P@10$^\circ$", "prec", True),
+                 ("sde_ref_mean", r"SDE$_{\mathrm{ref}}$", "sde", False)],
+    "plane_sym": [("n_objects", "Objetos", "obj", True), ("auc_angular", r"AUC$_{45^\circ}$", "auc", True),
+                  ("angular_error_median", r"Mediana|($^\circ$)", "grados", False),
+                  ("precision_10deg", r"P@10$^\circ$", "prec", True),
+                  ("f1_ref", r"$F1_{\mathrm{ref}}$|voraz", "f1", True),
+                  ("f1_ref_hungarian", r"$F1_{\mathrm{ref}}$|húngaro", "f1", True),
+                  ("sde_ref_mean", r"SDE$_{\mathrm{ref}}$", "sde", False)],
+}
+
+
+def comparativa(nombre: str, tipo: str, condiciones: list[tuple[str, str, str]], encabezado_cond: str,
+                titulo: str, nota: str) -> str:
+    """ Tabla por número de vistas con una fila por condición: (nombre LaTeX, carpeta, id). """
+    cols = COMP[tipo]
+    filas, separar = [], []
+    for k, v in enumerate(VISTAS):
+        if k:
+            separar.append(len(filas))
+        for j, (etiqueta, carpeta, exp_id) in enumerate(condiciones):
+            inicio = [rf"\multirow{{{len(condiciones)}}}{{*}}{{{v}}}" if j == 0 else "", etiqueta]
+            filas.append((inicio, [celda(carpeta, tipo, exp_id, v, c) for c, _, _, _ in cols]))
+    encabezado = [" & ".join(["Vistas", encabezado_cond] + [apilar(h) for _, h, _, _ in cols]) + r" \\"]
+    return tabla(nombre, titulo, encabezado, filas, [(f, m) for _, _, f, m in cols],
+                 f"{METODO[tipo]} {NOTA_ANG} {NOTA_F1 if tipo == 'plane_sym' else ''} {NEGRITA}",
+                 separar)
+
+
+# ----------------------------------------------------------------------------------------- tablas
+def tabla_azar() -> str:
+    filas = []
+    metricas = [("angular_error_mean", r"Error angular medio ($^\circ$)", "grados"),
+                ("angular_error_median", r"Error angular mediano ($^\circ$)", "grados"),
+                ("auc_angular", r"AUC$_{45^\circ}$", "auc"), ("precision_5deg", r"P@5$^\circ$", "prec"),
+                ("precision_10deg", r"P@10$^\circ$", "prec"), ("precision_15deg", r"P@15$^\circ$", "prec"),
+                ("f1_ref", r"$F1_{\mathrm{ref}}$ voraz", "f1")]
+    for metrica, texto, fmt in metricas:
+        eje = None if metrica == "f1_ref" else celda_azar("axis_sym", metrica, "closed_form_single_gt")
+        eje_sim = None if metrica == "f1_ref" else celda_azar("axis_sym", metrica, "random_mean")
+        plano = celda_azar("plane_sym", metrica, "random_mean")
+        filas.append(([texto], [eje, eje_sim, plano], fmt))
+    # columnas con formato propio por fila: se registran fila a fila
+    entradas, cuerpo = [], []
+    for i, (inicio, celdas, fmt) in enumerate(filas):
+        cuerpo.append(" & ".join(inicio + [formatear(c, fmt) for c in celdas]) + r" \\")
+        entradas += [{"fila": i, "columna": j, "texto": formatear(c, fmt), "formato": fmt,
+                      "traza": c["t"]} for j, c in enumerate(celdas) if c is not None]
+    encabezado = [r"Métrica & \begin{tabular}[b]{@{}c@{}}Eje \\ (forma cerrada)\end{tabular} & "
+                  r"\begin{tabular}[b]{@{}c@{}}Eje \\ (simulación)\end{tabular} & "
+                  r"\begin{tabular}[b]{@{}c@{}}Plano \\ (simulación)\end{tabular} \\"]
+    nombre = "azar"
+    registro[nombre] = entradas
+    nota = (r"Predictor que elige la dirección del eje o la normal del plano uniformemente en la "
+            r"esfera, sin mirar las imágenes, evaluado con las mismas funciones de "
+            r"\texttt{evaluate.py} sobre los 850 objetos de cada tipo (cobertura 100\%). La simulación "
+            r"promedia las repeticiones del módulo \texttt{RandomBaseline}. En plano, el error se mide "
+            r"contra el plano de referencia más cercano, por eso es menor que en eje.")
+    lineas = ["% Generado por utils/generar_tablas_resultados_cap4.py. No editar a mano.",
+              f"% Fuentes:\n%   {rel(AZAR_CSV)}", r"\begin{table}[htbp]", r"\centering",
+              r"\caption{Línea base aleatoria en eje y plano.}", r"\label{tab:res_azar}",
+              r"\begin{lrbox}{\tablebox}", r"\begin{tabular}{lrrr}", r"\toprule", *encabezado,
+              r"\midrule", *cuerpo, r"\bottomrule", r"\end{tabular}", r"\end{lrbox}",
+              r"\usebox{\tablebox}", "", r"\vspace{1.5ex}", r"\begin{minipage}{\wd\tablebox}",
+              r"\footnotesize", f"Nota: {nota}", r"\end{minipage}", r"\end{table}", ""]
+    (SALIDA / f"{nombre}.tex").write_text("\n".join(lineas), encoding="utf-8", newline="\n")
+    return nombre
+
+
+def tablas_triviales() -> list[str]:
+    nombres = []
+    predictores = [("uniform random direction (analytic)", "Dirección al azar (analítico)"),
+                   ("always X", r"Siempre $X$"), ("always Y", r"Siempre $Y$"), ("always Z", r"Siempre $Z$")]
+    cols = [("angular_error_mean", r"Media|($^\circ$)", "grados", False),
+            ("angular_error_median", r"Mediana|($^\circ$)", "grados", False),
+            ("auc_angular", r"AUC$_{45^\circ}$", "auc", True), ("precision_5deg", r"P@5$^\circ$", "prec", True),
+            ("precision_10deg", r"P@10$^\circ$", "prec", True), ("precision_15deg", r"P@15$^\circ$", "prec", True)]
+    filas = [([texto], [celda_trivial("axis_sym", p, c) for c, _, _, _ in cols]) for p, texto in predictores]
+    enc = [" & ".join(["Predictor"] + [apilar(h) for _, h, _, _ in cols]) + r" \\"]
+    nombres.append(tabla("triviales_eje", "Predictores triviales en simetría axial.", enc, filas,
+                         [(f, None) for _, _, f, _ in cols],
+                         r"Predictores que siempre devuelven la misma dirección del mundo, evaluados "
+                         r"sobre los 850 objetos axiales. Como los ejes de referencia están orientados "
+                         r"al azar, ninguno se aparta del azar analítico."))
+    predictores = [("always {X}", r"Siempre $\{X\}$"), ("always {Y}", r"Siempre $\{Y\}$"),
+                   ("always {Z}", r"Siempre $\{Z\}$"), ("always {X,Z}", r"Siempre $\{X,Z\}$"),
+                   ("always {X,Y}", r"Siempre $\{X,Y\}$"), ("always {X,Y,Z}", r"Siempre $\{X,Y,Z\}$")]
+    cols = [("n_planes_predicted", "Planos", "entero", None),
+            ("recall_planes_mean", "Recall", "prec", True),
+            ("precision_planes_mean", "Precisión", "prec", True),
+            ("f1_ref", r"$F1_{\mathrm{ref}}$|voraz", "f1", True),
+            ("f1_ref_hungarian", r"$F1_{\mathrm{ref}}$|húngaro", "f1", True)]
+    filas = [([texto], [celda_trivial("plane_sym", p, c) for c, _, _, _ in cols]) for p, texto in predictores]
+    enc = [" & ".join(["Predictor"] + [apilar(h) for _, h, _, _ in cols]) + r" \\"]
+    nombres.append(tabla("triviales_plano", "Predictores triviales en simetría planar.", enc, filas,
+                         [(f, m) for _, _, f, m in cols],
+                         r"Predictores que siempre devuelven el mismo conjunto de planos del mundo que "
+                         r"pasan por el origen, evaluados sobre los 850 objetos planares. Recall y "
+                         r"precisión con emparejamiento a $15^\circ$. " + NEGRITA))
+    return nombres
+
+
+PROMPTS = ["v00", "v01", "v02", "v03", "v04", "v05",
+           "v00_1", "v01_1", "v02_1", "v03_1", "v04_1", "v05_1", "v06", "v07", "v08"]
+
+
+def tabla_prompts(tipo: str) -> str:
+    segunda = ("angular_error_median", r"Error mediano ($^\circ$)", "grados", False) \
+        if tipo == "axis_sym" else ("f1_ref", r"$F1_{\mathrm{ref}}$ voraz", "f1", True)
+    filas = []
+    for p in PROMPTS:
+        carpeta = "ndcfix_v08" if p == "v08" else "ndcfix_flujoA"
+        auc = [celda(carpeta, tipo, ident(tipo, p), v, "auc_angular") for v in VISTAS]
+        otra = [celda(carpeta, tipo, ident(tipo, p), v, segunda[0]) for v in VISTAS]
+        filas.append(([tt(p)], auc + [media(auc)] + otra))
+    cols = [("auc", True)] * 4 + [(segunda[2], segunda[3])] * 3
+    enc = [rf"\multirow{{2}}{{*}}{{\textit{{Prompt}}}} & \multicolumn{{4}}{{c}}{{AUC$_{{45^\circ}}$}} & "
+           rf"\multicolumn{{3}}{{c}}{{{segunda[1]}}} \\",
+           r"\cmidrule(lr){2-5}\cmidrule(lr){6-8}",
+           r" & $n_v{=}6$ & 14 & 26 & Prom. & $n_v{=}6$ & 14 & 26 \\"]
+    titulo = rf"Comparación de \textit{{prompts}} en simetría {'axial' if tipo == 'axis_sym' else 'planar'} ({REF})."
+    nota = (f"{METODO[tipo]} {NOTA_ANG} " + (NOTA_F1 + " " if tipo == "plane_sym" else "")
+            + r"Prom.: media de los tres valores de $n_v$. Base: \texttt{v00}--\texttt{v05}; "
+            r"variantes: \texttt{\_1}; rondas posteriores: \texttt{v06}--\texttt{v08} "
+            r"(Tabla~\ref{tab:prompt-variants}). " + NEGRITA)
+    return tabla(f"prompts_{TIPOS[tipo]}", titulo, enc, filas, cols, nota, separar=[6, 12])
+
+
+SELECCION = {
+    "axis_sym": [("v04", {224: ("ndcfix_flujoA",), 448: ("ndcfix_448",), 1136: ("ndcfix_1136",)}),
+                 ("v06", {224: ("ndcfix_flujoA",), 448: ("ndcfix_448",)}),
+                 ("v08", {224: ("ndcfix_v08",), 448: ("ndcfix_448",)})],
+    "plane_sym": [("v00_1", {224: ("ndcfix_flujoA",), 448: ("plane_448px",), 1136: ("plane_1136px",)}),
+                  ("v02", {224: ("ndcfix_flujoA",), 448: ("plane_448px",), 1136: ("plane_1136px",)}),
+                  ("v04", {224: ("ndcfix_flujoA",), 448: ("plane_448px",)}),
+                  ("v05_1", {224: ("ndcfix_flujoA",), 448: ("ndcfix_448",), 1136: ("ndcfix_1136",)}),
+                  ("v06", {224: ("ndcfix_flujoA",), 448: ("ndcfix_448",)})],
+}
+
+
+def tabla_seleccion(tipo: str) -> str:
+    filas, incompletas = [], []
+    for p, por_res in SELECCION[tipo]:
+        valores = []
+        for size in (224, 448, 1136):
+            if size not in por_res:
+                valores.append(None)
+                continue
+            cs = [celda(por_res[size][0], tipo, ident(tipo, p, size), v, "auc_angular") for v in VISTAS]
+            if any(c is None for c in cs):
+                incompletas.append(f"{tt(p)} a {size}~px")
+            valores.append(media(cs))
+        cambio = None
+        if valores[0] and valores[1]:
+            cambio = derivada(valores[1]["v"] - valores[0]["v"], "resta", [valores[1], valores[0]])
+        filas.append(([tt(p)], valores + [cambio]))
+    enc = [r"\textit{Prompt} & 224~px & 448~px & 1136~px & \begin{tabular}[b]{@{}c@{}}Cambio \\ 224$\to$448\end{tabular} \\"]
+    nota = (f"{METODO[tipo]} AUC$_{{45^\\circ}}$ promedio sobre $n_v\\in\\{{6,14,26\\}}$, iluminación "
+            r"\textit{flat}, envío multiimagen. --: no se corrió a esa resolución. ")
+    if incompletas:
+        nota += "Promedio sobre las vistas disponibles en " + ", ".join(incompletas) + ". "
+    if tipo == "plane_sym":
+        nota += (r"\texttt{v05\_1} y \texttt{v06} corresponden a la primera selección, hecha con el "
+                 r"puntaje original; sus corridas se recalcularon con $S_{\mathrm{dat}}$. ")
+    nota += NEGRITA
+    cols = [("auc", True)] * 3 + [("auc", None)]
+    return tabla(f"seleccion_{TIPOS[tipo]}",
+                 rf"Selección del \textit{{prompt}} por resolución en simetría "
+                 rf"{'axial' if tipo == 'axis_sym' else 'planar'}.", enc, filas, cols, nota)
+
+
+def tabla_pareado_estimador(tipo: str) -> str:
+    prompt = "v04" if tipo == "axis_sym" else "v02"
+    ruta = RES / "ndcfix_flujoA" / "pareado" / f"{ident(tipo, prompt)}.csv"
+    metricas = [("auc_angular", "auc", True), ("angular_error_median", "grados", False)]
+    if tipo == "plane_sym":
+        metricas.append(("f1_ref", "f1", True))
+    filas = []
+    for v in VISTAS:
+        cs = []
+        for col, _, _ in metricas:
+            cs += [celda_pareado(ruta, v, f"{col}_base"), celda_pareado(ruta, v, f"{col}_nuevo")]
+        cs += [celda_pareado(ruta, v, c) for c in ("dif_media", "ic_inf", "ic_sup", "mejoran", "empeoran")]
+        filas.append(([str(v)], cs))
+    nombres = {"auc_angular": r"AUC$_{45^\circ}$", "angular_error_median": r"Mediana ($^\circ$)",
+               "f1_ref": r"$F1_{\mathrm{ref}}$"}
+    original, final = (("SVD", "EXP-E") if tipo == "axis_sym" else ("Cámaras", r"$S_{\mathrm{dat}}$"))
+    grupos = " & ".join(rf"\multicolumn{{2}}{{c}}{{{nombres[c]}}}" for c, _, _ in metricas)
+    reglas = "".join(rf"\cmidrule(lr){{{2 + 2 * k}-{3 + 2 * k}}}" for k in range(len(metricas)))
+    n = 2 + 2 * len(metricas)
+    enc = [rf"\multirow{{2}}{{*}}{{Vistas}} & {grupos} & \multicolumn{{3}}{{c}}{{Dif.\ de error ($^\circ$)}}"
+           r" & \multirow{2}{*}{Mejoran} & \multirow{2}{*}{Empeoran} \\",
+           reglas + rf"\cmidrule(lr){{{n}-{n + 2}}}",
+           " & " + " & ".join([original, final] * len(metricas)) + r" & Media & IC inf. & IC sup. & & \\"]
+    cols = []
+    for _, fmt, _ in metricas:
+        cols += [(fmt, None), (fmt, None)]
+    cols += [("grados", None)] * 3 + [("entero", None)] * 2
+    if tipo == "axis_sym":
+        intro = (r"Estimador original: SVD de las normales de interpretación sin reponderar. "
+                 r"Estimador final: EXP-E.")
+    else:
+        intro = (r"Estimador original: puntaje por cámaras. Estimador final: $S_{\mathrm{dat}}$. Ambos "
+                 r"predicen un plano por objeto.")
+    nota = (rf"{intro} Mismos puntos de Molmo2 con el \textit{{prompt}} {tt(prompt)} ({REF}). Dif.\ de "
+            r"error: diferencia objeto a objeto del error angular (final $-$ original) sobre los 850 "
+            r"objetos, con $90^\circ$ imputados a los objetos sin predicción; negativo favorece al "
+            r"estimador final. IC 95\% \textit{bootstrap} pareado. Mejoran/Empeoran: objetos cuyo "
+            r"error baja/sube más de $1^\circ$.")
+    return tabla(f"estimador_{TIPOS[tipo]}",
+                 rf"Estimador original frente al final en simetría {'axial' if tipo == 'axis_sym' else 'planar'}.",
+                 enc, filas, cols, nota)
+
+
+def tabla_mejor_eje() -> str:
+    filas = []
+    for v in VISTAS:
+        n = celda("ndcfix_flujoA", "axis_sym", ident("axis_sym", "v04"), v, "n_objects")
+        m = celda("ndcfix_flujoA", "axis_sym", ident("axis_sym", "v04"), v, "angular_error_mean")
+        auc = celda("ndcfix_flujoA", "axis_sym", ident("axis_sym", "v04"), v, "auc_angular")
+        esperado = (n["v"] * AZAR_MEDIA + (TOTAL - n["v"]) * 90) / TOTAL
+        e = derivada(esperado, "esperado_azar", [n])
+        z = derivada((m["v"] - esperado) / (AZAR_DESV * n["v"] ** 0.5 / TOTAL), "z_azar", [m, n])
+        filas.append(([str(v)], [n, auc, m, e, z]))
+    azar_auc = celda_azar("axis_sym", "auc_angular", "closed_form_single_gt")
+    filas.append(([r"Azar (analítico)"], [None, azar_auc, None, None, None]))
+    enc = [r"Vistas & Objetos & AUC$_{45^\circ}$ & \begin{tabular}[b]{@{}c@{}}Error medio \\ ($^\circ$)\end{tabular}"
+           r" & \begin{tabular}[b]{@{}c@{}}Esperado bajo \\ azar ($^\circ$)\end{tabular} & $z$ \\"]
+    nota = (rf"{METODO['axis_sym']} \textit{{Prompt}} {tt('v04')} ({REF}). {NOTA_ANG} Esperado bajo azar: "
+            r"$(N_{obj}\cdot 57.30 + (850-N_{obj})\cdot 90)/850$; $z$: diferencia entre el error medio "
+            r"observado y el esperado, dividida por $21.56\sqrt{N_{obj}}/850$ (Sección~\ref{subsec:res-azar}); "
+            r"$z<-2$ indica mejor que el azar.")
+    return tabla("mejor_eje", "Mejor configuración axial frente al azar.", enc, filas,
+                 [("obj", None), ("auc", None), ("grados", None), ("grados", None), ("z", None)], nota,
+                 separar=[3])
+
+
+def tabla_mejor_plano() -> str:
+    filas = []
+    for v in VISTAS:
+        filas.append(([rf"\texttt{{plane\_v02}}, $n_v{{=}}{v}$"],
+                      [celda("ndcfix_flujoA", "plane_sym", ident("plane_sym", "v02"), v, c)
+                       for c in ("n_objects", "auc_angular", "f1_ref", "f1_ref_hungarian")]))
+    filas.append((["Azar (simulación)"], [None, celda_azar("plane_sym", "auc_angular", "random_mean"),
+                                         celda_azar("plane_sym", "f1_ref", "random_mean"),
+                                         celda_azar("plane_sym", "f1_ref_hungarian", "random_mean")]))
+    for p, texto in (("always {X}", r"Siempre $\{X\}$"), ("always {X,Z}", r"Siempre $\{X,Z\}$")):
+        filas.append(([texto], [None, None, celda_trivial("plane_sym", p, "f1_ref"),
+                                celda_trivial("plane_sym", p, "f1_ref_hungarian")]))
+    enc = [r"Predictor & Objetos & AUC$_{45^\circ}$ & \begin{tabular}[b]{@{}c@{}}$F1_{\mathrm{ref}}$ \\ voraz\end{tabular}"
+           r" & \begin{tabular}[b]{@{}c@{}}$F1_{\mathrm{ref}}$ \\ húngaro\end{tabular} \\"]
+    nota = (rf"{METODO['plane_sym']} {REF}. {NOTA_ANG} {NOTA_F1} Los predictores triviales se evalúan sobre "
+            r"los 850 objetos. --: métrica no calculada para ese predictor.")
+    return tabla("mejor_plano", "Mejor configuración planar frente al azar y a los predictores triviales.",
+                 enc, filas, [("obj", None), ("auc", None), ("f1", None), ("f1", None)], nota, separar=[3])
+
+
+def tabla_rotacion() -> str:
+    ruta = RES / "plane_v02_224_rot_so3" / "pareado" / f"{ident('plane_sym', 'v02_rot_so3')}.csv"
+    filas = []
+    for v in VISTAS:
+        cs = [celda_pareado(ruta, v, c) for c in (
+            "n_objects_base", "n_objects_nuevo", "auc_angular_base", "auc_angular_nuevo",
+            "f1_ref_base", "f1_ref_nuevo", "dif_media", "ic_inf", "ic_sup", "mejoran", "empeoran")]
+        filas.append(([str(v)], cs))
+    enc = [r"\multirow{2}{*}{Vistas} & \multicolumn{2}{c}{Objetos} & \multicolumn{2}{c}{AUC$_{45^\circ}$} & "
+           r"\multicolumn{2}{c}{$F1_{\mathrm{ref}}$} & \multicolumn{3}{c}{Dif.\ de error ($^\circ$)} & "
+           r"\multirow{2}{*}{Mejoran} & \multirow{2}{*}{Empeoran} \\",
+           r"\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-10}",
+           r" & Original & Rotado & Original & Rotado & Original & Rotado & Media & IC inf. & IC sup. & & \\"]
+    cols = [("obj", None)] * 2 + [("auc", None)] * 2 + [("f1", None)] * 2 + [("grados", None)] * 3 \
+        + [("entero", None)] * 2
+    nota = (rf"{METODO['plane_sym']} \textit{{Prompt}} {tt('v02')} ({REF}). Rotado: cada objeto y sus planos "
+            r"de referencia se rotan con una rotación uniforme en SO(3) antes de renderizar. Dif.\ de "
+            r"error: rotado $-$ original, objeto a objeto, sobre los 850 objetos con $90^\circ$ "
+            r"imputados. IC 95\% \textit{bootstrap} pareado. Mejoran/Empeoran: más de $1^\circ$. "
+            r"AUC$_{45^\circ}$ del azar analítico: 0.100 (Tabla~\ref{tab:res_azar}).")
+    return tabla("rotacion_plano", "Efecto de la orientación canónica en simetría planar.", enc, filas,
+                 cols, nota)
+
+
+def main() -> None:
+    SALIDA.mkdir(parents=True, exist_ok=True)
+    hechas = [tabla_azar(), *tablas_triviales()]
+    for tipo in ("axis_sym", "plane_sym"):
+        hechas += [tabla_prompts(tipo), tabla_seleccion(tipo)]
+    # Flujos
+    hechas.append(comparativa("flujos_eje", "axis_sym", [
+        (rf"{tt('v04')}, A", "ndcfix_flujoA", ident("axis_sym", "v04")),
+        (rf"{tt('v04')}, B", "ndcfix_flujoB", ident("axis_sym", "v04_flowB")),
+        (rf"{tt('v05_1')}, A", "ndcfix_flujoA", ident("axis_sym", "v05_1")),
+        (rf"{tt('v05_1')}, B", "ndcfix_flujoB", ident("axis_sym", "v05_1_flowB")),
+        (rf"{tt('v05_1')}, C", "ndcfix_flujoC", ident("axis_sym", "v05_1_flowC"))],
+        r"\textit{Prompt}, flujo", "Flujos A, B y C en simetría axial (224~px, \\textit{flat}, envío multiimagen).",
+        ""))
+    hechas.append(comparativa("flujos_plano", "plane_sym", [
+        ("A", "ndcfix_flujoA", ident("plane_sym", "v02")),
+        ("B", "plane_v02_224_flujoB", ident("plane_sym", "v02_flowB")),
+        ("C", "plane_v02_224_flujoC", ident("plane_sym", "v02_flowC"))],
+        "Flujo", r"Flujos A, B y C en simetría planar con \texttt{plane\_v02} (224~px, \textit{flat}, "
+                 r"envío multiimagen).", ""))
+    # Modo de envío
+    hechas.append(comparativa("envio_eje", "axis_sym", [
+        ("Multiimagen", "ndcfix_flujoA", ident("axis_sym", "v04")),
+        ("Una vista", "ndcfix_single_oct26", ident("axis_sym", "v04_single_oct26"))],
+        "Envío", r"Modo de envío en simetría axial con \texttt{axis\_v04} (224~px, \textit{flat}, Flujo~A).", ""))
+    hechas.append(comparativa("envio_plano", "plane_sym", [
+        ("Multiimagen", "ndcfix_flujoA", ident("plane_sym", "v02")),
+        ("Una vista", "plane_v02_224_single", ident("plane_sym", "v02_single"))],
+        "Envío", r"Modo de envío en simetría planar con \texttt{plane\_v02} (224~px, \textit{flat}, Flujo~A).", ""))
+    # Resolución
+    hechas.append(comparativa("resolucion_eje", "axis_sym", [
+        ("224~px", "ndcfix_flujoA", ident("axis_sym", "v04")),
+        ("448~px", "ndcfix_448", ident("axis_sym", "v04", 448)),
+        ("1136~px", "ndcfix_1136", ident("axis_sym", "v04", 1136))],
+        "Resolución", r"Efecto de la resolución en simetría axial con \texttt{axis\_v04} (\textit{flat}, "
+                      r"envío multiimagen).", ""))
+    hechas.append(comparativa("resolucion_plano", "plane_sym", [
+        ("224~px", "ndcfix_flujoA", ident("plane_sym", "v02")),
+        ("448~px", "plane_448px", ident("plane_sym", "v02", 448)),
+        ("1136~px", "plane_1136px", ident("plane_sym", "v02", 1136))],
+        "Resolución", r"Efecto de la resolución en simetría planar con \texttt{plane\_v02} (\textit{flat}, "
+                      r"envío multiimagen).", ""))
+    # Iluminación
+    hechas.append(comparativa("iluminacion_eje", "axis_sym", [
+        (r"\textit{flat}", "ndcfix_flujoA", ident("axis_sym", "v04")),
+        (r"\textit{darker}", "ndcfix_224_darker", ident("axis_sym", "v04", 224, "darker")),
+        (r"\textit{brighter}", "ndcfix_224_brighter", ident("axis_sym", "v04", 224, "brighter"))],
+        "Iluminación", r"Efecto de la iluminación en simetría axial con \texttt{axis\_v04} (224~px, envío "
+                       r"multiimagen).", ""))
+    hechas.append(comparativa("iluminacion_plano", "plane_sym", [
+        (r"\textit{flat}", "ndcfix_flujoA", ident("plane_sym", "v02")),
+        (r"\textit{darker}", "plane_v02_224_darker", ident("plane_sym", "v02", 224, "darker")),
+        (r"\textit{brighter}", "plane_v02_224_brighter", ident("plane_sym", "v02", 224, "brighter"))],
+        "Iluminación", r"Efecto de la iluminación en simetría planar con \texttt{plane\_v02} (224~px, envío "
+                       r"multiimagen).", ""))
+    hechas += [tabla_pareado_estimador("axis_sym"), tabla_pareado_estimador("plane_sym"),
+               tabla_mejor_eje(), tabla_mejor_plano(), tabla_rotacion()]
+    # VLMs (una vista por llamada)
+    hechas.append(comparativa("vlms_eje", "axis_sym", [
+        ("Molmo2-8B", "ndcfix_single_oct26", ident("axis_sym", "v04_single_oct26")),
+        ("MolmoPoint-8B (frase)", "molmopoint", ident("axis_sym", "v04_molmopoint")),
+        ("MolmoPoint-8B (completo)", "axis_v04_224_axis_molmopoint", ident("axis_sym", "v04_molmopoint_completo")),
+        ("Qwen3-VL-8B", "qwen3vl", ident("axis_sym", "v04_qwen3vl"))],
+        "Modelo", r"Comparación de VLMs en simetría axial con \texttt{axis\_v04} (224~px, \textit{flat}, "
+                  r"una vista por llamada).", ""))
+    hechas.append(comparativa("vlms_plano", "plane_sym", [
+        ("Molmo2-8B", "plane_v02_224_single", ident("plane_sym", "v02_single")),
+        ("MolmoPoint-8B (frase)", "plane_v02_224_molmopoint_frase", ident("plane_sym", "v02_molmopoint_frase")),
+        ("MolmoPoint-8B (completo)", "plane_v02_224_molmopoint", ident("plane_sym", "v02_molmopoint")),
+        ("Qwen3-VL-8B", "plane_v02_224_qwen3vl", ident("plane_sym", "v02_qwen3vl"))],
+        "Modelo", r"Comparación de VLMs en simetría planar con \texttt{plane\_v02} (224~px, \textit{flat}, "
+                  r"una vista por llamada).", ""))
+    REGISTRO.write_text(json.dumps(registro, indent=1, ensure_ascii=False), encoding="utf-8",
+                        newline="\n")
+    print(f"{len(hechas)} tablas en {SALIDA}; {sum(len(v) for v in registro.values())} celdas registradas")
+
+
+if __name__ == "__main__":
+    main()
