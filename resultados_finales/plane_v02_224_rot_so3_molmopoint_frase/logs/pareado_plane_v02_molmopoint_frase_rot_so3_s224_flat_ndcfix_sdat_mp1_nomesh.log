@@ -1,0 +1,43 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 PlaneScoreData/compare_plane_scores.py --renders-root /data/pespinoz/renders_rot_so3 --symmetry-type plane_sym --comparison-csv /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_molmopoint_frase/experiments_12_11_2026/plane_sym_final_comparison.csv /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_rot_so3_molmopoint_frase/experiments_24_11_2026/plane_sym_final_comparison.csv --base-id plane_v02_molmopoint_frase_s224_flat_ndcfix_sdat_mp1_nomesh --new-id plane_v02_molmopoint_frase_rot_so3_s224_flat_ndcfix_sdat_mp1_nomesh --size 224 --lighting flat --salida /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_rot_so3_molmopoint_frase/pareado/plane_v02_molmopoint_frase_rot_so3_s224_flat_ndcfix_sdat_mp1_nomesh.csv
+
+
+=== 6 vistas ===
+Métrica          Base      Nuevo
+Objetos           814        791
+AUC45           0.685      0.115
+Mediana           7.9       65.6
+Media            18.7       60.4
+P@10            0.561      0.024
+F1 voraz        0.384      0.013
+F1 hung.        0.417      0.014
+SDE_ref        0.0038     0.0117
+Dif. de error (nuevo - base, n=850): +41.62 grados, IC 95% [+39.33, +43.96]
+Objetos: mejoran 94, empeoran 747 (margen de 1 grado)
+
+=== 14 vistas ===
+Métrica          Base      Nuevo
+Objetos           850        850
+AUC45           0.741      0.148
+Mediana           5.0       66.0
+Media            15.1       58.0
+P@10            0.708      0.043
+F1 voraz        0.466      0.025
+F1 hung.        0.507      0.026
+SDE_ref        0.0030     0.0087
+Dif. de error (nuevo - base, n=850): +42.95 grados, IC 95% [+40.62, +45.24]
+Objetos: mejoran 82, empeoran 759 (margen de 1 grado)
+
+=== 26 vistas ===
+Métrica          Base      Nuevo
+Objetos           850        850
+AUC45           0.632      0.144
+Mediana          10.9       65.0
+Media            19.4       58.3
+P@10            0.474      0.048
+F1 voraz        0.283      0.025
+F1 hung.        0.308      0.026
+SDE_ref        0.0044     0.0078
+Dif. de error (nuevo - base, n=850): +38.91 grados, IC 95% [+36.78, +41.05]
+Objetos: mejoran 90, empeoran 744 (margen de 1 grado)
+
+Guardado: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_rot_so3_molmopoint_frase/pareado/plane_v02_molmopoint_frase_rot_so3_s224_flat_ndcfix_sdat_mp1_nomesh.csv
