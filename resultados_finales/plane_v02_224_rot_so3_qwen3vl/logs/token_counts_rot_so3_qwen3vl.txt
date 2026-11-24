@@ -1,0 +1,6 @@
+# Token counts per n_views — experiment: plane_v02_qwen3vl_rot_so3
+# model: Qwen/Qwen3-VL-8B-Instruct  prompt_mode: single  sizes: [224]  lightings: ['flat']
+ n_views  n_objects      mean       min       max
+       6        199      2148      2148      2148
+      14        199      5012      5012      5012
+      26        199      9308      9308      9308
