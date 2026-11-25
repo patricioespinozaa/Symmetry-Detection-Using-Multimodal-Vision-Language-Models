@@ -10,7 +10,8 @@ imgui.ini
 .polyscope.ini
 
 results*
-Tesis_DCC_MDS
+Tesis_DCC_MDS/
+bibliografia/
 Prompted_*
 experiments_17*
 Gemini_poster_theme

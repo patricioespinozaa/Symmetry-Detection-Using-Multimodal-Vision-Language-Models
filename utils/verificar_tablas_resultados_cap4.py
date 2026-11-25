@@ -5,7 +5,8 @@
 #      con su fórmula, y debe dar el mismo texto que la tabla;
 #   2. cada número del cuerpo de cada tabla debe ser una celda registrada (o un número de vistas);
 #   3. cada CSV final usado debe ser de la versión final del pipeline sin malla: ids con ndcfix y
-#      EXP-E (eje) o S_dat con un plano (plano), n_total = 850 y carpeta del 05/11/2026 o posterior;
+#      EXP-E (eje) o S_dat con un plano (plano), n_total = 850 y carpeta del 05/11/2026 o posterior
+#      (los valores publicados por otros trabajos se leen de resultados_finales/referencias/);
 #   4. cada tabla \input en cap4.tex debe existir.
 #
 #   python utils/verificar_tablas_resultados_cap4.py
@@ -19,7 +20,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 CARPETA = REPO / "Tesis_DCC_MDS" / "tablas_resultados"
 FMT = {"auc": "{:.3f}", "grados": "{:.1f}", "prec": "{:.3f}", "f1": "{:.3f}", "obj": "{:.0f}",
-       "sde": "{:.4f}", "entero": "{:.0f}", "z": "{:.1f}"}
+       "sde": "{:.4f}", "entero": "{:.0f}", "z": "{:.1f}", "sde4": "{:.2f}"}
 ID_OK = re.compile(r"^(axis_.+_ndcfix_expE_nomesh|plane_.+_ndcfix_sdat_mp1_nomesh)$")
 errores: list[str] = []
 
@@ -48,6 +49,10 @@ def valor(t: dict) -> float:
     if fuente == "azar":
         return float(fila_csv(t["csv"], lambda r: r["symmetry_type"] == t["tipo"]
                               and float(r["coverage"]) == 1.0 and r["metric"] == t["metrica"])[t["columna"]])
+    if fuente == "publicado":
+        return float(fila_csv(t["csv"], lambda r: r["symmetry_type"] == t["tipo"]
+                              and r["configuracion"] == t["configuracion"]
+                              and int(r["n_views"]) == t["n_views"])[t["columna"]])
     if fuente == "log":
         tipo, encontrados = None, []
         for linea in (REPO / t["archivo"]).read_text(encoding="utf-8").splitlines():
@@ -67,6 +72,8 @@ def valor(t: dict) -> float:
             return sum(e) / len(e)
         if t["formula"] == "resta":
             return e[0] - e[1]
+        if t["formula"] == "escala_1e4":
+            return e[0] * 1e4
         if t["formula"] == "esperado_azar":
             return (e[0] * 57.2958 + (850 - e[0]) * 90) / 850
         if t["formula"] == "z_azar":

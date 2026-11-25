@@ -1,0 +1,5 @@
+symmetry_type,configuracion,n_views,f1,sde_e4,fuente
+plane_sym,FM10K-4R-FI,6,0.906,0.291,"Aguirre y Sipiran (WACV 2026), Tabla 1 (p. 73), back-projection mejorado (4R-FI)"
+plane_sym,FM10K-4R-FI,114,0.912,0.282,"Aguirre y Sipiran (WACV 2026), Tabla 1 (p. 73), back-projection mejorado (4R-FI)"
+axis_sym,RM-4R-FI-L50,6,0.598,357.4,"Aguirre y Sipiran (WACV 2026), Tabla 1 (p. 73), back-projection mejorado (4R-FI)"
+axis_sym,RM-4R-FI-L50,114,0.803,231.9,"Aguirre y Sipiran (WACV 2026), Tabla 1 (p. 73), back-projection mejorado (4R-FI)"

@@ -22,6 +22,7 @@ SALIDA = REPO / "Tesis_DCC_MDS" / "tablas_resultados"
 REGISTRO = SALIDA / "registro_celdas.json"
 AZAR_CSV = REPO / "RandomBaseline" / "outputs" / "random_baseline_reference.csv"
 TRIVIALES_LOG = RES / "logs" / "triviales.log"
+AGUIRRE_CSV = RES / "referencias" / "aguirre2026_publicado.csv"   # valores publicados (Tabla 1)
 VISTAS = [6, 14, 26]
 TOTAL = 850
 FECHA_MINIMA = (2026, 11, 5)          # recálculo completo tras la corrección NDC (5/10/2026)
@@ -29,7 +30,7 @@ ID_FINAL = re.compile(r"^(axis|plane)_(.+)_s(\d+)_([a-z]+)_ndcfix_(expE|sdat_mp1
 # Constantes del azar analítico para una dirección uniforme (Sección sm_azar del Cap. 3)
 AZAR_MEDIA, AZAR_DESV = 57.2958, 21.5597
 FORMATOS = {"auc": "{:.3f}", "grados": "{:.1f}", "prec": "{:.3f}", "f1": "{:.3f}",
-            "obj": "{:.0f}", "sde": "{:.4f}", "entero": "{:.0f}", "z": "{:.1f}"}
+            "obj": "{:.0f}", "sde": "{:.4f}", "entero": "{:.0f}", "z": "{:.1f}", "sde4": "{:.2f}"}
 TIPOS = {"axis_sym": "eje", "plane_sym": "plano"}
 METODO = {"axis_sym": "El eje se estima con EXP-E.",
           "plane_sym": r"La normal se elige con $S_{\mathrm{dat}}$ y se predice un plano por objeto."}
@@ -123,6 +124,16 @@ def celda_trivial(tipo: str, predictor: str, clave: str) -> dict:
                                            "tipo": tipo, "predictor": predictor, "clave": clave}}
 
 
+def celda_publicada(tipo: str, configuracion: str, vistas: int, columna: str) -> dict:
+    """ Valor publicado por Aguirre y Sipiran, transcrito en resultados_finales/referencias/. """
+    with open(AGUIRRE_CSV, encoding="utf-8", newline="") as f:
+        fila = next(r for r in csv.DictReader(f) if r["symmetry_type"] == tipo
+                    and r["configuracion"] == configuracion and int(r["n_views"]) == vistas)
+    return {"v": float(fila[columna]), "t": {"fuente": "publicado", "csv": rel(AGUIRRE_CSV), "tipo": tipo,
+                                             "configuracion": configuracion, "n_views": vistas,
+                                             "columna": columna}}
+
+
 def derivada(valor: float, formula: str, entradas: list[dict]) -> dict:
     """ Celda calculada a partir de otras; el verificador repite el cálculo. """
     return {"v": valor, "t": {"fuente": "derivada", "formula": formula,
@@ -156,7 +167,8 @@ def columna_celdas(celdas: list[dict | None], formato: str, mayor: bool | None) 
 
 
 def tabla(nombre: str, titulo: str, encabezado: list[str], filas: list[tuple[list[str], list]],
-          columnas: list[tuple[str, bool | None]], nota: str, separar: list[int] | None = None) -> str:
+          columnas: list[tuple[str, bool | None]], nota: str, separar: list[int] | None = None,
+          separar_fino: list[int] | None = None) -> str:
     """ Escribe la tabla y registra la procedencia de cada celda numérica.
 
     Args:
@@ -167,14 +179,22 @@ def tabla(nombre: str, titulo: str, encabezado: list[str], filas: list[tuple[lis
         * columnas: (formato, mayor_es_mejor) de cada columna numérica
         * nota: nota al pie
         * separar: índices de fila antes de los que va un \\midrule
+        * separar_fino: índices de fila antes de los que va un \\cmidrule de todo el ancho
+
+    Una fila sin celdas numéricas (lista vacía) se escribe tal cual, como fila de título.
 
     """
-    por_columna = [[f[1][j] for f in filas] for j in range(len(columnas))]
+    por_columna = [[f[1][j] if f[1] else None for f in filas] for j in range(len(columnas))]
     textos = [columna_celdas(cs, fmt, mayor) for cs, (fmt, mayor) in zip(por_columna, columnas)]
     cuerpo, entradas = [], []
     for i, (inicio, celdas) in enumerate(filas):
         if separar and i in separar:
             cuerpo.append(r"\midrule")
+        elif separar_fino and i in separar_fino:
+            cuerpo.append(rf"\cmidrule{{1-{max(len(f[0]) for f in filas if f[1]) + len(columnas)}}}")
+        if not celdas:
+            cuerpo.append(" & ".join(inicio) + r" \\")
+            continue
         cuerpo.append(" & ".join(inicio + [textos[j][i] for j in range(len(columnas))]) + r" \\")
         for j, c in enumerate(celdas):
             if c is not None:
@@ -183,7 +203,7 @@ def tabla(nombre: str, titulo: str, encabezado: list[str], filas: list[tuple[lis
     registro[nombre] = entradas
     fuentes = sorted({e["traza"].get("csv") or e["traza"].get("archivo") or "derivada"
                       for e in entradas})
-    alineacion = "l" * len(filas[0][0]) + "r" * len(columnas)
+    alineacion = "l" * max(len(f[0]) for f in filas if f[1]) + "r" * len(columnas)
     lineas = [f"% Generado por utils/generar_tablas_resultados_cap4.py. No editar a mano.",
               "% Fuentes:"] + [f"%   {f}" for f in fuentes] + [
         r"\begin{table}[htbp]", r"\centering", rf"\caption{{{titulo}}}",
@@ -299,7 +319,7 @@ def tablas_triviales() -> list[str]:
     enc = [" & ".join(["Predictor"] + [apilar(h) for _, h, _, _ in cols]) + r" \\"]
     nombres.append(tabla("triviales_eje", "Predictores triviales en simetría axial.", enc, filas,
                          [(f, None) for _, _, f, _ in cols],
-                         r"Predictores que siempre devuelven la misma dirección del mundo, evaluados "
+                         r"Predictores que siempre devuelven la misma dirección cartesiana, evaluados "
                          r"sobre los 850 objetos axiales. Como los ejes de referencia están orientados "
                          r"al azar, ninguno se aparta del azar analítico."))
     predictores = [("always {X}", r"Siempre $\{X\}$"), ("always {Y}", r"Siempre $\{Y\}$"),
@@ -314,7 +334,7 @@ def tablas_triviales() -> list[str]:
     enc = [" & ".join(["Predictor"] + [apilar(h) for _, h, _, _ in cols]) + r" \\"]
     nombres.append(tabla("triviales_plano", "Predictores triviales en simetría planar.", enc, filas,
                          [(f, m) for _, _, f, m in cols],
-                         r"Predictores que siempre devuelven el mismo conjunto de planos del mundo que "
+                         r"Predictores que siempre devuelven el mismo conjunto de planos cartesianos que "
                          r"pasan por el origen, evaluados sobre los 850 objetos planares. Recall y "
                          r"precisión con emparejamiento a $15^\circ$. " + NEGRITA))
     return nombres
@@ -499,6 +519,44 @@ def tabla_rotacion() -> str:
                  cols, nota)
 
 
+def tabla_aguirre() -> str:
+    """ F1 y SDE de este trabajo frente a los valores publicados por Aguirre y Sipiran. """
+    def propia(carpeta: str, tipo: str, exp_id: str, v: int) -> list:
+        sde = celda(carpeta, tipo, exp_id, v, "sde_ref_mean")
+        return [celda(carpeta, tipo, exp_id, v, "n_objects"),
+                celda(carpeta, tipo, exp_id, v, "f1_ref") if tipo == "plane_sym" else None,
+                derivada(sde["v"] * 1e4, "escala_1e4", [sde])]
+
+    filas, separar, fino = [], [], []
+    for tipo, config, carpeta, exp_id, etiqueta in (
+            ("plane_sym", "FM10K-4R-FI", "ndcfix_flujoA", ident("plane_sym", "v02"), r"Este trabajo, pose canónica"),
+            ("axis_sym", "RM-4R-FI-L50", "ndcfix_flujoA", ident("axis_sym", "v04"), r"Este trabajo")):
+        if filas:
+            separar.append(len(filas))
+        # Fila de título del bloque: sin celdas numéricas
+        filas.append(([rf"\multicolumn{{5}}{{l}}{{\textit{{{'Simetría planar' if tipo == 'plane_sym' else 'Simetría axial'}}}}}"],
+                      []))
+        for v in (6, 114):
+            filas.append(([str(v), rf"Aguirre y Sipiran (\texttt{{{config}}})"],
+                          [None, celda_publicada(tipo, config, v, "f1"), celda_publicada(tipo, config, v, "sde_e4")]))
+        fino.append(len(filas))
+        for v in VISTAS:
+            filas.append(([str(v), etiqueta], propia(carpeta, tipo, exp_id, v)))
+        if tipo == "plane_sym":
+            fino.append(len(filas))
+            for v in VISTAS:
+                filas.append(([str(v), r"Este trabajo, rotación en $\mathrm{SO}(3)$"],
+                              propia("plane_v02_224_rot_so3", tipo, ident("plane_sym", "v02_rot_so3"), v)))
+    enc = [r"Vistas & Método & Objetos & $F1_{\mathrm{ref}}$ & SDE$_{\mathrm{ref}}$ ($\times 10^{-4}$) \\"]
+    nota = (r"Valores de Aguirre y Sipiran tomados de su Tabla~1 (back-projection mejorado, 4R-FI), no de "
+            r"una ejecución propia; conservan hasta 10 simetrías por objeto con confianza $\geq 0.95$, y no "
+            r"reportan el número de objetos con predicción. Este trabajo predice una simetría por objeto: "
+            rf"\textit{{prompt}} {tt('v02')} con $S_{{\mathrm{{dat}}}}$ en plano y {tt('v04')} con EXP-E en eje "
+            rf"({REF}). {NOTA_F1} --: métrica no reportada o no calculada.")
+    return tabla("aguirre", "Comparación con el método de Aguirre y Sipiran, con acceso a la malla.",
+                 enc, filas, [("obj", None), ("f1", None), ("sde4", None)], nota, separar, fino)
+
+
 def main() -> None:
     SALIDA.mkdir(parents=True, exist_ok=True)
     hechas = [tabla_azar(), *tablas_triviales()]
@@ -571,6 +629,7 @@ def main() -> None:
         ("Qwen3-VL-8B", "plane_v02_224_qwen3vl", ident("plane_sym", "v02_qwen3vl"))],
         "Modelo", r"Comparación de VLMs en simetría planar con \texttt{plane\_v02} (224~px, \textit{flat}, "
                   r"una vista por llamada).", ""))
+    hechas.append(tabla_aguirre())
     REGISTRO.write_text(json.dumps(registro, indent=1, ensure_ascii=False), encoding="utf-8",
                         newline="\n")
     print(f"{len(hechas)} tablas en {SALIDA}; {sum(len(v) for v in registro.values())} celdas registradas")

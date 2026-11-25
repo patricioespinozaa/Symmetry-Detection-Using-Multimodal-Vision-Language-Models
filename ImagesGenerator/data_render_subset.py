@@ -70,6 +70,9 @@ def main():
     parser.add_argument('--subset-n-views', type=int, nargs='+', default=None,
                         help='Render only the views the pointing runners pick for these view counts '
                              '(e.g. 6 14 26 -> 36 of 114); passed through to export_fibonacci_views.py')
+    parser.add_argument('--roll-seed', type=int, default=None,
+                        help='Roll each camera about its optical axis (see export_fibonacci_views_subset.py); '
+                             'default: no roll')
     parser.add_argument('--device', type=str, default='cuda:0')
     parser.add_argument('--skip-existing', action='store_true',
                         help='Skip object/size/lighting combos whose manifest.json already exists')
@@ -132,6 +135,8 @@ def main():
                     ]
                     if args.subset_n_views:
                         cmd += ["--subset-n-views", *map(str, args.subset_n_views)]
+                    if args.roll_seed is not None:
+                        cmd += ["--roll-seed", str(args.roll_seed)]
                     subprocess.run(cmd, check=True)
             pbar.update(1)
         pbar.set_description("Done!")
