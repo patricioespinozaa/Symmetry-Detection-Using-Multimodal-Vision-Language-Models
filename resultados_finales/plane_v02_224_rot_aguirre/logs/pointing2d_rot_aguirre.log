@@ -1,0 +1,18 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 ExploratoryDataAnalysis/pointing_2d_canto.py --renders-root /data/pespinoz/renders_rot_aguirre --objects-root /data/pespinoz/objects_rot_aguirre --molmo-json molmo_multiview_plane_v02_rot_aguirre.json --out /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_rot_aguirre/diag/pointing2d_rot_aguirre --size 224 --grupos 6
+
+  100/692
+  200/692
+  300/692
+  400/692
+  500/692
+  600/692
+
+/home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_rot_aguirre/diag/pointing2d_rot_aguirre: 8224 puntos de 691 objetos
+acierto = punto a <= 3% de la diagonal del objeto de la linea de simetria GT
+    delta  puntos modelo med  acierto  azar med  acierto columna med  acierto
+      0-5     738      0.077     0.33     0.116     0.18      0.069     0.34
+     5-15    1536      0.087     0.29     0.116     0.17      0.085     0.29
+    15-30    1980      0.095     0.23     0.107     0.19      0.089     0.23
+    30-60    2868      0.102     0.20     0.107     0.19      0.100     0.19
+    60-90    1102      0.089     0.20     0.106     0.17      0.098     0.17
+    todas    8224      0.095     0.24     0.108     0.18      0.091     0.23

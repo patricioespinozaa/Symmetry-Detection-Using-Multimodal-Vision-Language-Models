@@ -1,0 +1,32 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 ExploratoryDataAnalysis/rotaciones_aguirre.py --obj-dir /data/pespinoz/objects/curated_plane_sym_obj --aguirre /data/pespinoz/curated_plane_sym_obj_rot_robustness.zip --out-dir /data/pespinoz/objects_rot_aguirre_etiquetas
+
+850 objetos propios; 850 en curated_plane_sym_obj_rot_1_noise; 850 en comun; 0 sin par
+  50/850
+  100/850
+  150/850
+  200/850
+  250/850
+  300/850
+  350/850
+  400/850
+  450/850
+  500/850
+  550/850
+  600/850
+  650/850
+  700/850
+  750/850
+  800/850
+  850/850
+
+Aceptados 850/850 -> /data/pespinoz/objects_rot_aguirre_etiquetas
+  det Q = -1 en 436/850 objetos (rotacion + reflexion)
+  angulo_R_grados    min    8.70000  mediana  158.67400  p95  178.63555  max  179.94100
+  rms_relativo       min    0.00491  mediana    0.01709  p95    0.01739  max    0.01797
+  escala             min    0.99729  mediana    1.00000  p95    1.00084  max    1.00257
+  traslacion_rel     min    0.00002  mediana    0.00030  p95    0.00104  max    0.00220
+  incertidumbre_Q_grados min    0.00730  mediana    0.04735  p95    0.15066  max    0.55940
+  dif_R_3pct_grados  min    0.00760  mediana    0.14095  p95    0.54989  max    2.12410
+  dif_R_3pct_z       min    0.09500  mediana    1.01000  p95    2.15315  max    3.49200
+  error_max_grados   min    0.00090  mediana    0.03060  p95    0.15111  max    0.74430
+  dif_offset_rel     min    0.00000  mediana    0.00000  p95    0.00000  max    0.00000

@@ -1,0 +1,15 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 ExploratoryDataAnalysis/rotar_mallas.py --obj-dir /data/pespinoz/objects/curated_plane_sym_obj --rot-dir /data/pespinoz/objects_rot_aguirre_etiquetas --out-root /data/pespinoz/objects_rot_aguirre
+
+  100/850
+  200/850
+  300/850
+  400/850
+  500/850
+  600/850
+  700/850
+  800/850
+850 mallas rotadas -> /data/pespinoz/objects_rot_aguirre/curated_plane_sym_obj
+Planos validados: 1014  (fallas: 0)
+Error de simetria, mediana entre planos:  original 0.00195  rotado 0.00195  control sin rotar plano 0.09455
+Max |rotado - original|: 1.00e-06
+Detalle: /data/pespinoz/objects_rot_aguirre/validacion_rotacion.csv
