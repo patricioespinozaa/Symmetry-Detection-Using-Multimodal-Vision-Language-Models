@@ -22,6 +22,7 @@ CARPETA = REPO / "Tesis_DCC_MDS" / "tablas_resultados"
 FMT = {"auc": "{:.3f}", "grados": "{:.1f}", "prec": "{:.3f}", "f1": "{:.3f}", "obj": "{:.0f}",
        "sde": "{:.4f}", "entero": "{:.0f}", "z": "{:.1f}", "sde4": "{:.2f}"}
 ID_OK = re.compile(r"^(axis_.+_ndcfix_expE_nomesh|plane_.+_ndcfix_sdat_mp1_nomesh)$")
+ID_MALLA = re.compile(r"^(axis|plane)_.+_s\d+_[a-z]+_ndcfix_mesh(_[a-z0-9_]+)?$")
 errores: list[str] = []
 
 
@@ -49,6 +50,19 @@ def valor(t: dict) -> float:
     if fuente == "azar":
         return float(fila_csv(t["csv"], lambda r: r["symmetry_type"] == t["tipo"]
                               and float(r["coverage"]) == 1.0 and r["metric"] == t["metrica"])[t["columna"]])
+    if fuente == "malla":
+        r = fila_csv(t["csv"], lambda r: r["experiment"] == t["experiment"]
+                     and r["method"] == t["method"] and int(r["n_views"]) == t["n_views"])
+        if not ID_MALLA.match(r["experiment"]) or int(r["n_total"]) != 850:
+            errores.append(f"fila con malla no válida: {t['csv']} {r['experiment']} n_total={r['n_total']}")
+        d, m, a = map(int, re.search(r"experiments_(\d+)_(\d+)_(\d+)", t["csv"]).groups())
+        if (a, m, d) < (2026, 11, 5):
+            errores.append(f"CSV anterior al recálculo NDC: {t['csv']}")
+        return float(r[t["columna"]])
+    if fuente == "pareado_malla":
+        return float(fila_csv(t["csv"], lambda r: r["variante"] == t["variante"]
+                              and r["metodo"] == t["metodo"]
+                              and int(r["n_views"]) == t["n_views"])[t["columna"]])
     if fuente == "publicado":
         return float(fila_csv(t["csv"], lambda r: r["symmetry_type"] == t["tipo"]
                               and r["configuracion"] == t["configuracion"]

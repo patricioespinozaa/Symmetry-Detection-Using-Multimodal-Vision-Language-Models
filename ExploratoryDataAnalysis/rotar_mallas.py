@@ -9,6 +9,12 @@ v' = R v, igual que n' = R n y p' = R p en las etiquetas. El resto del .obj
 (caras, coordenadas de textura, grupos, materiales) queda igual: una rotacion
 tiene det = +1, asi que no invierte la orientacion de las caras.
 
+R tambien puede ser ortogonal con det = -1 (rotacion + reflexion, como las de
+Aguirre y Sipiran recuperadas por rotaciones_aguirre.py). Una reflexion invierte
+el sentido de giro de las caras, y el render usa cull_backfaces=True, asi que en
+ese caso se invierte el orden de los vertices de cada cara 'f' para que las
+normales sigan apuntando hacia afuera. Con det = +1 la salida no cambia.
+
 Escribe una raiz de objetos nueva con la misma estructura que ~/data/objects,
 para usarla tal cual con --objects-root en el resto del pipeline:
 
@@ -19,7 +25,9 @@ para usarla tal cual con --objects-root en el resto del pipeline:
 
 Validacion por objeto (aborta si alguna falla):
   1. La etiqueta de --rot-dir es exactamente R aplicada a la original.
-  2. Releyendo el .obj escrito, R^T v' recupera los vertices originales.
+  2. Releyendo el .obj escrito, R^T v' recupera los vertices originales, y las
+     normales de cara de la malla escrita son R por las originales (coseno
+     medio ponderado por area ~ 1; seria ~ -1 si la malla quedara del reves).
   3. Error de simetria: se refleja cada vertice respecto al plano y se mide la
      distancia al vertice mas cercano (mediana, en unidades del bbox). Debe ser
      igual para (malla original, plano original) y (malla rotada, plano rotado).
@@ -44,6 +52,7 @@ SUBDIR = "curated_plane_sym_obj"
 TOL_VERTICES = 1e-6     # el .obj se escribe con 8 decimales
 TOL_ETIQUETA = 1e-6
 TOL_SIMETRIA = 1e-4     # diferencia admitida en el error de simetria (bbox ~ 1)
+TOL_CARAS = 1e-4        # 1 - coseno medio entre R * normales de cara originales y las escritas
 
 
 def leer_rotaciones(path: Path) -> dict[str, np.ndarray]:
@@ -65,7 +74,7 @@ def leer_planos(path: Path) -> list[tuple[np.ndarray, np.ndarray]]:
 
 
 def rotar_obj(texto: str, R: np.ndarray) -> tuple[str, np.ndarray, np.ndarray]:
-    """ Rota las lineas 'v' y 'vn' de un .obj.
+    """ Rota las lineas 'v' y 'vn' de un .obj; si det R < 0 invierte el orden de cada cara.
 
     Args:
         * texto: contenido del .obj original
@@ -76,9 +85,12 @@ def rotar_obj(texto: str, R: np.ndarray) -> tuple[str, np.ndarray, np.ndarray]:
 
     """
     salida, orig, rot = [], [], []
+    reflexion = np.linalg.det(R) < 0
     for linea in texto.splitlines():
         tok = linea.split()
-        if tok and tok[0] in ("v", "vn") and len(tok) >= 4:
+        if reflexion and tok and tok[0] == "f":
+            salida.append(" ".join(["f", *reversed(tok[1:])]))
+        elif tok and tok[0] in ("v", "vn") and len(tok) >= 4:
             x = np.array([float(t) for t in tok[1:4]])
             y = R @ x
             extra = tok[4:]           # p. ej. color por vertice o w; no se rota
@@ -96,6 +108,31 @@ def vertices_obj(path: Path) -> np.ndarray:
     return np.array([[float(t) for t in linea.split()[1:4]]
                      for linea in path.read_text(encoding="utf-8").splitlines()
                      if linea.startswith("v ")])
+
+
+def normales_cara(texto: str, V: np.ndarray) -> np.ndarray:
+    """ Normales de cara de un .obj (largo = 2 * area), con sus primeros 3 vertices.
+
+    Args:
+        * texto: contenido del .obj
+        * V: vertices del mismo .obj (N, 3)
+
+    Returns:
+        * np.ndarray: (F, 3)
+
+    """
+    caras, n_v = [], 0
+    for linea in texto.splitlines():
+        tok = linea.split()
+        if tok and tok[0] == "v":
+            n_v += 1
+        elif tok and tok[0] == "f" and len(tok) >= 4:
+            idx = [int(t.split("/")[0]) for t in tok[1:4]]
+            caras.append([i - 1 if i > 0 else n_v + i for i in idx])   # negativos: relativos
+    if not caras:
+        return np.zeros((0, 3))
+    F = np.array(caras)
+    return np.cross(V[F[:, 1]] - V[F[:, 0]], V[F[:, 2]] - V[F[:, 0]])
 
 
 def error_simetria(V: np.ndarray, n: np.ndarray, p: np.ndarray, arbol: cKDTree) -> float:
@@ -151,6 +188,14 @@ def main() -> None:
         Vr_leido = vertices_obj(obj_out)
         err_vert = (np.abs(Vr_leido @ R - V).max()
                     if Vr_leido.shape == V.shape else np.inf)   # (R^T v')^T = v'^T R
+        if err_vert < np.inf:
+            n_o = normales_cara(obj_in.read_text(encoding="utf-8"), V)
+            n_r = normales_cara(obj_out.read_text(encoding="utf-8"), Vr_leido)
+            peso = (np.linalg.norm(n_o, axis=1) * np.linalg.norm(n_r, axis=1)).sum()
+            cos_caras = (float(((n_o @ R.T) * n_r).sum() / peso)   # ponderado por area
+                         if len(n_o) == len(n_r) and peso > 0 else -np.inf)
+        else:
+            cos_caras = -np.inf
 
         # 3. error de simetria antes / despues / control
         arbol_o, arbol_r = cKDTree(V), cKDTree(Vr_leido)
@@ -159,14 +204,16 @@ def main() -> None:
             e_rot = error_simetria(Vr_leido, nr, pr, arbol_r)
             e_ctrl = error_simetria(Vr_leido, no, po, arbol_r)
             ok = (err_etq < TOL_ETIQUETA and err_vert < TOL_VERTICES
-                  and abs(e_rot - e_orig) < TOL_SIMETRIA)
+                  and abs(e_rot - e_orig) < TOL_SIMETRIA and cos_caras > 1 - TOL_CARAS)
             filas.append({"object_id": oid, "plano": j, "n_vertices": len(V),
+                          "det": int(round(np.linalg.det(R))),
                           "err_etiqueta": f"{err_etq:.2e}", "err_vertices": f"{err_vert:.2e}",
+                          "cos_normales_cara": f"{cos_caras:.6f}",
                           "sim_original": f"{e_orig:.6f}", "sim_rotado": f"{e_rot:.6f}",
                           "sim_control_sin_rotar_plano": f"{e_ctrl:.6f}", "ok": int(ok)})
             if not ok:
                 fallas.append(f"{oid} plano {j}: etq={err_etq:.1e} vert={err_vert:.1e} "
-                              f"sim {e_orig:.4f} -> {e_rot:.4f}")
+                              f"caras={cos_caras:.4f} sim {e_orig:.4f} -> {e_rot:.4f}")
         if k % 100 == 0:
             print(f"  {k}/{len(rotaciones)}")
 

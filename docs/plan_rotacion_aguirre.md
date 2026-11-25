@@ -104,11 +104,19 @@ Para cada id:
    tiene el menor ruido y no le faltan vértices.
 2. Comprobar el mismo número de vértices. Si no, el objeto se marca como
    rechazado.
-3. Kabsch: centrar ambos conjuntos, `H = A_c^T B_c`, SVD, `R = V U^T`, y
-   corregir el signo si `det R < 0`. Registrar también la traslación
-   (debería ser ≈ 0: los objetos están centrados en el origen).
-4. Residuo: RMS de `R a_i − b_i` después de alinear. Debe ser del orden del
-   ruido (≈ 0.01·R_max, con R_max = max ‖v‖). Si es mucho mayor, se rechaza.
+3. ~~Kabsch: centrar ambos conjuntos, `H = A_c^T B_c`, SVD, `R = V U^T`, y
+   corregir el signo si `det R < 0`.~~ **Corregido el 25/11/2026:** la
+   transformación de ellos es ortogonal de O(3), no de SO(3). En 19 de las 30
+   mallas locales `det Q = −1` (rotación + reflexión). Con la mejor rotación
+   pura el residuo es unas 10 veces el ruido; con Q sin restringir el
+   determinante es exactamente el ruido. Se usa Procrustes ortogonal
+   (`Q = V U^T` sin corregir el signo) y se registra `det`. Sus mallas con
+   det −1 quedan con las caras al revés (mismos índices y mismo orden), y el
+   render usa `cull_backfaces=True`, así que `rotar_mallas.py` invierte el
+   orden de cada cara cuando det Q = −1. La traslación es ≈ 0 (< 0.1 % de
+   R_max).
+4. Residuo: RMS de `Q a_i − b_i` después de alinear. Medido: 0.0165–0.0174·R_max,
+   igual a √3·0.01 (ruido de 1 % de R_max por coordenada).
 
 ### Paso 2. Referencia: la propia rotada, verificada con la de ellos
 
@@ -182,6 +190,31 @@ ruido) para compararse con su columna N1 % de la Tabla 2 (F1 0.906, SDE 0.343
   limpias.
 - Si se corre la opción sobre `rot_1_noise`, agregar los valores N1 % de su
   Tabla 2 a `resultados_finales/referencias/aguirre2026_publicado.csv`.
+
+## 5b. Estado (25/11/2026): implementado, falta correr en el servidor
+
+- `ExploratoryDataAnalysis/rotaciones_aguirre.py`: pasos 1–3. Lee el `.zip`
+  sin extraerlo (o la carpeta). Criterios por objeto: mismo número de
+  vértices; escala de Umeyama |s − 1| ≤ 0.01; RMS/R_max ≤ 0.03;
+  traslación/R_max ≤ 0.01; la Q estimada desde `rot_3_noise` tiene el mismo
+  det y su diferencia con la de 1 % es compatible con el ruido (z ≤ 6, con la
+  desviación de Procrustes σ/√λ_min; un umbral fijo de 0.5° rechazaba
+  objetos chicos o planos por ruido); etiquetas como conjunto ≤ 2°. En los
+  30 locales: 30/30 aceptados, etiquetas ≤ 0.24°, incertidumbre de Q ≤ 0.21°.
+- `ExploratoryDataAnalysis/rotar_mallas.py`: acepta det −1 (invierte las
+  caras) y verifica que las normales de cara queden orientadas (coseno
+  ponderado por área ≈ 1). Con det +1 la salida es idéntica byte a byte a la
+  versión anterior.
+- `PlaneScoreData/run_plane_v02_224_rot_aguirre.py`: objetos → render de 36
+  vistas → inferencia **solo n = 6** → S_dat (sin malla) **y** SVD/RANSAC
+  con malla, pareados contra `plane_v02` canónico sin malla y contra
+  `run_plane_malla.py` (`plane_v02_s224_flat_ndcfix_mesh`) → diagnóstico 2D
+  → git.
+- Oráculo local (29 objetos de un plano, AUC₄₅, n = 6/14/26): con puntos
+  perfectos S_dat cae de 0.95/0.89/0.86 (canónica) a 0.50/0.64/0.66
+  (Aguirre), mientras que con malla se mantiene en 0.97–0.98 / 0.93–0.98.
+  El atajo "columna central" da 0.13–0.25 con malla en ambas poses. Por eso
+  la variante con malla es la comparación limpia de la capacidad del VLM.
 
 ## 6. Convenciones del repo a respetar
 

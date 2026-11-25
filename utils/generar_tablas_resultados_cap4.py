@@ -95,6 +95,41 @@ def celda_pareado(ruta: Path, vistas: int, columna: str) -> dict:
                                              "n_views": vistas, "columna": columna}}
 
 
+ID_MALLA = re.compile(r"^(axis|plane)_(.+)_s(\d+)_([a-z]+)_ndcfix_mesh(_[a-z0-9_]+)?$")
+
+
+def leer_malla(ruta: Path) -> dict[tuple[str, str, int], dict]:
+    """ Filas del CSV final con malla por (id, método, vistas), validando id y n_total. """
+    filas = {}
+    with open(ruta, encoding="utf-8", newline="") as f:
+        for fila in csv.DictReader(f):
+            if not ID_MALLA.match(fila["experiment"]):
+                raise ValueError(f"{ruta}: id con malla inesperado {fila['experiment']}")
+            if int(fila["n_total"]) != TOTAL:
+                raise ValueError(f"{ruta}: n_total {fila['n_total']}")
+            filas[(fila["experiment"], fila["method"], int(fila["n_views"]))] = fila
+    return filas
+
+
+def celda_malla(carpeta: str, tipo: str, exp_id: str, metodo: str, vistas: int, columna: str) -> dict:
+    """ Celda de un CSV final del pipeline con malla (run_axis_malla.py / run_plane_malla.py). """
+    ruta = csv_final(carpeta, tipo)
+    datos = _cache.setdefault(ruta, leer_malla(ruta))
+    fila = datos[(exp_id, metodo, vistas)]
+    return {"v": float(fila[columna]), "t": {"fuente": "malla", "csv": rel(ruta), "experiment": exp_id,
+                                             "method": metodo, "n_views": vistas, "columna": columna}}
+
+
+def celda_pareado_malla(ruta: Path, variante: str, metodo: str, vistas: int, columna: str) -> dict:
+    """ Celda del pareado con malla frente a sin malla, por variante, método y vistas. """
+    with open(ruta, encoding="utf-8", newline="") as f:
+        fila = next(r for r in csv.DictReader(f) if r["variante"] == variante
+                    and r["metodo"] == metodo and int(r["n_views"]) == vistas)
+    return {"v": float(fila[columna]), "t": {"fuente": "pareado_malla", "csv": rel(ruta),
+                                             "variante": variante, "metodo": metodo,
+                                             "n_views": vistas, "columna": columna}}
+
+
 def celda_azar(tipo: str, metrica: str, columna: str) -> dict:
     """ Celda de RandomBaseline/outputs/random_baseline_reference.csv con cobertura 1.0. """
     with open(AZAR_CSV, encoding="utf-8", newline="") as f:
@@ -547,7 +582,7 @@ def tabla_aguirre() -> str:
             for v in VISTAS:
                 filas.append(([str(v), r"Este trabajo, rotación en $\mathrm{SO}(3)$"],
                               propia("plane_v02_224_rot_so3", tipo, ident("plane_sym", "v02_rot_so3"), v)))
-    enc = [r"Vistas & Método & Objetos & $F1_{\mathrm{ref}}$ & SDE$_{\mathrm{ref}}$ ($\times 10^{-4}$) \\"]
+    enc = [r"Vistas & Método & Objetos & $F1$ & $SDE$ ($\times 10^{-4}$) \\"]
     nota = (r"Valores de Aguirre y Sipiran tomados de su Tabla~1 (back-projection mejorado, 4R-FI), no de "
             r"una ejecución propia; conservan hasta 10 simetrías por objeto con confianza $\geq 0.95$, y no "
             r"reportan el número de objetos con predicción. Este trabajo predice una simetría por objeto: "
@@ -555,6 +590,69 @@ def tabla_aguirre() -> str:
             rf"({REF}). {NOTA_F1} --: métrica no reportada o no calculada.")
     return tabla("aguirre", "Comparación con el método de Aguirre y Sipiran, con acceso a la malla.",
                  enc, filas, [("obj", None), ("f1", None), ("sde4", None)], nota, separar, fino)
+
+
+VARIANTES_MALLA = {"base": "1 rayo", "p3": "parche 3$\\times$3", "p5": "parche 5$\\times$5",
+                   "cluster": "agrupamiento voraz", "hdbscan_ms2": "HDBSCAN, ms 2",
+                   "hdbscan_ms3": "HDBSCAN, ms 3", "hdbscan_ms5": "HDBSCAN, ms 5"}
+
+
+def tabla_malla(tipo: str) -> str:
+    """ Pipeline sin malla frente a la retroproyección sobre la malla con los mismos puntos.
+
+    Filas por número de vistas: sin malla, malla con un rayo por punto (SVD) y la variante con
+    malla de mayor AUC promedio en 6, 14 y 26 vistas, con el pareado objeto a objeto.
+
+    """
+    prompt = "v04" if tipo == "axis_sym" else "v02"
+    corto = "axis" if tipo == "axis_sym" else "plane"
+    carpeta = f"{corto}_malla_224"
+    alias = f"{corto}_{prompt}_s224_flat_ndcfix_mesh"
+    id_var = lambda v: alias if v == "base" else f"{alias}_{v}"  # noqa: E731
+    ruta_par = next((RES / carpeta / "pareado").glob(f"{alias}_vs_*.csv"))
+    datos = leer_malla(csv_final(carpeta, tipo))
+    mejor = max(((v, m) for v in VARIANTES_MALLA for m in ("svd", "ransac_svd")),
+                key=lambda vm: sum(float(datos[(id_var(vm[0]), vm[1], n)]["auc_angular"]) for n in VISTAS))
+    condiciones = [("base", "svd")] + ([mejor] if mejor != ("base", "svd") else [])
+    metricas = ["n_objects", "auc_angular", "angular_error_median", "precision_10deg"]
+    metricas += ["f1_ref"] if tipo == "plane_sym" else []
+    pareado = ["dif_media", "ic_inf", "ic_sup", "mejoran", "empeoran"]
+    filas, separar = [], []
+    for k, v in enumerate(VISTAS):
+        if k:
+            separar.append(len(filas))
+        n_filas = 1 + len(condiciones)
+        sin = [celda("ndcfix_flujoA", tipo, ident(tipo, prompt), v, c) for c in metricas]
+        filas.append(([rf"\multirow{{{n_filas}}}{{*}}{{{v}}}", "Sin malla"], sin + [None] * len(pareado)))
+        for variante, metodo in condiciones:
+            etiqueta = rf"Malla, {VARIANTES_MALLA[variante]}, {'SVD' if metodo == 'svd' else 'RANSAC+SVD'}"
+            con = [celda_malla(carpeta, tipo, id_var(variante), metodo, v, c) for c in metricas]
+            par = [celda_pareado_malla(ruta_par, variante, metodo, v, c) for c in pareado]
+            filas.append((["", etiqueta], con + par))
+    cols = [("obj", True), ("auc", True), ("grados", False), ("prec", True)]
+    cols += [("f1", True)] if tipo == "plane_sym" else []
+    cols += [("grados", None)] * 3 + [("entero", None)] * 2
+    n_met = len(metricas)
+    enc = [rf"\multirow{{2}}{{*}}{{Vistas}} & \multirow{{2}}{{*}}{{Condición}} & \multirow{{2}}{{*}}{{Objetos}} & "
+           rf"\multirow{{2}}{{*}}{{AUC$_{{45^\circ}}$}} & \multirow{{2}}{{*}}{{\begin{{tabular}}[b]{{@{{}}c@{{}}}}Mediana \\ ($^\circ$)\end{{tabular}}}} & "
+           rf"\multirow{{2}}{{*}}{{P@10$^\circ$}}"
+           + (r" & \multirow{2}{*}{$F1_{\mathrm{ref}}$}" if tipo == "plane_sym" else "")
+           + r" & \multicolumn{3}{c}{Dif.\ de error ($^\circ$)} & \multirow{2}{*}{Mejoran} & \multirow{2}{*}{Empeoran} \\",
+           rf"\cmidrule(lr){{{3 + n_met}-{5 + n_met}}}",
+           " & " * (2 + n_met) + r"Media & IC inf. & IC sup. & & \\"]
+    estimador = "EXP-E" if tipo == "axis_sym" else r"$S_{\mathrm{dat}}$ con un plano por objeto"
+    nota = (rf"Mismos puntos de Molmo2 en ambos casos: \textit{{prompt}} {tt(prompt)} ({REF}). Sin malla: "
+            rf"triangulación con {estimador}. Malla: cada punto se retroproyecta sobre la superficie y "
+            r"el elemento de simetría se ajusta sobre los puntos 3D; 1 rayo: un rayo por punto. La segunda "
+            r"variante con malla es la de mayor AUC$_{45^\circ}$ promedio en 6, 14 y 26 vistas entre las 14 "
+            r"evaluadas (parches de 1, 3$\times$3 y 5$\times$5 rayos, agrupamiento voraz y HDBSCAN con "
+            r"\textit{min\_samples} 2, 3 y 5, cada una con SVD y RANSAC+SVD). Dif.\ de error: malla $-$ sin "
+            r"malla, objeto a objeto, sobre los 850 objetos con $90^\circ$ imputados; valores negativos "
+            r"favorecen a la malla. IC 95\% \textit{bootstrap} pareado. Mejoran/Empeoran: más de $1^\circ$. "
+            + (NOTA_F1 + " " if tipo == "plane_sym" else "") + NEGRITA)
+    simetria = "axial" if tipo == "axis_sym" else "planar"
+    return tabla(f"malla_{TIPOS[tipo]}", f"Triangulación sin malla frente a retroproyección sobre la malla "
+                 f"en simetría {simetria}.", enc, filas, cols, nota, separar)
 
 
 def main() -> None:
@@ -630,6 +728,7 @@ def main() -> None:
         "Modelo", r"Comparación de VLMs en simetría planar con \texttt{plane\_v02} (224~px, \textit{flat}, "
                   r"una vista por llamada).", ""))
     hechas.append(tabla_aguirre())
+    hechas += [tabla_malla("axis_sym"), tabla_malla("plane_sym")]
     REGISTRO.write_text(json.dumps(registro, indent=1, ensure_ascii=False), encoding="utf-8",
                         newline="\n")
     print(f"{len(hechas)} tablas en {SALIDA}; {sum(len(v) for v in registro.values())} celdas registradas")
