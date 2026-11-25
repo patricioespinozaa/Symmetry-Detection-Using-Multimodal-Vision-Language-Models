@@ -9,7 +9,8 @@
 #      mallas limpias, invirtiendo las caras cuando hay reflexion;
 #   2. render de las 36 vistas de 6/14/26 de las 114 (como rot_so3; asi 14 y 26 no necesitan
 #      volver a renderizar), sin giro de camara;
-#   3. inferencia solo del grupo de 6 vistas con el runner _subset, repartida en --gpus;
+#   3. inferencia de los grupos de --vistas (6 por defecto) con el runner _subset, repartida en
+#      --gpus; los grupos ya inferidos se saltan, asi que --vistas 6 14 26 solo agrega 14 y 26;
 #   4. sin malla: S_dat con un plano, evaluate.py con metricas de referencia, comparacion,
 #      auditoria y pareado contra plane_v02 canonico (run_plane_v02_224.posprocesar);
 #   5. con malla: map_to_3d.py + estimate_symmetry.py (svd y ransac_svd, un rayo por punto) y
@@ -181,7 +182,7 @@ def renderizar(args: argparse.Namespace, logs: Path) -> None:
 
 
 def inferir(args: argparse.Namespace, logs: Path) -> None:
-    """ Inferencia del grupo de 6 vistas con el runner _subset, repartida en las GPUs. """
+    """ Inferencia de los grupos de VISTAS con el runner _subset (salta los ya hechos). """
     procesos = []
     for i, gpu in enumerate(args.gpus):
         comando = [base.PY, rot.RUNNER, "--renders-root", str(args.renders_root),
@@ -290,8 +291,8 @@ def subir(salida: Path) -> None:
             log("nada nuevo que subir")
             return
         mensaje = (f"Add plane_v02 224px results: {NOMBRE} (clean planar meshes with the "
-                   f"per-object transforms of Aguirre and Sipiran, n_views=6, with and without "
-                   f"mesh)\n\n{COAUTOR}")
+                   f"per-object transforms of Aguirre and Sipiran, n_views="
+                   f"{'/'.join(map(str, VISTAS))}, with and without mesh)\n\n{COAUTOR}")
         subprocess.run(["git", "commit", "-m", mensaje], cwd=REPO, check=True)
         subprocess.run(["git", "push", "origin", base.RAMA], cwd=REPO, check=True)
         log(f"{NOMBRE}: SUBIDO A GITHUB")
@@ -299,8 +300,9 @@ def subir(salida: Path) -> None:
 
 def main() -> None:
     """ Objetos, render, inferencia, post-procesamiento con y sin malla, diagnostico y subida. """
+    global VISTAS   # lo leen inferir, diagnostico_2d y con_malla
     p = argparse.ArgumentParser(description="plane_v02 224px con las transformaciones de Aguirre "
-                                            "y Sipiran, n_views=6.")
+                                            "y Sipiran.")
     p.add_argument("etapa", choices=["chequeo", "todo"])
     p.add_argument("--gpus", type=int, nargs="+", default=[0, 1])
     p.add_argument("--aguirre", type=Path, default=None,
@@ -316,9 +318,12 @@ def main() -> None:
     p.add_argument("--renders-base", type=Path, default=Path("/data/pespinoz/renders"),
                    help="raiz con las evaluaciones canonicas (sin malla y con malla)")
     p.add_argument("--jobs", type=int, default=12, help="procesos de CPU (S_dat y malla)")
+    p.add_argument("--vistas", type=int, nargs="+", default=list(VISTAS), choices=VISTAS_RENDER,
+                   help="grupos de vistas; los ya inferidos se saltan (p. ej. --vistas 6 14 26)")
     p.add_argument("--sin-git", action="store_true")
     args = p.parse_args()
 
+    VISTAS = tuple(sorted(set(args.vistas)))
     base.EXPERIMENTOS[NOMBRE] = EXP   # solo en memoria; los archivos base no cambian
     base.VISTAS = VISTAS              # revisar() y posprocesar() leen esta constante del modulo
     if base.molmo_to_ndc(0, 0)[0] != 1.0:
@@ -371,10 +376,11 @@ def main() -> None:
     except (RuntimeError, ValueError, FileExistsError, FileNotFoundError,
             subprocess.CalledProcessError) as error:
         sys.exit(f"[error] {NOMBRE}: {error}")
-    print(f"\n{'con malla':10} {'metodo':11} {'AUC canonica':>12} {'AUC Aguirre':>12} "
-          f"{'dif media':>10}")
+    print(f"\n{'con malla':10} {'metodo':11} {'vistas':>6} {'AUC canonica':>12} "
+          f"{'AUC Aguirre':>12} {'dif media':>10}")
     for f in filas_malla:
-        print(f"{'':10} {f['metodo']:11} {float(f['auc_canonica'] or 'nan'):12.3f} "
+        print(f"{'':10} {f['metodo']:11} {f['n_views']:>6} "
+              f"{float(f['auc_canonica'] or 'nan'):12.3f} "
               f"{float(f['auc_aguirre']):12.3f} {f['dif_media']:10.2f}")
     log(f"{NOMBRE}: terminado sin errores")
 
