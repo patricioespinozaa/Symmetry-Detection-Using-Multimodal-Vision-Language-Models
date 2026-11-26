@@ -3,5 +3,9 @@ $ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 Mapping/compare_results.p
 
                                  experiment     method  n_views  n_objects  angular_error_mean  angular_error_median  auc_angular  precision_5deg  precision_10deg
 plane_v02_rot_aguirre_s224_flat_ndcfix_mesh ransac_svd        6        819             63.9975               73.5943       0.1147          0.0129           0.0400
+plane_v02_rot_aguirre_s224_flat_ndcfix_mesh ransac_svd       14        837             65.4475               77.7347       0.1211          0.0271           0.0565
+plane_v02_rot_aguirre_s224_flat_ndcfix_mesh ransac_svd       26        742             70.6918               82.4160       0.0866          0.0165           0.0329
 plane_v02_rot_aguirre_s224_flat_ndcfix_mesh        svd        6        819             63.7676               74.6834       0.1215          0.0188           0.0459
-Saved: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_rot_aguirre/con_malla/experiments_25_11_2026/plane_sym_plane_v02_rot_aguirre_s224_flat_ndcfix_mesh_comparison.csv
+plane_v02_rot_aguirre_s224_flat_ndcfix_mesh        svd       14        837             64.6650               76.4083       0.1226          0.0247           0.0588
+plane_v02_rot_aguirre_s224_flat_ndcfix_mesh        svd       26        742             68.6568               82.4368       0.1126          0.0271           0.0553
+Saved: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_rot_aguirre/con_malla/experiments_26_11_2026/plane_sym_plane_v02_rot_aguirre_s224_flat_ndcfix_mesh_comparison.csv

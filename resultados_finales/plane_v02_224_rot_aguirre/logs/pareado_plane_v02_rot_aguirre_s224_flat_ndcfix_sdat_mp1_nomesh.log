@@ -1,4 +1,4 @@
-$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 PlaneScoreData/compare_plane_scores.py --renders-root /data/pespinoz/renders_rot_aguirre --symmetry-type plane_sym --comparison-csv /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/ndcfix_flujoA/experiments_05_11_2026/plane_sym_final_comparison.csv /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_rot_aguirre/experiments_25_11_2026/plane_sym_final_comparison.csv --base-id plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh --new-id plane_v02_rot_aguirre_s224_flat_ndcfix_sdat_mp1_nomesh --size 224 --lighting flat --salida /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_rot_aguirre/pareado/plane_v02_rot_aguirre_s224_flat_ndcfix_sdat_mp1_nomesh.csv
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 PlaneScoreData/compare_plane_scores.py --renders-root /data/pespinoz/renders_rot_aguirre --symmetry-type plane_sym --comparison-csv /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/ndcfix_flujoA/experiments_05_11_2026/plane_sym_final_comparison.csv /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_rot_aguirre/experiments_26_11_2026/plane_sym_final_comparison.csv --base-id plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh --new-id plane_v02_rot_aguirre_s224_flat_ndcfix_sdat_mp1_nomesh --size 224 --lighting flat --salida /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_rot_aguirre/pareado/plane_v02_rot_aguirre_s224_flat_ndcfix_sdat_mp1_nomesh.csv
 
 
 === 6 vistas ===
@@ -13,5 +13,31 @@ F1 hung.        0.700      0.020
 SDE_ref        0.0012     0.0119
 Dif. de error (nuevo - base, n=850): +44.40 grados, IC 95% [+41.58, +47.21]
 Objetos: mejoran 109, empeoran 720 (margen de 1 grado)
+
+=== 14 vistas ===
+Métrica          Base      Nuevo
+Objetos           658        654
+AUC45           0.628      0.120
+Mediana           4.8       71.0
+Media            29.2       63.3
+P@10            0.668      0.026
+F1 voraz        0.542      0.018
+F1 hung.        0.587      0.020
+SDE_ref        0.0020     0.0139
+Dif. de error (nuevo - base, n=850): +34.10 grados, IC 95% [+30.91, +37.21]
+Objetos: mejoran 182, empeoran 607 (margen de 1 grado)
+
+=== 26 vistas ===
+Métrica          Base      Nuevo
+Objetos           828        773
+AUC45           0.773      0.133
+Mediana           2.6       66.2
+Media            14.0       59.0
+P@10            0.754      0.033
+F1 voraz        0.614      0.018
+F1 hung.        0.669      0.019
+SDE_ref        0.0032     0.0151
+Dif. de error (nuevo - base, n=850): +44.99 grados, IC 95% [+42.65, +47.38]
+Objetos: mejoran 83, empeoran 759 (margen de 1 grado)
 
 Guardado: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_rot_aguirre/pareado/plane_v02_rot_aguirre_s224_flat_ndcfix_sdat_mp1_nomesh.csv

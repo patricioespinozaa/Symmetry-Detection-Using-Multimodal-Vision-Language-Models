@@ -4,4 +4,6 @@ $ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 Mapping/compare_results_n
 --- triangulation (eje/plano unico) ---
                                             experiment        method  n_views  n_objects  angular_error_mean  angular_error_median  auc_angular  precision_5deg  precision_10deg
 plane_v02_rot_aguirre_s224_flat_ndcfix_sdat_mp1_nomesh triangulation        6        753             61.0399               69.0138       0.1288          0.0059           0.0365
-Saved: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_rot_aguirre/experiments_25_11_2026/plane_sym_plane_v02_rot_aguirre_s224_flat_ndcfix_sdat_mp1_nomesh_comparison.csv
+plane_v02_rot_aguirre_s224_flat_ndcfix_sdat_mp1_nomesh triangulation       14        654             63.2722               71.0169       0.1197          0.0071           0.0259
+plane_v02_rot_aguirre_s224_flat_ndcfix_sdat_mp1_nomesh triangulation       26        773             59.0270               66.2086       0.1332          0.0094           0.0329
+Saved: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_rot_aguirre/experiments_26_11_2026/plane_sym_plane_v02_rot_aguirre_s224_flat_ndcfix_sdat_mp1_nomesh_comparison.csv
