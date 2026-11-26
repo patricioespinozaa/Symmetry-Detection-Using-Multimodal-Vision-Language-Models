@@ -1,0 +1,37 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 PlaneScoreData/compare_plane_scores.py --renders-root /data/pespinoz/renders --symmetry-type axis_sym --comparison-csv /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/ndcfix_flujoA/experiments_05_11_2026/axis_sym_final_comparison.csv /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/silueta_axis_v04_224/r04/experiments_26_11_2026/axis_sym_final_comparison.csv --base-id axis_v04_s224_flat_ndcfix_expE_nomesh --new-id axis_v04_silueta_r04_s224_flat_ndcfix_expE_nomesh --size 224 --lighting flat --salida /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/silueta_axis_v04_224/r04/pareado/axis_v04_silueta_r04_s224_flat_ndcfix_expE_nomesh.csv
+
+
+=== 6 vistas ===
+Métrica          Base      Nuevo
+Objetos           831        848
+AUC45           0.590      0.331
+Mediana           7.4       35.3
+Media            25.8       40.5
+P@10            0.554      0.164
+SDE_ref        0.0123     0.0272
+Dif. de error (nuevo - base, n=850): +14.66 grados, IC 95% [+12.57, +16.71]
+Objetos: mejoran 194, empeoran 606 (margen de 1 grado)
+
+=== 14 vistas ===
+Métrica          Base      Nuevo
+Objetos           816        849
+AUC45           0.581      0.399
+Mediana           8.1       28.4
+Media            26.4       37.0
+P@10            0.549      0.253
+SDE_ref        0.0101     0.0145
+Dif. de error (nuevo - base, n=850): +10.52 grados, IC 95% [+8.51, +12.55]
+Objetos: mejoran 226, empeoran 560 (margen de 1 grado)
+
+=== 26 vistas ===
+Métrica          Base      Nuevo
+Objetos           806        850
+AUC45           0.506      0.486
+Mediana          14.6       16.9
+Media            30.9       32.6
+P@10            0.358      0.397
+SDE_ref        0.0217     0.0090
+Dif. de error (nuevo - base, n=850): +1.65 grados, IC 95% [-0.26, +3.57]
+Objetos: mejoran 419, empeoran 371 (margen de 1 grado)
+
+Guardado: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/silueta_axis_v04_224/r04/pareado/axis_v04_silueta_r04_s224_flat_ndcfix_expE_nomesh.csv

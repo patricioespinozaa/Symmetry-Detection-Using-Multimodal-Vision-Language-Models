@@ -1,0 +1,129 @@
+nohup: ignoring input
+axis_sym: 850 objetos con puntos de axis_v04; semillas axis_v04_silueta_r00 ... axis_v04_silueta_r09
+plane_sym: 850 objetos con puntos de plane_v02; semillas plane_v02_silueta_r00 ... plane_v02_silueta_r09
+[ok] Chequeo sin problemas
+
+=== [26/11 17:27] axis_v04_silueta_r00
+axis_v04_silueta_r00: 0 archivos de puntos escritos
+axis_v04_silueta_r00: 850 enlaces -> axis_v04_silueta_r00_s224_flat_ndcfix_expE_nomesh
+[17:27:49] est_axis_v04_silueta_r00_s224_flat_ndcfix_expE_nomesh
+[17:28:52] eval_axis_v04_silueta_r00_s224_flat_ndcfix_expE_nomesh
+[17:30:56] compare_axis_sym
+[17:30:57] audit_axis_v04_silueta_r00_s224_flat_ndcfix_expE_nomesh
+[17:31:00] pareado_axis_v04_silueta_r00_s224_flat_ndcfix_expE_nomesh
+
+axis_v04_silueta_r00: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/silueta_axis_v04_224/r00/experiments_26_11_2026/axis_sym_final_comparison.csv
+vistas  obj    AUC     F1   P@10
+     6  848  0.326      -  0.162
+    14  849  0.396      -  0.254
+    26  850  0.496      -  0.387
+
+=== [26/11 17:31] axis_v04_silueta_r01
+axis_v04_silueta_r01: 0 archivos de puntos escritos
+axis_v04_silueta_r01: 850 enlaces -> axis_v04_silueta_r01_s224_flat_ndcfix_expE_nomesh
+[17:31:29] est_axis_v04_silueta_r01_s224_flat_ndcfix_expE_nomesh
+[17:32:13] eval_axis_v04_silueta_r01_s224_flat_ndcfix_expE_nomesh
+[17:33:58] compare_axis_sym
+[17:33:59] audit_axis_v04_silueta_r01_s224_flat_ndcfix_expE_nomesh
+[17:34:03] pareado_axis_v04_silueta_r01_s224_flat_ndcfix_expE_nomesh
+
+axis_v04_silueta_r01: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/silueta_axis_v04_224/r01/experiments_26_11_2026/axis_sym_final_comparison.csv
+vistas  obj    AUC     F1   P@10
+     6  848  0.327      -  0.191
+    14  849  0.408      -  0.246
+    26  850  0.490      -  0.385
+
+=== [26/11 17:34] axis_v04_silueta_r02
+axis_v04_silueta_r02: 850 archivos de puntos escritos
+axis_v04_silueta_r02: 850 enlaces -> axis_v04_silueta_r02_s224_flat_ndcfix_expE_nomesh
+[17:38:14] est_axis_v04_silueta_r02_s224_flat_ndcfix_expE_nomesh
+[17:39:01] eval_axis_v04_silueta_r02_s224_flat_ndcfix_expE_nomesh
+[17:40:43] compare_axis_sym
+[17:40:44] audit_axis_v04_silueta_r02_s224_flat_ndcfix_expE_nomesh
+[17:40:47] pareado_axis_v04_silueta_r02_s224_flat_ndcfix_expE_nomesh
+
+axis_v04_silueta_r02: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/silueta_axis_v04_224/r02/experiments_26_11_2026/axis_sym_final_comparison.csv
+vistas  obj    AUC     F1   P@10
+     6  848  0.333      -  0.162
+    14  849  0.401      -  0.273
+    26  850  0.493      -  0.379
+
+=== [26/11 17:40] axis_v04_silueta_r03
+axis_v04_silueta_r03: 850 archivos de puntos escritos
+axis_v04_silueta_r03: 850 enlaces -> axis_v04_silueta_r03_s224_flat_ndcfix_expE_nomesh
+[17:43:43] est_axis_v04_silueta_r03_s224_flat_ndcfix_expE_nomesh
+[17:44:31] eval_axis_v04_silueta_r03_s224_flat_ndcfix_expE_nomesh
+[17:46:12] compare_axis_sym
+[17:46:13] audit_axis_v04_silueta_r03_s224_flat_ndcfix_expE_nomesh
+[17:46:16] pareado_axis_v04_silueta_r03_s224_flat_ndcfix_expE_nomesh
+
+axis_v04_silueta_r03: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/silueta_axis_v04_224/r03/experiments_26_11_2026/axis_sym_final_comparison.csv
+vistas  obj    AUC     F1   P@10
+     6  848  0.348      -  0.172
+    14  849  0.395      -  0.249
+    26  850  0.479      -  0.358
+
+=== [26/11 17:46] axis_v04_silueta_r04
+axis_v04_silueta_r04: 850 archivos de puntos escritos
+axis_v04_silueta_r04: 850 enlaces -> axis_v04_silueta_r04_s224_flat_ndcfix_expE_nomesh
+[17:49:10] est_axis_v04_silueta_r04_s224_flat_ndcfix_expE_nomesh
+[17:49:59] eval_axis_v04_silueta_r04_s224_flat_ndcfix_expE_nomesh
+[17:51:41] compare_axis_sym
+[17:51:42] audit_axis_v04_silueta_r04_s224_flat_ndcfix_expE_nomesh
+[17:51:45] pareado_axis_v04_silueta_r04_s224_flat_ndcfix_expE_nomesh
+
+axis_v04_silueta_r04: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/silueta_axis_v04_224/r04/experiments_26_11_2026/axis_sym_final_comparison.csv
+vistas  obj    AUC     F1   P@10
+     6  848  0.331      -  0.164
+    14  849  0.399      -  0.253
+    26  850  0.486      -  0.397
+
+=== [26/11 17:51] axis_v04_silueta_r05
+axis_v04_silueta_r05: 850 archivos de puntos escritos
+axis_v04_silueta_r05: 850 enlaces -> axis_v04_silueta_r05_s224_flat_ndcfix_expE_nomesh
+[17:54:36] est_axis_v04_silueta_r05_s224_flat_ndcfix_expE_nomesh
+[17:55:23] eval_axis_v04_silueta_r05_s224_flat_ndcfix_expE_nomesh
+[17:57:06] compare_axis_sym
+[17:57:07] audit_axis_v04_silueta_r05_s224_flat_ndcfix_expE_nomesh
+[17:57:10] pareado_axis_v04_silueta_r05_s224_flat_ndcfix_expE_nomesh
+
+axis_v04_silueta_r05: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/silueta_axis_v04_224/r05/experiments_26_11_2026/axis_sym_final_comparison.csv
+vistas  obj    AUC     F1   P@10
+     6  848  0.329      -  0.176
+    14  849  0.393      -  0.262
+    26  850  0.484      -  0.369
+
+=== [26/11 17:57] axis_v04_silueta_r06
+axis_v04_silueta_r06: 850 archivos de puntos escritos
+axis_v04_silueta_r06: 850 enlaces -> axis_v04_silueta_r06_s224_flat_ndcfix_expE_nomesh
+[18:00:04] est_axis_v04_silueta_r06_s224_flat_ndcfix_expE_nomesh
+[18:00:50] eval_axis_v04_silueta_r06_s224_flat_ndcfix_expE_nomesh
+[18:02:31] compare_axis_sym
+[18:02:32] audit_axis_v04_silueta_r06_s224_flat_ndcfix_expE_nomesh
+[18:02:35] pareado_axis_v04_silueta_r06_s224_flat_ndcfix_expE_nomesh
+
+axis_v04_silueta_r06: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/silueta_axis_v04_224/r06/experiments_26_11_2026/axis_sym_final_comparison.csv
+vistas  obj    AUC     F1   P@10
+     6  848  0.329      -  0.166
+    14  849  0.396      -  0.258
+    26  850  0.497      -  0.382
+
+=== [26/11 18:02] axis_v04_silueta_r07
+axis_v04_silueta_r07: 850 archivos de puntos escritos
+axis_v04_silueta_r07: 850 enlaces -> axis_v04_silueta_r07_s224_flat_ndcfix_expE_nomesh
+[18:05:28] est_axis_v04_silueta_r07_s224_flat_ndcfix_expE_nomesh
+[18:06:10] eval_axis_v04_silueta_r07_s224_flat_ndcfix_expE_nomesh
+[18:07:51] compare_axis_sym
+[18:07:52] audit_axis_v04_silueta_r07_s224_flat_ndcfix_expE_nomesh
+[18:07:55] pareado_axis_v04_silueta_r07_s224_flat_ndcfix_expE_nomesh
+
+axis_v04_silueta_r07: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/silueta_axis_v04_224/r07/experiments_26_11_2026/axis_sym_final_comparison.csv
+vistas  obj    AUC     F1   P@10
+     6  848  0.331      -  0.167
+    14  849  0.378      -  0.252
+    26  850  0.490      -  0.389
+
+=== [26/11 18:07] axis_v04_silueta_r08
+axis_v04_silueta_r08: 850 archivos de puntos escritos
+axis_v04_silueta_r08: 850 enlaces -> axis_v04_silueta_r08_s224_flat_ndcfix_expE_nomesh
+[18:10:43] est_axis_v04_silueta_r08_s224_flat_ndcfix_expE_nomesh

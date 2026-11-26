@@ -1,0 +1,9 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 Mapping/compare_results_no_mesh.py --renders-root /data/pespinoz/renders --symmetry-type axis_sym --sizes 224 --lightings flat --experiment-id axis_v04_silueta_r00_s224_flat_ndcfix_expE_nomesh --csv-dir /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/silueta_axis_v04_224/r00 --no-plots --total-objects 850
+
+
+--- triangulation (eje/plano unico) ---
+                                       experiment        method  n_views  n_objects  angular_error_mean  angular_error_median  auc_angular  precision_5deg  precision_10deg
+axis_v04_silueta_r00_s224_flat_ndcfix_expE_nomesh triangulation        6        848             40.8660               37.1519       0.3260          0.0694           0.1624
+axis_v04_silueta_r00_s224_flat_ndcfix_expE_nomesh triangulation       14        849             36.8828               28.7778       0.3962          0.1341           0.2541
+axis_v04_silueta_r00_s224_flat_ndcfix_expE_nomesh triangulation       26        850             31.8639               15.7763       0.4956          0.2024           0.3871
+Saved: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/silueta_axis_v04_224/r00/experiments_26_11_2026/axis_sym_axis_v04_silueta_r00_s224_flat_ndcfix_expE_nomesh_comparison.csv
