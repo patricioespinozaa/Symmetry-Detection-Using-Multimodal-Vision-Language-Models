@@ -1,0 +1,43 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 PlaneScoreData/compare_plane_scores.py --renders-root /data/pespinoz/renders --symmetry-type plane_sym --comparison-csv /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/ndcfix_flujoA/experiments_05_11_2026/plane_sym_final_comparison.csv /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/silueta_plane_v02_224/r04/experiments_26_11_2026/plane_sym_final_comparison.csv --base-id plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh --new-id plane_v02_silueta_r04_s224_flat_ndcfix_sdat_mp1_nomesh --size 224 --lighting flat --salida /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/silueta_plane_v02_224/r04/pareado/plane_v02_silueta_r04_s224_flat_ndcfix_sdat_mp1_nomesh.csv
+
+
+=== 6 vistas ===
+Métrica          Base      Nuevo
+Objetos           792        850
+AUC45           0.779      0.219
+Mediana           3.0       59.7
+Media            16.6       52.7
+P@10            0.829      0.101
+F1 voraz        0.645      0.052
+F1 hung.        0.700      0.054
+SDE_ref        0.0012     0.0150
+Dif. de error (nuevo - base, n=850): +36.03 grados, IC 95% [+33.17, +38.85]
+Objetos: mejoran 132, empeoran 698 (margen de 1 grado)
+
+=== 14 vistas ===
+Métrica          Base      Nuevo
+Objetos           658        837
+AUC45           0.628      0.179
+Mediana           4.8       63.3
+Media            29.2       55.8
+P@10            0.668      0.093
+F1 voraz        0.542      0.050
+F1 hung.        0.587      0.052
+SDE_ref        0.0020     0.0095
+Dif. de error (nuevo - base, n=850): +26.58 grados, IC 95% [+23.54, +29.59]
+Objetos: mejoran 232, empeoran 583 (margen de 1 grado)
+
+=== 26 vistas ===
+Métrica          Base      Nuevo
+Objetos           828        849
+AUC45           0.773      0.184
+Mediana           2.6       65.4
+Media            14.0       56.5
+P@10            0.754      0.099
+F1 voraz        0.614      0.046
+F1 hung.        0.669      0.050
+SDE_ref        0.0032     0.0067
+Dif. de error (nuevo - base, n=850): +42.50 grados, IC 95% [+39.91, +45.11]
+Objetos: mejoran 107, empeoran 728 (margen de 1 grado)
+
+Guardado: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/silueta_plane_v02_224/r04/pareado/plane_v02_silueta_r04_s224_flat_ndcfix_sdat_mp1_nomesh.csv
