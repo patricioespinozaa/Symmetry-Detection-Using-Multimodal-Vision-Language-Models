@@ -311,30 +311,27 @@ def tabla_azar() -> str:
                 ("precision_10deg", r"P@10$^\circ$", "prec"), ("precision_15deg", r"P@15$^\circ$", "prec"),
                 ("f1_ref", r"$F1_{\mathrm{ref}}$ voraz", "f1")]
     for metrica, texto, fmt in metricas:
-        eje = None if metrica == "f1_ref" else celda_azar("axis_sym", metrica, "closed_form_single_gt")
-        eje_sim = None if metrica == "f1_ref" else celda_azar("axis_sym", metrica, "random_mean")
+        eje = None if metrica == "f1_ref" else celda_azar("axis_sym", metrica, "random_mean")
         plano = celda_azar("plane_sym", metrica, "random_mean")
-        filas.append(([texto], [eje, eje_sim, plano], fmt))
+        filas.append(([texto], [eje, plano], fmt))
     # columnas con formato propio por fila: se registran fila a fila
     entradas, cuerpo = [], []
     for i, (inicio, celdas, fmt) in enumerate(filas):
         cuerpo.append(" & ".join(inicio + [formatear(c, fmt) for c in celdas]) + r" \\")
         entradas += [{"fila": i, "columna": j, "texto": formatear(c, fmt), "formato": fmt,
                       "traza": c["t"]} for j, c in enumerate(celdas) if c is not None]
-    encabezado = [r"Métrica & \begin{tabular}[b]{@{}c@{}}Eje \\ (forma cerrada)\end{tabular} & "
-                  r"\begin{tabular}[b]{@{}c@{}}Eje \\ (simulación)\end{tabular} & "
-                  r"\begin{tabular}[b]{@{}c@{}}Plano \\ (simulación)\end{tabular} \\"]
+    encabezado = [r"Métrica & Eje & Plano \\"]
     nombre = "azar"
     registro[nombre] = entradas
     nota = (r"Predictor que elige la dirección del eje o la normal del plano uniformemente en la "
             r"esfera, sin mirar las imágenes, evaluado con las mismas funciones de "
-            r"\texttt{evaluate.py} sobre los 850 objetos de cada tipo (cobertura 100\%). La simulación "
-            r"promedia las repeticiones del módulo \texttt{RandomBaseline}. En plano, el error se mide "
+            r"\texttt{evaluate.py} sobre los 850 objetos de cada tipo (cobertura 100\%). Cada valor es la "
+            r"media de 1.000 repeticiones simuladas (módulo \texttt{RandomBaseline}). En plano, el error se mide "
             r"contra el plano de referencia más cercano, por eso es menor que en eje.")
     lineas = ["% Generado por utils/generar_tablas_resultados_cap4.py. No editar a mano.",
               f"% Fuentes:\n%   {rel(AZAR_CSV)}", r"\begin{table}[htbp]", r"\centering",
               r"\caption{Línea base aleatoria en eje y plano.}", r"\label{tab:res_azar}",
-              r"\begin{lrbox}{\tablebox}", r"\begin{tabular}{lrrr}", r"\toprule", *encabezado,
+              r"\begin{lrbox}{\tablebox}", r"\begin{tabular}{lrr}", r"\toprule", *encabezado,
               r"\midrule", *cuerpo, r"\bottomrule", r"\end{tabular}", r"\end{lrbox}",
               r"\usebox{\tablebox}", "", r"\vspace{1.5ex}", r"\begin{minipage}{\wd\tablebox}",
               r"\footnotesize", f"Nota: {nota}", r"\end{minipage}", r"\end{table}", ""]
