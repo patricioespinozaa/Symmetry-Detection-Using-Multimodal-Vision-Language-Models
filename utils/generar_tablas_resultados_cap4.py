@@ -35,7 +35,7 @@ TIPOS = {"axis_sym": "eje", "plane_sym": "plano"}
 METODO = {"axis_sym": "El eje se estima con EXP-E.",
           "plane_sym": r"La normal se elige con $S_{\mathrm{dat}}$ y se predice un plano por objeto."}
 NOTA_ANG = r"Las métricas angulares usan los 850 objetos e imputan $90^\circ$ a los objetos sin predicción."
-NOTA_F1 = r"$F1_{\mathrm{ref}}$ y SDE$_{\mathrm{ref}}$ usan solo los objetos con predicción."
+NOTA_F1 = r"$F1$ y SDE usan solo los objetos con predicción."
 NEGRITA = "Negrita: mejor valor de la columna."
 REF = r"224~px, iluminación \textit{flat}, envío multiimagen y Flujo~A"
 
@@ -203,7 +203,7 @@ def columna_celdas(celdas: list[dict | None], formato: str, mayor: bool | None) 
 
 def tabla(nombre: str, titulo: str, encabezado: list[str], filas: list[tuple[list[str], list]],
           columnas: list[tuple[str, bool | None]], nota: str, separar: list[int] | None = None,
-          separar_fino: list[int] | None = None) -> str:
+          separar_fino: list[int] | None = None, alto: str | None = None) -> str:
     """ Escribe la tabla y registra la procedencia de cada celda numérica.
 
     Args:
@@ -215,6 +215,7 @@ def tabla(nombre: str, titulo: str, encabezado: list[str], filas: list[tuple[lis
         * nota: nota al pie
         * separar: índices de fila antes de los que va un \\midrule
         * separar_fino: índices de fila antes de los que va un \\cmidrule de todo el ancho
+        * alto: alto máximo de la tabla (p. ej. 0.8\\textheight), para tablas largas
 
     Una fila sin celdas numéricas (lista vacía) se escribe tal cual, como fila de título.
 
@@ -243,7 +244,8 @@ def tabla(nombre: str, titulo: str, encabezado: list[str], filas: list[tuple[lis
               "% Fuentes:"] + [f"%   {f}" for f in fuentes] + [
         r"\begin{table}[htbp]", r"\centering", rf"\caption{{{titulo}}}",
         rf"\label{{tab:res_{nombre}}}", r"\begin{lrbox}{\tablebox}",
-        r"\begin{adjustbox}{max width=\textwidth}", rf"\begin{{tabular}}{{{alineacion}}}",
+        r"\begin{adjustbox}{max width=\textwidth" + (f", max totalheight={alto}" if alto else "") + "}",
+        rf"\begin{{tabular}}{{{alineacion}}}",
         r"\toprule", *encabezado, r"\midrule", *cuerpo, r"\bottomrule", r"\end{tabular}",
         r"\end{adjustbox}", r"\end{lrbox}", r"\usebox{\tablebox}", "", r"\vspace{1.5ex}",
         r"\begin{minipage}{\wd\tablebox}", r"\footnotesize", f"Nota: {nota}", r"\end{minipage}",
@@ -275,13 +277,13 @@ COMP = {
                  ("angular_error_median", r"Mediana|($^\circ$)", "grados", False),
                  ("precision_5deg", r"P@5$^\circ$", "prec", True),
                  ("precision_10deg", r"P@10$^\circ$", "prec", True),
-                 ("sde_ref_mean", r"SDE$_{\mathrm{ref}}$", "sde", False)],
+                 ("sde_ref_mean", r"SDE", "sde", False)],
     "plane_sym": [("n_objects", "Objetos", "obj", True), ("auc_angular", r"AUC$_{45^\circ}$", "auc", True),
                   ("angular_error_median", r"Mediana|($^\circ$)", "grados", False),
                   ("precision_10deg", r"P@10$^\circ$", "prec", True),
-                  ("f1_ref", r"$F1_{\mathrm{ref}}$|voraz", "f1", True),
-                  ("f1_ref_hungarian", r"$F1_{\mathrm{ref}}$|húngaro", "f1", True),
-                  ("sde_ref_mean", r"SDE$_{\mathrm{ref}}$", "sde", False)],
+                  ("f1_ref", r"$F1$|voraz", "f1", True),
+                  ("f1_ref_hungarian", r"$F1$|húngaro", "f1", True),
+                  ("sde_ref_mean", r"SDE", "sde", False)],
 }
 
 
@@ -297,9 +299,17 @@ def comparativa(nombre: str, tipo: str, condiciones: list[tuple[str, str, str]],
             inicio = [rf"\multirow{{{len(condiciones)}}}{{*}}{{{v}}}" if j == 0 else "", etiqueta]
             filas.append((inicio, [celda(carpeta, tipo, exp_id, v, c) for c, _, _, _ in cols]))
     encabezado = [" & ".join(["Vistas", encabezado_cond] + [apilar(h) for _, h, _, _ in cols]) + r" \\"]
-    return tabla(nombre, titulo, encabezado, filas, [(f, m) for _, _, f, m in cols],
-                 f"{METODO[tipo]} {NOTA_ANG} {NOTA_F1 if tipo == 'plane_sym' else ''} {NEGRITA}",
-                 separar)
+    if nombre.split("_")[0] in NOTA_CORTA:
+        # Nota editada a mano en la tesis (sin estimador ni aviso de negritas); se conserva aquí.
+        texto = NOTA_ANG + (f" {NOTA_F1}" if tipo == "plane_sym" else "") + (f" {nota}" if nota else "")
+    else:
+        texto = (f"{METODO[tipo]} {NOTA_ANG} {NOTA_F1 if tipo == 'plane_sym' else ''} "
+                 + (f"{nota} " if nota else "") + NEGRITA)
+    return tabla(nombre, titulo, encabezado, filas, [(f, m) for _, _, f, m in cols], texto, separar)
+
+
+# Tablas comparativas cuya nota solo explica la población de cada métrica.
+NOTA_CORTA = {"flujos", "envio", "resolucion", "iluminacion"}
 
 
 # ----------------------------------------------------------------------------------------- tablas
@@ -309,7 +319,7 @@ def tabla_azar() -> str:
                 ("angular_error_median", r"Error angular mediano ($^\circ$)", "grados"),
                 ("auc_angular", r"AUC$_{45^\circ}$", "auc"), ("precision_5deg", r"P@5$^\circ$", "prec"),
                 ("precision_10deg", r"P@10$^\circ$", "prec"), ("precision_15deg", r"P@15$^\circ$", "prec"),
-                ("f1_ref", r"$F1_{\mathrm{ref}}$ voraz", "f1")]
+                ("f1_ref", r"$F1$ voraz", "f1")]
     for metrica, texto, fmt in metricas:
         eje = None if metrica == "f1_ref" else celda_azar("axis_sym", metrica, "random_mean")
         plano = celda_azar("plane_sym", metrica, "random_mean")
@@ -323,11 +333,8 @@ def tabla_azar() -> str:
     encabezado = [r"Métrica & Eje & Plano \\"]
     nombre = "azar"
     registro[nombre] = entradas
-    nota = (r"Predictor que elige la dirección del eje o la normal del plano uniformemente en la "
-            r"esfera, sin mirar las imágenes, evaluado con las mismas funciones de "
-            r"\texttt{evaluate.py} sobre los 850 objetos de cada tipo (cobertura 100\%). Cada valor es la "
-            r"media de 1.000 repeticiones simuladas (módulo \texttt{RandomBaseline}). En plano, el error se mide "
-            r"contra el plano de referencia más cercano, por eso es menor que en eje.")
+    # Nota editada a mano en la tesis; se conserva aquí para que regenerar no la pise.
+    nota = r"Predictor de la dirección del eje o la normal del plano uniforme en la esfera, sin mirar las imágenes."
     lineas = ["% Generado por utils/generar_tablas_resultados_cap4.py. No editar a mano.",
               f"% Fuentes:\n%   {rel(AZAR_CSV)}", r"\begin{table}[htbp]", r"\centering",
               r"\caption{Línea base aleatoria en eje y plano.}", r"\label{tab:res_azar}",
@@ -341,10 +348,11 @@ def tabla_azar() -> str:
 
 def tablas_triviales() -> list[str]:
     nombres = []
-    predictores = [("uniform random direction (analytic)", "Dirección al azar (analítico)"),
+    # Encabezados, etiquetas y notas de estas dos tablas editados a mano en la tesis; se conservan aquí.
+    predictores = [("uniform random direction (analytic)", "Dirección al azar"),
                    ("always X", r"Siempre $X$"), ("always Y", r"Siempre $Y$"), ("always Z", r"Siempre $Z$")]
-    cols = [("angular_error_mean", r"Media|($^\circ$)", "grados", False),
-            ("angular_error_median", r"Mediana|($^\circ$)", "grados", False),
+    cols = [("angular_error_mean", r"\begin{tabular}[b]{@{}c@{}}Media ($^\circ$)\end{tabular}", "grados", False),
+            ("angular_error_median", r"\begin{tabular}[b]{@{}c@{}}Mediana ($^\circ$)\end{tabular}", "grados", False),
             ("auc_angular", r"AUC$_{45^\circ}$", "auc", True), ("precision_5deg", r"P@5$^\circ$", "prec", True),
             ("precision_10deg", r"P@10$^\circ$", "prec", True), ("precision_15deg", r"P@15$^\circ$", "prec", True)]
     filas = [([texto], [celda_trivial("axis_sym", p, c) for c, _, _, _ in cols]) for p, texto in predictores]
@@ -352,23 +360,22 @@ def tablas_triviales() -> list[str]:
     nombres.append(tabla("triviales_eje", "Predictores triviales en simetría axial.", enc, filas,
                          [(f, None) for _, _, f, _ in cols],
                          r"Predictores que siempre devuelven la misma dirección cartesiana, evaluados "
-                         r"sobre los 850 objetos axiales. Como los ejes de referencia están orientados "
-                         r"al azar, ninguno se aparta del azar analítico."))
+                         r"sobre los 850 objetos axiales. "))
     predictores = [("always {X}", r"Siempre $\{X\}$"), ("always {Y}", r"Siempre $\{Y\}$"),
                    ("always {Z}", r"Siempre $\{Z\}$"), ("always {X,Z}", r"Siempre $\{X,Z\}$"),
                    ("always {X,Y}", r"Siempre $\{X,Y\}$"), ("always {X,Y,Z}", r"Siempre $\{X,Y,Z\}$")]
     cols = [("n_planes_predicted", "Planos", "entero", None),
             ("recall_planes_mean", "Recall", "prec", True),
             ("precision_planes_mean", "Precisión", "prec", True),
-            ("f1_ref", r"$F1_{\mathrm{ref}}$|voraz", "f1", True),
-            ("f1_ref_hungarian", r"$F1_{\mathrm{ref}}$|húngaro", "f1", True)]
+            ("f1_ref", r"$F1$|voraz", "f1", True),
+            ("f1_ref_hungarian", r"$F1$|húngaro", "f1", True)]
     filas = [([texto], [celda_trivial("plane_sym", p, c) for c, _, _, _ in cols]) for p, texto in predictores]
     enc = [" & ".join(["Predictor"] + [apilar(h) for _, h, _, _ in cols]) + r" \\"]
     nombres.append(tabla("triviales_plano", "Predictores triviales en simetría planar.", enc, filas,
                          [(f, m) for _, _, f, m in cols],
                          r"Predictores que siempre devuelven el mismo conjunto de planos cartesianos que "
                          r"pasan por el origen, evaluados sobre los 850 objetos planares. Recall y "
-                         r"precisión con emparejamiento a $15^\circ$. " + NEGRITA))
+                         r"precisión con emparejamiento a $15^\circ$."))
     return nombres
 
 
@@ -378,23 +385,26 @@ PROMPTS = ["v00", "v01", "v02", "v03", "v04", "v05",
 
 def tabla_prompts(tipo: str) -> str:
     segunda = ("angular_error_median", r"Error mediano ($^\circ$)", "grados", False) \
-        if tipo == "axis_sym" else ("f1_ref", r"$F1_{\mathrm{ref}}$ voraz", "f1", True)
+        if tipo == "axis_sym" else ("f1_ref", r"$F1$ voraz", "f1", True)
     filas = []
     for p in PROMPTS:
         carpeta = "ndcfix_v08" if p == "v08" else "ndcfix_flujoA"
         auc = [celda(carpeta, tipo, ident(tipo, p), v, "auc_angular") for v in VISTAS]
         otra = [celda(carpeta, tipo, ident(tipo, p), v, segunda[0]) for v in VISTAS]
-        filas.append(([tt(p)], auc + [media(auc)] + otra))
-    cols = [("auc", True)] * 4 + [(segunda[2], segunda[3])] * 3
+        objetos = [celda(carpeta, tipo, ident(tipo, p), v, "n_objects") for v in VISTAS]
+        filas.append(([tt(p)], auc + [media(auc)] + otra + objetos))
+    cols = [("auc", True)] * 4 + [(segunda[2], segunda[3])] * 3 + [("obj", None)] * 3
     enc = [rf"\multirow{{2}}{{*}}{{\textit{{Prompt}}}} & \multicolumn{{4}}{{c}}{{AUC$_{{45^\circ}}$}} & "
-           rf"\multicolumn{{3}}{{c}}{{{segunda[1]}}} \\",
-           r"\cmidrule(lr){2-5}\cmidrule(lr){6-8}",
-           r" & $n_v{=}6$ & 14 & 26 & Prom. & $n_v{=}6$ & 14 & 26 \\"]
+           rf"\multicolumn{{3}}{{c}}{{{segunda[1]}}} & \multicolumn{{3}}{{c}}{{Objetos}} \\",
+           r"\cmidrule(lr){2-5}\cmidrule(lr){6-8}\cmidrule(lr){9-11}",
+           r" & $n_v{=}6$ & 14 & 26 & Prom. & $n_v{=}6$ & 14 & 26 & $n_v{=}6$ & 14 & 26 \\"]
     titulo = rf"Comparación de \textit{{prompts}} en simetría {'axial' if tipo == 'axis_sym' else 'planar'} ({REF})."
-    nota = (f"{METODO[tipo]} {NOTA_ANG} " + (NOTA_F1 + " " if tipo == "plane_sym" else "")
-            + r"Prom.: media de los tres valores de $n_v$. Base: \texttt{v00}--\texttt{v05}; "
-            r"variantes: \texttt{\_1}; rondas posteriores: \texttt{v06}--\texttt{v08} "
-            r"(Tabla~\ref{tab:prompt-variants}). " + NEGRITA)
+    # Nota editada a mano en la tesis; se conserva aquí para que regenerar no la pise.
+    nota = ((r"Se predice un plano por objeto. $F1$ y $SDE$ usan solo los objetos con predicción. "
+             if tipo == "plane_sym" else "")
+            + r"Prom.: media de los tres valores de $n_v$. Objetos: objetos con predicción. "
+            r"Base: \texttt{v00}--\texttt{v05}. Variantes: \texttt{\_1}. "
+            r"Rondas posteriores: \texttt{v06}--\texttt{v08}.")
     return tabla(f"prompts_{TIPOS[tipo]}", titulo, enc, filas, cols, nota, separar=[6, 12])
 
 
@@ -410,9 +420,15 @@ SELECCION = {
 }
 
 
+# Prompts que muestran las tablas de selección (resumen y completa del anexo).
+SELECCION_RESUMEN = {"axis_sym": ["v04", "v06", "v08"], "plane_sym": ["v00_1", "v02", "v04"]}
+
+
 def tabla_seleccion(tipo: str) -> str:
     filas, incompletas = [], []
     for p, por_res in SELECCION[tipo]:
+        if p not in SELECCION_RESUMEN[tipo]:
+            continue
         valores = []
         for size in (224, 448, 1136):
             if size not in por_res:
@@ -427,18 +443,66 @@ def tabla_seleccion(tipo: str) -> str:
             cambio = derivada(valores[1]["v"] - valores[0]["v"], "resta", [valores[1], valores[0]])
         filas.append(([tt(p)], valores + [cambio]))
     enc = [r"\textit{Prompt} & 224~px & 448~px & 1136~px & \begin{tabular}[b]{@{}c@{}}Cambio \\ 224$\to$448\end{tabular} \\"]
-    nota = (f"{METODO[tipo]} AUC$_{{45^\\circ}}$ promedio sobre $n_v\\in\\{{6,14,26\\}}$, iluminación "
-            r"\textit{flat}, envío multiimagen. --: no se corrió a esa resolución. ")
+    # Nota reducida a pedido; las corridas incompletas no deberían aparecer con SELECCION_RESUMEN.
     if incompletas:
-        nota += "Promedio sobre las vistas disponibles en " + ", ".join(incompletas) + ". "
-    if tipo == "plane_sym":
-        nota += (r"\texttt{v05\_1} y \texttt{v06} corresponden a la primera selección, hecha con el "
-                 r"puntaje original; sus corridas se recalcularon con $S_{\mathrm{dat}}$. ")
-    nota += NEGRITA
+        raise ValueError(f"selección {tipo}: corridas incompletas {incompletas}")
+    nota = r"$n_v\in\{6,14,26\}$, iluminación \textit{flat}, envío multiimagen."
     cols = [("auc", True)] * 3 + [("auc", None)]
     return tabla(f"seleccion_{TIPOS[tipo]}",
                  rf"Selección del \textit{{prompt}} por resolución en simetría "
-                 rf"{'axial' if tipo == 'axis_sym' else 'planar'}.", enc, filas, cols, nota)
+                 rf"{'axial' if tipo == 'axis_sym' else 'planar'} (Flujo~A).", enc, filas, cols, nota)
+
+
+# Tablas completas del Anexo (anx:tablas-completas): todas las métricas de cap3 por prompt y n_v.
+# Sin negritas: son tablas de consulta; la elección se argumenta con las tablas del cuerpo.
+COMPLETO = [("n_objects", "Objetos", "obj"), ("auc_angular", r"AUC$_{45^\circ}$", "auc"),
+            ("angular_error_mean", r"Media|($^\circ$)", "grados"),
+            ("angular_error_median", r"Mediana|($^\circ$)", "grados"),
+            ("precision_5deg", r"P@5$^\circ$", "prec"), ("precision_10deg", r"P@10$^\circ$", "prec"),
+            ("precision_15deg", r"P@15$^\circ$", "prec"),
+            ("translation_error_normalized_median", r"$t_n$|mediana", "sde")]
+COMPLETO_F1 = [("f1_ref", r"$F1$|voraz", "f1"), ("f1_ref_hungarian", r"$F1$|húngaro", "f1")]
+COMPLETO_SDE = [("sde_ref_mean", "SDE", "sde")]
+
+
+def completa(nombre: str, tipo: str, condiciones: list[tuple[str, str, str]], encabezado_cond: str,
+             titulo: str, nota: str) -> str:
+    """ Tabla completa por número de vistas, una fila por condición: (nombre LaTeX, carpeta, id). """
+    cols = COMPLETO + (COMPLETO_F1 if tipo == "plane_sym" else []) + COMPLETO_SDE
+    filas, separar = [], []
+    for k, v in enumerate(VISTAS):
+        if k:
+            separar.append(len(filas))
+        for j, (etiqueta, carpeta, exp_id) in enumerate(condiciones):
+            inicio = [rf"\multirow{{{len(condiciones)}}}{{*}}{{{v}}}" if j == 0 else "", etiqueta]
+            filas.append((inicio, [celda(carpeta, tipo, exp_id, v, c) for c, _, _ in cols]))
+    encabezado = [" & ".join(["Vistas", encabezado_cond] + [apilar(h) for _, h, _ in cols]) + r" \\"]
+    nota_comun = (f"{METODO[tipo]} {NOTA_ANG} Objetos: objetos con predicción. $t_n$: error de "
+                  r"traslación normalizado, mediana. $t_n$, " + ("$F1$ y " if tipo == "plane_sym" else "")
+                  + r"SDE usan solo los objetos con predicción. ")
+    if any(all(c is None for c in celdas) for _, celdas in filas):
+        nota_comun += "--: no se corrió esa combinación. "
+    return tabla(nombre, titulo, encabezado, filas, [(f, None) for _, _, f in cols], nota_comun + nota,
+                 separar, alto=r"0.8\textheight")
+
+
+def tabla_completa_prompts(tipo: str) -> str:
+    condiciones = [(tt(p), "ndcfix_v08" if p == "v08" else "ndcfix_flujoA", ident(tipo, p)) for p in PROMPTS]
+    simetria = "axial" if tipo == "axis_sym" else "planar"
+    return completa(f"completa_prompts_{TIPOS[tipo]}", tipo, condiciones, r"\textit{Prompt}",
+                    rf"Métricas completas de los \textit{{prompts}} en simetría {simetria} ({REF}).",
+                    rf"Resumen en la Tabla~\ref{{tab:res_prompts_{TIPOS[tipo]}}}.")
+
+
+def tabla_completa_seleccion(tipo: str) -> str:
+    condiciones = [(rf"{tt(p)}, {size}~px", por_res[size][0], ident(tipo, p, size))
+                   for p, por_res in SELECCION[tipo] if p in SELECCION_RESUMEN[tipo]
+                   for size in (224, 448, 1136) if size in por_res]
+    simetria = "axial" if tipo == "axis_sym" else "planar"
+    nota = rf"Resumen en la Tabla~\ref{{tab:res_seleccion_{TIPOS[tipo]}}}."
+    return completa(f"completa_seleccion_{TIPOS[tipo]}", tipo, condiciones, r"\textit{Prompt}, resolución",
+                    rf"Métricas completas de la selección de \textit{{prompts}} por resolución en simetría "
+                    rf"{simetria} (iluminación \textit{{flat}}, envío multiimagen y Flujo~A).", nota)
 
 
 def tabla_pareado_estimador(tipo: str) -> str:
@@ -455,7 +519,7 @@ def tabla_pareado_estimador(tipo: str) -> str:
         cs += [celda_pareado(ruta, v, c) for c in ("dif_media", "ic_inf", "ic_sup", "mejoran", "empeoran")]
         filas.append(([str(v)], cs))
     nombres = {"auc_angular": r"AUC$_{45^\circ}$", "angular_error_median": r"Mediana ($^\circ$)",
-               "f1_ref": r"$F1_{\mathrm{ref}}$"}
+               "f1_ref": r"$F1$"}
     original, final = (("SVD", "EXP-E") if tipo == "axis_sym" else ("Cámaras", r"$S_{\mathrm{dat}}$"))
     grupos = " & ".join(rf"\multicolumn{{2}}{{c}}{{{nombres[c]}}}" for c, _, _ in metricas)
     reglas = "".join(rf"\cmidrule(lr){{{2 + 2 * k}-{3 + 2 * k}}}" for k in range(len(metricas)))
@@ -519,8 +583,8 @@ def tabla_mejor_plano() -> str:
     for p, texto in (("always {X}", r"Siempre $\{X\}$"), ("always {X,Z}", r"Siempre $\{X,Z\}$")):
         filas.append(([texto], [None, None, celda_trivial("plane_sym", p, "f1_ref"),
                                 celda_trivial("plane_sym", p, "f1_ref_hungarian")]))
-    enc = [r"Predictor & Objetos & AUC$_{45^\circ}$ & \begin{tabular}[b]{@{}c@{}}$F1_{\mathrm{ref}}$ \\ voraz\end{tabular}"
-           r" & \begin{tabular}[b]{@{}c@{}}$F1_{\mathrm{ref}}$ \\ húngaro\end{tabular} \\"]
+    enc = [r"Predictor & Objetos & AUC$_{45^\circ}$ & \begin{tabular}[b]{@{}c@{}}$F1$ \\ voraz\end{tabular}"
+           r" & \begin{tabular}[b]{@{}c@{}}$F1$ \\ húngaro\end{tabular} \\"]
     nota = (rf"{METODO['plane_sym']} {REF}. {NOTA_ANG} {NOTA_F1} Los predictores triviales se evalúan sobre "
             r"los 850 objetos. --: métrica no calculada para ese predictor.")
     return tabla("mejor_plano", "Mejor configuración planar frente al azar y a los predictores triviales.",
@@ -536,7 +600,7 @@ def tabla_rotacion() -> str:
             "f1_ref_base", "f1_ref_nuevo", "dif_media", "ic_inf", "ic_sup", "mejoran", "empeoran")]
         filas.append(([str(v)], cs))
     enc = [r"\multirow{2}{*}{Vistas} & \multicolumn{2}{c}{Objetos} & \multicolumn{2}{c}{AUC$_{45^\circ}$} & "
-           r"\multicolumn{2}{c}{$F1_{\mathrm{ref}}$} & \multicolumn{3}{c}{Dif.\ de error ($^\circ$)} & "
+           r"\multicolumn{2}{c}{$F1$} & \multicolumn{3}{c}{Dif.\ de error ($^\circ$)} & "
            r"\multirow{2}{*}{Mejoran} & \multirow{2}{*}{Empeoran} \\",
            r"\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-10}",
            r" & Original & Rotado & Original & Rotado & Original & Rotado & Media & IC inf. & IC sup. & & \\"]
@@ -633,7 +697,7 @@ def tabla_malla(tipo: str) -> str:
     enc = [rf"\multirow{{2}}{{*}}{{Vistas}} & \multirow{{2}}{{*}}{{Condición}} & \multirow{{2}}{{*}}{{Objetos}} & "
            rf"\multirow{{2}}{{*}}{{AUC$_{{45^\circ}}$}} & \multirow{{2}}{{*}}{{\begin{{tabular}}[b]{{@{{}}c@{{}}}}Mediana \\ ($^\circ$)\end{{tabular}}}} & "
            rf"\multirow{{2}}{{*}}{{P@10$^\circ$}}"
-           + (r" & \multirow{2}{*}{$F1_{\mathrm{ref}}$}" if tipo == "plane_sym" else "")
+           + (r" & \multirow{2}{*}{$F1$}" if tipo == "plane_sym" else "")
            + r" & \multicolumn{3}{c}{Dif.\ de error ($^\circ$)} & \multirow{2}{*}{Mejoran} & \multirow{2}{*}{Empeoran} \\",
            rf"\cmidrule(lr){{{3 + n_met}-{5 + n_met}}}",
            " & " * (2 + n_met) + r"Media & IC inf. & IC sup. & & \\"]
@@ -656,16 +720,17 @@ def main() -> None:
     SALIDA.mkdir(parents=True, exist_ok=True)
     hechas = [tabla_azar(), *tablas_triviales()]
     for tipo in ("axis_sym", "plane_sym"):
-        hechas += [tabla_prompts(tipo), tabla_seleccion(tipo)]
+        hechas += [tabla_prompts(tipo), tabla_seleccion(tipo),
+                   tabla_completa_prompts(tipo), tabla_completa_seleccion(tipo)]
     # Flujos
+    # Flujo C no usa el prompt base (build_flow_c_prompts); en eje solo existe la corrida
+    # axis_v05_1_flowC, donde v05_1 solo actúa si falta la pista de ubicación.
     hechas.append(comparativa("flujos_eje", "axis_sym", [
-        (rf"{tt('v04')}, A", "ndcfix_flujoA", ident("axis_sym", "v04")),
-        (rf"{tt('v04')}, B", "ndcfix_flujoB", ident("axis_sym", "v04_flowB")),
-        (rf"{tt('v05_1')}, A", "ndcfix_flujoA", ident("axis_sym", "v05_1")),
-        (rf"{tt('v05_1')}, B", "ndcfix_flujoB", ident("axis_sym", "v05_1_flowB")),
-        (rf"{tt('v05_1')}, C", "ndcfix_flujoC", ident("axis_sym", "v05_1_flowC"))],
-        r"\textit{Prompt}, flujo", "Flujos A, B y C en simetría axial (224~px, \\textit{flat}, envío multiimagen).",
-        ""))
+        ("A", "ndcfix_flujoA", ident("axis_sym", "v04")),
+        ("B", "ndcfix_flujoB", ident("axis_sym", "v04_flowB")),
+        ("C", "ndcfix_flujoC", ident("axis_sym", "v05_1_flowC"))],
+        "Flujo", r"Flujos A, B y C en simetría axial con \texttt{axis\_v04} (224~px, \textit{flat}, "
+                 r"envío multiimagen).", ""))
     hechas.append(comparativa("flujos_plano", "plane_sym", [
         ("A", "ndcfix_flujoA", ident("plane_sym", "v02")),
         ("B", "plane_v02_224_flujoB", ident("plane_sym", "v02_flowB")),
@@ -707,7 +772,8 @@ def main() -> None:
         (r"\textit{brighter}", "plane_v02_224_brighter", ident("plane_sym", "v02", 224, "brighter"))],
         "Iluminación", r"Efecto de la iluminación en simetría planar con \texttt{plane\_v02} (224~px, envío "
                        r"multiimagen).", ""))
-    hechas += [tabla_pareado_estimador("axis_sym"), tabla_pareado_estimador("plane_sym"),
+    # S_dat es el estimador por defecto: ya no se publica la comparación con el puntaje original.
+    hechas += [tabla_pareado_estimador("axis_sym"),
                tabla_mejor_eje(), tabla_mejor_plano(), tabla_rotacion()]
     # VLMs (una vista por llamada)
     hechas.append(comparativa("vlms_eje", "axis_sym", [
