@@ -1,0 +1,15 @@
+$ /home/pespinoz/miniconda3/envs/tesis_env/bin/python3 Mapping/compare_results_no_mesh.py --renders-root /data/pespinoz/renders --symmetry-type plane_sym --sizes 224 --lightings flat --experiment-id plane_v02_s224_flat_ndcfix_sdat_multi_mp1_nomesh plane_v02_s224_flat_ndcfix_sdat_multi_mp2_nomesh plane_v02_s224_flat_ndcfix_sdat_multi_mp3_nomesh --csv-dir /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_multiplano --no-plots --total-objects 850
+
+
+--- triangulation_multiplane (recall/precision sobre planos GT) ---
+                                      experiment                   method  n_views  n_objects  n_planes_predicted_mean  n_true_planes_mean  n_planes_matched_mean  recall_planes_mean  precision_planes_mean
+plane_v02_s224_flat_ndcfix_sdat_multi_mp1_nomesh triangulation_multiplane        6        792                   1.0000              1.1869                 0.8939              0.8121                 0.8939
+plane_v02_s224_flat_ndcfix_sdat_multi_mp1_nomesh triangulation_multiplane       14        658                   1.0000              1.1809                 0.8997              0.8224                 0.8997
+plane_v02_s224_flat_ndcfix_sdat_multi_mp1_nomesh triangulation_multiplane       26        828                   1.0000              1.1944                 0.8200              0.7446                 0.8200
+plane_v02_s224_flat_ndcfix_sdat_multi_mp2_nomesh triangulation_multiplane        6        792                   1.0025              1.1869                 0.8939              0.8121                 0.8939
+plane_v02_s224_flat_ndcfix_sdat_multi_mp2_nomesh triangulation_multiplane       14        658                   1.9240              1.1809                 0.9043              0.8270                 0.4833
+plane_v02_s224_flat_ndcfix_sdat_multi_mp2_nomesh triangulation_multiplane       26        828                   1.7126              1.1944                 0.8249              0.7488                 0.5042
+plane_v02_s224_flat_ndcfix_sdat_multi_mp3_nomesh triangulation_multiplane        6        792                   1.0025              1.1869                 0.8939              0.8121                 0.8939
+plane_v02_s224_flat_ndcfix_sdat_multi_mp3_nomesh triangulation_multiplane       14        658                   1.9286              1.1809                 0.9058              0.8278                 0.4835
+plane_v02_s224_flat_ndcfix_sdat_multi_mp3_nomesh triangulation_multiplane       26        828                   2.2681              1.1944                 0.8973              0.7895                 0.4444
+Saved: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/plane_v02_224_multiplano/experiments_26_11_2026/plane_sym_plane_v02_s224_flat_ndcfix_sdat_multi_mp1_nomesh_plane_v02_s224_flat_ndcfix_sdat_multi_mp2_nomesh_plane_v02_s224_flat_ndcfix_sdat_multi_mp3_nomesh_comparison.csv
