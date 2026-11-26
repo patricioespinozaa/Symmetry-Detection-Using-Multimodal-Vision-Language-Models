@@ -23,6 +23,7 @@ FMT = {"auc": "{:.3f}", "grados": "{:.1f}", "prec": "{:.3f}", "f1": "{:.3f}", "o
        "sde": "{:.4f}", "entero": "{:.0f}", "z": "{:.1f}", "sde4": "{:.2f}"}
 ID_OK = re.compile(r"^(axis_.+_ndcfix_expE_nomesh|plane_.+_ndcfix_sdat_mp1_nomesh)$")
 ID_MALLA = re.compile(r"^(axis|plane)_.+_s\d+_[a-z]+_ndcfix_mesh(_[a-z0-9_]+)?$")
+ID_MULTI = re.compile(r"^plane_.+_s\d+_[a-z]+_ndcfix_sdat_multi_mp[123]_nomesh$")
 errores: list[str] = []
 
 
@@ -59,6 +60,15 @@ def valor(t: dict) -> float:
         if (a, m, d) < (2026, 11, 5):
             errores.append(f"CSV anterior al recálculo NDC: {t['csv']}")
         return float(r[t["columna"]])
+    if fuente == "multiplano":
+        r = fila_csv(t["csv"], lambda r: r["experiment"] == t["experiment"]
+                     and r["method"] == "triangulation_multiplane" and int(r["n_views"]) == t["n_views"])
+        if not ID_MULTI.match(r["experiment"]) or int(r["n_total"]) != 850:
+            errores.append(f"fila multiplano no válida: {t['csv']} {r['experiment']} n_total={r['n_total']}")
+        d, m, a = map(int, re.search(r"experiments_(\d+)_(\d+)_(\d+)", t["csv"]).groups())
+        if (a, m, d) < (2026, 11, 5):
+            errores.append(f"CSV anterior al recálculo NDC: {t['csv']}")
+        return float(r[t["columna"]])
     if fuente == "pareado_malla":
         return float(fila_csv(t["csv"], lambda r: r["variante"] == t["variante"]
                               and r["metodo"] == t["metodo"]
@@ -80,6 +90,11 @@ def valor(t: dict) -> float:
         if len(encontrados) != 1:
             raise LookupError(f"{t['archivo']}: {t['predictor']} aparece {len(encontrados)} veces")
         return encontrados[0]
+    if fuente == "log_objetos":
+        hallados = re.findall(rf"=== {t['tipo']}: (\d+) objects", (REPO / t["archivo"]).read_text(encoding="utf-8"))
+        if len(hallados) != 1:
+            raise LookupError(f"{t['archivo']}: encabezado de {t['tipo']} aparece {len(hallados)} veces")
+        return float(hallados[0])
     if fuente == "derivada":
         e = [valor(x) for x in t["entradas"]]
         if t["formula"] == "media":
@@ -103,7 +118,7 @@ def numeros_cuerpo(tex: str) -> list[str]:
     for linea in cuerpo.split(r"\\"):
         for celda in linea.split("&")[1:]:     # la primera columna es la etiqueta o las vistas
             texto = celda.strip()
-            hallado = re.fullmatch(r"(?:\\textbf\{)?(-?\d+(?:\.\d+)?)\}?", texto)
+            hallado = re.fullmatch(r"(?:\\textbf\{)?(-?\d+(?:\.\d+)?)\}?(?:\$\^\{\*\}\$)?", texto)
             if hallado:
                 numeros.append(hallado.group(1))
     return numeros

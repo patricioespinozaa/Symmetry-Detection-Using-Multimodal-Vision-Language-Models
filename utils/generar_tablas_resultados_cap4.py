@@ -159,6 +159,13 @@ def celda_trivial(tipo: str, predictor: str, clave: str) -> dict:
                                            "tipo": tipo, "predictor": predictor, "clave": clave}}
 
 
+def objetos_trivial(tipo: str) -> dict:
+    """ Objetos evaluados por los predictores triviales, del encabezado del registro. """
+    m = re.search(rf"=== {tipo}: (\d+) objects", TRIVIALES_LOG.read_text(encoding="utf-8"))
+    return {"v": float(m.group(1)), "t": {"fuente": "log_objetos", "archivo": rel(TRIVIALES_LOG),
+                                          "tipo": tipo}}
+
+
 def celda_publicada(tipo: str, configuracion: str, vistas: int, columna: str) -> dict:
     """ Valor publicado por Aguirre y Sipiran, transcrito en resultados_finales/referencias/. """
     with open(AGUIRRE_CSV, encoding="utf-8", newline="") as f:
@@ -231,7 +238,8 @@ def tabla(nombre: str, titulo: str, encabezado: list[str], filas: list[tuple[lis
         if not celdas:
             cuerpo.append(" & ".join(inicio) + r" \\")
             continue
-        cuerpo.append(" & ".join(inicio + [textos[j][i] for j in range(len(columnas))]) + r" \\")
+        cuerpo.append(" & ".join(inicio + [textos[j][i] + (celdas[j] or {}).get("sufijo", "")
+                                           for j in range(len(columnas))]) + r" \\")
         for j, c in enumerate(celdas):
             if c is not None:
                 entradas.append({"fila": i, "columna": j, "texto": formatear(c, columnas[j][0]),
@@ -562,10 +570,7 @@ def tabla_mejor_eje() -> str:
     filas.append(([r"Azar (analítico)"], [None, azar_auc, None, None, None]))
     enc = [r"Vistas & Objetos & AUC$_{45^\circ}$ & \begin{tabular}[b]{@{}c@{}}Error medio \\ ($^\circ$)\end{tabular}"
            r" & \begin{tabular}[b]{@{}c@{}}Esperado bajo \\ azar ($^\circ$)\end{tabular} & $z$ \\"]
-    nota = (rf"{METODO['axis_sym']} \textit{{Prompt}} {tt('v04')} ({REF}). {NOTA_ANG} Esperado bajo azar: "
-            r"$(N_{obj}\cdot 57.30 + (850-N_{obj})\cdot 90)/850$; $z$: diferencia entre el error medio "
-            r"observado y el esperado, dividida por $21.56\sqrt{N_{obj}}/850$ (Sección~\ref{subsec:res-azar}); "
-            r"$z<-2$ indica mejor que el azar.")
+    nota = rf"\textit{{Prompt}} {tt('v04')} ({REF})."
     return tabla("mejor_eje", "Mejor configuración axial frente al azar.", enc, filas,
                  [("obj", None), ("auc", None), ("grados", None), ("grados", None), ("z", None)], nota,
                  separar=[3])
@@ -577,16 +582,24 @@ def tabla_mejor_plano() -> str:
         filas.append(([rf"\texttt{{plane\_v02}}, $n_v{{=}}{v}$"],
                       [celda("ndcfix_flujoA", "plane_sym", ident("plane_sym", "v02"), v, c)
                        for c in ("n_objects", "auc_angular", "f1_ref", "f1_ref_hungarian")]))
-    filas.append((["Azar (simulación)"], [None, celda_azar("plane_sym", "auc_angular", "random_mean"),
+    filas.append((["Azar (simulación)"], [celda_azar("plane_sym", "auc_angular", "n_objects_gt"),
+                                         celda_azar("plane_sym", "auc_angular", "random_mean"),
                                          celda_azar("plane_sym", "f1_ref", "random_mean"),
                                          celda_azar("plane_sym", "f1_ref_hungarian", "random_mean")]))
     for p, texto in (("always {X}", r"Siempre $\{X\}$"), ("always {X,Z}", r"Siempre $\{X,Z\}$")):
-        filas.append(([texto], [None, None, celda_trivial("plane_sym", p, "f1_ref"),
+        # AUC de los triviales: solo existe en el registro desde que trivial_baselines.py la calcula
+        # para plano; con dos planos se toma el mejor (valor optimista, marcado con *).
+        fila = next(f for f in triviales()["plane_sym"] if f["predictor"] == p)
+        auc = celda_trivial("plane_sym", p, "auc_angular") if "auc_angular" in fila else None
+        if auc is not None and "," in p:
+            auc["sufijo"] = "$^{*}$"
+        filas.append(([texto], [objetos_trivial("plane_sym"), auc, celda_trivial("plane_sym", p, "f1_ref"),
                                 celda_trivial("plane_sym", p, "f1_ref_hungarian")]))
     enc = [r"Predictor & Objetos & AUC$_{45^\circ}$ & \begin{tabular}[b]{@{}c@{}}$F1$ \\ voraz\end{tabular}"
            r" & \begin{tabular}[b]{@{}c@{}}$F1$ \\ húngaro\end{tabular} \\"]
-    nota = (rf"{METODO['plane_sym']} {REF}. {NOTA_ANG} {NOTA_F1} Los predictores triviales se evalúan sobre "
-            r"los 850 objetos. --: métrica no calculada para ese predictor.")
+    nota = (rf"\textit{{Prompt}} {tt('plane_v02')} ({REF}). $^{{*}}$: el predictor propone dos planos y el "
+            r"AUC$_{45^\circ}$ toma el mejor de ellos frente a la referencia, por lo que no es comparable "
+            r"con el de un solo plano.")
     return tabla("mejor_plano", "Mejor configuración planar frente al azar y a los predictores triviales.",
                  enc, filas, [("obj", None), ("auc", None), ("f1", None), ("f1", None)], nota, separar=[3])
 
@@ -651,6 +664,44 @@ def tabla_aguirre() -> str:
             rf"({REF}). {NOTA_F1} --: métrica no reportada o no calculada.")
     return tabla("aguirre", "Comparación con el método de Aguirre y Sipiran, con acceso a la malla.",
                  enc, filas, [("obj", None), ("f1", None), ("sde4", None)], nota, separar, fino)
+
+
+ID_MULTI = re.compile(r"^plane_.+_s\d+_[a-z]+_ndcfix_sdat_multi_mp([123])_nomesh$")
+
+
+def celda_multi(exp_id: str, vistas: int, columna: str) -> dict:
+    """ Celda del CSV final del experimento multiplano (run_plane_multiplano.py). """
+    ruta = csv_final("plane_v02_224_multiplano", "plane_sym")
+    with open(ruta, encoding="utf-8", newline="") as f:
+        filas = [r for r in csv.DictReader(f) if r["experiment"] == exp_id and int(r["n_views"]) == vistas]
+    if len(filas) != 1 or not ID_MULTI.match(exp_id) or filas[0]["method"] != "triangulation_multiplane" \
+            or int(filas[0]["n_total"]) != TOTAL:
+        raise ValueError(f"{ruta}: fila multiplano no válida {exp_id} {vistas}")
+    return {"v": float(filas[0][columna]), "t": {"fuente": "multiplano", "csv": rel(ruta),
+                                                 "experiment": exp_id, "n_views": vistas, "columna": columna}}
+
+
+def tabla_multiplano() -> str:
+    """ Hasta 1, 2 o 3 planos por objeto con S_dat, mismos puntos de plane_v02. """
+    columnas = [("n_objects", "obj"), ("n_planes_predicted_mean", "sde4"), ("n_planes_matched_mean", "sde4"),
+                ("recall_planes_mean", "prec"), ("precision_planes_mean", "prec"),
+                ("f1_ref", "f1"), ("f1_ref_hungarian", "f1"), ("sde_ref_mean", "sde")]
+    filas, separar = [], []
+    for k, v in enumerate(VISTAS):
+        if k:
+            separar.append(len(filas))
+        for maximo in (1, 2, 3):
+            exp_id = f"plane_v02_s224_flat_ndcfix_sdat_multi_mp{maximo}_nomesh"
+            inicio = [rf"\multirow{{3}}{{*}}{{{v}}}" if maximo == 1 else "", f"${maximo}$"]
+            filas.append((inicio, [celda_multi(exp_id, v, c) for c, _ in columnas]))
+    enc = [r"Vistas & \begin{tabular}[b]{@{}c@{}}Máx.\ de \\ planos\end{tabular} & Objetos & "
+           r"\begin{tabular}[b]{@{}c@{}}Planos \\ predichos\end{tabular} & "
+           r"\begin{tabular}[b]{@{}c@{}}Planos \\ emparejados\end{tabular} & Recall & Precisión & "
+           r"\begin{tabular}[b]{@{}c@{}}$F1$ \\ voraz\end{tabular} & "
+           r"\begin{tabular}[b]{@{}c@{}}$F1$ \\ húngaro\end{tabular} & SDE \\"]
+    nota = rf"Mismos puntos de Molmo2 con el \textit{{prompt}} {tt('v02')} ({REF})."
+    return tabla("multiplano", "Un plano frente a varios planos por objeto en simetría planar.", enc, filas,
+                 [(fmt, None) for _, fmt in columnas], nota, separar)
 
 
 VARIANTES_MALLA = {"base": "1 rayo", "p3": "parche 3$\\times$3", "p5": "parche 5$\\times$5",
@@ -774,7 +825,7 @@ def main() -> None:
                        r"multiimagen).", ""))
     # S_dat es el estimador por defecto: ya no se publica la comparación con el puntaje original.
     hechas += [tabla_pareado_estimador("axis_sym"),
-               tabla_mejor_eje(), tabla_mejor_plano(), tabla_rotacion()]
+               tabla_mejor_eje(), tabla_mejor_plano(), tabla_rotacion(), tabla_multiplano()]
     # VLMs (una vista por llamada)
     hechas.append(comparativa("vlms_eje", "axis_sym", [
         ("Molmo2-8B", "ndcfix_single_oct26", ident("axis_sym", "v04_single_oct26")),

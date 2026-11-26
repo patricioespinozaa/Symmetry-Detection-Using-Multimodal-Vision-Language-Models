@@ -116,10 +116,14 @@ def score_plane_predictor(labels: list[list[dict]], axes: str) -> dict:
     preds = [{"normal": WORLD_AXES[a].tolist(), "origin": [0.0, 0.0, 0.0]} for a in axes]
     pred_vecs = [normal_origin_to_plane(p["normal"], p["origin"]).reshape(4) for p in preds]
 
-    recalls, precisions = [], []
+    recalls, precisions, errors = [], [], []
     greedy = {t: [0, 0, 0] for t in THRESHOLDS_INLIER}
     hungarian = {t: [0, 0, 0] for t in THRESHOLDS_INLIER}
     for els in labels:
+        # Same angular convention as evaluate_plane: best-matching GT plane. With several
+        # predicted planes, the best of them is kept (an optimistic score: more than one guess).
+        errors.append(min(angular_error_deg(np.asarray(p["normal"]), np.asarray(el["normal"]))
+                          for p in preds for el in els))
         res = evaluate_plane_multiset(preds, els)
         recalls.append(res["recall_planes"])
         precisions.append(res["precision_planes"])
@@ -138,6 +142,9 @@ def score_plane_predictor(labels: list[list[dict]], axes: str) -> dict:
         "precision_planes_mean": round(float(np.mean(precisions)), 4),
         "f1_ref": round(_f1_from_counts_by_threshold({t: tuple(c) for t, c in greedy.items()}), 4),
         "f1_ref_hungarian": round(_f1_from_counts_by_threshold({t: tuple(c) for t, c in hungarian.items()}), 4),
+        "angular_error_mean": round(float(np.mean(errors)), 2),
+        "angular_error_median": round(float(np.median(errors)), 2),
+        "auc_angular": round(auc_from_errors(errors, AUC_ANGULAR_MAX), 4),
     }
 
 
