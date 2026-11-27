@@ -85,9 +85,11 @@ def load_csvs(renders_root: Path, symmetry_type: str, sizes: list[int],
     size_tag   = "s" + "_".join(str(s) for s in sizes)
     light_tag  = "_".join(lightings)
     prefix     = f"eval_{size_tag}_{light_tag}_"
-    sym_prefix = "axis_v" if symmetry_type == "axis_sym" else "plane_v"
-    root       = renders_root / symmetry_type
     wanted     = set(experiment_ids) if experiment_ids else None
+    # Sin ids explícitos solo se listan las corridas de prompts (axis_v*/plane_v*). Con ids, el
+    # match es exacto, así que se busca en todo axis_*/plane_* (p. ej. axis_silueta2p_r00_...).
+    sym_prefix = ("axis_" if symmetry_type == "axis_sym" else "plane_") + ("" if wanted else "v")
+    root       = renders_root / symmetry_type
 
     frames     = []
     found_exps = set()

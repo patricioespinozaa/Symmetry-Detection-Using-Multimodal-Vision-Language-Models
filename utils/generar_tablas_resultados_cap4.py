@@ -832,16 +832,7 @@ def tabla_malla(tipo: str) -> str:
            + r" & \multicolumn{3}{c}{Dif.\ de error ($^\circ$)} & \multirow{2}{*}{Mejoran} & \multirow{2}{*}{Empeoran} \\",
            rf"\cmidrule(lr){{{3 + n_met}-{5 + n_met}}}",
            " & " * (2 + n_met) + r"Media & IC inf. & IC sup. & & \\"]
-    estimador = "EXP-E" if tipo == "axis_sym" else r"$S_{\mathrm{dat}}$ con un plano por objeto"
-    nota = (rf"Mismos puntos de Molmo2 en ambos casos: \textit{{prompt}} {tt(prompt)} ({REF}). Sin malla: "
-            rf"triangulación con {estimador}. Malla: cada punto se retroproyecta sobre la superficie y "
-            r"el elemento de simetría se ajusta sobre los puntos 3D; 1 rayo: un rayo por punto. La segunda "
-            r"variante con malla es la de mayor AUC$_{45^\circ}$ promedio en 6, 14 y 26 vistas entre las 14 "
-            r"evaluadas (parches de 1, 3$\times$3 y 5$\times$5 rayos, agrupamiento voraz y HDBSCAN con "
-            r"\textit{min\_samples} 2, 3 y 5, cada una con SVD y RANSAC+SVD). Dif.\ de error: malla $-$ sin "
-            r"malla, objeto a objeto, sobre los 850 objetos con $90^\circ$ imputados; valores negativos "
-            r"favorecen a la malla. IC 95\% \textit{bootstrap} pareado. Mejoran/Empeoran: más de $1^\circ$. "
-            + (NOTA_F1 + " " if tipo == "plane_sym" else "") + NEGRITA)
+    nota = rf"Molmo2, \textit{{prompt}} {tt(prompt)} ({REF})."
     simetria = "axial" if tipo == "axis_sym" else "planar"
     return tabla(f"malla_{TIPOS[tipo]}", f"Triangulación sin malla frente a retroproyección sobre la malla "
                  f"en simetría {simetria}.", enc, filas, cols, nota, separar)
