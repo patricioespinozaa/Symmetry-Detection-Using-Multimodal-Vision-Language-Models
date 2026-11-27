@@ -52,6 +52,7 @@ def _row_for_object(
             continue
 
         n_points = n_centered = n_noncenital = n_noncenital_centered = 0
+        n_centered_xy = n_noncenital_centered_xy = 0
         for img_idx_str, pts in points_by_image.items():
             if not pts:
                 continue
@@ -61,17 +62,22 @@ def _row_for_object(
 
             for p in pts:
                 n_points += 1
+                # x only: point on the image's central column (the projection of the world
+                # vertical axis in every non-cenital view). x and y: point at the projection
+                # of the origin (the object center) -- on the element, but carries no orientation.
                 centered = abs(p["x"] - 500.0) < centered_thresh
-                if centered:
-                    n_centered += 1
+                centered_xy = centered and abs(p["y"] - 500.0) < centered_thresh
+                n_centered += centered
+                n_centered_xy += centered_xy
                 if not is_cenital:
                     n_noncenital += 1
-                    if centered:
-                        n_noncenital_centered += 1
+                    n_noncenital_centered += centered
+                    n_noncenital_centered_xy += centered_xy
 
         out[n_views_key] = {
-            "n_points": n_points, "n_centered": n_centered,
+            "n_points": n_points, "n_centered": n_centered, "n_centered_xy": n_centered_xy,
             "n_noncenital": n_noncenital, "n_noncenital_centered": n_noncenital_centered,
+            "n_noncenital_centered_xy": n_noncenital_centered_xy,
         }
     return out
 
@@ -138,6 +144,10 @@ def run_diagnostic(
         pct_noncenital_centered = (
             agg["n_noncenital_centered"] / agg["n_noncenital"] if agg["n_noncenital"] else 0.0
         )
+        pct_centered_xy = agg["n_centered_xy"] / agg["n_points"] if agg["n_points"] else 0.0
+        pct_noncenital_centered_xy = (
+            agg["n_noncenital_centered_xy"] / agg["n_noncenital"] if agg["n_noncenital"] else 0.0
+        )
         if pct_noncenital_centered > 0.5:
             verdict = "PROBLEMA CONFIRMADO"
         elif pct_noncenital_centered > 0.2:
@@ -151,6 +161,8 @@ def run_diagnostic(
             "n_points": agg["n_points"], "pct_centered": round(pct_centered, 4),
             "n_noncenital_points": agg["n_noncenital"],
             "pct_noncenital_centered": round(pct_noncenital_centered, 4),
+            "pct_centered_xy": round(pct_centered_xy, 4),
+            "pct_noncenital_centered_xy": round(pct_noncenital_centered_xy, 4),
             "verdict": verdict,
         })
 
@@ -214,7 +226,8 @@ def main() -> None:
         all_summary += summary
         for row in summary:
             print(f"  n_views={row['n_views']:>4}  pct_centered={row['pct_centered']:.2%}  "
-                  f"pct_noncenital_centered={row['pct_noncenital_centered']:.2%}  -> {row['verdict']}")
+                  f"pct_noncenital_centered={row['pct_noncenital_centered']:.2%}  "
+                  f"pct_noncenital_centered_xy={row['pct_noncenital_centered_xy']:.2%}  -> {row['verdict']}")
 
     _write_csv(Path(args.out_detail), all_detail)
     _write_csv(Path(args.out_summary), all_summary)

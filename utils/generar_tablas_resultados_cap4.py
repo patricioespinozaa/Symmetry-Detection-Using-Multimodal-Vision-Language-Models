@@ -789,11 +789,12 @@ VARIANTES_MALLA = {"base": "1 rayo", "p3": "parche 3$\\times$3", "p5": "parche 5
                    "hdbscan_ms3": "HDBSCAN, ms 3", "hdbscan_ms5": "HDBSCAN, ms 5"}
 
 
-def tabla_malla(tipo: str) -> str:
+def tabla_malla(tipo: str, completa: bool = False) -> str:
     """ Pipeline sin malla frente a la retroproyección sobre la malla con los mismos puntos.
 
     Filas por número de vistas: sin malla, malla con un rayo por punto (SVD) y la variante con
-    malla de mayor AUC promedio en 6, 14 y 26 vistas, con el pareado objeto a objeto.
+    malla de mayor AUC promedio en 6, 14 y 26 vistas, con el pareado objeto a objeto. Con
+    completa=True, las 14 variantes con malla (anexo).
 
     """
     prompt = "v04" if tipo == "axis_sym" else "v02"
@@ -806,6 +807,8 @@ def tabla_malla(tipo: str) -> str:
     mejor = max(((v, m) for v in VARIANTES_MALLA for m in ("svd", "ransac_svd")),
                 key=lambda vm: sum(float(datos[(id_var(vm[0]), vm[1], n)]["auc_angular"]) for n in VISTAS))
     condiciones = [("base", "svd")] + ([mejor] if mejor != ("base", "svd") else [])
+    if completa:
+        condiciones = [(v, m) for v in VARIANTES_MALLA for m in ("svd", "ransac_svd")]
     metricas = ["n_objects", "auc_angular", "angular_error_median", "precision_10deg"]
     metricas += ["f1_ref"] if tipo == "plane_sym" else []
     pareado = ["dif_media", "ic_inf", "ic_sup", "mejoran", "empeoran"]
@@ -834,6 +837,11 @@ def tabla_malla(tipo: str) -> str:
            " & " * (2 + n_met) + r"Media & IC inf. & IC sup. & & \\"]
     nota = rf"Molmo2, \textit{{prompt}} {tt(prompt)} ({REF})."
     simetria = "axial" if tipo == "axis_sym" else "planar"
+    if completa:
+        return tabla(f"completa_malla_{TIPOS[tipo]}", f"Todas las variantes de retroproyección sobre la malla "
+                     f"en simetría {simetria}.", enc, filas, cols,
+                     nota + rf" Resumen en la Tabla~\ref{{tab:res_malla_{TIPOS[tipo]}}}.", separar,
+                     alto=r"0.85\textheight")
     return tabla(f"malla_{TIPOS[tipo]}", f"Triangulación sin malla frente a retroproyección sobre la malla "
                  f"en simetría {simetria}.", enc, filas, cols, nota, separar)
 
@@ -915,7 +923,8 @@ def main() -> None:
         "Modelo", r"Comparación de VLMs en simetría planar con \texttt{plane\_v02} (224~px, \textit{flat}, "
                   r"una vista por llamada).", ""))
     hechas.append(tabla_aguirre())
-    hechas += [tabla_malla("axis_sym"), tabla_malla("plane_sym")]
+    hechas += [tabla_malla("axis_sym"), tabla_malla("plane_sym"),
+               tabla_malla("axis_sym", completa=True), tabla_malla("plane_sym", completa=True)]
     REGISTRO.write_text(json.dumps(registro, indent=1, ensure_ascii=False), encoding="utf-8",
                         newline="\n")
     print(f"{len(hechas)} tablas en {SALIDA}; {sum(len(v) for v in registro.values())} celdas registradas")
