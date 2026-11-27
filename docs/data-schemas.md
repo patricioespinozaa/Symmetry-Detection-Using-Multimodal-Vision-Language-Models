@@ -26,14 +26,25 @@ Escrito por `MolmoPointing/molmo_multiview_runner.py`. Acumulativo por
 
 ## `mapped_points_3d[_<EXP>].json` (solo pipeline con malla)
 
-Escrito por `Mapping/map_to_3d.py` vía ray casting contra el `.obj`. Un punto
-2D de Molmo por punto 3D (o `null` si el rayo no impacta la malla).
+Escrito por `Mapping/map_to_3d.py` vía ray casting contra el `.obj`. Una entrada
+por punto 2D de Molmo; `point_3d` es `null` (y `hit` es `false`) si el rayo no
+impacta la malla.
 
 ```jsonc
 {
-  "6": {
-    "hit_points_3d": [[x, y, z], null, ...],
-    "patch_size": 1
+  "object_id": "...", "symmetry_type": "plane_sym", "image_size": 224,
+  "illumination": "flat", "fov_deg": ..., "patch_size": 1,
+  "n_views_results": {
+    "6": {
+      "images_sent": [...],
+      "points_3d": [
+        {"img_idx": 0, "obj_id": 1, "molmo_x": 450.0, "molmo_y": 230.0,
+         "hit": true, "point_3d": [x, y, z], "face_id": 1234},
+        ...                      // con patch_size > 1: patch_size, n_patch_hits, n_patch_total
+      ],
+      "n_hits": 11,
+      "n_misses": 1
+    }
   }
 }
 ```

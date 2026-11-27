@@ -61,8 +61,9 @@ def main() -> None:
         err_sin = errores_por_objeto(eval_sin, str(v))
         for archivo in sorted(raiz.glob(f"*/224/flat/mapped_points_3d_{alias}.json")):
             objeto = archivo.parents[2].name
-            grupo = json.loads(archivo.read_text(encoding="utf-8")).get(str(v)) or {}
-            razon = razon_singular(grupo.get("hit_points_3d", []))
+            datos = json.loads(archivo.read_text(encoding="utf-8"))
+            grupo = datos.get("n_views_results", {}).get(str(v)) or {}
+            razon = razon_singular([p["point_3d"] for p in grupo.get("points_3d", []) if p.get("hit")])
             filas.append({"object_id": objeto, "n_views": v, "razon_s2_s1": razon,
                           "error_malla": err_malla.get(objeto), "error_sin_malla": err_sin.get(objeto)})
 
