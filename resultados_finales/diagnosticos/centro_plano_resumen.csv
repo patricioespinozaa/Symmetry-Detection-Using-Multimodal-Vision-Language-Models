@@ -1,71 +1,71 @@
-experiment_id,n_views,n_objects,n_points,pct_centered,n_noncenital_points,pct_noncenital_centered,verdict
-plane_v00,1,850,1700,0.0359,0,0.0,sin problema generalizado
-plane_v00,6,850,10200,0.4371,6800,0.4096,problema parcial
-plane_v00,14,850,23798,0.5793,20399,0.5618,PROBLEMA CONFIRMADO
-plane_v00,26,850,44216,0.6088,40794,0.6033,PROBLEMA CONFIRMADO
-plane_v01,1,850,1700,0.0324,0,0.0,sin problema generalizado
-plane_v01,6,850,10200,0.0538,6800,0.0537,sin problema generalizado
-plane_v01,14,850,23787,0.0632,20388,0.0639,sin problema generalizado
-plane_v01,26,850,44200,0.0377,40800,0.0372,sin problema generalizado
-plane_v02,1,850,1700,0.9276,0,0.0,sin problema generalizado
-plane_v02,6,850,10200,0.9127,6800,0.8932,PROBLEMA CONFIRMADO
-plane_v02,14,850,23616,0.9168,20232,0.9056,PROBLEMA CONFIRMADO
-plane_v02,26,850,44146,0.9417,40750,0.9389,PROBLEMA CONFIRMADO
-plane_v03,1,850,1700,0.0471,0,0.0,sin problema generalizado
-plane_v03,6,850,10199,0.0944,6799,0.0952,sin problema generalizado
-plane_v03,14,850,23800,0.1023,20400,0.1047,sin problema generalizado
-plane_v03,26,850,44197,0.0746,40797,0.0743,sin problema generalizado
-plane_v04,1,850,1700,0.9918,0,0.0,sin problema generalizado
-plane_v04,6,850,10128,0.958,6752,0.9416,PROBLEMA CONFIRMADO
-plane_v04,14,850,23778,0.9428,20380,0.9358,PROBLEMA CONFIRMADO
-plane_v04,26,850,44198,0.9813,40798,0.98,PROBLEMA CONFIRMADO
-plane_v05,1,850,1700,0.0541,0,0.0,sin problema generalizado
-plane_v05,6,850,10145,0.0578,6756,0.0448,sin problema generalizado
-plane_v05,14,850,23306,0.0632,19944,0.0595,sin problema generalizado
-plane_v05,26,850,44167,0.0429,40770,0.0402,sin problema generalizado
-plane_v00_1,1,850,1700,0.9065,0,0.0,sin problema generalizado
-plane_v00_1,6,850,10200,0.9296,6800,0.9144,PROBLEMA CONFIRMADO
-plane_v00_1,14,850,23800,0.9195,20400,0.9103,PROBLEMA CONFIRMADO
-plane_v00_1,26,850,44164,0.9323,40768,0.93,PROBLEMA CONFIRMADO
-plane_v01_1,1,850,1700,0.0265,0,0.0,sin problema generalizado
-plane_v01_1,6,850,10200,0.0548,6800,0.056,sin problema generalizado
-plane_v01_1,14,850,23787,0.0696,20388,0.0711,sin problema generalizado
-plane_v01_1,26,850,44198,0.0374,40798,0.0372,sin problema generalizado
-plane_v02_1,1,850,1700,0.9541,0,0.0,sin problema generalizado
-plane_v02_1,6,850,10140,0.8995,6760,0.8698,PROBLEMA CONFIRMADO
-plane_v02_1,14,850,23796,0.8611,20400,0.8448,PROBLEMA CONFIRMADO
-plane_v02_1,26,850,44146,0.8929,40750,0.8878,PROBLEMA CONFIRMADO
-plane_v03_1,1,850,1700,0.05,0,0.0,sin problema generalizado
-plane_v03_1,6,850,10196,0.0954,6796,0.0959,sin problema generalizado
-plane_v03_1,14,850,23761,0.1048,20364,0.1057,sin problema generalizado
-plane_v03_1,26,850,44176,0.0694,40778,0.069,sin problema generalizado
-plane_v04_1,1,850,1700,0.9894,0,0.0,sin problema generalizado
-plane_v04_1,6,850,10194,0.9681,6796,0.9572,PROBLEMA CONFIRMADO
-plane_v04_1,14,850,23800,0.9684,20400,0.9652,PROBLEMA CONFIRMADO
-plane_v04_1,26,850,44170,0.9933,40774,0.9933,PROBLEMA CONFIRMADO
-plane_v05_1,1,850,1700,0.8094,0,0.0,sin problema generalizado
-plane_v05_1,6,850,10200,0.6557,6800,0.6191,PROBLEMA CONFIRMADO
-plane_v05_1,14,850,23787,0.7405,20388,0.7238,PROBLEMA CONFIRMADO
-plane_v05_1,26,850,44192,0.7355,40794,0.7319,PROBLEMA CONFIRMADO
-plane_v06,6,850,10176,0.9224,6784,0.898,PROBLEMA CONFIRMADO
-plane_v06,14,850,23800,0.8935,20400,0.88,PROBLEMA CONFIRMADO
-plane_v06,26,850,44146,0.9278,40750,0.9251,PROBLEMA CONFIRMADO
-plane_v07,6,850,10194,0.9732,6796,0.9642,PROBLEMA CONFIRMADO
-plane_v07,14,850,23800,0.9547,20400,0.9495,PROBLEMA CONFIRMADO
-plane_v07,26,850,44200,0.9731,40800,0.9729,PROBLEMA CONFIRMADO
-plane_v08,1,850,1700,0.0406,0,0.0,sin problema generalizado
-plane_v08,6,850,10154,0.0568,6764,0.0479,sin problema generalizado
-plane_v08,14,850,23720,0.0664,20328,0.0632,sin problema generalizado
-plane_v08,26,850,44070,0.0429,40677,0.0405,sin problema generalizado
-plane_v02_flowB,6,850,10200,0.8791,6800,0.8591,PROBLEMA CONFIRMADO
-plane_v02_flowB,14,850,23752,0.9033,20303,0.8904,PROBLEMA CONFIRMADO
-plane_v02_flowB,26,850,44158,0.9382,40764,0.9355,PROBLEMA CONFIRMADO
-plane_v02_flowC,6,850,10195,0.3079,6796,0.2983,problema parcial
-plane_v02_flowC,14,850,23774,0.4237,20376,0.4143,problema parcial
-plane_v02_flowC,26,850,44200,0.4319,40800,0.4297,problema parcial
-plane_v02_qwen3vl_s224_flat_ndcfix_mp1_nomesh,6,850,10200,0.7321,6800,0.6428,PROBLEMA CONFIRMADO
-plane_v02_qwen3vl_s224_flat_ndcfix_mp1_nomesh,14,850,23800,0.7879,20400,0.7675,PROBLEMA CONFIRMADO
-plane_v02_qwen3vl_s224_flat_ndcfix_mp1_nomesh,26,850,44200,0.6947,40800,0.6767,PROBLEMA CONFIRMADO
-plane_v02_molmopoint_s224_flat_ndcfix_mp1_nomesh,6,850,11356,0.3863,7294,0.3388,problema parcial
-plane_v02_molmopoint_s224_flat_ndcfix_mp1_nomesh,14,850,26719,0.367,22657,0.3482,problema parcial
-plane_v02_molmopoint_s224_flat_ndcfix_mp1_nomesh,26,850,48642,0.3398,44580,0.3278,problema parcial
+experiment_id,n_views,n_objects,n_points,pct_centered,n_noncenital_points,pct_noncenital_centered,pct_centered_xy,pct_noncenital_centered_xy,verdict
+plane_v00,1,850,1700,0.0359,0,0.0,0.0024,0.0,sin problema generalizado
+plane_v00,6,850,10200,0.4371,6800,0.4096,0.0425,0.0338,problema parcial
+plane_v00,14,850,23798,0.5793,20399,0.5618,0.0953,0.0864,PROBLEMA CONFIRMADO
+plane_v00,26,850,44216,0.6088,40794,0.6033,0.1696,0.1704,PROBLEMA CONFIRMADO
+plane_v01,1,850,1700,0.0324,0,0.0,0.0059,0.0,sin problema generalizado
+plane_v01,6,850,10200,0.0538,6800,0.0537,0.0201,0.0196,sin problema generalizado
+plane_v01,14,850,23787,0.0632,20388,0.0639,0.0162,0.0167,sin problema generalizado
+plane_v01,26,850,44200,0.0377,40800,0.0372,0.0194,0.0194,sin problema generalizado
+plane_v02,1,850,1700,0.9276,0,0.0,0.1229,0.0,sin problema generalizado
+plane_v02,6,850,10200,0.9127,6800,0.8932,0.1954,0.1731,PROBLEMA CONFIRMADO
+plane_v02,14,850,23616,0.9168,20232,0.9056,0.2532,0.239,PROBLEMA CONFIRMADO
+plane_v02,26,850,44146,0.9417,40750,0.9389,0.4273,0.4276,PROBLEMA CONFIRMADO
+plane_v03,1,850,1700,0.0471,0,0.0,0.0076,0.0,sin problema generalizado
+plane_v03,6,850,10199,0.0944,6799,0.0952,0.023,0.0235,sin problema generalizado
+plane_v03,14,850,23800,0.1023,20400,0.1047,0.0294,0.0299,sin problema generalizado
+plane_v03,26,850,44197,0.0746,40797,0.0743,0.0297,0.0299,sin problema generalizado
+plane_v04,1,850,1700,0.9918,0,0.0,0.1088,0.0,sin problema generalizado
+plane_v04,6,850,10128,0.958,6752,0.9416,0.1549,0.1318,PROBLEMA CONFIRMADO
+plane_v04,14,850,23778,0.9428,20380,0.9358,0.229,0.2161,PROBLEMA CONFIRMADO
+plane_v04,26,850,44198,0.9813,40798,0.98,0.59,0.5908,PROBLEMA CONFIRMADO
+plane_v05,1,850,1700,0.0541,0,0.0,0.0012,0.0,sin problema generalizado
+plane_v05,6,850,10145,0.0578,6756,0.0448,0.0016,0.0009,sin problema generalizado
+plane_v05,14,850,23306,0.0632,19944,0.0595,0.0026,0.0025,sin problema generalizado
+plane_v05,26,850,44167,0.0429,40770,0.0402,0.0044,0.0046,sin problema generalizado
+plane_v00_1,1,850,1700,0.9065,0,0.0,0.0929,0.0,sin problema generalizado
+plane_v00_1,6,850,10200,0.9296,6800,0.9144,0.4359,0.4063,PROBLEMA CONFIRMADO
+plane_v00_1,14,850,23800,0.9195,20400,0.9103,0.505,0.4937,PROBLEMA CONFIRMADO
+plane_v00_1,26,850,44164,0.9323,40768,0.93,0.6115,0.6117,PROBLEMA CONFIRMADO
+plane_v01_1,1,850,1700,0.0265,0,0.0,0.0029,0.0,sin problema generalizado
+plane_v01_1,6,850,10200,0.0548,6800,0.056,0.0203,0.0212,sin problema generalizado
+plane_v01_1,14,850,23787,0.0696,20388,0.0711,0.0261,0.0271,sin problema generalizado
+plane_v01_1,26,850,44198,0.0374,40798,0.0372,0.0194,0.0194,sin problema generalizado
+plane_v02_1,1,850,1700,0.9541,0,0.0,0.1153,0.0,sin problema generalizado
+plane_v02_1,6,850,10140,0.8995,6760,0.8698,0.3279,0.2984,PROBLEMA CONFIRMADO
+plane_v02_1,14,850,23796,0.8611,20400,0.8448,0.392,0.3817,PROBLEMA CONFIRMADO
+plane_v02_1,26,850,44146,0.8929,40750,0.8878,0.5339,0.5343,PROBLEMA CONFIRMADO
+plane_v03_1,1,850,1700,0.05,0,0.0,0.0135,0.0,sin problema generalizado
+plane_v03_1,6,850,10196,0.0954,6796,0.0959,0.0278,0.0272,sin problema generalizado
+plane_v03_1,14,850,23761,0.1048,20364,0.1057,0.0331,0.0329,sin problema generalizado
+plane_v03_1,26,850,44176,0.0694,40778,0.069,0.0287,0.0286,sin problema generalizado
+plane_v04_1,1,850,1700,0.9894,0,0.0,0.1182,0.0,sin problema generalizado
+plane_v04_1,6,850,10194,0.9681,6796,0.9572,0.3274,0.3047,PROBLEMA CONFIRMADO
+plane_v04_1,14,850,23800,0.9684,20400,0.9652,0.4304,0.422,PROBLEMA CONFIRMADO
+plane_v04_1,26,850,44170,0.9933,40774,0.9933,0.6645,0.6654,PROBLEMA CONFIRMADO
+plane_v05_1,1,850,1700,0.8094,0,0.0,0.0759,0.0,sin problema generalizado
+plane_v05_1,6,850,10200,0.6557,6800,0.6191,0.0874,0.0659,PROBLEMA CONFIRMADO
+plane_v05_1,14,850,23787,0.7405,20388,0.7238,0.149,0.1406,PROBLEMA CONFIRMADO
+plane_v05_1,26,850,44192,0.7355,40794,0.7319,0.1308,0.1311,PROBLEMA CONFIRMADO
+plane_v06,6,850,10176,0.9224,6784,0.898,0.3143,0.2849,PROBLEMA CONFIRMADO
+plane_v06,14,850,23800,0.8935,20400,0.88,0.4011,0.3905,PROBLEMA CONFIRMADO
+plane_v06,26,850,44146,0.9278,40750,0.9251,0.5224,0.5223,PROBLEMA CONFIRMADO
+plane_v07,6,850,10194,0.9732,6796,0.9642,0.4869,0.4666,PROBLEMA CONFIRMADO
+plane_v07,14,850,23800,0.9547,20400,0.9495,0.5939,0.5904,PROBLEMA CONFIRMADO
+plane_v07,26,850,44200,0.9731,40800,0.9729,0.8771,0.8777,PROBLEMA CONFIRMADO
+plane_v08,1,850,1700,0.0406,0,0.0,0.0,0.0,sin problema generalizado
+plane_v08,6,850,10154,0.0568,6764,0.0479,0.0015,0.0013,sin problema generalizado
+plane_v08,14,850,23720,0.0664,20328,0.0632,0.0046,0.0049,sin problema generalizado
+plane_v08,26,850,44070,0.0429,40677,0.0405,0.0052,0.0054,sin problema generalizado
+plane_v02_flowB,6,850,10200,0.8791,6800,0.8591,0.1515,0.1293,PROBLEMA CONFIRMADO
+plane_v02_flowB,14,850,23752,0.9033,20303,0.8904,0.2371,0.2217,PROBLEMA CONFIRMADO
+plane_v02_flowB,26,850,44158,0.9382,40764,0.9355,0.3992,0.3998,PROBLEMA CONFIRMADO
+plane_v02_flowC,6,850,10195,0.3079,6796,0.2983,0.0775,0.0774,problema parcial
+plane_v02_flowC,14,850,23774,0.4237,20376,0.4143,0.2324,0.2316,problema parcial
+plane_v02_flowC,26,850,44200,0.4319,40800,0.4297,0.2919,0.293,problema parcial
+plane_v02_qwen3vl_s224_flat_ndcfix_mp1_nomesh,6,850,10200,0.7321,6800,0.6428,0.0713,0.0428,PROBLEMA CONFIRMADO
+plane_v02_qwen3vl_s224_flat_ndcfix_mp1_nomesh,14,850,23800,0.7879,20400,0.7675,0.0637,0.0529,PROBLEMA CONFIRMADO
+plane_v02_qwen3vl_s224_flat_ndcfix_mp1_nomesh,26,850,44200,0.6947,40800,0.6767,0.0556,0.0496,PROBLEMA CONFIRMADO
+plane_v02_molmopoint_s224_flat_ndcfix_mp1_nomesh,6,850,11356,0.3863,7294,0.3388,0.049,0.0354,problema parcial
+plane_v02_molmopoint_s224_flat_ndcfix_mp1_nomesh,14,850,26719,0.367,22657,0.3482,0.0466,0.0418,problema parcial
+plane_v02_molmopoint_s224_flat_ndcfix_mp1_nomesh,26,850,48642,0.3398,44580,0.3278,0.0397,0.0366,problema parcial
