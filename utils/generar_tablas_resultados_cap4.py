@@ -544,6 +544,46 @@ def tabla_centro(tipo: str) -> str:
                  enc, filas, [("prec", None)] * 3 + [("auc", None)], nota, separar=[len(PROMPTS)])
 
 
+LOG_PROFUNDIDAD = RES / "diagnosticos" / "profundidad_plano.log"
+RANGOS_THETA = ["0-15", "15-30", "30-45", "45-60", "60-75", "75-90"]
+
+
+def celda_profundidad(vistas: int, rango: str | None, columna: str) -> dict:
+    """ Celda del log de diagnostico_profundidad_malla.py: total de puntos de un número de vistas
+    (rango None) o n / dist. mediana / frac. cerca de un rango de theta. """
+    texto = LOG_PROFUNDIDAD.read_text(encoding="utf-8")
+    bloque = re.search(rf"^{vistas} vistas: (\d+) puntos\n(.*?)(?:\n\n|\Z)", texto, re.M | re.S)
+    if rango is None:
+        valor = float(bloque.group(1))
+    else:
+        fila = re.search(rf"^\s+{rango}\s+(\d+)\s+([\d.]+)\s+([\d.]+)\s*$", bloque.group(2), re.M)
+        valor = float(fila.group({"n": 1, "mediana": 2, "cerca": 3}[columna]))
+    return {"v": valor, "t": {"fuente": "profundidad", "archivo": rel(LOG_PROFUNDIDAD), "n_views": vistas,
+                              "rango": rango, "columna": columna if rango else "total"}}
+
+
+def tabla_profundidad() -> str:
+    """ Distancia de los puntos retroproyectados al plano de referencia según el ángulo de la cámara. """
+    filas = []
+    for rango in RANGOS_THETA:
+        cs = []
+        for v in VISTAS:
+            n, total = celda_profundidad(v, rango, "n"), celda_profundidad(v, None, "total")
+            cs += [derivada(n["v"] / total["v"], "division", [n, total]),
+                   celda_profundidad(v, rango, "mediana"), celda_profundidad(v, rango, "cerca")]
+        lo, hi = rango.split("-")
+        filas.append(([rf"{lo}--{hi}$^\circ$"], cs))
+    enc = [r"\multirow{2}{*}{$\theta$} & " + " & ".join(rf"\multicolumn{{3}}{{c}}{{{v} vistas}}" for v in VISTAS)
+           + r" \\",
+           "".join(rf"\cmidrule(lr){{{2 + 3 * k}-{4 + 3 * k}}}" for k in range(3)),
+           " & " + " & ".join([r"Puntos & \begin{tabular}[b]{@{}c@{}}Dist.\ \\ mediana\end{tabular} & Cerca"] * 3)
+           + r" \\"]
+    nota = (rf"Molmo2, \textit{{prompt}} {tt('v02')} ({REF}), un rayo por punto. Puntos: fracción de los puntos "
+            r"que impactan la malla. Cerca: fracción a menos de $0.02$ del plano.")
+    return tabla("profundidad_plano", r"Distancia de los puntos con malla al plano de referencia según $\theta$.",
+                 enc, filas, [("prec", None), ("sde", None), ("prec", None)] * 3, nota)
+
+
 def tabla_completa_prompts(tipo: str) -> str:
     condiciones = [(tt(p), "ndcfix_v08" if p == "v08" else "ndcfix_flujoA", ident(tipo, p)) for p in PROMPTS]
     simetria = "axial" if tipo == "axis_sym" else "planar"
@@ -725,10 +765,9 @@ def tabla_silueta(tipo: str) -> str | None:
                "f1_ref": ["$F1$"]}
     titulos = [apilar(t) for col, _ in metricas for t in nombres[col]]
     enc = [r"Vistas & " + " & ".join(titulos) + r" \\"]
-    nota = (r"Renders de 224~px con iluminación \textit{flat} y las mismas $n_v$ vistas que recibe Molmo2. "
-            r"En cada vista se sortean dos píxeles distintos dentro de la silueta del objeto, y los puntos se "
-            rf"procesan con el mismo estimador que los de Molmo2. Media sobre {len(semillas)} semillas. "
-            r"Desv.\ AUC: desviación estándar del AUC$_{45^\circ}$ entre semillas.")
+    nota = (r"Renders de 224~px, iluminación \textit{flat} y las mismas $n_v$ vistas que recibe Molmo2. "
+            rf"Media sobre {len(semillas)} semillas. Desv.\ AUC: desviación estándar del AUC$_{{45^\circ}}$ "
+            r"entre semillas.")
     simetria = "axial" if tipo == "axis_sym" else "planar"
     return tabla(f"silueta_{TIPOS[tipo]}", f"Puntos al azar dentro de la silueta en simetría {simetria}.",
                  enc, filas, cols, nota)
@@ -973,7 +1012,7 @@ def main() -> None:
         "Modelo", r"Comparación de VLMs en simetría planar con \texttt{plane\_v02} (224~px, \textit{flat}, "
                   r"una vista por llamada).", ""))
     hechas.append(tabla_aguirre())
-    hechas += [tabla_centro("axis_sym"), tabla_centro("plane_sym")]
+    hechas += [tabla_centro("axis_sym"), tabla_centro("plane_sym"), tabla_profundidad()]
     hechas += [tabla_malla("axis_sym"), tabla_malla("plane_sym"),
                tabla_malla("axis_sym", completa=True), tabla_malla("plane_sym", completa=True)]
     REGISTRO.write_text(json.dumps(registro, indent=1, ensure_ascii=False), encoding="utf-8",

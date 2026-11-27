@@ -72,6 +72,16 @@ def valor(t: dict) -> float:
     if fuente == "centro":
         return float(fila_csv(t["csv"], lambda r: r["experiment_id"] == t["experiment_id"]
                               and int(r["n_views"]) == t["n_views"])[t["columna"]])
+    if fuente == "profundidad":
+        texto = (REPO / t["archivo"]).read_text(encoding="utf-8")
+        partes = texto.split(f"\n{t['n_views']} vistas: ", 1)[1]
+        if t["columna"] == "total":
+            return float(partes.split(" ", 1)[0])
+        for linea in partes.split("\n\n", 1)[0].splitlines():
+            campos = linea.split()
+            if campos and campos[0] == t["rango"]:
+                return float(campos[{"n": 1, "mediana": 2, "cerca": 3}[t["columna"]]])
+        raise LookupError(f"{t['archivo']}: rango {t['rango']} con {t['n_views']} vistas")
     if fuente == "pareado_malla":
         return float(fila_csv(t["csv"], lambda r: r["variante"] == t["variante"]
                               and r["metodo"] == t["metodo"]
@@ -105,6 +115,8 @@ def valor(t: dict) -> float:
         if t["formula"] == "desvio":
             m = sum(e) / len(e)
             return (sum((x - m) ** 2 for x in e) / (len(e) - 1)) ** 0.5
+        if t["formula"] == "division":
+            return e[0] / e[1]
         if t["formula"] == "resta":
             return e[0] - e[1]
         if t["formula"] == "escala_1e4":
