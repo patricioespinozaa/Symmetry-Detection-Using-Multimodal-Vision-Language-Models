@@ -1,0 +1,16 @@
+symmetry_type,n_views,metric,n_semillas,molmo2,silueta_media,silueta_std,silueta_min,silueta_max,p_empirico
+plane_sym,6,n_objects,10,792.0,850.0,0.0,850.0,850.0,
+plane_sym,6,auc_angular,10,0.7792,0.21291,0.005155,0.2076,0.2239,0.090909
+plane_sym,6,angular_error_median,10,3.048,57.20508,1.503296,54.2734,59.9561,
+plane_sym,6,precision_10deg,10,0.8294,0.10047,0.007678,0.0882,0.1094,
+plane_sym,6,f1_ref,10,0.6449,0.05252,0.004198,0.0466,0.0582,
+plane_sym,14,n_objects,10,658.0,850.0,0.0,850.0,850.0,
+plane_sym,14,auc_angular,10,0.6276,0.18807,0.013311,0.1579,0.2106,0.090909
+plane_sym,14,angular_error_median,10,4.8466,64.60804,1.031803,62.8627,65.9808,
+plane_sym,14,precision_10deg,10,0.6682,0.10012,0.012946,0.0812,0.1188,
+plane_sym,14,f1_ref,10,0.5421,0.05223,0.006247,0.0436,0.0629,
+plane_sym,26,n_objects,10,828.0,850.0,0.0,850.0,850.0,
+plane_sym,26,auc_angular,10,0.7729,0.17242,0.007032,0.1633,0.1887,0.090909
+plane_sym,26,angular_error_median,10,2.612,67.84454,0.770313,66.7443,69.0305,
+plane_sym,26,precision_10deg,10,0.7541,0.08144,0.005238,0.0741,0.0918,
+plane_sym,26,f1_ref,10,0.6143,0.04228,0.003474,0.0372,0.0468,
