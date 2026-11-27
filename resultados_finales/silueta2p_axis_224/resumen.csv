@@ -1,0 +1,13 @@
+symmetry_type,n_views,metric,n_semillas,molmo2,silueta_media,silueta_std,silueta_min,silueta_max,p_empirico
+axis_sym,6,n_objects,10,831.0,850.0,0.0,850.0,850.0,
+axis_sym,6,auc_angular,10,0.5896,0.3228,0.008002,0.3136,0.3375,0.090909
+axis_sym,6,angular_error_median,10,7.3734,37.25142,1.221721,35.359,39.1818,
+axis_sym,6,precision_10deg,10,0.5541,0.16565,0.009351,0.1553,0.1776,
+axis_sym,14,n_objects,10,816.0,850.0,0.0,850.0,850.0,
+axis_sym,14,auc_angular,10,0.5809,0.39701,0.006522,0.3863,0.4037,0.090909
+axis_sym,14,angular_error_median,10,8.0722,28.45833,1.484104,26.9321,30.8372,
+axis_sym,14,precision_10deg,10,0.5494,0.2607,0.00887,0.2529,0.2824,
+axis_sym,26,n_objects,10,806.0,850.0,0.0,850.0,850.0,
+axis_sym,26,auc_angular,10,0.5061,0.4893,0.008366,0.4774,0.5052,0.090909
+axis_sym,26,angular_error_median,10,14.5836,16.68587,1.032016,14.5489,17.8916,
+axis_sym,26,precision_10deg,10,0.3576,0.38222,0.013013,0.3659,0.4129,

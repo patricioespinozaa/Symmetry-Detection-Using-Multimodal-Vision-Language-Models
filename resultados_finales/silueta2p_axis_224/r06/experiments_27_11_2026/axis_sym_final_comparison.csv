@@ -1,0 +1,4 @@
+experiment,method,n_views,n_total,n_objects,angular_error_mean,angular_error_median,angular_error_std,translation_error_mean,translation_error_median,translation_error_std,translation_error_normalized_mean,translation_error_normalized_median,auc_angular,n_points_mean,precision_5deg,precision_10deg,precision_15deg,sde_ref_mean,sde_ref_min,sde_ref_max
+axis_silueta2p_r06_s224_flat_ndcfix_expE_nomesh,triangulation,6,850,850,40.7593,36.6313,28.0304,0.105741,0.081407,0.091391,0.098094,0.074537,0.329,6.0,0.08,0.1765,0.2553,0.02727748,2.739e-05,0.3457604
+axis_silueta2p_r06_s224_flat_ndcfix_expE_nomesh,triangulation,14,850,850,35.9328,27.5374,28.684,0.060974,0.047395,0.048695,0.056453,0.044066,0.4036,14.0,0.1235,0.2682,0.3612,0.0151611,6.474e-05,0.28451484
+axis_silueta2p_r06_s224_flat_ndcfix_expE_nomesh,triangulation,26,850,850,31.8907,17.3201,30.7931,0.039914,0.032068,0.031106,0.037098,0.029375,0.4952,26.0,0.2294,0.3729,0.4776,0.00856274,1.422e-05,0.09549107
