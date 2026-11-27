@@ -1,0 +1,30 @@
+plane_sym: 850 objetos, 114 vistas en la secuencia de Fibonacci, umbral 15 grados
+objetos con cámaras distintas a las del primero: 0
+
+6 vistas (índices [0, 23, 45, 68, 90, 113])
+  plano X: 3 de 6 vistas de canto (theta: 0, 10, 22, 75, 35, 0)
+  plano Z: 3 de 6 vistas de canto (theta: 0, 52, 65, 9, 34, 0)
+
+14 vistas (índices [0, 9, 17, 26, 35, 43, 52, 61, 70, 78, 87, 96, 104, 113])
+  plano X: 6 de 14 vistas de canto (theta: 0, 30, 46, 50, 39, 60, 40, 18, 4, 14, 6, 20, 5, 0)
+  plano Z: 4 de 14 vistas de canto (theta: 0, 12, 2, 21, 43, 26, 49, 71, 76, 63, 57, 39, 32, 0)
+
+26 vistas (índices [0, 5, 9, 14, 18, 23, 27, 32, 36, 41, 45, 50, 54, 59, 63, 68, 72, 77, 81, 86, 90, 95, 99, 104, 108, 113])
+  plano X: 8 de 26 vistas de canto (theta: 0, 20, 30, 22, 31, 10, 19, 9, 0, 31, 22, 54, 45, 77, 66, 75, 74, 52, 57, 30, 35, 10, 15, 5, 0, 0)
+  plano Z: 7 de 26 vistas de canto (theta: 0, 13, 12, 33, 31, 52, 52, 63, 69, 54, 65, 35, 45, 13, 23, 9, 1, 29, 20, 44, 34, 45, 37, 32, 24, 0)
+
+6 vistas: vistas de canto respecto del plano de referencia, por objeto
+  de canto  objetos  AUC multiimagen med. multiimagen    AUC una vista   med. una vista
+         2        7            0.000             89.9            0.000             89.3
+         3      695            0.784              2.9            0.830              2.6
+       >=4      148            0.795              3.5            0.874              3.6
+
+14 vistas: vistas de canto respecto del plano de referencia, por objeto
+  de canto  objetos  AUC multiimagen med. multiimagen    AUC una vista   med. una vista
+       >=4      850            0.628              4.8            0.831              3.8
+
+26 vistas: vistas de canto respecto del plano de referencia, por objeto
+  de canto  objetos  AUC multiimagen med. multiimagen    AUC una vista   med. una vista
+       >=4      850            0.773              2.6            0.530             20.4
+
+CSV por objeto: /tmp/camaras_canto.csv
