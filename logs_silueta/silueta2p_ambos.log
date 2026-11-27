@@ -1,0 +1,12 @@
+nohup: ignoring input
+axis_sym: 850 objetos, 2 puntos por vista, vistas iguales a axis_v04 en 2550 grupos; semillas axis_silueta2p_r00 ... axis_silueta2p_r09
+plane_sym: 850 objetos, 2 puntos por vista, vistas iguales a plane_v02 en 2550 grupos; semillas plane_silueta2p_r00 ... plane_silueta2p_r09
+[ok] Chequeo sin problemas
+
+=== [26/11 23:37] axis_silueta2p_r00
+axis_silueta2p_r00: 850 archivos de puntos escritos
+axis_silueta2p_r00: 850 enlaces -> axis_silueta2p_r00_s224_flat_ndcfix_expE_nomesh
+[23:40:15] est_axis_silueta2p_r00_s224_flat_ndcfix_expE_nomesh
+[23:41:18] eval_axis_silueta2p_r00_s224_flat_ndcfix_expE_nomesh
+[23:43:23] compare_axis_sym
+[error] falló compare_axis_sym (código 1); revisa /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/silueta2p_axis_224/r00/logs/compare_axis_sym.log
