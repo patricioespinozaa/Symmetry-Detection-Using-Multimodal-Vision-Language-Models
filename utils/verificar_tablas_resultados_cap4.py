@@ -72,6 +72,13 @@ def valor(t: dict) -> float:
     if fuente == "centro":
         return float(fila_csv(t["csv"], lambda r: r["experiment_id"] == t["experiment_id"]
                               and int(r["n_views"]) == t["n_views"])[t["columna"]])
+    if fuente == "repetidos":
+        return float(fila_csv(t["csv"], lambda r: r["tipo"] == t["tipo"] and r["experiment_id"] == t["experiment_id"]
+                              and int(r["n_views"]) == t["n_views"])[t["columna"]])
+    if fuente == "categorias":
+        return float(fila_csv(t["csv"], lambda r: r["tipo"] == t["tipo"] and r["configuracion"] == t["configuracion"]
+                              and r["categoria"] == t["categoria"]
+                              and int(r["n_views"]) == t["n_views"])[t["columna"]])
     if fuente == "profundidad":
         texto = (REPO / t["archivo"]).read_text(encoding="utf-8")
         partes = texto.split(f"\n{t['n_views']} vistas: ", 1)[1]

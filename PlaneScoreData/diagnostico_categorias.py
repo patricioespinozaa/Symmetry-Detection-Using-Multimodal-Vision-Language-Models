@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-# Resultados por categoría de objeto: AUC, error mediano y P@10 de cada configuración restringidos a
+# Resultados por categoría de objeto: AUC, error medio y mediano, P@10 y, en plano, F1 voraz de cada
+# configuración restringidos a
 # las categorías con suficientes instancias. Lee el error angular por objeto de los
 # eval_*_triangulation_results.json que ya dejó evaluate.py (90 grados a los objetos sin predicción,
 # igual que en las tablas) y la categoría de ExploratoryDataAnalysis/categorias_objetos_final.csv.
-# La fila "todas" usa los 850 objetos y debe coincidir con el AUC de las tablas del capítulo 4.
+# El F1 voraz de una categoría acumula los conteos (tp, fp, fn) por umbral de sus objetos con
+# predicción, igual que evaluate.py lo hace sobre todo el conjunto.
+# La fila "todas" usa los 850 objetos y debe coincidir con las tablas del capítulo 4.
 # Solo lee archivos existentes; no usa GPU.
 #
 #   python3 PlaneScoreData/diagnostico_categorias.py --salida resultados_finales/diagnosticos/categorias_resumen.csv
 #   python3 PlaneScoreData/diagnostico_categorias.py --min-objetos 30 --salida /tmp/categorias.csv
 import argparse
 import csv
+import json
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -20,7 +24,7 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "PlaneScoreData"))
 sys.path.insert(0, str(REPO / "Mapping"))
 from compare_plane_scores import errores_por_objeto  # noqa: E402
-from evaluate import AUC_ANGULAR_MAX, auc_from_errors  # noqa: E402
+from evaluate import AUC_ANGULAR_MAX, _f1_from_counts_by_threshold, auc_from_errors  # noqa: E402
 
 VISTAS = ("6", "14", "26")
 CATEGORIAS = REPO / "ExploratoryDataAnalysis" / "categorias_objetos_final.csv"
@@ -39,10 +43,33 @@ PRINCIPALES = {
 
 
 def metricas(errores: list[float]) -> dict:
-    """ AUC, error mediano y P@10 de una lista de errores angulares. """
+    """ AUC, error medio y mediano y P@10 de una lista de errores angulares. """
     e = np.asarray(errores, dtype=float)
     return {"n": len(e), "auc": round(auc_from_errors(list(e), AUC_ANGULAR_MAX), 4),
-            "mediana": round(float(np.median(e)), 2), "p10": round(float(np.mean(e < 10)), 4)}
+            "media": round(float(np.mean(e)), 2), "mediana": round(float(np.median(e)), 2),
+            "p10": round(float(np.mean(e < 10)), 4)}
+
+
+def conteos_f1(ruta: Path, vistas: str) -> dict[str, dict]:
+    """ Conteos (tp, fp, fn) por umbral del F1 voraz de cada objeto con predicción (solo plano). """
+    objetos = json.loads(ruta.read_text(encoding="utf-8"))["objects"]
+    conteos = {}
+    for obj, por_vistas in objetos.items():
+        m = (por_vistas or {}).get(vistas, {})
+        if m.get("status") == "ok" and m.get("f1_counts_ref") is not None:
+            conteos[obj] = m["f1_counts_ref"]
+    return conteos
+
+
+def f1_grupo(conteos: dict[str, dict], objetos: list[str]) -> float | None:
+    """ F1 voraz de un grupo de objetos: suma los conteos por umbral y promedia el F1 de los umbrales. """
+    totales = defaultdict(lambda: [0, 0, 0])
+    for o in objetos:
+        for umbral, (tp, fp, fn) in conteos.get(o, {}).items():
+            totales[float(umbral)][0] += tp
+            totales[float(umbral)][1] += fp
+            totales[float(umbral)][2] += fn
+    return round(_f1_from_counts_by_threshold({u: tuple(c) for u, c in totales.items()}), 4) if totales else None
 
 
 def main() -> None:
@@ -72,16 +99,20 @@ def main() -> None:
                 continue
             for v in VISTAS:
                 errores = errores_por_objeto(ruta, v)
+                conteos = conteos_f1(ruta, v) if tipo == "plane_sym" else {}
                 # Objetos sin entrada en la evaluación: 90 grados, como en las tablas
                 por_objeto = {o: errores.get(o, 90.0) for o in categoria}
                 grupos = {"todas": list(por_objeto.values())}
                 for c in grandes:
                     grupos[c] = [e for o, e in por_objeto.items() if categoria[o] == c]
                 grupos["otras"] = [e for o, e in por_objeto.items() if categoria[o] not in grandes]
+                miembros = {"todas": list(categoria), "otras": [o for o in categoria if categoria[o] not in grandes]}
+                miembros.update({c: [o for o in categoria if categoria[o] == c] for c in grandes})
                 for c, errs in grupos.items():
                     if errs:
                         filas.append({"tipo": tipo, "configuracion": etiqueta, "experiment": exp,
-                                      "n_views": int(v), "categoria": c, **metricas(errs)})
+                                      "n_views": int(v), "categoria": c, **metricas(errs),
+                                      "f1": f1_grupo(conteos, miembros[c]) if conteos else None})
             print(f"  {etiqueta:20} AUC por categoría (6 / 14 / 26 vistas):")
             for c in ["todas"] + grandes + ["otras"]:
                 aucs = [f["auc"] for f in filas if f["experiment"] == exp and f["categoria"] == c]
