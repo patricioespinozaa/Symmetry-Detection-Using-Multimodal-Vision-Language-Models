@@ -3,20 +3,23 @@
 # que los del VLM. Responde si la elección de puntos de Molmo2 aporta algo más allá de lo que ya dan
 # las cámaras, la forma del objeto y el estimador.
 #
-# Para cada objeto, número de vistas y semilla toma el grupo real de Molmo2 de la configuración base
-# (axis_v04 o plane_v02, 224px/flat, Flujo A multiimagen) y conserva las mismas vistas y la misma
-# cantidad de puntos por vista, pero reemplaza cada punto por un píxel sorteado uniformemente dentro de
-# la silueta de esa vista (píxeles que no son fondo blanco), en la escala [0, 1000] de Molmo. El
-# resultado se escribe como molmo_multiview_<prompt>_silueta_rNN.json y pasa por el mismo
-# post-procesamiento que el VLM (run_plane_v02_224.posprocesar): EXP-E en eje o S_dat con un plano en
-# plano, evaluate.py con métricas de referencia, auditoría y pareado objeto a objeto contra Molmo2.
+# La línea base no depende de ninguna salida de Molmo2. Para cada objeto, número de vistas
+# n_v en {6, 14, 26} y semilla toma el mismo conjunto de vistas que recibe el VLM (los n_v renders
+# espaciados uniformemente en la secuencia de Fibonacci de metadata_all.json, igual que
+# get_n_views_entries del runner de Molmo2) y sortea en cada vista PUNTOS_POR_VISTA = 2 píxeles
+# distintos dentro de la silueta (píxeles que no son fondo blanco), con obj_id 1 y 2 como el par
+# que pide el prompt, en la escala [0, 1000] de Molmo. Así todas las vistas y todos los objetos
+# tienen puntos. El resultado se escribe como molmo_multiview_<tipo>_silueta2p_rNN.json y pasa por
+# el mismo post-procesamiento que el VLM (run_plane_v02_224.posprocesar): EXP-E en eje o S_dat con
+# un plano en plano, evaluate.py con métricas de referencia, auditoría y pareado objeto a objeto
+# contra Molmo2 (axis_v04 / plane_v02 a 224px/flat, Flujo A), que solo se usa para comparar.
 # No usa GPU ni vuelve a correr ningún VLM.
 #
 #   python3 PlaneScoreData/run_silueta_aleatoria.py chequeo                 # solo lee y valida
 #   python3 PlaneScoreData/run_silueta_aleatoria.py todo --tipo axis_sym     # 10 semillas en eje
 #   python3 PlaneScoreData/run_silueta_aleatoria.py todo --tipo plane_sym --semillas 10
 #
-# Cada semilla deja su CSV en resultados_finales/silueta_<prompt>_224/rNN/ y, al final, resumen.csv
+# Cada semilla deja su CSV en resultados_finales/silueta2p_<tipo>_224/rNN/ y, al final, resumen.csv
 # con la media, el desvío y el rango sobre las semillas junto al valor de Molmo2, y el p empírico
 # (1 + semillas con AUC >= Molmo2) / (1 + semillas). Las semillas ya completas se saltan.
 import argparse
@@ -40,18 +43,20 @@ SIZE, LUZ = 224, "flat"
 VISTAS = (6, 14, 26)
 TOTAL_OBJETOS = 850
 UMBRAL_FONDO = 250          # un píxel es del objeto si algún canal RGB es menor que este valor
-PROMPTS = {"axis_sym": "axis_v04", "plane_sym": "plane_v02"}
+PUNTOS_POR_VISTA = 2        # el par (obj_id 1 y 2) que piden los prompts de eje y plano
+CORTO = {"axis_sym": "axis", "plane_sym": "plane"}
+PROMPTS = {"axis_sym": "axis_v04", "plane_sym": "plane_v02"}     # Molmo2 con que se compara
 METRICAS = ("n_objects", "auc_angular", "angular_error_median", "precision_10deg", "f1_ref")
 
 
-def nombre_exp(prompt: str, semilla: int) -> str:
+def nombre_exp(tipo: str, semilla: int) -> str:
     """ Id del experimento de una semilla (también nombre del JSON de puntos). """
-    return f"{prompt}_silueta_r{semilla:02d}"
+    return f"{CORTO[tipo]}_silueta2p_r{semilla:02d}"
 
 
-def carpeta_resultados(prompt: str) -> Path:
+def carpeta_resultados(tipo: str) -> Path:
     """ Carpeta de resultados_finales del experimento. """
-    return REPO / "resultados_finales" / f"silueta_{prompt}_{SIZE}"
+    return REPO / "resultados_finales" / f"silueta2p_{CORTO[tipo]}_{SIZE}"
 
 
 def carpetas_render(renders: Path, tipo: str) -> list[Path]:
@@ -67,64 +72,75 @@ def silueta(ruta: Path) -> np.ndarray:
     return np.stack([filas, columnas], axis=1)
 
 
-def puntos_aleatorios(grupo: dict, carpeta: Path, rng: np.random.Generator) -> dict:
-    """ Reemplaza los puntos del VLM por puntos al azar en la silueta de la misma vista.
+def entradas_vistas(metadata: list[dict], vistas: int) -> list[dict]:
+    """ Las n_v vistas que recibe el VLM: copia de get_n_views_entries de
+    MolmoPointing/molmo_multiview_runner.py (que importa torch); chequear() compara ambas. """
+    total = len(metadata)
+    if vistas >= total:
+        return sorted(metadata, key=lambda e: e["index"])
+    indices = {int(round(i)) for i in np.linspace(0, total - 1, vistas)}
+    return sorted((m for m in metadata if m["index"] in indices), key=lambda e: e["index"])
+
+
+def imagenes_enviadas(metadata: list[dict], vistas: int) -> list[dict]:
+    """ images_sent con el mismo formato que escribe el runner de Molmo2. """
+    return [{"img_idx": i, "filename": e["filename"], "index": e["index"], "azimuth": e["azimuth"],
+             "elevation": e["elevation"], "eye": e["eye"], "R": e["R"], "T": e["T"]}
+            for i, e in enumerate(entradas_vistas(metadata, vistas))]
+
+
+def puntos_aleatorios(imagenes: list[dict], carpeta: Path, rng: np.random.Generator) -> dict:
+    """ Sortea PUNTOS_POR_VISTA píxeles distintos dentro de la silueta de cada vista.
 
     Args:
-        * grupo: grupo de molmo_multiview con points_by_image e images_sent
+        * imagenes: images_sent del grupo
         * carpeta: carpeta de renders del objeto
-        * rng: generador de la semilla y el objeto
+        * rng: generador de la semilla, el objeto y el número de vistas
 
     Returns:
-        * dict: points_by_image con la misma cantidad de puntos y los mismos obj_id por vista
+        * dict: points_by_image con obj_id 1..PUNTOS_POR_VISTA en cada vista
 
     Raises:
-        * ValueError: si una vista no tiene píxeles del objeto
+        * ValueError: si una vista tiene menos píxeles del objeto que puntos
 
     """
     nuevos = {}
-    archivos = {int(i["img_idx"]): i["filename"] for i in grupo["images_sent"]}
-    for clave, puntos in grupo["points_by_image"].items():
-        if not puntos:
-            nuevos[clave] = []
-            continue
-        imagen = archivos[int(clave)]
-        pixeles = silueta(carpeta / imagen)
-        if len(pixeles) == 0:
-            raise ValueError(f"{carpeta / imagen}: la silueta está vacía")
-        alto, ancho = np.asarray(Image.open(carpeta / imagen)).shape[:2]
-        elegidos = pixeles[rng.integers(0, len(pixeles), size=len(puntos))]
-        desplazamiento = rng.random((len(puntos), 2))        # posición dentro del píxel
-        nuevos[clave] = [{"obj_id": p["obj_id"],
-                          "x": round(float((c + dx) / ancho * 1000), 3),
-                          "y": round(float((f + dy) / alto * 1000), 3)}
-                         for p, (f, c), (dy, dx) in zip(puntos, elegidos, desplazamiento)]
+    for imagen in imagenes:
+        ruta = carpeta / imagen["filename"]
+        pixeles = silueta(ruta)
+        if len(pixeles) < PUNTOS_POR_VISTA:
+            raise ValueError(f"{ruta}: la silueta tiene {len(pixeles)} píxeles")
+        alto, ancho = np.asarray(Image.open(ruta)).shape[:2]
+        elegidos = pixeles[rng.choice(len(pixeles), size=PUNTOS_POR_VISTA, replace=False)]
+        desplazamiento = rng.random((PUNTOS_POR_VISTA, 2))        # posición dentro del píxel
+        nuevos[str(imagen["img_idx"])] = [
+            {"obj_id": k + 1, "x": round(float((c + dx) / ancho * 1000), 3),
+             "y": round(float((f + dy) / alto * 1000), 3)}
+            for k, ((f, c), (dy, dx)) in enumerate(zip(elegidos, desplazamiento))]
     return nuevos
 
 
 def generar(args: argparse.Namespace, tipo: str, semilla: int) -> int:
     """ Escribe molmo_multiview_<exp>.json en cada objeto; devuelve cuántos escribió. """
-    prompt, exp = PROMPTS[tipo], nombre_exp(PROMPTS[tipo], semilla)
+    exp = nombre_exp(tipo, semilla)
     escritos = 0
     for carpeta in carpetas_render(args.renders_root, tipo):
         destino = carpeta / f"molmo_multiview_{exp}.json"
         if destino.exists() and not args.overwrite:
             continue
-        origen = json.loads((carpeta / f"molmo_multiview_{prompt}.json").read_text(encoding="utf-8"))
+        metadata = json.loads((carpeta / "metadata_all.json").read_text(encoding="utf-8"))
         objeto = carpeta.parents[1].name
         salida = {}
         for vistas in VISTAS:
-            grupo = origen.get(str(vistas))
-            if grupo is None:          # misma cobertura que el VLM
-                continue
+            imagenes = imagenes_enviadas(metadata, vistas)
             rng = np.random.default_rng([semilla, zlib.crc32(objeto.encode()), vistas])
-            por_imagen = puntos_aleatorios(grupo, carpeta, rng)
+            por_imagen = puntos_aleatorios(imagenes, carpeta, rng)
             salida[str(vistas)] = {
                 "experiment_id": exp, "origen": "silueta_aleatoria", "semilla": semilla,
-                "puntos_vlm": f"molmo_multiview_{prompt}.json",
-                "prompt_used": None, "raw_output": None,
-                "points_by_image": por_imagen, "images_sent": grupo["images_sent"],
-                "n_points": sum(len(p) for p in por_imagen.values())}
+                "puntos_por_vista": PUNTOS_POR_VISTA, "prompt_used": None, "raw_output": None,
+                "points_by_image": por_imagen, "images_sent": imagenes,
+                "n_points": sum(len(p) for p in por_imagen.values()),
+                "n_images_with_points": len(por_imagen)}
         tmp = destino.with_suffix(".tmp")
         tmp.write_text(json.dumps(salida), encoding="utf-8")
         tmp.replace(destino)
@@ -133,34 +149,39 @@ def generar(args: argparse.Namespace, tipo: str, semilla: int) -> int:
 
 
 def chequear(args: argparse.Namespace, tipos: list[str]) -> None:
-    """ Valida renders, puntos del VLM y referencia antes de escribir nada. """
+    """ Valida renders y referencia antes de escribir nada. Donde existe la corrida de Molmo2,
+    confirma además que entradas_vistas elige las mismas vistas que su runner (solo se compara,
+    los puntos no la usan). """
     if base.molmo_to_ndc(0, 0)[0] != 1.0:
         sys.exit("[error] pipeline_common/camera.py no tiene la corrección NDC")
     for tipo in tipos:
-        prompt, errores = PROMPTS[tipo], []
+        errores, comparadas = [], 0
         carpetas = carpetas_render(args.renders_root, tipo)
         if len(carpetas) != TOTAL_OBJETOS:
             errores.append(f"{len(carpetas)} renders a {SIZE}px/{LUZ}, se esperaban {TOTAL_OBJETOS}")
         for carpeta in carpetas:
-            ruta = carpeta / f"molmo_multiview_{prompt}.json"
-            if not ruta.exists():
-                errores.append(f"falta {ruta}")
-                continue
-            grupos = json.loads(ruta.read_text(encoding="utf-8"))
+            metadata = json.loads((carpeta / "metadata_all.json").read_text(encoding="utf-8"))
+            vlm = carpeta / f"molmo_multiview_{PROMPTS[tipo]}.json"
+            grupos = json.loads(vlm.read_text(encoding="utf-8")) if vlm.exists() else {}
             for vistas in VISTAS:
-                g = grupos.get(str(vistas))
-                if g is None:
-                    continue
-                faltan = [i["filename"] for i in g["images_sent"] if not (carpeta / i["filename"]).exists()]
+                imagenes = imagenes_enviadas(metadata, vistas)
+                if len(imagenes) != vistas:
+                    errores.append(f"{carpeta}: {len(imagenes)} vistas en vez de {vistas}")
+                faltan = [i["filename"] for i in imagenes if not (carpeta / i["filename"]).exists()]
                 if faltan:
                     errores.append(f"{carpeta}/{vistas}: faltan renders {faltan[:2]}")
+                g = grupos.get(str(vistas))
+                if g is not None:
+                    comparadas += 1
+                    if [i["filename"] for i in g["images_sent"]] != [i["filename"] for i in imagenes]:
+                        errores.append(f"{carpeta}/{vistas}: vistas distintas de las de {PROMPTS[tipo]}")
         if not base.REFERENCIA[tipo][1].exists():
             errores.append(f"falta {base.REFERENCIA[tipo][1]}")
         if errores:
             sys.exit(f"[error] {tipo}: {len(errores)} problemas, por ejemplo {errores[:3]}")
-        print(f"{tipo}: {len(carpetas)} objetos con puntos de {prompt}; semillas "
-              f"{nombre_exp(prompt, args.semilla_inicial)} ... "
-              f"{nombre_exp(prompt, args.semilla_inicial + args.semillas - 1)}")
+        print(f"{tipo}: {len(carpetas)} objetos, {PUNTOS_POR_VISTA} puntos por vista, vistas iguales a "
+              f"{PROMPTS[tipo]} en {comparadas} grupos; semillas {nombre_exp(tipo, args.semilla_inicial)}"
+              f" ... {nombre_exp(tipo, args.semilla_inicial + args.semillas - 1)}")
     print("[ok] Chequeo sin problemas")
 
 
@@ -184,15 +205,14 @@ def leer_fila(ruta: Path, exp_id: str, vistas: int) -> dict:
 
 def resumir(tipo: str, semillas: list[int]) -> Path:
     """ Media, desvío y rango sobre las semillas, junto al valor de Molmo2 y el p empírico. """
-    prompt = PROMPTS[tipo]
     id_vlm, csv_vlm = base.REFERENCIA[tipo]
-    raiz = carpeta_resultados(prompt)
+    raiz = carpeta_resultados(tipo)
     filas = []
     for vistas in VISTAS:
         vlm = leer_fila(csv_vlm, id_vlm, vistas)
         por_semilla = []
         for s in semillas:
-            e = base.EXPERIMENTOS[nombre_exp(prompt, s)]
+            e = base.EXPERIMENTOS[nombre_exp(tipo, s)]
             ruta = next((raiz / f"r{s:02d}").glob(f"experiments_*/{tipo}_final_comparison.csv"))
             por_semilla.append(leer_fila(ruta, base.id_final(e), vistas))
         for metrica in METRICAS:
@@ -258,17 +278,17 @@ def main() -> None:
     # compare el texto del prompt, que aquí no existe).
     for tipo in tipos:
         for s in semillas:
-            exp = nombre_exp(PROMPTS[tipo], s)
+            exp = nombre_exp(tipo, s)
             base.EXPERIMENTOS[exp] = dict(tipo=tipo, luz=LUZ, modelo="molmo", exp=exp,
-                                          prompt=PROMPTS[tipo], modo="auto", flujo=None)
+                                          prompt=None, modo="auto", flujo=None)
     chequear(args, tipos)
     if args.etapa == "chequeo":
         return
     try:
         for tipo in tipos:
-            raiz = carpeta_resultados(PROMPTS[tipo])
+            raiz = carpeta_resultados(tipo)
             for s in semillas:
-                exp = nombre_exp(PROMPTS[tipo], s)
+                exp = nombre_exp(tipo, s)
                 salida = raiz / f"r{s:02d}"
                 if semilla_lista(salida, tipo, exp) and not args.overwrite:
                     print(f"{exp}: ya está, se salta")
@@ -281,8 +301,8 @@ def main() -> None:
                 base.posprocesar(args, exp, salida)
             resumir(tipo, semillas)
             if not args.sin_git:
-                subir(raiz, f"Add random-silhouette baseline (PI1 iii): {PROMPTS[tipo]}, "
-                            f"{len(semillas)} seeds")
+                subir(raiz, f"Add random-silhouette baseline (PI1 iii): {CORTO[tipo]}, "
+                            f"{PUNTOS_POR_VISTA} points per view, {len(semillas)} seeds")
     except (RuntimeError, ValueError, FileExistsError, StopIteration,
             subprocess.CalledProcessError) as error:
         sys.exit(f"[error] {error}")

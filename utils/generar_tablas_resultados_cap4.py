@@ -556,6 +556,34 @@ def tabla_pareado_estimador(tipo: str) -> str:
                  enc, filas, cols, nota)
 
 
+# Puntos al azar dentro de la silueta (PI1 iii): PlaneScoreData/run_silueta_aleatoria.py, dos píxeles
+# por vista en las mismas vistas que recibe Molmo2, sin usar ninguna salida del VLM.
+def carpeta_silueta(tipo: str) -> str:
+    return f"silueta2p_{'axis' if tipo == 'axis_sym' else 'plane'}_224"
+
+
+def celda_silueta(tipo: str, semilla: str, vistas: int, columna: str) -> dict | None:
+    return celda(f"{carpeta_silueta(tipo)}/{semilla}", tipo, ident(tipo, f"silueta2p_{semilla}"), vistas, columna)
+
+
+def media_silueta(tipo: str, vistas: int, columna: str) -> dict | None:
+    """ Media sobre las semillas completas de una columna del experimento de la silueta. """
+    return media([celda_silueta(tipo, s, vistas, columna) for s in semillas_silueta(tipo)])
+
+
+def filas_silueta(tipo: str, columnas: list[str], extra: int = 0) -> list[tuple[list[str], list]]:
+    """ Filas 'Silueta, n_v' de las tablas de mejor configuración (vacío si aún no hay semillas). """
+    if len(semillas_silueta(tipo)) < 2:
+        return []
+    return [([rf"Silueta, $n_v{{=}}{v}$"], [media_silueta(tipo, v, c) for c in columnas] + [None] * extra)
+            for v in VISTAS]
+
+
+def nota_silueta(tipo: str) -> str:
+    n = len(semillas_silueta(tipo))
+    return rf" Silueta: media sobre {n} semillas (Sección~\ref{{subsec:res-silueta}})." if n >= 2 else ""
+
+
 def tabla_mejor_eje() -> str:
     filas = []
     for v in VISTAS:
@@ -565,15 +593,17 @@ def tabla_mejor_eje() -> str:
         esperado = (n["v"] * AZAR_MEDIA + (TOTAL - n["v"]) * 90) / TOTAL
         e = derivada(esperado, "esperado_azar", [n])
         z = derivada((m["v"] - esperado) / (AZAR_DESV * n["v"] ** 0.5 / TOTAL), "z_azar", [m, n])
-        filas.append(([str(v)], [n, auc, m, e, z]))
+        filas.append(([rf"\texttt{{axis\_v04}}, $n_v{{=}}{v}$"], [n, auc, m, e, z]))
+    filas += filas_silueta("axis_sym", ["n_objects", "auc_angular", "angular_error_mean"], extra=2)
+    separar = sorted({3, len(filas)})
     azar_auc = celda_azar("axis_sym", "auc_angular", "closed_form_single_gt")
     filas.append(([r"Azar (analítico)"], [None, azar_auc, None, None, None]))
-    enc = [r"Vistas & Objetos & AUC$_{45^\circ}$ & \begin{tabular}[b]{@{}c@{}}Error medio \\ ($^\circ$)\end{tabular}"
+    enc = [r"Predictor & Objetos & AUC$_{45^\circ}$ & \begin{tabular}[b]{@{}c@{}}Error medio \\ ($^\circ$)\end{tabular}"
            r" & \begin{tabular}[b]{@{}c@{}}Esperado bajo \\ azar ($^\circ$)\end{tabular} & $z$ \\"]
-    nota = rf"\textit{{Prompt}} {tt('v04')} ({REF})."
-    return tabla("mejor_eje", "Mejor configuración axial frente al azar.", enc, filas,
-                 [("obj", None), ("auc", None), ("grados", None), ("grados", None), ("z", None)], nota,
-                 separar=[3])
+    nota = rf"\textit{{Prompt}} {tt('v04')} ({REF})." + nota_silueta("axis_sym")
+    return tabla("mejor_eje", "Mejor configuración axial frente a las líneas base.",
+                 enc, filas, [("obj", None), ("auc", None), ("grados", None), ("grados", None), ("z", None)],
+                 nota, separar=separar)
 
 
 def tabla_mejor_plano() -> str:
@@ -582,6 +612,8 @@ def tabla_mejor_plano() -> str:
         filas.append(([rf"\texttt{{plane\_v02}}, $n_v{{=}}{v}$"],
                       [celda("ndcfix_flujoA", "plane_sym", ident("plane_sym", "v02"), v, c)
                        for c in ("n_objects", "auc_angular", "f1_ref", "f1_ref_hungarian")]))
+    filas += filas_silueta("plane_sym", ["n_objects", "auc_angular", "f1_ref", "f1_ref_hungarian"])
+    separar = sorted({3, len(filas)})
     filas.append((["Azar (simulación)"], [celda_azar("plane_sym", "auc_angular", "n_objects_gt"),
                                          celda_azar("plane_sym", "auc_angular", "random_mean"),
                                          celda_azar("plane_sym", "f1_ref", "random_mean"),
@@ -597,11 +629,59 @@ def tabla_mejor_plano() -> str:
                                 celda_trivial("plane_sym", p, "f1_ref_hungarian")]))
     enc = [r"Predictor & Objetos & AUC$_{45^\circ}$ & \begin{tabular}[b]{@{}c@{}}$F1$ \\ voraz\end{tabular}"
            r" & \begin{tabular}[b]{@{}c@{}}$F1$ \\ húngaro\end{tabular} \\"]
-    nota = (rf"\textit{{Prompt}} {tt('plane_v02')} ({REF}). $^{{*}}$: el predictor propone dos planos y el "
-            r"AUC$_{45^\circ}$ toma el mejor de ellos frente a la referencia, por lo que no es comparable "
-            r"con el de un solo plano.")
-    return tabla("mejor_plano", "Mejor configuración planar frente al azar y a los predictores triviales.",
-                 enc, filas, [("obj", None), ("auc", None), ("f1", None), ("f1", None)], nota, separar=[3])
+    nota = (rf"\textit{{Prompt}} {tt('plane_v02')} ({REF})." + nota_silueta("plane_sym") +
+            r" $^{*}$: el predictor propone dos planos y el AUC$_{45^\circ}$ toma el mejor de ellos frente a "
+            r"la referencia, por lo que no es comparable con el de un solo plano.")
+    return tabla("mejor_plano", "Mejor configuración planar frente a las líneas base.",
+                 enc, filas, [("obj", None), ("auc", None), ("f1", None), ("f1", None)], nota, separar=separar)
+
+
+def desvio(celdas: list[dict]) -> dict:
+    """ Desviación estándar muestral (ddof=1) de las celdas. """
+    v = [c["v"] for c in celdas]
+    m = sum(v) / len(v)
+    return derivada((sum((x - m) ** 2 for x in v) / (len(v) - 1)) ** 0.5, "desvio", celdas)
+
+
+def semillas_silueta(tipo: str) -> list[str]:
+    """ Semillas completas (CSV final y pareado) del experimento de puntos al azar en la silueta. """
+    raiz = RES / carpeta_silueta(tipo)
+    return [d.name for d in sorted(raiz.glob("r[0-9][0-9]"))
+            if list(d.glob(f"experiments_*/{tipo}_final_comparison.csv")) and list(d.glob("pareado/*.csv"))]
+
+
+def tabla_silueta(tipo: str) -> str | None:
+    """ Puntos sorteados dentro de la silueta, con las mismas vistas y estimador que Molmo2. """
+    semillas = semillas_silueta(tipo)
+    if len(semillas) < 2:
+        print(f"silueta_{TIPOS[tipo]}: {len(semillas)} semillas completas, no se genera la tabla")
+        return None
+    metricas = [("n_objects", "obj"), ("auc_angular", "auc"), ("angular_error_median", "grados"),
+                ("precision_10deg", "prec")] + ([("f1_ref", "f1")] if tipo == "plane_sym" else [])
+    filas = []
+    for v in VISTAS:
+        cs = []
+        for col, _ in metricas:
+            por_semilla = [celda_silueta(tipo, s, v, col) for s in semillas]
+            cs.append(media(por_semilla))
+            if col == "auc_angular":
+                cs.append(desvio(por_semilla))
+        filas.append(([str(v)], cs))
+    cols = []
+    for col, fmt in metricas:
+        cols += [(fmt, None)] * (2 if col == "auc_angular" else 1)
+    nombres = {"n_objects": ["Objetos"], "auc_angular": [r"AUC$_{45^\circ}$", r"Desv.|AUC"],
+               "angular_error_median": [r"Mediana|($^\circ$)"], "precision_10deg": [r"P@10$^\circ$"],
+               "f1_ref": ["$F1$"]}
+    titulos = [apilar(t) for col, _ in metricas for t in nombres[col]]
+    enc = [r"Vistas & " + " & ".join(titulos) + r" \\"]
+    nota = (r"Renders de 224~px con iluminación \textit{flat} y las mismas $n_v$ vistas que recibe Molmo2. "
+            r"En cada vista se sortean dos píxeles distintos dentro de la silueta del objeto, y los puntos se "
+            rf"procesan con el mismo estimador que los de Molmo2. Media sobre {len(semillas)} semillas. "
+            r"Desv.\ AUC: desviación estándar del AUC$_{45^\circ}$ entre semillas.")
+    simetria = "axial" if tipo == "axis_sym" else "planar"
+    return tabla(f"silueta_{TIPOS[tipo]}", f"Puntos al azar dentro de la silueta en simetría {simetria}.",
+                 enc, filas, cols, nota)
 
 
 def tabla_rotacion() -> str:
@@ -826,6 +906,8 @@ def main() -> None:
     # S_dat es el estimador por defecto: ya no se publica la comparación con el puntaje original.
     hechas += [tabla_pareado_estimador("axis_sym"),
                tabla_mejor_eje(), tabla_mejor_plano(), tabla_rotacion(), tabla_multiplano()]
+    # Puntos al azar dentro de la silueta (PI1 iii): solo si ya hay semillas completas
+    hechas += [t for t in (tabla_silueta("axis_sym"), tabla_silueta("plane_sym")) if t]
     # VLMs (una vista por llamada)
     hechas.append(comparativa("vlms_eje", "axis_sym", [
         ("Molmo2-8B", "ndcfix_single_oct26", ident("axis_sym", "v04_single_oct26")),

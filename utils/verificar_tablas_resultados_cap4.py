@@ -99,6 +99,9 @@ def valor(t: dict) -> float:
         e = [valor(x) for x in t["entradas"]]
         if t["formula"] == "media":
             return sum(e) / len(e)
+        if t["formula"] == "desvio":
+            m = sum(e) / len(e)
+            return (sum((x - m) ** 2 for x in e) / (len(e) - 1)) ** 0.5
         if t["formula"] == "resta":
             return e[0] - e[1]
         if t["formula"] == "escala_1e4":
