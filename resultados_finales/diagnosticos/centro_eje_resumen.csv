@@ -1,0 +1,18 @@
+experiment_id,n_views,n_objects,n_points,pct_centered,n_noncenital_points,pct_noncenital_centered,verdict
+axis_v04,1,850,1700,0.4376,0,0.0,sin problema generalizado
+axis_v04,6,850,10176,0.3979,6784,0.3862,problema parcial
+axis_v04,14,850,23787,0.3967,20388,0.3924,problema parcial
+axis_v04,26,850,44200,0.3903,40800,0.3885,problema parcial
+axis_v04_qwen3vl_s224_flat_ndcfix_nomesh,6,850,10200,0.4692,6800,0.4647,problema parcial
+axis_v04_qwen3vl_s224_flat_ndcfix_nomesh,14,850,23800,0.4737,20400,0.4729,problema parcial
+axis_v04_qwen3vl_s224_flat_ndcfix_nomesh,26,850,44200,0.4718,40800,0.4712,problema parcial
+axis_v04_molmopoint_completo_s224_flat_ndcfix_nomesh,6,850,10567,0.3335,7054,0.3343,problema parcial
+axis_v04_molmopoint_completo_s224_flat_ndcfix_nomesh,14,850,24610,0.3337,21097,0.334,problema parcial
+axis_v04_molmopoint_completo_s224_flat_ndcfix_nomesh,26,850,45752,0.3348,42239,0.335,problema parcial
+axis_v04_flowB,6,850,10196,0.3833,6798,0.3692,problema parcial
+axis_v04_flowB,14,850,23765,0.4015,20368,0.3974,problema parcial
+axis_v04_flowB,26,850,44192,0.3971,40792,0.395,problema parcial
+axis_v05_1_flowC,1,850,2381,0.4927,0,0.0,sin problema generalizado
+axis_v05_1_flowC,6,850,7384,0.5098,4997,0.5111,PROBLEMA CONFIRMADO
+axis_v05_1_flowC,14,850,15213,0.5564,13019,0.5549,PROBLEMA CONFIRMADO
+axis_v05_1_flowC,26,850,27625,0.6487,25496,0.6512,PROBLEMA CONFIRMADO

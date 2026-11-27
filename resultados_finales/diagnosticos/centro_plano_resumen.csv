@@ -1,0 +1,17 @@
+experiment_id,n_views,n_objects,n_points,pct_centered,n_noncenital_points,pct_noncenital_centered,verdict
+plane_v02,1,850,1700,0.9276,0,0.0,sin problema generalizado
+plane_v02,6,850,10200,0.9127,6800,0.8932,PROBLEMA CONFIRMADO
+plane_v02,14,850,23616,0.9168,20232,0.9056,PROBLEMA CONFIRMADO
+plane_v02,26,850,44146,0.9417,40750,0.9389,PROBLEMA CONFIRMADO
+plane_v02_qwen3vl_s224_flat_ndcfix_mp1_nomesh,6,850,10200,0.7321,6800,0.6428,PROBLEMA CONFIRMADO
+plane_v02_qwen3vl_s224_flat_ndcfix_mp1_nomesh,14,850,23800,0.7879,20400,0.7675,PROBLEMA CONFIRMADO
+plane_v02_qwen3vl_s224_flat_ndcfix_mp1_nomesh,26,850,44200,0.6947,40800,0.6767,PROBLEMA CONFIRMADO
+plane_v02_molmopoint_s224_flat_ndcfix_mp1_nomesh,6,850,11356,0.3863,7294,0.3388,problema parcial
+plane_v02_molmopoint_s224_flat_ndcfix_mp1_nomesh,14,850,26719,0.367,22657,0.3482,problema parcial
+plane_v02_molmopoint_s224_flat_ndcfix_mp1_nomesh,26,850,48642,0.3398,44580,0.3278,problema parcial
+plane_v02_flowB,6,850,10200,0.8791,6800,0.8591,PROBLEMA CONFIRMADO
+plane_v02_flowB,14,850,23752,0.9033,20303,0.8904,PROBLEMA CONFIRMADO
+plane_v02_flowB,26,850,44158,0.9382,40764,0.9355,PROBLEMA CONFIRMADO
+plane_v02_flowC,6,850,10195,0.3079,6796,0.2983,problema parcial
+plane_v02_flowC,14,850,23774,0.4237,20376,0.4143,problema parcial
+plane_v02_flowC,26,850,44200,0.4319,40800,0.4297,problema parcial
