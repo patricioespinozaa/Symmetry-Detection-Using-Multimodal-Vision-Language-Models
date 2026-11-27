@@ -1,241 +1,241 @@
-tipo,configuracion,experiment,n_views,categoria,n,auc,mediana,p10
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,6,todas,850,0.5896,7.37,0.5541
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,6,lamp,342,0.6991,3.79,0.6901
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,6,bottle,259,0.8205,4.32,0.8185
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,6,bowl,122,0.0686,65.54,0.0164
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,6,pot,90,0.2914,41.48,0.1444
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,6,ashcan,27,0.2857,37.87,0.1111
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,6,otras,10,0.722,9.62,0.5
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,14,todas,850,0.5809,8.07,0.5494
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,14,lamp,342,0.6647,5.78,0.6696
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,14,bottle,259,0.8245,5.69,0.8378
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,14,bowl,122,0.0734,72.15,0.0164
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,14,pot,90,0.3084,35.35,0.1333
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,14,ashcan,27,0.3637,28.86,0.0741
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,14,otras,10,0.6335,10.09,0.5
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,26,todas,850,0.5061,14.58,0.3576
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,26,lamp,342,0.5902,10.58,0.4883
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,26,bottle,259,0.6876,10.46,0.4595
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,26,bowl,122,0.0675,72.95,0.0082
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,26,pot,90,0.2882,34.29,0.0889
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,26,ashcan,27,0.3559,33.07,0.1111
-axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,26,otras,10,0.646,7.26,0.6
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,6,todas,850,0.4963,14.65,0.4318
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,6,lamp,342,0.582,8.15,0.5409
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,6,bottle,259,0.7262,5.86,0.6795
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,6,bowl,122,0.0602,65.64,0.0
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,6,pot,90,0.1904,48.16,0.0333
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,6,ashcan,27,0.1898,45.74,0.0
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,6,otras,10,0.516,19.29,0.3
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,14,todas,850,0.5202,12.53,0.4706
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,14,lamp,342,0.5801,6.8,0.5526
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,14,bottle,259,0.8056,4.79,0.7876
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,14,bowl,122,0.0633,64.18,0.0
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,14,pot,90,0.2063,53.19,0.0444
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,14,ashcan,27,0.1785,44.97,0.0
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,14,otras,10,0.401,30.42,0.3
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,26,todas,850,0.5352,10.64,0.4929
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,26,lamp,342,0.6035,5.95,0.5789
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,26,bottle,259,0.8126,4.26,0.8224
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,26,bowl,122,0.0553,66.26,0.0
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,26,pot,90,0.2217,46.23,0.0556
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,26,ashcan,27,0.2246,41.75,0.0
-axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,26,otras,10,0.5315,19.29,0.3
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,6,todas,850,0.3216,35.36,0.1318
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,6,lamp,342,0.4514,21.17,0.269
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,6,bottle,259,0.349,28.31,0.0695
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,6,bowl,122,0.0674,62.03,0.0
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,6,pot,90,0.1579,48.78,0.0111
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,6,ashcan,27,0.1176,58.68,0.0
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,6,otras,10,0.3015,35.05,0.1
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,14,todas,850,0.3307,33.51,0.1388
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,14,lamp,342,0.4606,19.97,0.269
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,14,bottle,259,0.3768,25.98,0.0927
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,14,bowl,122,0.0644,61.92,0.0
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,14,pot,90,0.1408,50.07,0.0111
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,14,ashcan,27,0.1091,59.76,0.0
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,14,otras,10,0.251,34.57,0.1
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,26,todas,850,0.3457,33.57,0.1541
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,26,lamp,342,0.5021,17.53,0.3304
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,26,bottle,259,0.3671,25.4,0.0618
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,26,bowl,122,0.0647,61.12,0.0
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,26,pot,90,0.1426,49.21,0.0111
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,26,ashcan,27,0.1087,58.96,0.0
-axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,26,otras,10,0.3375,27.01,0.1
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,6,todas,850,0.6181,6.37,0.5835
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,6,lamp,342,0.743,3.23,0.7164
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,6,bottle,259,0.8531,4.14,0.8687
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,6,bowl,122,0.0667,68.62,0.0246
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,6,pot,90,0.2968,39.04,0.1333
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,6,ashcan,27,0.3546,33.62,0.2593
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,6,otras,10,0.5845,16.97,0.4
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,14,todas,850,0.6471,4.79,0.6165
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,14,lamp,342,0.7801,2.49,0.7661
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,14,bottle,259,0.8979,3.25,0.9112
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,14,bowl,122,0.0649,70.62,0.0082
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,14,pot,90,0.3157,39.29,0.1889
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,14,ashcan,27,0.3174,33.01,0.1481
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,14,otras,10,0.5825,17.29,0.4
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,26,todas,850,0.6557,4.17,0.6282
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,26,lamp,342,0.8024,1.82,0.7895
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,26,bottle,259,0.9027,3.1,0.9151
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,26,bowl,122,0.0587,71.68,0.0246
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,26,pot,90,0.2977,40.97,0.1778
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,26,ashcan,27,0.3328,35.88,0.1481
-axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,26,otras,10,0.6245,15.29,0.4
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,todas,850,0.7792,3.05,0.8294
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,bench,209,0.8255,3.3,0.8995
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,cabinet,145,0.8257,2.52,0.869
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,bus,52,0.8394,2.48,0.8654
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,bathtub,51,0.4261,81.96,0.4706
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,loudspeaker,47,0.6593,3.06,0.7021
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,table,34,0.6382,4.78,0.7059
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,chair,29,0.9093,2.78,0.9655
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,train,25,0.832,2.8,0.88
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,skateboard,21,0.7262,2.98,0.7619
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,vessel,20,0.8425,2.37,0.8
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,piano,20,0.8917,2.64,0.95
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,otras,197,0.7864,2.73,0.8325
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,todas,850,0.6276,4.85,0.6682
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,bench,209,0.7662,4.66,0.8182
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,cabinet,145,0.539,5.61,0.5793
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,bus,52,0.6386,5.25,0.7115
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,bathtub,51,0.2577,89.87,0.2549
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,loudspeaker,47,0.4426,24.69,0.4681
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,table,34,0.6909,4.67,0.7647
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,chair,29,0.685,5.33,0.6552
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,train,25,0.757,4.72,0.84
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,skateboard,21,0.365,90.0,0.3333
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,vessel,20,0.6608,5.96,0.75
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,piano,20,0.71,4.75,0.75
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,otras,197,0.6631,4.87,0.7005
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,todas,850,0.7729,2.61,0.7541
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,bench,209,0.8019,2.24,0.7751
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,cabinet,145,0.8637,2.55,0.9034
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,bus,52,0.8506,2.69,0.8269
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,bathtub,51,0.4322,38.8,0.3922
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,loudspeaker,47,0.6784,2.61,0.6809
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,table,34,0.7631,2.69,0.7353
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,chair,29,0.6786,13.8,0.4828
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,train,25,0.6986,3.11,0.6
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,skateboard,21,0.6512,3.54,0.5714
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,vessel,20,0.8785,2.77,0.85
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,piano,20,0.831,2.51,0.85
-plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,otras,197,0.7869,2.6,0.7766
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,todas,850,0.8312,2.83,0.8671
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,bench,209,0.8634,4.13,0.9043
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,cabinet,145,0.8079,2.25,0.8207
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,bus,52,0.9658,1.25,1.0
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,bathtub,51,0.5236,6.82,0.549
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,loudspeaker,47,0.6404,2.66,0.6596
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,table,34,0.8032,3.85,0.7941
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,chair,29,0.9369,0.92,0.9655
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,train,25,0.9286,2.86,0.96
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,skateboard,21,0.9307,3.11,1.0
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,vessel,20,0.936,2.35,1.0
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,piano,20,0.8495,2.01,0.9
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,otras,197,0.8574,2.85,0.9137
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,todas,850,0.8312,3.76,0.8471
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,bench,209,0.8594,3.51,0.8756
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,cabinet,145,0.8676,3.72,0.9172
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,bus,52,0.9406,2.41,1.0
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,bathtub,51,0.5061,11.71,0.4706
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,loudspeaker,47,0.6588,5.72,0.6596
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,table,34,0.7194,4.43,0.6471
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,chair,29,0.8798,4.89,0.8966
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,train,25,0.9466,1.91,1.0
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,skateboard,21,0.9402,1.64,0.9048
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,vessel,20,0.924,2.75,0.95
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,piano,20,0.9185,3.11,0.95
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,otras,197,0.8385,4.46,0.8477
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,todas,850,0.5304,20.45,0.2518
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,bench,209,0.5235,20.7,0.2297
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,cabinet,145,0.4534,24.08,0.1103
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,bus,52,0.8629,5.58,0.9038
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,bathtub,51,0.2525,30.31,0.0196
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,loudspeaker,47,0.374,28.65,0.1064
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,table,34,0.4829,20.76,0.1176
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,chair,29,0.4443,26.77,0.0345
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,train,25,0.8498,3.32,0.72
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,skateboard,21,0.8779,5.24,0.8571
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,vessel,20,0.8355,5.8,0.8
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,piano,20,0.5735,15.55,0.2
-plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,otras,197,0.5237,21.86,0.1827
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,todas,850,0.8504,3.11,0.9047
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,bench,209,0.9176,3.1,0.9809
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,cabinet,145,0.9184,2.35,0.9655
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,bus,52,0.9169,2.55,0.9615
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,bathtub,51,0.5181,7.44,0.5686
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,loudspeaker,47,0.6738,3.62,0.7021
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,table,34,0.8224,3.16,0.8824
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,chair,29,0.9167,3.05,0.9655
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,train,25,0.88,3.75,0.96
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,skateboard,21,0.9155,4.0,1.0
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,vessel,20,0.7887,3.32,0.85
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,piano,20,0.9635,1.12,1.0
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,otras,197,0.8189,3.31,0.8731
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,todas,850,0.8221,4.12,0.8118
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,bench,209,0.8749,3.69,0.7847
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,cabinet,145,0.8718,3.49,0.8828
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,bus,52,0.8917,5.27,1.0
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,bathtub,51,0.4968,13.97,0.4706
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,loudspeaker,47,0.6843,4.83,0.6809
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,table,34,0.7921,3.83,0.7941
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,chair,29,0.8297,5.1,0.7241
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,train,25,0.9246,2.91,1.0
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,skateboard,21,0.9074,4.33,1.0
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,vessel,20,0.8925,4.37,1.0
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,piano,20,0.8795,3.71,0.8
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,otras,197,0.7971,4.59,0.8122
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,todas,850,0.5913,16.01,0.1788
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,bench,209,0.5572,18.14,0.0335
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,cabinet,145,0.6814,13.22,0.2345
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,bus,52,0.6923,11.75,0.25
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,bathtub,51,0.3717,24.44,0.098
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,loudspeaker,47,0.4894,19.75,0.2128
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,table,34,0.5559,16.99,0.1176
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,chair,29,0.5495,20.05,0.1724
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,train,25,0.7538,9.05,0.64
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,skateboard,21,0.7779,8.81,0.7143
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,vessel,20,0.661,11.77,0.4
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,piano,20,0.7,14.63,0.2
-plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,otras,197,0.5692,17.66,0.1574
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,todas,850,0.4765,21.22,0.3529
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,bench,209,0.2609,43.42,0.1531
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,cabinet,145,0.3949,26.59,0.2207
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,bus,52,0.8651,4.13,0.9038
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,bathtub,51,0.4088,29.49,0.2745
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,loudspeaker,47,0.3271,34.7,0.1702
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,table,34,0.3651,29.04,0.0882
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,chair,29,0.6602,7.46,0.5862
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,train,25,0.87,3.84,0.92
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,skateboard,21,0.9202,2.37,0.9048
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,vessel,20,0.89,3.59,0.85
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,piano,20,0.246,61.55,0.05
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,otras,197,0.5921,12.02,0.4416
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,todas,850,0.4925,16.54,0.4071
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,bench,209,0.2476,73.12,0.1388
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,cabinet,145,0.384,34.16,0.3034
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,bus,52,0.889,4.2,0.9808
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,bathtub,51,0.4863,22.72,0.3333
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,loudspeaker,47,0.3264,36.32,0.1702
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,table,34,0.5328,16.21,0.3529
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,chair,29,0.6247,8.02,0.5517
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,train,25,0.9162,3.17,0.96
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,skateboard,21,0.9179,3.14,1.0
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,vessel,20,0.903,3.72,0.9
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,piano,20,0.279,68.36,0.0
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,otras,197,0.6231,7.48,0.5381
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,todas,850,0.3545,35.56,0.2494
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,bench,209,0.1456,85.4,0.0383
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,cabinet,145,0.1544,53.91,0.0966
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,bus,52,0.8948,4.42,0.9423
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,bathtub,51,0.382,26.09,0.0196
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,loudspeaker,47,0.2301,41.46,0.1064
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,table,34,0.3854,28.85,0.1176
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,chair,29,0.3683,31.99,0.1724
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,train,25,0.8906,4.73,0.96
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,skateboard,21,0.9031,4.05,1.0
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,vessel,20,0.836,6.62,0.85
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,piano,20,0.0273,76.47,0.0
-plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,otras,197,0.4537,22.97,0.3249
+tipo,configuracion,experiment,n_views,categoria,n,auc,media,mediana,p10,f1
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,6,todas,850,0.5896,25.81,7.37,0.5541,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,6,lamp,342,0.6991,18.85,3.79,0.6901,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,6,bottle,259,0.8205,10.11,4.32,0.8185,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,6,bowl,122,0.0686,62.86,65.54,0.0164,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,6,pot,90,0.2914,43.98,41.48,0.1444,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,6,ashcan,27,0.2857,41.51,37.87,0.1111,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,6,otras,10,0.722,12.58,9.62,0.5,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,14,todas,850,0.5809,26.44,8.07,0.5494,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,14,lamp,342,0.6647,21.13,5.78,0.6696,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,14,bottle,259,0.8245,9.26,5.69,0.8378,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,14,bowl,122,0.0734,64.69,72.15,0.0164,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,14,pot,90,0.3084,43.0,35.35,0.1333,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,14,ashcan,27,0.3637,32.73,28.86,0.0741,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,14,otras,10,0.6335,20.49,10.09,0.5,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,26,todas,850,0.5061,30.92,14.58,0.3576,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,26,lamp,342,0.5902,25.65,10.58,0.4883,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,26,bottle,259,0.6876,16.77,10.46,0.4595,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,26,bowl,122,0.0675,66.32,72.95,0.0082,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,26,pot,90,0.2882,44.18,34.29,0.0889,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,26,ashcan,27,0.3559,34.71,33.07,0.1111,
+axis_sym,Molmo2 multiimagen,axis_v04_s224_flat_ndcfix_expE_nomesh,26,otras,10,0.646,15.96,7.26,0.6,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,6,todas,850,0.4963,31.65,14.65,0.4318,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,6,lamp,342,0.582,26.84,8.15,0.5409,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,6,bottle,259,0.7262,16.13,5.86,0.6795,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,6,bowl,122,0.0602,62.47,65.64,0.0,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,6,pot,90,0.1904,48.93,48.16,0.0333,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,6,ashcan,27,0.1898,46.24,45.74,0.0,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,6,otras,10,0.516,27.06,19.29,0.3,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,14,todas,850,0.5202,30.08,12.53,0.4706,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,14,lamp,342,0.5801,27.07,6.8,0.5526,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,14,bottle,259,0.8056,10.39,4.79,0.7876,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,14,bowl,122,0.0633,61.96,64.18,0.0,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,14,pot,90,0.2063,49.25,53.19,0.0444,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,14,ashcan,27,0.1785,47.27,44.97,0.0,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,14,otras,10,0.401,34.83,30.42,0.3,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,26,todas,850,0.5352,29.53,10.64,0.4929,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,26,lamp,342,0.6035,25.83,5.95,0.5789,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,26,bottle,259,0.8126,10.81,4.26,0.8224,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,26,bowl,122,0.0553,63.25,66.26,0.0,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,26,pot,90,0.2217,47.54,46.23,0.0556,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,26,ashcan,27,0.2246,45.34,41.75,0.0,
+axis_sym,Molmo2 una vista,axis_v04_single_oct26_s224_flat_ndcfix_expE_nomesh,26,otras,10,0.5315,25.22,19.29,0.3,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,6,todas,850,0.3216,40.85,35.36,0.1318,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,6,lamp,342,0.4514,32.05,21.17,0.269,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,6,bottle,259,0.349,38.67,28.31,0.0695,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,6,bowl,122,0.0674,60.3,62.03,0.0,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,6,pot,90,0.1579,49.68,48.78,0.0111,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,6,ashcan,27,0.1176,56.01,58.68,0.0,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,6,otras,10,0.3015,40.46,35.05,0.1,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,14,todas,850,0.3307,40.08,33.51,0.1388,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,14,lamp,342,0.4606,31.34,19.97,0.269,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,14,bottle,259,0.3768,36.49,25.98,0.0927,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,14,bowl,122,0.0644,59.94,61.92,0.0,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,14,pot,90,0.1408,51.67,50.07,0.0111,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,14,ashcan,27,0.1091,55.86,59.76,0.0,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,14,otras,10,0.251,42.73,34.57,0.1,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,26,todas,850,0.3457,39.85,33.57,0.1541,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,26,lamp,342,0.5021,29.53,17.53,0.3304,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,26,bottle,259,0.3671,38.55,25.4,0.0618,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,26,bowl,122,0.0647,59.89,61.12,0.0,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,26,pot,90,0.1426,50.94,49.21,0.0111,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,26,ashcan,27,0.1087,56.11,58.96,0.0,
+axis_sym,Qwen3-VL-8B,axis_v04_qwen3vl_s224_flat_ndcfix_expE_nomesh,26,otras,10,0.3375,38.36,27.01,0.1,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,6,todas,850,0.6181,23.73,6.37,0.5835,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,6,lamp,342,0.743,15.71,3.23,0.7164,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,6,bottle,259,0.8531,7.31,4.14,0.8687,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,6,bowl,122,0.0667,64.42,68.62,0.0246,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,6,pot,90,0.2968,42.65,39.04,0.1333,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,6,ashcan,27,0.3546,36.47,33.62,0.2593,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,6,otras,10,0.5845,22.88,16.97,0.4,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,14,todas,850,0.6471,22.07,4.79,0.6165,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,14,lamp,342,0.7801,13.14,2.49,0.7661,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,14,bottle,259,0.8979,4.86,3.25,0.9112,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,14,bowl,122,0.0649,64.75,70.62,0.0082,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,14,pot,90,0.3157,42.92,39.29,0.1889,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,14,ashcan,27,0.3174,37.42,33.01,0.1481,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,14,otras,10,0.5825,23.09,17.29,0.4,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,26,todas,850,0.6557,22.0,4.17,0.6282,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,26,lamp,342,0.8024,12.2,1.82,0.7895,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,26,bottle,259,0.9027,4.46,3.1,0.9151,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,26,bowl,122,0.0587,66.4,71.68,0.0246,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,26,pot,90,0.2977,44.53,40.97,0.1778,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,26,ashcan,27,0.3328,38.85,35.88,0.1481,
+axis_sym,MolmoPoint-8B,axis_v04_molmopoint_completo_s224_flat_ndcfix_expE_nomesh,26,otras,10,0.6245,21.09,15.29,0.4,
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,todas,850,0.7792,16.64,3.05,0.8294,0.6449
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,bench,209,0.8255,12.03,3.3,0.8995,0.5588
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,cabinet,145,0.8257,12.61,2.52,0.869,0.78
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,bus,52,0.8394,12.43,2.48,0.8654,0.9457
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,bathtub,51,0.4261,47.41,81.96,0.4706,0.2684
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,loudspeaker,47,0.6593,28.21,3.06,0.7021,0.6122
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,table,34,0.6382,26.43,4.78,0.7059,0.3317
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,chair,29,0.9093,5.66,2.78,0.9655,0.8839
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,train,25,0.832,12.97,2.8,0.88,0.9205
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,skateboard,21,0.7262,23.02,2.98,0.7619,0.537
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,vessel,20,0.8425,11.59,2.37,0.8,0.8289
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,piano,20,0.8917,7.13,2.64,0.95,0.8947
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,6,otras,197,0.7864,16.08,2.73,0.8325,0.7098
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,todas,850,0.6276,29.17,4.85,0.6682,0.5421
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,bench,209,0.7662,15.53,4.66,0.8182,0.5574
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,cabinet,145,0.539,37.99,5.61,0.5793,0.5802
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,bus,52,0.6386,29.24,5.25,0.7115,0.7432
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,bathtub,51,0.2577,63.92,89.87,0.2549,0.2868
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,loudspeaker,47,0.4426,46.04,24.69,0.4681,0.4145
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,table,34,0.6909,24.49,4.67,0.7647,0.4115
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,chair,29,0.685,23.48,5.33,0.6552,0.6087
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,train,25,0.757,16.33,4.72,0.84,0.7273
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,skateboard,21,0.365,54.28,90.0,0.3333,0.3333
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,vessel,20,0.6608,24.68,5.96,0.75,0.5938
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,piano,20,0.71,22.07,4.75,0.75,0.7031
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,14,otras,197,0.6631,25.9,4.87,0.7005,0.5361
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,todas,850,0.7729,14.04,2.61,0.7541,0.6143
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,bench,209,0.8019,11.46,2.24,0.7751,0.6176
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,cabinet,145,0.8637,9.28,2.55,0.9034,0.8593
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,bus,52,0.8506,8.47,2.69,0.8269,0.7794
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,bathtub,51,0.4322,41.09,38.8,0.3922,0.2821
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,loudspeaker,47,0.6784,24.19,2.61,0.6809,0.5865
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,table,34,0.7631,13.68,2.69,0.7353,0.4083
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,chair,29,0.6786,14.59,13.8,0.4828,0.4138
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,train,25,0.6986,19.23,3.11,0.6,0.5625
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,skateboard,21,0.6512,15.71,3.54,0.5714,0.2973
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,vessel,20,0.8785,5.54,2.77,0.85,0.6905
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,piano,20,0.831,7.86,2.51,0.85,0.8375
+plane_sym,Molmo2 multiimagen,plane_v02_s224_flat_ndcfix_sdat_mp1_nomesh,26,otras,197,0.7869,12.94,2.6,0.7766,0.6301
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,todas,850,0.8312,11.38,2.83,0.8671,0.6255
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,bench,209,0.8634,7.8,4.13,0.9043,0.5802
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,cabinet,145,0.8079,12.73,2.25,0.8207,0.6935
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,bus,52,0.9658,1.54,1.25,1.0,0.9712
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,bathtub,51,0.5236,39.82,6.82,0.549,0.3233
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,loudspeaker,47,0.6404,27.69,2.66,0.6596,0.5472
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,table,34,0.8032,13.96,3.85,0.7941,0.3792
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,chair,29,0.9369,3.03,0.92,0.9655,0.9397
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,train,25,0.9286,3.18,2.86,0.96,0.81
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,skateboard,21,0.9307,3.12,3.11,1.0,0.4459
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,vessel,20,0.936,2.88,2.35,1.0,0.8333
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,piano,20,0.8495,10.0,2.01,0.9,0.8125
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,6,otras,197,0.8574,9.22,2.85,0.9137,0.6689
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,todas,850,0.8312,10.62,3.76,0.8471,0.5604
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,bench,209,0.8594,7.75,3.51,0.8756,0.5363
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,cabinet,145,0.8676,7.53,3.72,0.9172,0.6435
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,bus,52,0.9406,2.67,2.41,1.0,0.8798
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,bathtub,51,0.5061,39.45,11.71,0.4706,0.2633
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,loudspeaker,47,0.6588,25.59,5.72,0.6596,0.4434
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,table,34,0.7194,17.26,4.43,0.6471,0.275
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,chair,29,0.8798,5.39,4.89,0.8966,0.6466
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,train,25,0.9466,2.41,1.91,1.0,0.91
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,skateboard,21,0.9402,2.72,1.64,0.9048,0.5135
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,vessel,20,0.924,3.38,2.75,0.95,0.75
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,piano,20,0.9185,3.72,3.11,0.95,0.75
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,14,otras,197,0.8385,9.94,4.46,0.8477,0.5833
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,todas,850,0.5304,23.98,20.45,0.2518,0.1391
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,bench,209,0.5235,24.27,20.7,0.2297,0.1078
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,cabinet,145,0.4534,26.71,24.08,0.1103,0.0629
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,bus,52,0.8629,6.13,5.58,0.9038,0.601
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,bathtub,51,0.2525,44.41,30.31,0.0196,0.0033
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,loudspeaker,47,0.374,37.84,28.65,0.1064,0.0519
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,table,34,0.4829,26.69,20.76,0.1176,0.0375
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,chair,29,0.4443,25.0,26.77,0.0345,0.0086
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,train,25,0.8498,6.74,3.32,0.72,0.61
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,skateboard,21,0.8779,5.49,5.24,0.8571,0.3716
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,vessel,20,0.8355,7.4,5.8,0.8,0.5238
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,piano,20,0.5735,19.18,15.55,0.2,0.1
+plane_sym,Molmo2 una vista,plane_v02_single_s224_flat_ndcfix_sdat_mp1_nomesh,26,otras,197,0.5237,23.51,21.86,0.1827,0.1078
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,todas,850,0.8504,10.63,3.11,0.9047,0.6623
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,bench,209,0.9176,4.51,3.1,0.9809,0.658
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,cabinet,145,0.9184,4.89,2.35,0.9655,0.8097
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,bus,52,0.9169,5.45,2.55,0.9615,0.885
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,bathtub,51,0.5181,39.88,7.44,0.5686,0.29
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,loudspeaker,47,0.6738,26.69,3.62,0.7021,0.5561
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,table,34,0.8224,12.82,3.16,0.8824,0.4208
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,chair,29,0.9167,3.73,3.05,0.9655,0.8448
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,train,25,0.88,7.2,3.75,0.96,0.7917
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,skateboard,21,0.9155,3.8,4.0,1.0,0.4392
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,vessel,20,0.7887,16.24,3.32,0.85,0.7917
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,piano,20,0.9635,1.67,1.12,1.0,0.925
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,6,otras,197,0.8189,13.46,3.31,0.8731,0.6959
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,todas,850,0.8221,11.19,4.12,0.8118,0.5368
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,bench,209,0.8749,6.07,3.69,0.7847,0.5324
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,cabinet,145,0.8718,7.03,3.49,0.8828,0.6565
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,bus,52,0.8917,4.9,5.27,1.0,0.6875
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,bathtub,51,0.4968,40.8,13.97,0.4706,0.2467
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,loudspeaker,47,0.6843,24.12,4.83,0.6809,0.4623
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,table,34,0.7921,14.24,3.83,0.7941,0.3602
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,chair,29,0.8297,9.24,5.1,0.7241,0.5893
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,train,25,0.9246,3.38,2.91,1.0,0.82
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,skateboard,21,0.9074,4.17,4.33,1.0,0.4257
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,vessel,20,0.8925,4.86,4.37,1.0,0.6667
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,piano,20,0.8795,5.43,3.71,0.8,0.6375
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,14,otras,197,0.7971,13.32,4.59,0.8122,0.5448
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,todas,850,0.5913,20.72,16.01,0.1788,0.0843
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,bench,209,0.5572,20.3,18.14,0.0335,0.0153
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,cabinet,145,0.6814,15.3,13.22,0.2345,0.1274
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,bus,52,0.6923,13.84,11.75,0.25,0.1298
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,bathtub,51,0.3717,43.66,24.44,0.098,0.0433
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,loudspeaker,47,0.4894,32.21,19.75,0.2128,0.1226
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,table,34,0.5559,23.86,16.99,0.1176,0.0292
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,chair,29,0.5495,20.25,20.05,0.1724,0.1034
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,train,25,0.7538,11.08,9.05,0.64,0.27
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,skateboard,21,0.7779,9.99,8.81,0.7143,0.1757
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,vessel,20,0.661,15.27,11.77,0.4,0.1667
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,piano,20,0.7,13.46,14.63,0.2,0.1125
+plane_sym,Qwen3-VL-8B,plane_v02_qwen3vl_s224_flat_ndcfix_sdat_mp1_nomesh,26,otras,197,0.5692,21.49,17.66,0.1574,0.0956
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,todas,850,0.4765,30.34,21.22,0.3529,0.2165
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,bench,209,0.2609,44.66,43.42,0.1531,0.0706
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,cabinet,145,0.3949,34.19,26.59,0.2207,0.1274
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,bus,52,0.8651,6.06,4.13,0.9038,0.7019
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,bathtub,51,0.4088,33.46,29.49,0.2745,0.1267
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,loudspeaker,47,0.3271,42.76,34.7,0.1702,0.0991
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,table,34,0.3651,31.15,29.04,0.0882,0.0167
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,chair,29,0.6602,16.53,7.46,0.5862,0.319
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,train,25,0.87,5.88,3.84,0.92,0.72
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,skateboard,21,0.9202,3.56,2.37,0.9048,0.4865
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,vessel,20,0.89,4.97,3.59,0.85,0.6429
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,piano,20,0.246,48.77,61.55,0.05,0.0375
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,6,otras,197,0.5921,23.51,12.02,0.4416,0.3089
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,todas,850,0.4925,32.94,16.54,0.4071,0.2475
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,bench,209,0.2476,55.2,73.12,0.1388,0.0782
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,cabinet,145,0.384,37.03,34.16,0.3034,0.1661
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,bus,52,0.889,4.99,4.2,0.9808,0.6875
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,bathtub,51,0.4863,33.12,22.72,0.3333,0.16
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,loudspeaker,47,0.3264,44.65,36.32,0.1702,0.1132
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,table,34,0.5328,23.8,16.21,0.3529,0.1083
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,chair,29,0.6247,19.21,8.02,0.5517,0.3707
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,train,25,0.9162,3.77,3.17,0.96,0.77
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,skateboard,21,0.9179,3.68,3.14,1.0,0.4459
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,vessel,20,0.903,4.35,3.72,0.9,0.6667
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,piano,20,0.279,52.95,68.36,0.0,0.0
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,14,otras,197,0.6231,22.14,7.48,0.5381,0.3733
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,todas,850,0.3545,41.11,35.56,0.2494,0.1474
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,bench,209,0.1456,66.67,85.4,0.0383,0.0219
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,cabinet,145,0.1544,49.62,53.91,0.0966,0.0581
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,bus,52,0.8948,4.75,4.42,0.9423,0.7163
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,bathtub,51,0.382,30.64,26.09,0.0196,0.0033
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,loudspeaker,47,0.2301,46.13,41.46,0.1064,0.066
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,table,34,0.3854,28.99,28.85,0.1176,0.0458
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,chair,29,0.3683,31.02,31.99,0.1724,0.1207
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,train,25,0.8906,4.94,4.73,0.96,0.69
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,skateboard,21,0.9031,4.41,4.05,1.0,0.4189
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,vessel,20,0.836,7.4,6.62,0.85,0.4524
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,piano,20,0.0273,73.57,76.47,0.0,0.0
+plane_sym,MolmoPoint-8B,plane_v02_molmopoint_s224_flat_ndcfix_sdat_mp1_nomesh,26,otras,197,0.4537,31.04,22.97,0.3249,0.2011
