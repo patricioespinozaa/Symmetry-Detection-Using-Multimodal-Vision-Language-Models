@@ -95,6 +95,17 @@ def celda_pareado(ruta: Path, vistas: int, columna: str) -> dict:
                                              "n_views": vistas, "columna": columna}}
 
 
+def celda_centro(tipo: str, exp_id: str, vistas: int) -> dict:
+    """ Fracción de puntos en la columna central en vistas no cenitales (diagnose_center_bias.py). """
+    ruta = RES / "diagnosticos" / f"centro_{TIPOS[tipo]}_resumen.csv"
+    with open(ruta, encoding="utf-8", newline="") as f:
+        fila = next(r for r in csv.DictReader(f)
+                    if r["experiment_id"] == exp_id and int(r["n_views"]) == vistas)
+    columna = "pct_noncenital_centered"
+    return {"v": float(fila[columna]), "t": {"fuente": "centro", "csv": rel(ruta), "experiment_id": exp_id,
+                                             "n_views": vistas, "columna": columna}}
+
+
 ID_MALLA = re.compile(r"^(axis|plane)_(.+)_s(\d+)_([a-z]+)_ndcfix_mesh(_[a-z0-9_]+)?$")
 
 
@@ -492,6 +503,45 @@ def completa(nombre: str, tipo: str, condiciones: list[tuple[str, str, str]], en
         nota_comun += "--: no se corrió esa combinación. "
     return tabla(nombre, titulo, encabezado, filas, [(f, None) for _, _, f in cols], nota_comun + nota,
                  separar, alto=r"0.8\textheight")
+
+
+def tabla_centro(tipo: str) -> str:
+    """ Fracción de puntos en la columna central de la imagen por prompt, flujo y VLM, con su AUC. """
+    corto, base = ("axis", "v04") if tipo == "axis_sym" else ("plane", "v02")
+    alias = "nomesh" if tipo == "axis_sym" else "mp1_nomesh"
+    otras = {   # etiqueta: (id del diagnóstico, carpeta del CSV final, prompt del id final)
+        "axis_sym": [(rf"Flujo~B ({tt('v04')})", "axis_v04_flowB", "ndcfix_flujoB", "v04_flowB"),
+                     (rf"Flujo~C ({tt('v05_1')})", "axis_v05_1_flowC", "ndcfix_flujoC", "v05_1_flowC"),
+                     ("Qwen3-VL-8B", f"axis_v04_qwen3vl_s224_flat_ndcfix_{alias}", "qwen3vl", "v04_qwen3vl"),
+                     ("MolmoPoint-8B", f"axis_v04_molmopoint_completo_s224_flat_ndcfix_{alias}",
+                      "axis_v04_224_axis_molmopoint", "v04_molmopoint_completo")],
+        "plane_sym": [(rf"Flujo~B ({tt('v02')})", "plane_v02_flowB", "plane_v02_224_flujoB", "v02_flowB"),
+                      (rf"Flujo~C ({tt('v02')})", "plane_v02_flowC", "plane_v02_224_flujoC", "v02_flowC"),
+                      ("Qwen3-VL-8B", f"plane_v02_qwen3vl_s224_flat_ndcfix_{alias}", "plane_v02_224_qwen3vl",
+                       "v02_qwen3vl"),
+                      ("MolmoPoint-8B", f"plane_v02_molmopoint_s224_flat_ndcfix_{alias}",
+                       "plane_v02_224_molmopoint", "v02_molmopoint")]}[tipo]
+    filas = []
+    for p in PROMPTS:
+        carpeta = "ndcfix_v08" if p == "v08" else "ndcfix_flujoA"
+        auc = media([celda(carpeta, tipo, ident(tipo, p), v, "auc_angular") for v in VISTAS])
+        filas.append(([tt(p) + (r"$^{\dagger}$" if p == base else "")],
+                      [celda_centro(tipo, f"{corto}_{p}", v) for v in VISTAS] + [auc]))
+    for etiqueta, id_centro, carpeta, prompt in otras:
+        auc = media([celda(carpeta, tipo, ident(tipo, prompt), v, "auc_angular") for v in VISTAS])
+        filas.append(([etiqueta], [celda_centro(tipo, id_centro, v) for v in VISTAS] + [auc]))
+    enc = [r"\multirow{2}{*}{Configuración} & \multicolumn{3}{c}{Puntos en la columna central} & "
+           r"\multirow{2}{*}{\begin{tabular}[b]{@{}c@{}}AUC$_{45^\circ}$ \\ medio\end{tabular}} \\",
+           r"\cmidrule(lr){2-4}",
+           r" & 6 vistas & 14 vistas & 26 vistas & \\"]
+    nota = (r"Fracción de los puntos de vistas no cenitales ($|$elevación$| \le 70^\circ$) a menos de 30 "
+            r"unidades de $x = 500$, en la escala 0--1000 de Molmo2. Filas de \textit{prompts}: Molmo2 "
+            rf"({REF}). $^{{\dagger}}$: \textit{{prompt}} de referencia. Qwen3-VL-8B y MolmoPoint-8B: "
+            rf"\textit{{prompt}} {tt(base)} y envío de una imagen por llamada. AUC$_{{45^\circ}}$ medio: media "
+            r"sobre 6, 14 y 26 vistas.")
+    simetria = "axial" if tipo == "axis_sym" else "planar"
+    return tabla(f"centro_{TIPOS[tipo]}", f"Puntos en la columna central de la imagen en simetría {simetria}.",
+                 enc, filas, [("prec", None)] * 3 + [("auc", None)], nota, separar=[len(PROMPTS)])
 
 
 def tabla_completa_prompts(tipo: str) -> str:
@@ -923,6 +973,7 @@ def main() -> None:
         "Modelo", r"Comparación de VLMs en simetría planar con \texttt{plane\_v02} (224~px, \textit{flat}, "
                   r"una vista por llamada).", ""))
     hechas.append(tabla_aguirre())
+    hechas += [tabla_centro("axis_sym"), tabla_centro("plane_sym")]
     hechas += [tabla_malla("axis_sym"), tabla_malla("plane_sym"),
                tabla_malla("axis_sym", completa=True), tabla_malla("plane_sym", completa=True)]
     REGISTRO.write_text(json.dumps(registro, indent=1, ensure_ascii=False), encoding="utf-8",

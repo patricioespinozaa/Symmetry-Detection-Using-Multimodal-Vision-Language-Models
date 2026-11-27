@@ -69,6 +69,9 @@ def valor(t: dict) -> float:
         if (a, m, d) < (2026, 11, 5):
             errores.append(f"CSV anterior al recálculo NDC: {t['csv']}")
         return float(r[t["columna"]])
+    if fuente == "centro":
+        return float(fila_csv(t["csv"], lambda r: r["experiment_id"] == t["experiment_id"]
+                              and int(r["n_views"]) == t["n_views"])[t["columna"]])
     if fuente == "pareado_malla":
         return float(fila_csv(t["csv"], lambda r: r["variante"] == t["variante"]
                               and r["metodo"] == t["metodo"]
