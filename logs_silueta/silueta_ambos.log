@@ -127,3 +127,24 @@ vistas  obj    AUC     F1   P@10
 axis_v04_silueta_r08: 850 archivos de puntos escritos
 axis_v04_silueta_r08: 850 enlaces -> axis_v04_silueta_r08_s224_flat_ndcfix_expE_nomesh
 [18:10:43] est_axis_v04_silueta_r08_s224_flat_ndcfix_expE_nomesh
+[18:11:26] eval_axis_v04_silueta_r08_s224_flat_ndcfix_expE_nomesh
+[18:13:07] compare_axis_sym
+[18:13:08] audit_axis_v04_silueta_r08_s224_flat_ndcfix_expE_nomesh
+[18:13:11] pareado_axis_v04_silueta_r08_s224_flat_ndcfix_expE_nomesh
+
+axis_v04_silueta_r08: /home/pespinoz/Symmetry-Detection-Using-Multimodal-Vision-Language-Models/resultados_finales/silueta_axis_v04_224/r08/experiments_26_11_2026/axis_sym_final_comparison.csv
+vistas  obj    AUC     F1   P@10
+     6  848  0.321      -  0.166
+    14  849  0.387      -  0.257
+    26  850  0.487      -  0.366
+
+=== [26/11 18:13] axis_v04_silueta_r09
+axis_v04_silueta_r09: 850 archivos de puntos escritos
+axis_v04_silueta_r09: 850 enlaces -> axis_v04_silueta_r09_s224_flat_ndcfix_expE_nomesh
+[18:16:05] est_axis_v04_silueta_r09_s224_flat_ndcfix_expE_nomesh
+[18:16:52] eval_axis_v04_silueta_r09_s224_flat_ndcfix_expE_nomesh
+[18:18:33] compare_axis_sym
+[18:18:34] audit_axis_v04_silueta_r09_s224_flat_ndcfix_expE_nomesh
+[18:18:37] pareado_axis_v04_silueta_r09_s224_flat_ndcfix_expE_nomesh
+From github.com:patricioespinozaa/Symmetry-Detection-Using-Multimodal-Vision-Language-Models
+ * branch              refactor   -> FETCH_HEAD

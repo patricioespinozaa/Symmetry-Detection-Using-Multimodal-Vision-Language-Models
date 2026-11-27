@@ -7,9 +7,9 @@ GT axis orientation: {'n_elements': 850, 'by_axis': {'X': 272, 'Y': 295, 'Z': 28
 
 === plane_sym: 850 objects, 1.193 GT planes/object ===
 GT plane-normal orientation: {'n_elements': 1014, 'by_axis': {'X': 796, 'Y': 14, 'Z': 204}, 'frac_within_5deg': 0.9980276134122288, 'frac_within_15deg': 1.0, 'random_ref_within_15deg': np.float64(0.10222252113279506)}
-   {'predictor': 'always {X}', 'n_planes_predicted': 1, 'recall_planes_mean': 0.8494, 'precision_planes_mean': 0.9365, 'f1_ref': 0.7833, 'f1_ref_hungarian': 0.8522}
-   {'predictor': 'always {Y}', 'n_planes_predicted': 1, 'recall_planes_mean': 0.0116, 'precision_planes_mean': 0.0165, 'f1_ref': 0.0138, 'f1_ref_hungarian': 0.015}
-   {'predictor': 'always {Z}', 'n_planes_predicted': 1, 'recall_planes_mean': 0.1324, 'precision_planes_mean': 0.2259, 'f1_ref': 0.2, 'f1_ref_hungarian': 0.2047}
-   {'predictor': 'always {X,Z}', 'n_planes_predicted': 2, 'recall_planes_mean': 0.9818, 'precision_planes_mean': 0.5812, 'f1_ref': 0.8871, 'f1_ref_hungarian': 0.7259}
-   {'predictor': 'always {X,Y}', 'n_planes_predicted': 2, 'recall_planes_mean': 0.861, 'precision_planes_mean': 0.4765, 'f1_ref': 0.7192, 'f1_ref_hungarian': 0.5956}
-   {'predictor': 'always {X,Y,Z}', 'n_planes_predicted': 3, 'recall_planes_mean': 0.9933, 'precision_planes_mean': 0.3929, 'f1_ref': 0.8241, 'f1_ref_hungarian': 0.5606}
+   {'predictor': 'always {X}', 'n_planes_predicted': 1, 'recall_planes_mean': 0.8494, 'precision_planes_mean': 0.9365, 'f1_ref': 0.7833, 'f1_ref_hungarian': 0.8522, 'angular_error_mean': 5.81, 'angular_error_median': 0.01, 'auc_angular': 0.9307}
+   {'predictor': 'always {Y}', 'n_planes_predicted': 1, 'recall_planes_mean': 0.0116, 'precision_planes_mean': 0.0165, 'f1_ref': 0.0138, 'f1_ref_hungarian': 0.015, 'angular_error_mean': 88.42, 'angular_error_median': 89.99, 'auc_angular': 0.0164}
+   {'predictor': 'always {Z}', 'n_planes_predicted': 1, 'recall_planes_mean': 0.1324, 'precision_planes_mean': 0.2259, 'f1_ref': 0.2, 'f1_ref_hungarian': 0.2047, 'angular_error_mean': 69.66, 'angular_error_median': 89.98, 'auc_angular': 0.2243}
+   {'predictor': 'always {X,Z}', 'n_planes_predicted': 2, 'recall_planes_mean': 0.9818, 'precision_planes_mean': 0.5812, 'f1_ref': 0.8871, 'f1_ref_hungarian': 0.7259, 'angular_error_mean': 0.84, 'angular_error_median': 0.01, 'auc_angular': 0.9857}
+   {'predictor': 'always {X,Y}', 'n_planes_predicted': 2, 'recall_planes_mean': 0.861, 'precision_planes_mean': 0.4765, 'f1_ref': 0.7192, 'f1_ref_hungarian': 0.5956, 'angular_error_mean': 4.85, 'angular_error_median': 0.01, 'auc_angular': 0.9412}
+   {'predictor': 'always {X,Y,Z}', 'n_planes_predicted': 3, 'recall_planes_mean': 0.9933, 'precision_planes_mean': 0.3929, 'f1_ref': 0.8241, 'f1_ref_hungarian': 0.5606, 'angular_error_mean': 0.1, 'angular_error_median': 0.01, 'auc_angular': 0.9939}
