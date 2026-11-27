@@ -1,0 +1,42 @@
+plane_sym: 850 objetos con puntos con malla, 0 sin referencia o malla, 53360 puntos que impactaron la malla
+
+6 vistas: 8049 puntos
+  theta (°)         n  dist. mediana  frac < 0.02
+  0-15           4586         0.0125        0.631
+  15-30          1128         0.0571        0.170
+  30-45          1168         0.0946        0.110
+  45-60           103         0.1441        0.126
+  60-75           896         0.1703        0.052
+  75-90           168         0.1385        0.054
+  tercil dist. mediana          n  err. malla med.
+  1 (0.0000-0.0190)      284             19.8
+  2 (0.0190-0.0371)      283             55.2
+  3 (0.0371-0.4428)      283             58.1
+
+14 vistas: 16714 puntos
+  theta (°)         n  dist. mediana  frac < 0.02
+  0-15           7617         0.0106        0.696
+  15-30          2729         0.0530        0.209
+  30-45          3066         0.0876        0.140
+  45-60          3045         0.1404        0.090
+  60-75           173         0.1624        0.087
+  75-90            84         0.1834        0.095
+  tercil dist. mediana          n  err. malla med.
+  1 (0.0000-0.0236)      283             55.7
+  2 (0.0236-0.0467)      283             51.2
+  3 (0.0467-0.4493)      283             60.3
+
+26 vistas: 28597 puntos
+  theta (°)         n  dist. mediana  frac < 0.02
+  0-15           9885         0.0092        0.663
+  15-30          6685         0.0524        0.235
+  30-45          5519         0.0715        0.205
+  45-60          2984         0.1443        0.093
+  60-75          2595         0.2032        0.066
+  75-90           929         0.1382        0.108
+  tercil dist. mediana          n  err. malla med.
+  1 (0.0000-0.0335)      282             82.8
+  2 (0.0335-0.0686)      281             78.8
+  3 (0.0686-0.4465)      282             78.2
+
+CSV por punto: /tmp/profundidad_plano.csv
