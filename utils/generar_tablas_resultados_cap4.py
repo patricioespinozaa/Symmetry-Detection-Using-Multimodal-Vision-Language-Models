@@ -30,10 +30,11 @@ ID_FINAL = re.compile(r"^(axis|plane)_(.+)_s(\d+)_([a-z]+)_ndcfix_(expE|sdat_mp1
 # Constantes del azar analítico para una dirección uniforme (Sección sm_azar del Cap. 3)
 AZAR_MEDIA, AZAR_DESV = 57.2958, 21.5597
 FORMATOS = {"auc": "{:.3f}", "grados": "{:.1f}", "prec": "{:.3f}", "f1": "{:.3f}",
-            "obj": "{:.0f}", "sde": "{:.4f}", "entero": "{:.0f}", "z": "{:.1f}", "sde4": "{:.2f}"}
+            "obj": "{:.0f}", "sde": "{:.4f}", "entero": "{:.0f}", "z": "{:.1f}", "sde4": "{:.2f}",
+            "corr": "{:.2f}"}
 TIPOS = {"axis_sym": "eje", "plane_sym": "plano"}
 METODO = {"axis_sym": "El eje se estima con EXP-E.",
-          "plane_sym": r"La normal se elige con $S_{\mathrm{dat}}$ y se predice un plano por objeto."}
+          "plane_sym": r"La normal se elige con el puntaje $S$ y se predice un plano por objeto."}
 NOTA_ANG = r"Las métricas angulares usan los 850 objetos e imputan $90^\circ$ a los objetos sin predicción."
 NOTA_F1 = r"$F1$ y SDE usan solo los objetos con predicción."
 NEGRITA = "Negrita: mejor valor de la columna."
@@ -201,6 +202,15 @@ def media(celdas: list[dict | None]) -> dict | None:
     return derivada(sum(c["v"] for c in validas) / len(validas), "media", validas)
 
 
+def correlacion(xs: list[dict], ys: list[dict]) -> dict:
+    """ Correlación de Pearson entre dos listas de celdas del mismo largo. """
+    a, b = [c["v"] for c in xs], [c["v"] for c in ys]
+    ma, mb = sum(a) / len(a), sum(b) / len(b)
+    cov = sum((x - ma) * (y - mb) for x, y in zip(a, b))
+    r = cov / (sum((x - ma) ** 2 for x in a) * sum((y - mb) ** 2 for y in b)) ** 0.5
+    return derivada(r, "pearson", xs + ys)
+
+
 def formatear(c: dict | None, formato: str) -> str:
     """ Formatea una celda; un valor que redondea a cero se escribe sin signo ('-0.0' -> '0.0'). """
     if c is None:
@@ -221,7 +231,9 @@ def columna_celdas(celdas: list[dict | None], formato: str, mayor: bool | None) 
 
 def tabla(nombre: str, titulo: str, encabezado: list[str], filas: list[tuple[list[str], list]],
           columnas: list[tuple[str, bool | None]], nota: str, separar: list[int] | None = None,
-          separar_fino: list[int] | None = None, alto: str | None = None) -> str:
+          separar_fino: list[int] | None = None, alto: str | None = None,
+          nota_celdas: list[tuple[dict, str]] | None = None, larga: bool = False,
+          tamano: str = r"\scriptsize") -> str:
     """ Escribe la tabla y registra la procedencia de cada celda numérica.
 
     Args:
@@ -234,6 +246,11 @@ def tabla(nombre: str, titulo: str, encabezado: list[str], filas: list[tuple[lis
         * separar: índices de fila antes de los que va un \\midrule
         * separar_fino: índices de fila antes de los que va un \\cmidrule de todo el ancho
         * alto: alto máximo de la tabla (p. ej. 0.8\\textheight), para tablas largas
+        * nota_celdas: (celda, formato) de los valores citados en la nota, que se registran
+          aparte del cuerpo para que el verificador también los compruebe
+        * larga: escribe una longtable que empieza donde está y sigue en la página siguiente con
+          el encabezado repetido; los \\multirow de la primera columna pasan a la primera fila
+        * tamano: tamaño de letra de la tabla larga
 
     Una fila sin celdas numéricas (lista vacía) se escribe tal cual, como fila de título.
 
@@ -246,19 +263,44 @@ def tabla(nombre: str, titulo: str, encabezado: list[str], filas: list[tuple[lis
             cuerpo.append(r"\midrule")
         elif separar_fino and i in separar_fino:
             cuerpo.append(rf"\cmidrule{{1-{max(len(f[0]) for f in filas if f[1]) + len(columnas)}}}")
+        # En la tabla larga la página puede cortarse en cualquier fila, así que un \multirow se
+        # reemplaza por su contenido en la primera fila del grupo (centrado vertical no sobrevive a un corte)
+        if larga:
+            inicio = [re.sub(r"^\\multirow\{\d+\}\{\*\}\{(.*)\}$", r"\1", c) for c in inicio]
+        fin = r" \\"
         if not celdas:
-            cuerpo.append(" & ".join(inicio) + r" \\")
+            cuerpo.append(" & ".join(inicio) + fin)
             continue
         cuerpo.append(" & ".join(inicio + [textos[j][i] + (celdas[j] or {}).get("sufijo", "")
-                                           for j in range(len(columnas))]) + r" \\")
+                                           for j in range(len(columnas))]) + fin)
         for j, c in enumerate(celdas):
             if c is not None:
                 entradas.append({"fila": i, "columna": j, "texto": formatear(c, columnas[j][0]),
                                  "formato": columnas[j][0], "traza": c["t"]})
+    for k, (c, fmt) in enumerate(nota_celdas or []):
+        entradas.append({"fila": -1, "columna": k, "texto": formatear(c, fmt), "formato": fmt,
+                         "traza": c["t"], "nota": True})
     registro[nombre] = entradas
     fuentes = sorted({e["traza"].get("csv") or e["traza"].get("archivo") or "derivada"
                       for e in entradas})
     alineacion = "l" * max(len(f[0]) for f in filas if f[1]) + "r" * len(columnas)
+    if larga:
+        n = len(alineacion)
+        lineas = [f"% Generado por utils/generar_tablas_resultados_cap4.py. No editar a mano.",
+                  "% Fuentes:"] + [f"%   {f}" for f in fuentes] + [
+            r"\begingroup", tamano, r"\setlength{\tabcolsep}{2.5pt}", r"\setlength{\LTcapwidth}{\textwidth}",
+            r"\captionsetup{font=normalsize}", rf"\begin{{longtable}}{{{alineacion}}}",
+            rf"\caption{{{titulo}}}\label{{tab:res_{nombre}}}\\",
+            r"\toprule", *encabezado, r"\midrule", r"\endfirsthead",
+            rf"\multicolumn{{{n}}}{{l}}{{\tablename~\thetable{{}} (continuación)}}\\",
+            r"\toprule", *encabezado, r"\midrule", r"\endhead",
+            r"\bottomrule", rf"\multicolumn{{{n}}}{{r}}{{\textit{{Continúa en la página siguiente}}}}\\",
+            r"\endfoot", r"\bottomrule", r"\endlastfoot",
+            *cuerpo, r"\end{longtable}", r"\vspace{-1ex}", r"{\footnotesize Nota: " + nota + r"\par}",
+            r"\endgroup", ""]
+        SALIDA.mkdir(parents=True, exist_ok=True)
+        (SALIDA / f"{nombre}.tex").write_text("\n".join(lineas), encoding="utf-8", newline="\n")
+        return nombre
     lineas = [f"% Generado por utils/generar_tablas_resultados_cap4.py. No editar a mano.",
               "% Fuentes:"] + [f"%   {f}" for f in fuentes] + [
         r"\begin{table}[htbp]", r"\centering", rf"\caption{{{titulo}}}",
@@ -387,18 +429,27 @@ def tablas_triviales() -> list[str]:
     predictores = [("always {X}", r"Siempre $\{X\}$"), ("always {Y}", r"Siempre $\{Y\}$"),
                    ("always {Z}", r"Siempre $\{Z\}$"), ("always {X,Z}", r"Siempre $\{X,Z\}$"),
                    ("always {X,Y}", r"Siempre $\{X,Y\}$"), ("always {X,Y,Z}", r"Siempre $\{X,Y,Z\}$")]
+    # AUC sin negrita: con dos o tres planos toma el mejor frente a la referencia (marcado con *)
     cols = [("n_planes_predicted", "Planos", "entero", None),
+            ("auc_angular", r"AUC$_{45^\circ}$", "auc", None),
             ("recall_planes_mean", "Recall", "prec", True),
             ("precision_planes_mean", "Precisión", "prec", True),
             ("f1_ref", r"$F1$|voraz", "f1", True),
             ("f1_ref_hungarian", r"$F1$|húngaro", "f1", True)]
-    filas = [([texto], [celda_trivial("plane_sym", p, c) for c, _, _, _ in cols]) for p, texto in predictores]
+    filas = []
+    for p, texto in predictores:
+        cs = [celda_trivial("plane_sym", p, c) for c, _, _, _ in cols]
+        if "," in p:
+            cs[1]["sufijo"] = "$^{*}$"
+        filas.append(([texto], cs))
     enc = [" & ".join(["Predictor"] + [apilar(h) for _, h, _, _ in cols]) + r" \\"]
     nombres.append(tabla("triviales_plano", "Predictores triviales en simetría planar.", enc, filas,
                          [(f, m) for _, _, f, m in cols],
                          r"Predictores que siempre devuelven el mismo conjunto de planos cartesianos que "
                          r"pasan por el origen, evaluados sobre los 850 objetos planares. Recall y "
-                         r"precisión con emparejamiento a $15^\circ$."))
+                         r"precisión con emparejamiento a $15^\circ$. $^{*}$: el predictor propone más de un "
+                         r"plano y el AUC$_{45^\circ}$ toma el mejor de ellos frente a la referencia, por lo que "
+                         r"no es comparable con el de un solo plano."))
     return nombres
 
 
@@ -423,7 +474,7 @@ def tabla_prompts(tipo: str) -> str:
            r" & $n_v{=}6$ & 14 & 26 & Prom. & $n_v{=}6$ & 14 & 26 & $n_v{=}6$ & 14 & 26 \\"]
     titulo = rf"Comparación de \textit{{prompts}} en simetría {'axial' if tipo == 'axis_sym' else 'planar'} ({REF})."
     # Nota editada a mano en la tesis; se conserva aquí para que regenerar no la pise.
-    nota = ((r"Se predice un plano por objeto. $F1$ y $SDE$ usan solo los objetos con predicción. "
+    nota = ((r"Se predice un plano por objeto. $F1$ y SDE usan solo los objetos con predicción. "
              if tipo == "plane_sym" else "")
             + r"Prom.: media de los tres valores de $n_v$. Objetos: objetos con predicción. "
             r"Base: \texttt{v00}--\texttt{v05}. Variantes: \texttt{\_1}. "
@@ -500,17 +551,18 @@ def completa(nombre: str, tipo: str, condiciones: list[tuple[str, str, str]], en
             inicio = [rf"\multirow{{{len(condiciones)}}}{{*}}{{{v}}}" if j == 0 else "", etiqueta]
             filas.append((inicio, [celda(carpeta, tipo, exp_id, v, c) for c, _, _ in cols]))
     encabezado = [" & ".join(["Vistas", encabezado_cond] + [apilar(h) for _, h, _ in cols]) + r" \\"]
-    nota_comun = (f"{METODO[tipo]} {NOTA_ANG} Objetos: objetos con predicción. $t_n$: error de "
-                  r"traslación normalizado, mediana. $t_n$, " + ("$F1$ y " if tipo == "plane_sym" else "")
-                  + r"SDE usan solo los objetos con predicción. ")
+    nota_comun = (f"{NOTA_ANG} Objetos: objetos con predicción. $t_n$: mediana del error de "
+                  r"traslación normalizado. "
+                  + ("$t_n$, $F1$ y SDE" if tipo == "plane_sym" else "$t_n$ y SDE")
+                  + r" usan solo los objetos con predicción.")
     if any(all(c is None for c in celdas) for _, celdas in filas):
-        nota_comun += "--: no se corrió esa combinación. "
-    return tabla(nombre, titulo, encabezado, filas, [(f, None) for _, _, f in cols], nota_comun + nota,
-                 separar, alto=r"0.8\textheight")
+        nota_comun += " --: no se corrió esa combinación."
+    return tabla(nombre, titulo, encabezado, filas, [(f, None) for _, _, f in cols],
+                 nota_comun + (f" {nota}" if nota else ""),
+                 separar, larga=True)
 
 
 CSV_CATEGORIAS = RES / "diagnosticos" / "categorias_resumen.csv"
-CONFIG_CATEGORIAS = ["Molmo2 multiimagen", "Molmo2 una vista", "Qwen3-VL-8B", "MolmoPoint-8B"]
 
 
 def celda_categoria(tipo: str, configuracion: str, categoria: str, vistas: int, columna: str) -> dict:
@@ -523,31 +575,40 @@ def celda_categoria(tipo: str, configuracion: str, categoria: str, vistas: int, 
                                              "n_views": vistas, "columna": columna}}
 
 
+# Alto acotado para que las dos tablas por categoría y el párrafo que las cita quepan en una página
+ALTO_CATEGORIAS = r"0.32\textheight"
+
+
 def tabla_categorias(tipo: str) -> str:
-    """ AUC medio por categoría (categorías con al menos 20 objetos) para las configuraciones principales;
-    Molmo2 multiimagen además por número de vistas. """
+    """ Métricas por categoría (al menos 20 objetos) para Molmo2 multiimagen, Qwen3-VL-8B y MolmoPoint-8B,
+    como media sobre 6, 14 y 26 vistas: AUC y error medio en eje, AUC, P@10 y F1 voraz en plano. """
+    configs = ["Molmo2 multiimagen", "Qwen3-VL-8B", "MolmoPoint-8B"]
+    titulos = ["Molmo2 multiimagen", "Qwen3-VL-8B", "MolmoPoint-8B"]
+    metricas = ([("auc", r"AUC$_{45^\circ}$", "auc"), ("media", r"Error|medio ($^\circ$)", "grados")]
+                if tipo == "axis_sym" else
+                [("auc", r"AUC$_{45^\circ}$", "auc"), ("p10", r"P@10$^\circ$", "prec"), ("f1", r"$F1$|voraz", "f1")])
     with open(CSV_CATEGORIAS, encoding="utf-8", newline="") as f:
         orden = list(dict.fromkeys(r["categoria"] for r in csv.DictReader(f)
-                                   if r["tipo"] == tipo and r["configuracion"] == CONFIG_CATEGORIAS[0]))
+                                   if r["tipo"] == tipo and r["configuracion"] == configs[0]))
     orden = [c for c in orden if c not in ("todas", "otras")] + ["otras", "todas"]
     filas = []
     for c in orden:
-        multi = [celda_categoria(tipo, CONFIG_CATEGORIAS[0], c, v, "auc") for v in VISTAS]
-        medias = [media([celda_categoria(tipo, cf, c, v, "auc") for v in VISTAS]) for cf in CONFIG_CATEGORIAS]
-        etiqueta = {"otras": "Otras", "todas": "Todas"}.get(c, c)
-        filas.append(([etiqueta], [celda_categoria(tipo, CONFIG_CATEGORIAS[0], c, 6, "n")] + multi + medias))
-    enc = [r"\multirow{2}{*}{Categoría} & \multirow{2}{*}{Objetos} & \multicolumn{3}{c}{Molmo2 multiimagen} & "
-           r"\multicolumn{4}{c}{AUC$_{45^\circ}$ medio} \\",
-           r"\cmidrule(lr){3-5}\cmidrule(lr){6-9}",
-           r" & & 6 vistas & 14 vistas & 26 vistas & \begin{tabular}[b]{@{}c@{}}Molmo2 \\ multiimagen\end{tabular} & "
-           r"\begin{tabular}[b]{@{}c@{}}Molmo2 \\ una vista\end{tabular} & Qwen3-VL-8B & MolmoPoint-8B \\"]
+        celdas = [celda_categoria(tipo, configs[0], c, 6, "n")]
+        for cf in configs:
+            celdas += [media([celda_categoria(tipo, cf, c, v, col) for v in VISTAS]) for col, _, _ in metricas]
+        filas.append(([{"otras": "Otras", "todas": "Todas"}.get(c, c)], celdas))
+    k = len(metricas)
+    enc = [r"\multirow{2}{*}{Categoría} & \multirow{2}{*}{Objetos} & "
+           + " & ".join(rf"\multicolumn{{{k}}}{{c}}{{{t}}}" for t in titulos) + r" \\",
+           "".join(rf"\cmidrule(lr){{{3 + k * j}-{2 + k * (j + 1)}}}" for j in range(len(configs))),
+           " & & " + " & ".join(apilar(h) for _ in configs for _, h, _ in metricas) + r" \\"]
     prompt = "v04" if tipo == "axis_sym" else "v02"
-    nota = (rf"AUC$_{{45^\circ}}$ por categoría con el \textit{{prompt}} {tt(prompt)} (224~px, iluminación "
-            r"\textit{flat}). Categorías con al menos 20 objetos. Qwen3-VL-8B y MolmoPoint-8B: una imagen por "
-            r"llamada. AUC$_{45^\circ}$ medio: media sobre 6, 14 y 26 vistas.")
+    nota = (rf"\textit{{Prompt}} {tt(prompt)} (224~px, iluminación \textit{{flat}}). Categorías con al menos 20 "
+            r"objetos. Valores promediados sobre 6, 14 y 26 vistas.")
     simetria = "axial" if tipo == "axis_sym" else "planar"
     return tabla(f"categorias_{TIPOS[tipo]}", f"Resultados por categoría de objeto en simetría {simetria}.",
-                 enc, filas, [("obj", None)] + [("auc", None)] * 7, nota, separar=[len(orden) - 2])
+                 enc, filas, [("obj", None)] + [(fmt, None) for _ in configs for _, _, fmt in metricas], nota,
+                 separar=[len(orden) - 2], alto=ALTO_CATEGORIAS)
 
 
 CSV_REPETIDOS = RES / "diagnosticos" / "repetidos_resumen.csv"
@@ -599,11 +660,10 @@ def tabla_repetidos(tipo: str, completa: bool = False) -> str:
     simetria = "axial" if tipo == "axis_sym" else "planar"
     if completa:
         nota = (definiciones + rf"Filas de \textit{{prompts}}: Molmo2 ({REF}). $^{{\dagger}}$: \textit{{prompt}} "
-                r"de referencia. Una vista, Qwen3-VL-8B y MolmoPoint-8B: una imagen por llamada. Resumen en la "
-                rf"Tabla~\ref{{tab:res_repetidos_{TIPOS[tipo]}}}.")
+                r"de referencia. Una vista, Qwen3-VL-8B y MolmoPoint-8B: una imagen por llamada.")
         return tabla(f"completa_repetidos_{TIPOS[tipo]}", f"Puntos repetidos entre vistas en simetría "
                      f"{simetria}, todas las configuraciones.", enc, filas, [("prec", None)] * 6, nota,
-                     separar=separar)
+                     separar=separar, larga=True)
     nota = r"Dos vistas son idénticas si reciben exactamente los mismos puntos. Valores promediados sobre los objetos."
     return tabla(f"repetidos_{TIPOS[tipo]}", f"Puntos repetidos entre vistas en simetría {simetria} (224~px "
                  r"con iluminación \textit{flat}).", enc, filas, [("prec", None)] * 6, nota, separar=separar)
@@ -629,12 +689,20 @@ def tabla_centro(tipo: str) -> str:
                       ("MolmoPoint-8B", f"plane_v02_molmopoint_s224_flat_ndcfix_{alias}",
                        "plane_v02_224_molmopoint", "v02_molmopoint")]}[tipo]
     filas = []
+    medias_col, medias_xy, aucs = [], [], []
     for p in PROMPTS:
         carpeta = "ndcfix_v08" if p == "v08" else "ndcfix_flujoA"
         auc = media([celda(carpeta, tipo, ident(tipo, p), v, "auc_angular") for v in VISTAS])
-        filas.append(([tt(p) + (r"$^{\dagger}$" if p == base else "")],
-                      [celda_centro(tipo, f"{corto}_{p}", v) for v in VISTAS]
-                      + [celda_centro(tipo, f"{corto}_{p}", v, XY) for v in VISTAS] + [auc]))
+        col = [celda_centro(tipo, f"{corto}_{p}", v) for v in VISTAS]
+        xy = [celda_centro(tipo, f"{corto}_{p}", v, XY) for v in VISTAS]
+        medias_col.append(media(col))
+        medias_xy.append(media(xy))
+        aucs.append(auc)
+        filas.append(([tt(p) + (r"$^{\dagger}$" if p == base else "")], col + xy + [auc]))
+    # Correlación entre la fracción media sobre las vistas y el AUC medio, sobre los prompts
+    r_col, r_xy = correlacion(medias_col, aucs), correlacion(medias_xy, aucs)
+    valores_r = (rf"${formatear(r_col, 'corr')}$ (columna central) y ${formatear(r_xy, 'corr')}$ "
+                 r"(centro de la imagen)")
     for etiqueta, id_centro, carpeta, prompt in otras:
         auc = media([celda(carpeta, tipo, ident(tipo, prompt), v, "auc_angular") for v in VISTAS])
         filas.append(([etiqueta], [celda_centro(tipo, id_centro, v) for v in VISTAS]
@@ -647,15 +715,22 @@ def tabla_centro(tipo: str) -> str:
     if tipo == "axis_sym":
         nota = (rf"Molmo2 ({REF}). $^{{\dagger}}$: \textit{{prompt}} de referencia. "
                 rf"Qwen3-VL-8B y MolmoPoint-8B: \textit{{prompt}} {tt(base)}, una imagen por llamada. "
-                r"AUC$_{45^\circ}$ medio: media sobre 6, 14 y 26 vistas.")
+                r"AUC$_{45^\circ}$ medio: media sobre 6, 14 y 26 vistas. "
+                rf"Correlación de Pearson entre la fracción media y el AUC$_{{45^\circ}}$ medio de los "
+                rf"{len(PROMPTS)} \textit{{prompts}}: {valores_r}.")
     else:
-        nota = (r"Mismas definiciones que en la Tabla~\ref{tab:res_centro_eje}, con el \textit{prompt} "
-                rf"{tt(base)} en Qwen3-VL-8B y MolmoPoint-8B.")
+        nota = (rf"$^{{\dagger}}$: \textit{{prompt}} de referencia. Qwen3-VL-8B y MolmoPoint-8B: una imagen "
+                rf"por llamada. Correlación con el AUC$_{{45^\circ}}$ medio de los {len(PROMPTS)} "
+                rf"\textit{{prompts}}: {valores_r}.")
     simetria = "axial" if tipo == "axis_sym" else "planar"
     # Alto acotado para que las tablas de eje y plano quepan en una misma página
     return tabla(f"centro_{TIPOS[tipo]}", f"Puntos en la columna central y en el centro de la imagen en "
                  f"simetría {simetria}.", enc, filas, [("prec", None)] * 6 + [("auc", None)], nota,
-                 separar=[len(PROMPTS)], alto=r"0.32\textheight")
+                 separar=[len(PROMPTS)], alto=ALTO_CENTRO,
+                 nota_celdas=[(r_col, "corr"), (r_xy, "corr")])
+
+
+ALTO_CENTRO = r"0.32\textheight"
 
 
 LOG_PROFUNDIDAD = RES / "diagnosticos" / "profundidad_plano.log"
@@ -702,8 +777,7 @@ def tabla_completa_prompts(tipo: str) -> str:
     condiciones = [(tt(p), "ndcfix_v08" if p == "v08" else "ndcfix_flujoA", ident(tipo, p)) for p in PROMPTS]
     simetria = "axial" if tipo == "axis_sym" else "planar"
     return completa(f"completa_prompts_{TIPOS[tipo]}", tipo, condiciones, r"\textit{Prompt}",
-                    rf"Métricas completas de los \textit{{prompts}} en simetría {simetria} ({REF}).",
-                    rf"Resumen en la Tabla~\ref{{tab:res_prompts_{TIPOS[tipo]}}}.")
+                    rf"Métricas completas de los \textit{{prompts}} en simetría {simetria} ({REF}).", "")
 
 
 def tabla_completa_seleccion(tipo: str) -> str:
@@ -711,7 +785,7 @@ def tabla_completa_seleccion(tipo: str) -> str:
                    for p, por_res in SELECCION[tipo] if p in SELECCION_RESUMEN[tipo]
                    for size in (224, 448, 1136) if size in por_res]
     simetria = "axial" if tipo == "axis_sym" else "planar"
-    nota = rf"Resumen en la Tabla~\ref{{tab:res_seleccion_{TIPOS[tipo]}}}."
+    nota = ""
     return completa(f"completa_seleccion_{TIPOS[tipo]}", tipo, condiciones, r"\textit{Prompt}, resolución",
                     rf"Métricas completas de la selección de \textit{{prompts}} por resolución en simetría "
                     rf"{simetria} (iluminación \textit{{flat}}, envío multiimagen y Flujo~A).", nota)
@@ -732,7 +806,7 @@ def tabla_pareado_estimador(tipo: str) -> str:
         filas.append(([str(v)], cs))
     nombres = {"auc_angular": r"AUC$_{45^\circ}$", "angular_error_median": r"Mediana ($^\circ$)",
                "f1_ref": r"$F1$"}
-    original, final = (("SVD", "EXP-E") if tipo == "axis_sym" else ("Cámaras", r"$S_{\mathrm{dat}}$"))
+    original, final = (("SVD", "EXP-E") if tipo == "axis_sym" else ("Cámaras", r"Puntaje $S$"))
     grupos = " & ".join(rf"\multicolumn{{2}}{{c}}{{{nombres[c]}}}" for c, _, _ in metricas)
     reglas = "".join(rf"\cmidrule(lr){{{2 + 2 * k}-{3 + 2 * k}}}" for k in range(len(metricas)))
     n = 2 + 2 * len(metricas)
@@ -748,7 +822,7 @@ def tabla_pareado_estimador(tipo: str) -> str:
         intro = (r"Estimador original: SVD de las normales de interpretación sin reponderar. "
                  r"Estimador final: EXP-E.")
     else:
-        intro = (r"Estimador original: puntaje por cámaras. Estimador final: $S_{\mathrm{dat}}$. Ambos "
+        intro = (r"Estimador original: puntaje por cámaras. Estimador final: puntaje $S$. Ambos "
                  r"predicen un plano por objeto.")
     nota = (rf"{intro} Mismos puntos de Molmo2 con el \textit{{prompt}} {tt(prompt)} ({REF}). Dif.\ de "
             r"error: diferencia objeto a objeto del error angular (final $-$ original) sobre los 850 "
@@ -783,6 +857,19 @@ def filas_silueta(tipo: str, columnas: list[str], extra: int = 0) -> list[tuple[
             for v in VISTAS]
 
 
+def pareado_silueta(tipo: str, vistas: int) -> tuple[dict, dict]:
+    """ Diferencia pareada de error (silueta - Molmo2) media sobre las semillas, y número de semillas
+    cuyo IC 95 % bootstrap pareado excluye el cero. """
+    rutas = [RES / carpeta_silueta(tipo) / s / "pareado" / f"{ident(tipo, f'silueta2p_{s}')}.csv"
+             for s in semillas_silueta(tipo)]
+    ics = []
+    for ruta in rutas:
+        ics += [celda_pareado(ruta, vistas, "ic_inf"), celda_pareado(ruta, vistas, "ic_sup")]
+    significativas = sum(1 for k in range(0, len(ics), 2) if ics[k]["v"] > 0 or ics[k + 1]["v"] < 0)
+    return (media([celda_pareado(r, vistas, "dif_media") for r in rutas]),
+            derivada(significativas, "significativas", ics))
+
+
 def tabla_mejor_eje() -> str:
     filas = []
     for v in VISTAS:
@@ -791,16 +878,29 @@ def tabla_mejor_eje() -> str:
         auc = celda("ndcfix_flujoA", "axis_sym", ident("axis_sym", "v04"), v, "auc_angular")
         esperado = (n["v"] * AZAR_MEDIA + (TOTAL - n["v"]) * 90) / TOTAL
         e = derivada(esperado, "esperado_azar", [n])
-        filas.append(([rf"\texttt{{axis\_v04}}, $n_v{{=}}{v}$"], [n, auc, m, e]))
-    filas += filas_silueta("axis_sym", ["n_objects", "auc_angular", "angular_error_mean"], extra=1)
+        filas.append(([rf"\texttt{{axis\_v04}}, $n_v{{=}}{v}$"], [n, auc, m, e, None, None]))
+    semillas = semillas_silueta("axis_sym")
+    if len(semillas) >= 2:
+        for v in VISTAS:
+            filas.append(([rf"Silueta, $n_v{{=}}{v}$"],
+                          [media_silueta("axis_sym", v, c) for c in ("n_objects", "auc_angular",
+                                                                     "angular_error_mean")]
+                          + [None, *pareado_silueta("axis_sym", v)]))
     separar = sorted({3, len(filas)})
     azar_auc = celda_azar("axis_sym", "auc_angular", "closed_form_single_gt")
-    filas.append(([r"Azar (analítico)"], [None, azar_auc, None, None]))
+    filas.append(([r"Azar (analítico)"], [None, azar_auc, None, None, None, None]))
     enc = [r"Predictor & Objetos & AUC$_{45^\circ}$ & \begin{tabular}[b]{@{}c@{}}Error medio \\ ($^\circ$)\end{tabular}"
-           r" & \begin{tabular}[b]{@{}c@{}}Esperado bajo \\ azar ($^\circ$)\end{tabular} \\"]
-    nota = rf"\textit{{Prompt}} {tt('v04')} ({REF})."
+           r" & \begin{tabular}[b]{@{}c@{}}Esperado bajo \\ azar ($^\circ$)\end{tabular}"
+           r" & \begin{tabular}[b]{@{}c@{}}Dif.\ pareada \\ ($^\circ$)\end{tabular}"
+           r" & \begin{tabular}[b]{@{}c@{}}Semillas \\ significativas\end{tabular} \\"]
+    nota = (rf"\textit{{Prompt}} {tt('v04')} ({REF}). "
+            rf"Dif.\ pareada: cuánto mayor es el error angular de la silueta que el de "
+            rf"{tt('axis_v04')} en el mismo objeto, media sobre los 850 objetos (con $90^\circ$ imputados) y "
+            rf"las {len(semillas)} semillas. Un valor positivo indica que la silueta se equivoca más. Semillas "
+            r"significativas: semillas cuyo IC 95\% \textit{bootstrap} pareado excluye el cero.")
     return tabla("mejor_eje", "Mejor configuración axial frente a las líneas base.",
-                 enc, filas, [("obj", None), ("auc", None), ("grados", None), ("grados", None)],
+                 enc, filas, [("obj", None), ("auc", None), ("grados", None), ("grados", None),
+                              ("grados", None), ("entero", None)],
                  nota, separar=separar)
 
 
@@ -907,13 +1007,47 @@ def tabla_rotacion() -> str:
            r"\cmidrule(lr){6-8}",
            r" & & & & & Media & IC inf. & IC sup. & & \\"]
     cols = [("obj", None), ("auc", None), ("f1", None)] + [("grados", None)] * 3 + [("entero", None)] * 2
-    nota = (rf"\textit{{Prompt}} {tt('v02')} ({REF}). Original: pose canónica. SO(3): cada objeto y sus planos "
-            r"de referencia se rotan con una rotación uniforme en SO(3) antes de renderizar. Aguirre y "
-            r"Sipiran: transformación publicada para cada objeto. Dif.\ de error: rotado $-$ original, objeto "
-            r"a objeto, sobre los 850 objetos con $90^\circ$ imputados. IC 95\% \textit{bootstrap} pareado. "
-            r"Mejoran/Empeoran: más de $1^\circ$.")
+    nota = (rf"\textit{{Prompt}} {tt('v02')} ({REF}). Dif.\ de error: cuánto aumenta el error angular al rotar, objeto a objeto, "
+            r"sobre los 850 objetos con $90^\circ$ imputados y con IC 95\% \textit{bootstrap} pareado. "
+            r"Mejoran/Empeoran: objetos cuyo error baja/sube más de $1^\circ$ al rotar.")
     return tabla("rotacion_plano", "Efecto de la orientación canónica en simetría planar.", enc, filas,
                  cols, nota, separar)
+
+
+def tabla_rotacion_modelos() -> str:
+    """ Rotación uniforme en SO(3) con cada modelo y modo de envío, frente a la misma configuración sin
+    rotar (pareado objeto a objeto de compare_plane_scores.py contra la corrida original de cada uno). """
+    corridas = [("Molmo2-8B, multiimagen", "plane_v02_224_rot_so3", "v02_rot_so3"),
+                ("Molmo2-8B, una vista", "plane_v02_224_rot_so3_single", "v02_single_rot_so3"),
+                ("Qwen3-VL-8B", "plane_v02_224_rot_so3_qwen3vl", "v02_qwen3vl_rot_so3"),
+                ("MolmoPoint-8B (frase)", "plane_v02_224_rot_so3_molmopoint_frase", "v02_molmopoint_frase_rot_so3")]
+    columnas = ["auc_angular_base", "auc_angular_nuevo", "f1_ref_base", "f1_ref_nuevo",
+                "dif_media", "ic_inf", "ic_sup"]
+    filas, separar = [], []
+    for k, v in enumerate(VISTAS):
+        if k:
+            separar.append(len(filas))
+        for j, (etiqueta, carpeta, prompt) in enumerate(corridas):
+            ruta = RES / carpeta / "pareado" / f"{ident('plane_sym', prompt)}.csv"
+            primera = rf"\multirow{{{len(corridas)}}}{{*}}{{{v}}}" if j == 0 else ""
+            filas.append(([primera, etiqueta], [celda_pareado(ruta, v, c) for c in columnas]))
+    enc = [r"\multirow{2}{*}{Vistas} & \multirow{2}{*}{Modelo y envío} & "
+           r"\multicolumn{2}{c}{AUC$_{45^\circ}$} & \multicolumn{2}{c}{$F1$ voraz} & "
+           r"\multicolumn{3}{c}{Dif.\ de error ($^\circ$)} \\",
+           r"\cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-9}",
+           r" & & Original & Rotado & Original & Rotado & Media & IC inf. & IC sup. \\"]
+    cols = [("auc", None)] * 2 + [("f1", None)] * 2 + [("grados", None)] * 3
+    nota = (rf"\textit{{Prompt}} {tt('v02')} (224~px, iluminación \textit{{flat}}, Flujo~A), con la misma "
+            r"rotación en SO(3) para todos los modelos. Original: la misma configuración sin rotar. "
+            r"Dif.\ de error: cuánto aumenta el error angular al rotar, objeto a objeto sobre los 850 "
+            r"objetos con $90^\circ$ imputados, con IC 95\% \textit{bootstrap} pareado. Qwen3-VL-8B y "
+            r"MolmoPoint-8B reciben una vista por llamada.")
+    return tabla("rotacion_modelos", "Efecto de la rotación en SO(3) según el modelo y el modo de envío en "
+                 "simetría planar.", enc, filas, cols, nota, separar)
+
+
+# Alto acotado para que la tabla quepa en la misma página que el texto de sec:res-aguirre
+ALTO_AGUIRRE = r"0.36\textheight"
 
 
 def tabla_aguirre() -> str:
@@ -955,13 +1089,12 @@ def tabla_aguirre() -> str:
                               [celda_pareado(ruta, v, "n_objects_nuevo"), celda_pareado(ruta, v, "f1_ref_nuevo"),
                                derivada(sde["v"] * 1e4, "escala_1e4", [sde])]))
     enc = [r"Vistas & Método & Objetos & $F1$ & $SDE$ ($\times 10^{-4}$) \\"]
-    nota = (r"Valores de Aguirre y Sipiran tomados de su Tabla~1 (back-projection mejorado, 4R-FI), no de "
-            r"una ejecución propia; conservan hasta 10 simetrías por objeto con confianza $\geq 0.95$, y no "
-            r"reportan el número de objetos con predicción. Este trabajo predice una simetría por objeto: "
-            rf"\textit{{prompt}} {tt('v02')} con $S_{{\mathrm{{dat}}}}$ en plano y {tt('v04')} con EXP-E en eje "
-            rf"({REF}). {NOTA_F1} --: métrica no reportada o no calculada.")
+    nota = (r"Valores de Aguirre y Sipiran tomados de su publicación (back-projection mejorado, 4R-FI). Este "
+            rf"trabajo predice una simetría por objeto: \textit{{prompt}} {tt('v02')} en plano y {tt('v04')} en "
+            rf"eje ({REF}).")
     return tabla("aguirre", "Comparación con el método de Aguirre y Sipiran, con acceso a la malla.",
-                 enc, filas, [("obj", None), ("f1", None), ("sde4", None)], nota, separar, fino)
+                 enc, filas, [("obj", None), ("f1", None), ("sde4", None)], nota, separar, fino,
+                 alto=ALTO_AGUIRRE)
 
 
 ID_MULTI = re.compile(r"^plane_.+_s\d+_[a-z]+_ndcfix_sdat_multi_mp([123])_nomesh$")
@@ -1005,6 +1138,10 @@ def tabla_multiplano() -> str:
 VARIANTES_MALLA = {"base": "1 rayo", "p3": "parche 3$\\times$3", "p5": "parche 5$\\times$5",
                    "cluster": "agrupamiento voraz", "hdbscan_ms2": "HDBSCAN, ms 2",
                    "hdbscan_ms3": "HDBSCAN, ms 3", "hdbscan_ms5": "HDBSCAN, ms 5"}
+# Etiquetas cortas de la tabla completa del anexo, que separa retroproyección y ajuste en dos columnas
+VARIANTES_MALLA_CORTAS = {"base": "1 rayo", "p3": "Parche 3$\\times$3", "p5": "Parche 5$\\times$5",
+                          "cluster": "Voraz", "hdbscan_ms2": "HDBSCAN ms 2",
+                          "hdbscan_ms3": "HDBSCAN ms 3", "hdbscan_ms5": "HDBSCAN ms 5"}
 
 
 def tabla_malla(tipo: str, completa: bool = False) -> str:
@@ -1056,10 +1193,31 @@ def tabla_malla(tipo: str, completa: bool = False) -> str:
     nota = rf"Molmo2, \textit{{prompt}} {tt(prompt)} ({REF})."
     simetria = "axial" if tipo == "axis_sym" else "planar"
     if completa:
+        # Para que quepa en el ancho de la página sin escalar: la condición se separa en
+        # retroproyección y ajuste, y Mejoran/Empeoran se abrevian (explicado en la nota)
+        filas_c = []
+        for inicio, celdas in filas:
+            if inicio[1] == "Sin malla":
+                filas_c.append(([inicio[0], "Sin malla", "--"], celdas))
+                continue
+            variante = next(v for v, e in VARIANTES_MALLA.items() if f"Malla, {e}," in inicio[1])
+            ajuste = "RANSAC+SVD" if inicio[1].endswith("RANSAC+SVD") else "SVD"
+            filas_c.append(([inicio[0], VARIANTES_MALLA_CORTAS[variante], ajuste], celdas))
+        enc_c = [rf"\multirow{{2}}{{*}}{{Vistas}} & \multirow{{2}}{{*}}{{Retroproyección}} & "
+                 rf"\multirow{{2}}{{*}}{{Ajuste}} & \multirow{{2}}{{*}}{{Obj.}} & "
+                 rf"\multirow{{2}}{{*}}{{AUC$_{{45^\circ}}$}} & "
+                 rf"\multirow{{2}}{{*}}{{\begin{{tabular}}[b]{{@{{}}c@{{}}}}Med. \\ ($^\circ$)\end{{tabular}}}} & "
+                 rf"\multirow{{2}}{{*}}{{P@10$^\circ$}}"
+                 + (r" & \multirow{2}{*}{$F1$}" if tipo == "plane_sym" else "")
+                 + r" & \multicolumn{3}{c}{Dif.\ de error ($^\circ$)} & \multirow{2}{*}{Mej.} & \multirow{2}{*}{Emp.} \\",
+                 rf"\cmidrule(lr){{{4 + n_met}-{6 + n_met}}}",
+                 " & " * (3 + n_met) + r"Media & IC inf. & IC sup. & & \\"]
+        nota_c = (nota + r" Obj.: objetos con predicción. Med.: error angular mediano. Voraz: agrupamiento "
+                  r"voraz. ms: \textit{min\_samples} de HDBSCAN. Dif.\ de error: error con malla menos error sin "
+                  r"malla, objeto a objeto, con IC 95\% \textit{bootstrap} pareado. Mej./Emp.: objetos cuyo error "
+                  r"baja/sube más de $1^\circ$ con la malla.")
         return tabla(f"completa_malla_{TIPOS[tipo]}", f"Todas las variantes de retroproyección sobre la malla "
-                     f"en simetría {simetria}.", enc, filas, cols,
-                     nota + rf" Resumen en la Tabla~\ref{{tab:res_malla_{TIPOS[tipo]}}}.", separar,
-                     alto=r"0.85\textheight")
+                     f"en simetría {simetria}.", enc_c, filas_c, cols, nota_c, separar, larga=True)
     return tabla(f"malla_{TIPOS[tipo]}", f"Triangulación sin malla frente a retroproyección sobre la malla "
                  f"en simetría {simetria}.", enc, filas, cols, nota, separar)
 
@@ -1122,7 +1280,7 @@ def main() -> None:
                        r"multiimagen).", ""))
     # S_dat es el estimador por defecto: ya no se publica la comparación con el puntaje original.
     hechas += [tabla_pareado_estimador("axis_sym"),
-               tabla_mejor_eje(), tabla_mejor_plano(), tabla_rotacion(), tabla_multiplano()]
+               tabla_mejor_eje(), tabla_mejor_plano(), tabla_rotacion(), tabla_rotacion_modelos(), tabla_multiplano()]
     # Puntos al azar dentro de la silueta (PI1 iii): solo si ya hay semillas completas
     hechas += [t for t in (tabla_silueta("axis_sym"), tabla_silueta("plane_sym")) if t]
     # VLMs (una vista por llamada)

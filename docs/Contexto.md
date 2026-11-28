@@ -125,7 +125,7 @@ Esto constituye la brecha específica que la presente tesis busca abordar."*
    esfera de Fibonacci, a distintas resoluciones/iluminaciones.
 2. **Pointing con Molmo2** (`MolmoPointing/`) — prompts diseñados por versión
    (`v00`–`v05`, `v00_1`–`v05_1`, ver `MolmoPointing/Experiments.md` y
-   `anexoA.tex` §Prompts) piden puntos 2D relevantes para la simetría en cada
+   `anexos/C2_prompts_originales.tex`) piden puntos 2D relevantes para la simetría en cada
    vista. `--point-mode` (`independent`/`midpoint`/`all`) determina cómo se
    combinan los puntos obj_id 1/2 por imagen.
 3. **Retro-proyección a 3D** (`Mapping/map_to_3d.py`) — ray-casting usando
@@ -195,8 +195,8 @@ de 7, corridas antes de estandarizar el sweep a 7).
 ## 7. Estado de redacción de la tesis (`Tesis_DCC_MDS/`)
 
 Estructura (`main.tex`): `intro.tex` → `cap2.tex` (revisión de literatura) →
-`cap3.tex` (contiene 3 capítulos en un archivo: Metodología línea 8,
-Resultados línea 755, Discusiones línea 1370) → `conclu.tex` → `anexoA.tex`.
+`cap3.tex` (Metodología) → `cap4.tex` (Resultados) → `cap5.tex` (Discusiones) →
+`conclu.tex` → `anexos/anexos.tex` (A: metodología, B: tablas completas, C: prompts).
 
 | Capítulo | Estado |
 |---|---|

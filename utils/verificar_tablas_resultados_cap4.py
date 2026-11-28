@@ -20,7 +20,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 CARPETA = REPO / "Tesis_DCC_MDS" / "tablas_resultados"
 FMT = {"auc": "{:.3f}", "grados": "{:.1f}", "prec": "{:.3f}", "f1": "{:.3f}", "obj": "{:.0f}",
-       "sde": "{:.4f}", "entero": "{:.0f}", "z": "{:.1f}", "sde4": "{:.2f}"}
+       "sde": "{:.4f}", "entero": "{:.0f}", "z": "{:.1f}", "sde4": "{:.2f}", "corr": "{:.2f}"}
 ID_OK = re.compile(r"^(axis_.+_ndcfix_expE_nomesh|plane_.+_ndcfix_sdat_mp1_nomesh)$")
 ID_MALLA = re.compile(r"^(axis|plane)_.+_s\d+_[a-z]+_ndcfix_mesh(_[a-z0-9_]+)?$")
 ID_MULTI = re.compile(r"^plane_.+_s\d+_[a-z]+_ndcfix_sdat_multi_mp[123]_nomesh$")
@@ -124,6 +124,14 @@ def valor(t: dict) -> float:
             return (sum((x - m) ** 2 for x in e) / (len(e) - 1)) ** 0.5
         if t["formula"] == "division":
             return e[0] / e[1]
+        if t["formula"] == "pearson":
+            a, b = e[:len(e) // 2], e[len(e) // 2:]
+            ma, mb = sum(a) / len(a), sum(b) / len(b)
+            cov = sum((x - ma) * (y - mb) for x, y in zip(a, b))
+            return cov / (sum((x - ma) ** 2 for x in a) * sum((y - mb) ** 2 for y in b)) ** 0.5
+        if t["formula"] == "significativas":
+            # pares (IC inf., IC sup.) por semilla; cuenta los que excluyen el cero
+            return sum(1 for k in range(0, len(e), 2) if e[k] > 0 or e[k + 1] < 0)
         if t["formula"] == "resta":
             return e[0] - e[1]
         if t["formula"] == "escala_1e4":
@@ -138,7 +146,10 @@ def valor(t: dict) -> float:
 
 def numeros_cuerpo(tex: str) -> list[str]:
     """ Números de las celdas numéricas del cuerpo; las etiquetas de fila no se revisan. """
-    cuerpo = tex.split(r"\midrule", 1)[1].split(r"\bottomrule")[0]
+    if r"\endlastfoot" in tex:   # longtable: el cuerpo va después de los encabezados y pies repetidos
+        cuerpo = tex.split(r"\endlastfoot", 1)[1].split(r"\end{longtable}")[0]
+    else:
+        cuerpo = tex.split(r"\midrule", 1)[1].split(r"\bottomrule")[0]
     numeros = []
     for linea in cuerpo.split(r"\\"):
         for celda in linea.split("&")[1:]:     # la primera columna es la etiqueta o las vistas
@@ -167,9 +178,15 @@ def main() -> None:
             if esperado != c["texto"]:
                 errores.append(f"{nombre} fila {c['fila']} col {c['columna']}: tabla {c['texto']} "
                                f"!= fuente {esperado}")
+        # Valores citados en la nota: deben aparecer en la nota de la tabla
+        nota = tex.split("Nota:", 1)[1] if "Nota:" in tex else ""
+        for c in celdas:
+            if c.get("nota") and not re.search(rf"(?<![\d.]){re.escape(c['texto'])}(?![\d])", nota):
+                errores.append(f"{nombre}: la nota no muestra {c['texto']}")
         # Celda por celda y en orden: la tabla debe mostrar exactamente los textos registrados
         numeros = numeros_cuerpo(tex)
-        ordenadas = [c["texto"] for c in sorted(celdas, key=lambda c: (c["fila"], c["columna"]))]
+        ordenadas = [c["texto"] for c in sorted(celdas, key=lambda c: (c["fila"], c["columna"]))
+                     if not c.get("nota")]
         if len(numeros) != len(ordenadas):
             errores.append(f"{nombre}: {len(numeros)} celdas numéricas y {len(ordenadas)} registradas")
         for k, (en_tabla, registrada) in enumerate(zip(numeros, ordenadas)):
