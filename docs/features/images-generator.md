@@ -35,9 +35,11 @@ reproducible per-view camera metadata (`metadata_all.json`) and a run summary
 | `ImagesGenerator/export_fibonacci_views.py` | `render_fibonacci` | Core rendering loop: builds cameras/lights per viewpoint, rasterizes the mesh in batches of 4, saves one PNG per view, and builds the per-image metadata records. |
 | `ImagesGenerator/export_fibonacci_views.py` | `save_image_tensor` | Converts a rendered `(H, W, 3)` float tensor in `[0, 1]` to a `uint8` PNG. |
 | `ImagesGenerator/export_fibonacci_views.py` | `write_metadata` | Dumps the full list of per-image metadata records to `metadata_all.json`. |
+| `ImagesGenerator/export_fibonacci_views.py` | `subset_indices` | Union of the view indices the pointing runners pick for each `n` in `--subset-n-views` (`round(linspace(0, total-1, n))`), e.g. 36 of 114 for `{6, 14, 26}`. |
+| `ImagesGenerator/export_fibonacci_views.py` | `roll_angles`, `roll_cameras` | `--roll-seed`: per-object, per-view uniform roll angle in [0, 360) (seeded by the seed and the md5 of the object id) and the camera rotation about its optical axis (`R' = R @ Rz`, `T' = T @ Rz`). |
 | `ImagesGenerator/export_fibonacci_views.py` | `main` | CLI entry point: parses arguments, sets up illumination/gray value, computes camera distance, renders, and writes `manifest.json`. |
 | `ImagesGenerator/data_render.py` | `preview_execution` | Prints a summary of the planned batch run (object/view/size/lighting counts) and asks for interactive `'OK'` confirmation before starting. |
-| `ImagesGenerator/data_render.py` | `main` | Batch runner: globs all `.obj` files in an input folder and calls `export_fibonacci_views.py` as a subprocess once per object × size × lighting combination, with a `tqdm` progress bar. |
+| `ImagesGenerator/data_render.py` | `main` | Batch runner: globs all `.obj` files in an input folder and calls `export_fibonacci_views.py` (absolute path) as a subprocess once per object × size × lighting combination, with a `tqdm` progress bar; forwards `--subset-n-views`, `--roll-seed` and `--device`, and supports `--skip-existing` and `--yes`. |
 
 ## Inputs & Outputs
 
@@ -52,6 +54,11 @@ reproducible per-view camera metadata (`metadata_all.json`) and a run summary
   multiplier (`--camera-distance-factor`), illumination mode (`--illumination`:
   `flat`/`darker`/`brighter`), symmetry type label (`--symmetry-type`:
   `axis_sym`/`plane_sym`), and device (`--device`: `cuda:0` or `cpu`).
+- Optional: `--subset-n-views N1 N2 ...` renders only the views the pointing runners
+  pick for those view counts, keeping the filenames and indices of the full
+  `--repo-views` sequence; `--roll-seed S` rolls each camera about its optical axis
+  (same position and viewing direction, image rotated in its plane). Without these
+  options the render is the same as always.
 
 **Outputs:** written under `<output>/<symmetry_type>/<object_id>/<image_size>/<illumination>/`:
 - PNG images, one per viewpoint, named `IND_{i:02d}_AZ_{az:03d}_EL_{el:+03d}.png`.
@@ -60,10 +67,13 @@ reproducible per-view camera metadata (`metadata_all.json`) and a run summary
   position in world space), `R` (3×3 rotation matrix, world→camera, row-vector
   convention `p_cam = p_world @ R + T`), and `T` (translation vector). This is the
   exact camera information `Mapping/map_to_3d.py` needs to ray-cast Molmo's 2D
-  predictions back to 3D.
+  predictions back to 3D. Every record also stores `fibonacci_total` (size of the full
+  sequence) and, with `--roll-seed`, `roll_deg`; the pointing runners use
+  `fibonacci_total` to pick the same views from a partial render as from a full one.
 - `manifest.json` — run summary: mesh path, device, fov, image size, computed camera
   distance, total images rendered, processing time (seconds and human-readable),
-  illumination mode and its numeric gray value.
+  illumination mode and its numeric gray value, plus `repo_views`, `subset_n_views`,
+  `rendered_indices` and `roll_seed`.
 
 ## Results & Observations
 
@@ -117,14 +127,13 @@ anywhere in this module.
   `CUDA_VISIBLE_DEVICES` (as documented in the root `README.md`'s Step 1) and split
   the object list yourself. `ImagesGenerator/README.md` previously claimed the
   script itself has "multi-GPU support" — corrected during the 2026-08-25 doc pass.
-- **`data_render.py` requires interactive confirmation** (`preview_execution` calls
-  `input("Type 'OK' to start: ")`), which will hang or fail in a fully non-interactive
-  / scripted environment (e.g. inside another automation pipeline) unless stdin is
-  piped.
-- **No overwrite/skip check**: unlike later pipeline stages (per `CLAUDE.md`, which
-  says later stages skip already-computed runs), `export_fibonacci_views.py` always
-  re-renders and overwrites, and `data_render.py` has no flag to skip
-  object/size/lighting combinations that already have output on disk.
+- **`data_render.py` asks for interactive confirmation by default** (`preview_execution`
+  calls `input("Type 'OK' to start: ")`); pass `--yes` in scripted environments.
+- **`export_fibonacci_views.py` always re-renders and overwrites**; only
+  `data_render.py --skip-existing` skips object/size/lighting combinations whose
+  `manifest.json` already exists.
+- The `*_subset.py` copies used for the SO(3)/Aguirre/roll experiments were merged into
+  these two scripts in the 2026-11 restructuring.
 - **`.obj` texture data is never loaded** (`load_objs_as_meshes(..., load_textures=False, ...)`)
   — any material/texture information in the source mesh is discarded; only geometry
   is used.

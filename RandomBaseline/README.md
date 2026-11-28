@@ -18,8 +18,7 @@ dataset. Solo lee las etiquetas `.txt`, así que no necesita renders, GPU ni mal
 | `simulation.py` | Carga el GT, muestrea direcciones y puntúa como `evaluate.py` (vectorizado) |
 | `multiplane.py` | Azar multiplano: varios planos separados por objeto, puntuados como `evaluate.py` |
 | `significance.py` | Compara el método con el azar: IC 95 %, p empírico y z |
-| `latex_tables.py` | Tablas LaTeX del azar (axial y planar por separado) |
-| `run_baseline.py` | CLI: subcomandos `reference`, `compare`, `latex` y `cap4` |
+| `run_baseline.py` | CLI: subcomandos `reference` y `compare` |
 | `tests/test_random_baseline.py` | Comprueba que el código vectorizado da lo mismo que `evaluate.py` y que coincide con las fórmulas cerradas |
 
 ## Uso
@@ -32,23 +31,15 @@ python RandomBaseline/run_baseline.py reference --objects-root ../data/objects \
 # 2a. Comparar CSVs de evaluate.py / compare_results.py
 python RandomBaseline/run_baseline.py compare --objects-root ../data/objects \
     --symmetry-type axis_sym \
-    --summary-csv ndc_fix/ndcfix_448/experiments_11_10_2026/axis_sym_*.csv \
-    --out RandomBaseline/outputs/ndcfix_448_axis_vs_random.csv
+    --summary-csv resultados_finales/<carpeta>/experiments_*/axis_sym_final_comparison.csv \
+    --out RandomBaseline/outputs/random_baseline_comparison.csv
 
 # 2b. Comparar eval_*_results.json (solo útil con --coverage-mode matched)
 python RandomBaseline/run_baseline.py compare --objects-root <objects_root> \
     --symmetry-type plane_sym \
     --eval-results <renders_root>/plane_sym/eval_s448_default_<EXP>_triangulation_results.json
 
-# 3. Tablas LaTeX del azar -> docs/archive/resultados/tablas_azar/
-#    azar_axis.tex, azar_plane.tex y azar_plane_multi.tex
-python RandomBaseline/run_baseline.py latex --objects-root ../data/objects
-
-# 3b. Un solo .tex con ambos baselines (azar y ejes fijos), etiquetas tab:base_*
-#     -> Tesis_DCC_MDS/cap4_baselines.tex (cambia la ruta con --out)
-python RandomBaseline/run_baseline.py cap4 --objects-root ../data/objects
-
-# 4. Azar multiplano con 1, 2 y 3 planos por objeto, sobre el dataset real
+# 3. Azar multiplano con 1, 2 y 3 planos por objeto, sobre el dataset real
 python RandomBaseline/run_baseline.py reference --objects-root ../data/objects \
     --symmetry-type plane_sym --n-planes 1 2 3 \
     --out RandomBaseline/outputs/random_baseline_multiplane.csv
@@ -81,9 +72,9 @@ más pareja posible, así que el resultado es aproximado.
 Necesita `numpy` y lo que ya importa `evaluate.py` (`trimesh`, `tqdm`). Todo
 corre en local: solo lee los `.txt` y los CSV/JSON de resultados.
 
-Las tablas LaTeX (`latex`) usan cobertura 100 % y el mismo estilo que
-`utils/generar_tablas_latex.py`. Requieren `booktabs` y `adjustbox`; las
-etiquetas son `tab:axis_azar` y `tab:plane_azar`.
+Las tablas de la tesis no las genera este módulo: `utils/generar_tablas_resultados_cap4.py`
+lee `outputs/random_baseline_reference.csv`. Los subcomandos `latex` y `cap4`, que escribían
+tablas LaTeX propias, se quitaron en la reestructuración y siguen en el historial de git.
 
 ## Cómo leer la salida
 

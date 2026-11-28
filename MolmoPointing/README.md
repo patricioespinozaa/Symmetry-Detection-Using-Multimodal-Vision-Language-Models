@@ -13,12 +13,14 @@ MolmoPointing/
 ├── molmo_multiview_runner.py   # Entry point — all-in-one batch runner
 ├── prompts_registry.py         # Auto-discovers prompt variants from prompts/
 ├── prompts/
-│   ├── axis/                   # axis_v00-v05, axis_v00_1-v05_1 (original + improved)
-│   ├── plane/                  # plane_v00-v05, plane_v00_1-v05_1
+│   ├── axis/                   # axis_v00-v08, axis_v00_1-v05_1 (original + improved)
+│   ├── plane/                  # plane_v00-v08, plane_v00_1-v05_1
 │   └── description/            # Flow B/C prompts (describe.txt, describe_and_point_{axis,plane}.txt)
-├── Experiments.md               # Prompt table + full experiment loops
-└── PROMPT_IMPROVEMENTS_v1.md    # Rationale for v0 -> v_1 prompt changes
 ```
+
+The prompt table and experiment loops of the July-August sweep, and the rationale for the
+v0 -> v_1 changes, are archived in `../docs/archive/MolmoPointing_Experiments.md` and
+`../docs/archive/PROMPT_IMPROVEMENTS_v1.md`.
 
 ---
 
@@ -294,24 +296,13 @@ CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
 Results accumulate in `molmo_multiview.json`. Each `(size, illumination, n_views)`
 combination is skipped if its key already exists in the JSON.
 
-To rerun a specific combination, use `cleanup_experiments.py` (see `Mapping/README.md`):
+To rerun a specific combination, delete that `n_views` key from the JSON (or the whole
+`molmo_multiview[_<EXP>].json`) and run the runner again; it only computes missing keys.
 
-```bash
-# Preview what would be deleted
-python Mapping/cleanup_experiments.py \
-    --renders-root ../data/renders \
-    --symmetry-type axis_sym \
-    --sizes 224 --lightings flat \
-    --view-groups 1 6 14 26 \
-    --dry-run
-
-# Execute
-python Mapping/cleanup_experiments.py \
-    --renders-root ../data/renders \
-    --symmetry-type axis_sym \
-    --sizes 224 --lightings flat \
-    --view-groups 1 6 14 26
-```
+Renders made with `ImagesGenerator/export_fibonacci_views.py --subset-n-views` hold only some
+of the Fibonacci views. The runner picks the views over the full sequence
+(`fibonacci_total` in `metadata_all.json`), so it chooses the same views as with a full
+render, and stops with an error if a requested `n_views` needs a view that was not rendered.
 
 ---
 

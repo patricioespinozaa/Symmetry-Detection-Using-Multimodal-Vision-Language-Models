@@ -48,15 +48,24 @@ eje/plano de simetría, evaluado contra ground truth de ShapeNet.
 ## Flujo del pipeline (en orden)
 
 ```
-ImagesGenerator/  → renders multi-vista de mallas .obj (Fibonacci sphere sampling)
+ImagesGenerator/  → renders multi-vista de mallas .obj (Fibonacci sphere sampling;
+                    --subset-n-views renderiza solo las vistas de 6/14/26, --roll-seed)
 MolmoPointing/    → Molmo2-8B infiere puntos 2D sobre esos renders (requiere GPU)
+                    (QwenPointing/ y MolmoPointPointing/: mismos esquemas con otros VLMs)
 
-# Con malla (pipeline original):
+# Método final (sin malla):
+Pipeline_Experiments/estimate_symmetry_variants.py --variant expE → eje con EXP-E
+PlaneScoreData/plane_score_data.py --criterio datos               → plano con S_dat
+PlaneScoreData/run_resultados_finales.sh → recalcula todas las configuraciones finales
+PlaneScoreData/run_*.py                  → un runner por experimento reportado
+utils/generar_tablas_resultados_cap4.py  → tablas del cap. 4 desde resultados_finales/
+
+# Con malla (comparación; la corren PlaneScoreData/run_{axis,plane}_malla.py):
 Mapping/map_to_3d.py         → ray casting: puntos 2D → puntos 3D sobre la malla
 Mapping/estimate_symmetry.py → SVD/RANSAC: puntos 3D → eje o plano
                                 (métodos svd/ransac_svd/svd_sde/ransac_svd_sde)
 
-# Sin malla (pipeline alternativo, ver docs/pipeline_sin_malla.md):
+# Sin malla, estimador base (ver docs/pipeline_sin_malla.md):
 Mapping/estimate_symmetry_no_mesh.py → triangulación de rayos multi-vista → eje o
                                         plano, SIN ray-casting contra la malla
                                         (métodos triangulation/triangulation_multiplane,
@@ -70,8 +79,13 @@ Mapping/evaluate.py          → métricas vs. ground truth (angular error, AUC,
                                 recall/precision sobre el conjunto completo de
                                 planos (evaluate_plane_multiset) en vez de un
                                 único ángulo — ver docs/implementacion_pipeline_sin_malla.md.
-Mapping/compare_results.py   → tablas + plots agregados
+Mapping/compare_results_no_mesh.py → CSV comparativos (compare_results.py en el caso con malla)
 ```
+
+Las copias `*_subset.py` de los renderizadores y runners se fusionaron con sus originales
+(reestructuración de 2026-11, ver `docs/audits/refactor-log.md`): los runners eligen las
+vistas sobre la secuencia Fibonacci completa (`fibonacci_total`), así que sirven igual con
+un render completo o parcial.
 
 `reference_metrics.py` ya no existe como script separado — se fusionó dentro
 de `evaluate.py` (ver `docs/actualizacion_metricas.md`). Cualquier código que
@@ -146,15 +160,11 @@ desarrollo local (Windows) no tiene GPU ni todas las deps pesadas instaladas —
 pasos de Molmo2/renderizado y las corridas largas del sweep se ejecutan en el
 servidor remoto, no localmente.
 
-## Notebooks de análisis
+## Notebooks
 
-- `ranking_postprocesamiento.ipynb` — notebook principal de análisis de resultados:
-  rankings por experimento/prompt, ablations, y (secciones 10-11) comparación contra
-  `reference_metrics_*.csv` (generado por `evaluate.py --all`, ver arriba — mismo
-  nombre/columnas de siempre, ahora fusionado en `evaluate.py`). Reusa helpers ya
-  definidos ahí (`enrich`, `inventory`, `best_per_experiment`, `plot_ablation_bar`,
-  etc.) — no dupliques esa lógica en un notebook nuevo.
-- `analisis_tiempos_postprocesamiento.ipynb` — tiempos de cómputo del postproceso.
+- Ya no hay notebooks de análisis de resultados en el repo: las tablas de la tesis salen
+  de `utils/generar_tablas_resultados_cap4.py` (y `verificar_tablas_resultados_cap4.py`
+  comprueba cada celda contra su CSV). Queda `ExploratoryDataAnalysis/EDA.ipynb`.
 - **Los notebooks pueden superar el límite de tokens de lectura de las tools** si
   tienen outputs de celdas cacheados. Si una tool de notebook falla por tamaño, limpiar
   `outputs`/`execution_count` de las celdas de código primero (script Python rápido

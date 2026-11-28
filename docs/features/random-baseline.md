@@ -26,8 +26,7 @@ implemented; the paired Wilcoxon test (option B) was removed.
 | `RandomBaseline/simulation.py` | `simulate_random_baseline` | R simulated datasets: all objects, a fixed coverage mask, or a random subset of `n_objects` per repetition |
 | `RandomBaseline/multiplane.py` | `random_plane_sets`, `draw_plane_counts`, `multiset_scores`, `multiset_f1_counts`, `adjusted_metrics`, `simulate_random_multiplane` | Random baseline for `triangulation_multiplane`: a set of separated random planes per object, scored like `evaluate_plane_multiset` and `f1_match_counts`/`f1_match_counts_hungarian` |
 | `RandomBaseline/significance.py` | `compare_metric` | Option A: 95% interval, one-sided empirical p, z, normal-approximation p |
-| `RandomBaseline/latex_tables.py` | `axis_table`, `plane_table` | LaTeX tables (booktabs + adjustbox, same style as `utils/generar_tablas_latex.py`) of the random baseline on the full dataset |
-| `RandomBaseline/run_baseline.py` | `run_reference`, `run_compare`, `run_latex`, `compare_summary_csv`, `compare_eval_results` | CLI (`reference` / `compare` / `latex`) |
+| `RandomBaseline/run_baseline.py` | `run_reference`, `run_compare`, `compare_summary_csv`, `compare_eval_results` | CLI (`reference` / `compare`) |
 | `RandomBaseline/tests/test_random_baseline.py` | — | Equivalence against `evaluate.py` functions + agreement with the closed form |
 
 ## Inputs & Outputs
@@ -49,15 +48,9 @@ implemented; the paired Wilcoxon test (option B) was removed.
   per `(experiment, method, n_views, metric)`: the method and random
   coverage, the method value, the random mean/std/interval, `z`,
   `p_empirical`, `p_normal` and `better_than_random`.
-- `latex --out-dir` (default `docs/archive/resultados/tablas_azar/`): `azar_axis.tex`
-  (`tab:axis_azar`: closed form, simulation, 95% interval) and
-  `azar_plane.tex` (`tab:plane_azar`: simulation and 95% interval; F1_ref
-  rows included). Full coverage. `azar_plane_multi.tex` (`tab:plane_azar_multi`):
-  recall, precision and F1_ref with 1, 2 and 3 random planes per object.
-- `cap4 --out` (default `Tesis_DCC_MDS/cap4_baselines.tex`): one file with six
-  tables and `tab:base_*` labels, the three random tables above plus the fixed
-  world-axis predictors of `Pipeline_Experiments/diagnostics/trivial_baselines.py`
-  (`tab:base_axis_fijos`, `tab:base_plane_fijos`, `tab:base_plane_fijos_multi`).
+- The thesis tables read `RandomBaseline/outputs/random_baseline_reference.csv` through
+  `utils/generar_tablas_resultados_cap4.py`. The former `latex` and `cap4` subcommands
+  (and `latex_tables.py`) were removed in the 2026-11 restructuring.
 
 ## Key Decisions
 

@@ -29,7 +29,7 @@ element plausibly sits.
 | File | Function / Class | Responsibility |
 |---|---|---|
 | `MolmoPointing/molmo_multiview_runner.py` | `get_model()` | Lazily loads `allenai/Molmo2-8B` (`AutoProcessor`/`AutoModelForImageTextToText`) as a module-level singleton, `bfloat16`, `device_map="auto"`. |
-| | `load_metadata()` / `get_n_views_entries()` | Reads `metadata_all.json`; selects `n_views` camera entries evenly spaced (via `linspace` over index) across the full Fibonacci-sphere sequence. |
+| | `load_metadata()` / `get_n_views_entries()` | Reads `metadata_all.json`; selects `n_views` camera entries evenly spaced (via `linspace` over index) across the full Fibonacci-sphere sequence. The sequence size is `fibonacci_total` when the render is partial (`--subset-n-views`), so a partial render gives the same views as a full one; a missing view raises an error. |
 | | `_call_model()` | Single low-level Molmo2 call: builds the chat-template message with 1..N images + prompt text, runs `model.generate` (`max_new_tokens=2048`), decodes, frees GPU tensors. |
 | | `parse_single_coords()` | Parses the single-image `<points coords="RADIO ID X Y ...">` format into `{"0": [{obj_id, x, y}, ...]}`. |
 | | `parse_multi_coords()` | Parses the multi-image `<points coords="img_idx obj_id X Y; ...">` format (1-based image index) into `{"<img_idx>": [...]}` per image. |
@@ -117,6 +117,10 @@ element plausibly sits.
   cameras near the north pole (e.g. elevation +66° to +90° for
   `n_views=6`), so `get_n_views_entries()` guarantees uniform angular
   coverage instead.
+- **One runner for full and partial renders**: the former
+  `molmo_multiview_runner_subset.py` copy was merged in the 2026-11
+  restructuring; with a full render (no `fibonacci_total` field, or equal to
+  `len(metadata)`) the selection is identical to the previous one.
 - **Coordinate parsing drops the leading "radius" token** in
   `parse_single_coords()` (`raw = raw[1:]`) — Molmo2's single-image
   `<points coords="RADIO ID X Y ...">` format includes a radius value

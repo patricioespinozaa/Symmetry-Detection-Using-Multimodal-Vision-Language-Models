@@ -115,3 +115,25 @@ Auditoría de solo lectura que generó el plan ejecutado en este log.
 - División de `Mapping/evaluate.py` / `MolmoPointing/molmo_multiview_runner.py`
   en módulos más chicos — ver Fase 3.
 - Re-ejecución de `ExploratoryDataAnalysis/EDA.ipynb` — ver Fase 4.
+
+---
+
+# Reestructuración de 2026-11 (rama `reestructuracion`)
+
+Ejecuta `docs/plan_reestructuracion_repo.md`. Un commit por fase; después de cada una se
+regeneraron las 43 tablas del capítulo 4 y los anexos de prompts (salida idéntica byte a
+byte a la de antes de empezar), `verificar_tablas_resultados_cap4.py` dio todas las celdas
+correctas y pasaron los tests de `PlaneScoreData/` y `RandomBaseline/`. El repo pasa de
+17 166 a unos 1 700 archivos versionados.
+
+| Fase | Qué se hizo |
+|---|---|
+| 1 | Borra lo que no tenía dependencias: `Experiments/` (sandbox de agosto), `historial/`, `ndc_fix_axial_expE/`, CSV `experiments_*`, `Mapping/archive/` y los chequeos/diagnósticos de agosto de `Mapping/`, `candidates_then_select/`, prompts `lit*`/`*_6pts`, notebooks de prueba, `revision_ambiguos/`, fragmentos `cap4_*.tex` |
+| 2 | Logs de inferencia sueltos → `resultados_finales/logs/inferencia/<config>/`; logs de post-proceso viejos borrados; informes de etapas superadas → `docs/archive/`; guía de MolmoPoint/Qwen → `docs/instalacion_molmopoint_qwen3vl.md`; `.gitignore` ampliado |
+| 3 | Borra generadores de tablas viejos de `utils/`, `ndc_fix/`, `planar_sdat/`, `ContextLimits/`, variantes EXP-A..D/F (queda solo EXP-E), `run_batch.py` + `configs/` (y `RunConfig`), `latex_tables.py` y los subcomandos `latex`/`cap4` de `RandomBaseline`, `run_all_postprocessing.py` y los scripts de limpieza del servidor |
+| 4 | Fusiona las copias `*_subset.py` (renderizador y los 3 runners) con sus originales; los runners de `PlaneScoreData/` llaman a los originales |
+| 5 | Reduce `Examples/` a 448 px y actualiza README, CLAUDE.md, READMEs de módulos y `docs/features/` |
+
+Pendiente: probar en el servidor los runners fusionados (`--help` y un objeto con
+`--n-views 6` sobre un render completo y uno parcial de `renders_rot_so3`), y decidir si se
+reescribe el historial para quitar `cap4_originañ.tex`/`cap4_baselines.tex` (plan §8).

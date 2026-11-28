@@ -51,10 +51,19 @@ Mapping/
 ├── estimate_symmetry.py     # SVD fit: 3D points → predicted axis or plane (4 methods)
 ├── evaluate.py              # Metrics: predicted symmetry vs true labels
 ├── compare_results.py       # Aggregate and plot results across experiments/methods
+├── estimate_symmetry_no_mesh.py  # Mesh-free triangulation (baseline estimator, see ../docs/pipeline_sin_malla.md)
+├── compare_results_no_mesh.py    # Comparison CSVs for the mesh-free experiments
 ├── visualize_rays.py        # Debug tool: visualize camera rays and hit points in 3D
-├── cleanup_experiments.py   # Remove specific n_views keys from molmo JSON results
-└── export_viz_samples.py    # Export best/worst-N objects + ready-to-run viz commands
+├── visualize_symmetry.py    # Polyscope viewer: predicted vs. GT symmetry
+├── export_symmetry_overlay.py    # GT vs. predicted overlay figure on a render
+└── render_symmetry_comparison.py # Side-by-side GT/prediction renders
 ```
+
+The thesis' final method (EXP-E in axis, S in plane) lives in
+`../Pipeline_Experiments/estimate_symmetry_variants.py` and `../PlaneScoreData/plane_score_data.py`;
+both reuse `estimate_symmetry_no_mesh.py` and are scored by `evaluate.py`. The with-mesh scripts
+below (`map_to_3d.py`, `estimate_symmetry.py`, `compare_results.py`) are the comparison run by
+`../PlaneScoreData/run_{axis,plane}_malla.py`.
 
 Camera-ray math, mesh loading, `--experiment-id` filename suffixing, and point-cloud
 clustering (greedy + HDBSCAN) are shared helpers in `../pipeline_common/`, imported by
@@ -255,7 +264,7 @@ python Mapping/estimate_symmetry.py \
 | `--symmetry-type` | *(required)* | `axis_sym` or `plane_sym` |
 | `--sizes` | `224 448 1136` | Sizes to pool points from |
 | `--lightings` | `flat brighter darker` | Lightings to pool points from |
-| `--point-mode` | `independent` | `independent`, `midpoint`, or `all` (Flow C) — see prompt table in `Experiments.md` |
+| `--point-mode` | `independent` | `independent`, `midpoint`, or `all` (Flow C) — see the prompt table in `../docs/archive/MolmoPointing_Experiments.md` |
 | `--clustering-method` | `none` | `none`, `greedy`, or `hdbscan` |
 | `--hdbscan-min-samples` | `3` | `min_samples` for `--clustering-method hdbscan` (sweep 2, 3, 5) |
 | `--clustering` | `False` | Deprecated alias for `--clustering-method greedy` |
@@ -446,59 +455,7 @@ filenames are tagged so a filtered run never overwrites the full comparison in t
 
 ---
 
-## 5. `cleanup_experiments.py`
-
-Removes specific `n_views` keys from `molmo_multiview[_EXP].json` files. Use this when iterating on prompts to delete only the results you want to rerun without affecting other keys in the same JSON.
-
-- If the JSON still has other keys after removal → rewritten without the removed keys
-- If the JSON becomes empty → file deleted entirely
-
-**Always run with `--dry-run` first** to preview what would be changed.
-
-### Usage
-
-```bash
-# Preview (no changes)
-python Mapping/cleanup_experiments.py \
-    --renders-root ../data/renders \
-    --symmetry-type axis_sym \
-    --sizes 224 --lightings flat \
-    --view-groups 1 6 14 26 \
-    --dry-run
-
-# Execute (production file)
-python Mapping/cleanup_experiments.py \
-    --renders-root ../data/renders \
-    --symmetry-type axis_sym \
-    --sizes 224 --lightings flat \
-    --view-groups 1 6 14 26
-
-# Experiment file
-python Mapping/cleanup_experiments.py \
-    --renders-root ../data/renders \
-    --symmetry-type axis_sym \
-    --sizes 224 --lightings flat \
-    --view-groups 1 6 \
-    --experiment-id axis_v02
-```
-
-### Arguments
-
-| Argument | Default | Description |
-|---|---|---|
-| `--renders-root` | *(required)* | Root folder of renders |
-| `--symmetry-type` | *(required)* | `axis_sym` or `plane_sym` |
-| `--view-groups` | *(required)* | Keys to remove (e.g. `1 6 14 26`) |
-| `--sizes` | `224 448 1136` | Sizes to clean |
-| `--lightings` | `flat brighter darker` | Lightings to clean |
-| `--experiment-id` | `None` | Targets `molmo_multiview_<ID>.json` instead of `molmo_multiview.json` |
-| `--dry-run` | `False` | Preview without making changes |
-
-> **Note:** this script only cleans `molmo_multiview[_EXP].json`. Downstream files (`mapped_points_3d`, `predicted_symmetry`, `eval_*`) must be removed separately if needed.
-
----
-
-## 6. `visualize_rays.py`
+## 5. `visualize_rays.py`
 
 Debugging tool that recomputes all camera rays from scratch and shows them in a 3D Polyscope viewer.
 
@@ -572,49 +529,11 @@ python Mapping/visualize_rays.py \
 
 ---
 
-## 7. `export_viz_samples.py`
-
-Selects the N objects with the best and worst angular error for a given experiment/method,
-copies their pipeline JSONs into `<results_dir>/<experiment_id>/viz_samples/{good,bad}/`, and
-generates a `README.md` with ready-to-run `visualize_rays.py` commands per object (including a
-before/after comparison table when `--base-experiment-id` is given, e.g. comparing a clustered
-run against its non-clustered base).
-
-```bash
-python Mapping/export_viz_samples.py \
-    --renders-root ../data/renders \
-    --objects-root ../data/objects \
-    --symmetry-type axis_sym \
-    --experiment-id axis_v00 \
-    --method svd \
-    --results-dir ../results \
-    --sizes 224 --lightings flat \
-    --n-samples 10
-```
-
-### Arguments
-
-| Argument | Default | Description |
-|---|---|---|
-| `--renders-root` | *(required)* | Root folder of renders |
-| `--objects-root` | *(required)* | Root folder with `.obj` meshes |
-| `--symmetry-type` | *(required)* | `axis_sym` or `plane_sym` |
-| `--results-dir` | *(required)* | Output root; writes to `<results_dir>/<experiment_id>/` |
-| `--method` | `svd` | Which fitting method to rank good/bad objects by |
-| `--experiment-id` | `None` | Reads `eval_*_<ID>_*_results.json` |
-| `--base-experiment-id` | `None` | Base experiment to compare against (e.g. `axis_v00` when exporting `axis_v00_cluster`) |
-| `--sizes` | `224` | Sizes to copy JSONs for |
-| `--lightings` | `flat` | Lightings to copy JSONs for |
-| `--n-views` | max available | n_views group used for ranking |
-| `--n-samples` | `10` | Number of good + bad objects to export |
-
----
-
 ## Full pipeline example
 
 ```bash
 EXP=axis_v02
-MODE=independent   # see Experiments.md for correct value per prompt
+MODE=independent   # see docs/archive/MolmoPointing_Experiments.md for the value per prompt
 
 # 1. Molmo2 inference
 CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
@@ -669,7 +588,6 @@ python Mapping/compare_results.py \
 | `estimate_symmetry.py` | Skips objects where `predicted_symmetry[_EXP].json` already exists (unless `--overwrite`) |
 | `evaluate.py` | Always rewrites (fast, CPU-only) |
 | `compare_results.py` | Always rewrites |
-| `cleanup_experiments.py` | Skips configs with no matching JSON or keys |
 
 To rerun a specific object, delete its output file:
 

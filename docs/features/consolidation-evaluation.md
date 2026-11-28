@@ -23,14 +23,11 @@ landed on real geometry — was found to be invalid and was deleted outright
 from `evaluate.py`; it is documented here only so it is not mistaken for a
 currently-reported metric. `Mapping/compare_results.py` then consumes the
 CSVs this stage produces to build cross-experiment comparison tables and
-plots, `Mapping/cleanup_experiments.py` lets prompt iteration re-run just
-part of the sweep, `Mapping/run_all_postprocessing.py` chains the whole
-post-Molmo pipeline (map_to_3d → estimate_symmetry → evaluate → compare)
-unattended over every discovered experiment, and a handful of ad hoc
-`Mapping/check_*.py`/`Mapping/audit_view_indices*.py` scripts were written to
-diagnose specific anomalies found while consolidating results (SDE/angular
-discordance, independent-vs-midpoint pointing strategy, view-index sampling
-bugs).
+plots (`Mapping/compare_results_no_mesh.py` does the same for the mesh-free
+runs, which are the ones the thesis reports). The sweep orchestrator
+(`run_all_postprocessing.py`), the partial-rerun helper (`cleanup_experiments.py`)
+and the ad hoc `check_*.py`/`audit_view_indices*.py` diagnostics of August 2026
+were removed in the 2026-11 restructuring; they remain in the git history.
 
 ## Key Files & Functions
 
@@ -50,14 +47,6 @@ bugs).
 | `Mapping/compare_results.py` | `load_csvs` | Loads and concatenates all `eval_*_summary.csv` files for a symmetry type, exact-matching `--experiment-id` (no filename-prefix collisions) |
 | `Mapping/compare_results.py` | `plot_metrics_by_nviews`, `plot_precision_curve`, `plot_acceptance_rate`, `plot_valid_by_prompt` | Generate comparison plots: metrics vs. `n_views` per method/experiment; continuous precision-vs-threshold curve at max `n_views`; SDE acceptance rate (`svd_sde`/`ransac_svd_sde` only); % objects with a valid prediction per prompt |
 | `Mapping/compare_results.py` | `print_table` | Console table of `experiment × method × n_views` with core metrics |
-| `Mapping/cleanup_experiments.py` | `cleanup_object`, `preview` | Removes specific `n_views` keys from `molmo_multiview*.json` files (per object/size/lighting) to allow re-running only part of a prompt experiment |
-| `Mapping/run_all_postprocessing.py` | `discover_experiments`, `process_experiment`, `run_core_stages`, `run_clustering_sweep`, `run_patch_sweep`, `final_consolidation` | Unattended sweep entrypoint: chains map_to_3d → estimate_symmetry → evaluate (×4 methods) → compare_results for every discovered Molmo experiment and both symmetry types, plus a clustering (C2/C3) and patch-size (p3/p5) variant sweep per experiment; resumable by skipping already-completed stages |
-| `Mapping/check_independent_vs_midpoint.py` | `load_angular_errors` | Ad hoc diagnostic: compares angular error between `--point-mode independent` vs. `midpoint` axis-prompt variants at fixed `n_views=26`, `method=svd` |
-| `Mapping/check_sde_vs_angular.py` | `pearson`, `spearman_via_ranks`, `load_pairs` | Ad hoc diagnostic: correlates `angular_error_deg` vs. the internal `sde` field and flags "discordant" objects (high angular error, low SDE) from already-produced `eval_*_results.json` files |
-| `Mapping/check_origin_full.py` | `sphericity`, `load_eval_pairs` | Ad hoc diagnostic (successor to archived `check_origin_compactness.py`): population-wide comparison of `dist_origin_centroid_norm`/`sphericity` vs. `angular_error_deg`/`sde` across an entire experiment, not just a discordant-tail sample |
-| `Mapping/archive/check_origin_compactness.py` | — | Archived predecessor of `check_origin_full.py`: compared only the discordant tail (from `check_sde_vs_angular.py`) against a random control sample, rather than the full population |
-| `Mapping/audit_view_indices_v2.py` | `expected_indices_for`, `classify`, `infer_standard_path_info` | Audits every `molmo_multiview*.json` found recursively under a search root for a view-sampling bug (sequential `[0..n_views-1]` indices instead of the correct Fibonacci-spaced linspace indices), including files outside the standard directory convention |
-| `Mapping/archive/audit_view_indices.py` | `expected_indices_for`, `classify` | Archived predecessor of `audit_view_indices_v2.py`: same sequential-vs-spaced audit, but only over the fixed `<renders_root>/<symmetry_type>/...` directory convention (no recursive search) |
 
 ## Inputs & Outputs
 
@@ -75,7 +64,7 @@ bugs).
 - For bulk re-scoring (`--all`/`--experiment-ids`): every
   `predicted_symmetry_<EXP>.json` already on disk under
   `<renders_root>/<symmetry_type>/`, discovered by filename pattern.
-- For `compare_results.py`/`run_all_postprocessing.py`: the `eval_*_summary.csv`
+- For `compare_results.py`/`compare_results_no_mesh.py`: the `eval_*_summary.csv`
   and `eval_*_results.json` files produced by `evaluate.py` itself, plus
   `predicted_symmetry_<EXP>.json` (for the SDE acceptance-rate plot).
 
@@ -91,14 +80,6 @@ bugs).
   (`<csv-dir>/experiments_<DD_MM_YYYY>/{prefix}_comparison.csv`) and PNG plots
   under `--save-dir` (`{prefix}_<metric>.png`, `{prefix}_precision_curve_nv<N>.png`,
   `{prefix}_acceptance_rate.png`, `valid/{prefix}_valid.png`).
-- `run_all_postprocessing.py`: a greppable stage log (`log_postprocesos.txt`)
-  and a full stdout/stderr transcript (`log_postprocesos_full.txt`), plus
-  `<results_root>/all_experiments_comparison.csv` merging both symmetry types.
-- `cleanup_experiments.py`: rewrites/deletes `molmo_multiview[_<EXP>].json`
-  files in place (no new output files).
-- The diagnostic `check_*`/`audit_view_indices*` scripts write one-off CSVs
-  under `scratch/` (now removed from git tracking, see Known Limitations) —
-  not part of the production pipeline output.
 
 ## Results & Observations
 
@@ -125,10 +106,10 @@ bugs).
   without stating that difference.
 - The ad hoc diagnostics found concrete anomalies during the sweep: a
   view-index sampling bug (sequential vs. correctly Fibonacci-spaced
-  `n_views` sub-sampling, audited by `audit_view_indices_v2.py`), and
+  `n_views` sub-sampling, audited by the former `audit_view_indices_v2.py`), and
   discordant objects where low internal SDE co-occurred with high angular
   error, investigated via mesh compactness/sphericity
-  (`check_sde_vs_angular.py` → `check_origin_full.py`) to check whether a
+  (the former `check_sde_vs_angular.py` → `check_origin_full.py`) to check whether a
   plane through a compact object's centroid was scoring artificially well —
   motivating part of the decision to promote `SDE_ref` (real-surface,
   squared distance) over any in-house plane-distance formula.
@@ -231,14 +212,6 @@ bugs).
   current CSVs, which no longer contain those columns) but the code paths
   referencing the removed metric were not cleaned out of this file, only
   the CSV writer that used to produce them.
-- **Ad hoc diagnostic scripts (`check_*.py`, `audit_view_indices*.py`) are
-  not part of the production pipeline** — they were written to investigate
-  specific anomalies (view-index sampling bug, SDE/angular discordance,
-  pointing-strategy comparison) and read already-produced `eval_*`/
-  `predicted_symmetry_*` files rather than being invoked by
-  `run_all_postprocessing.py`. Their one-off CSV outputs under `scratch/`
-  were removed from git tracking (per the working tree's current status),
-  so results from past runs are not preserved in the repo.
 - **`EnhancedBackProjection` paper citation is unverified**: the reference
   repo's own README attributes it to "Aguirre & Sipiran, WACV 2026," but
   `docs/metricas_evaluacion.md` §4.1 explicitly flags this as read from the

@@ -57,10 +57,10 @@ Images and metadata are saved under the following directory hierarchy:
 <output>/<symmetry_type>/<object_id>/<image_size>/<illumination>/
 ```
 
-For example, running with `--mesh Examples/objects/axis_sym_obj.obj --output Examples/renders --image-size 224 --illumination flat` produces:
+For example, running with `--mesh Examples/objects/axis_sym_obj.obj --output Examples/renders --image-size 448 --illumination flat` produces:
 
 ```
-Examples/renders/axis_sym/axis_sym_obj/224/flat/
+Examples/renders/axis_sym/axis_sym_obj/448/flat/
 ├── IND_00_AZ_090_EL_+89.png
 ├── IND_01_AZ_243_EL_+67.png
 ├── ...
@@ -127,7 +127,7 @@ python ImagesGenerator/export_fibonacci_views.py \
   --output Examples/renders \
   --symmetry-type axis_sym \
   --repo-views 26 \
-  --image-size 224 \
+  --image-size 448 \
   --illumination flat
 
 # Planar symmetry example
@@ -136,7 +136,7 @@ python ImagesGenerator/export_fibonacci_views.py \
   --output Examples/renders \
   --symmetry-type plane_sym \
   --repo-views 26 \
-  --image-size 224 \
+  --image-size 448 \
   --illumination flat
 ```
 

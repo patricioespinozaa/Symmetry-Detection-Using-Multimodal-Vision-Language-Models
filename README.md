@@ -1,73 +1,57 @@
 # Symmetry Detection Using Multimodal Vision-Language Models
 
-**Hypothesis:** Molmo2-8B (a VLM with pointing capability) can identify structural 3D symmetry points from 2D multi-view images without direct access to 3D geometry.
+**Hypothesis:** a VLM with pointing capability (Molmo2-8B, compared against MolmoPoint-8B and Qwen3-VL-8B) can identify structural 3D symmetry (axis or plane) from 2D multi-view renders of an object, without direct access to its 3D geometry.
 
-The model receives rendered views of a 3D object and returns 2D pointing coordinates. These points are then lifted to 3D via ray casting and used to fit the symmetry axis or plane, which is compared against the ground-truth ShapeNet labels.
+The model receives rendered views of a 3D object and returns 2D points. In the **final method** those points are triangulated across views without the mesh: the symmetry axis is fitted with **EXP-E** (iterative residual reweighting) and the symmetry plane with the **S score** (`S_dat`, one plane per object). The prediction is compared against the ground-truth ShapeNet labels. Ray casting against the mesh (`Mapping/map_to_3d.py`) is kept as a comparison experiment.
 
 ---
 
 ## Repository structure
 
 ```
-Symmetry-Detection-Using-Multimodal-Vision-Language-Models/
+.
+├── README.md  CLAUDE.md  environment.yml  .gitignore
 │
-├── ImagesGenerator/               # Render .obj files to multi-view images
-│   ├── export_fibonacci_views.py  # Fibonacci-sphere sampling; renders one object
-│   ├── data_render.py             # Batch renderer (calls export_fibonacci_views.py)
-│   └── README.md
+├── ImagesGenerator/            # Render .obj meshes to multi-view images (Fibonacci sphere)
+│   ├── export_fibonacci_views.py  # one object; --subset-n-views (partial render), --roll-seed
+│   └── data_render.py             # batch renderer over a dataset folder
 │
-├── MolmoPointing/                 # Molmo2-8B inference over rendered images
-│   ├── molmo_multiview_runner.py  # Main batch runner
-│   ├── prompts_registry.py        # Auto-discovers prompts from prompts/
-│   ├── prompts/
-│   │   ├── axis/                  # axis_v00–v05 × {single, multi}.txt
-│   │   └── plane/                 # plane_v00–v05 × {single, multi}.txt
-│   ├── Experiments.md             # Prompt table + full experiment loops
-│   └── README.md
+├── MolmoPointing/              # Molmo2-8B pointing: molmo_multiview_runner.py, prompts_registry.py, prompts/
+├── MolmoPointPointing/         # MolmoPoint-8B pointing (same output schema)
+├── QwenPointing/               # Qwen3-VL-8B pointing (same output schema)
+├── pipeline_common/            # camera/NDC math, triangulation primitives, naming, datasets, clustering
 │
-├── Mapping/                       # 2D predictions → 3D symmetry evaluation
-│   ├── map_to_3d.py               # Ray casting: Molmo 2D coords → 3D hit points
-│   ├── estimate_symmetry.py       # SVD/RANSAC fit (mesh-based): 3D points → axis or plane (4 methods)
-│   ├── estimate_symmetry_no_mesh.py # Mesh-free fit via multi-view ray triangulation (up to 3 planes)
-│   ├── evaluate.py                # Metrics: angular error, AUC, precision@k, SDE_ref, F1_ref (+ bulk --all mode)
-│   ├── compare_results.py         # Table + plots across experiments/methods
-│   ├── visualize_rays.py          # Debug: Polyscope 3D ray viewer
-│   ├── visualize_symmetry.py      # Debug: Polyscope GT vs. predicted symmetry viewer
-│   ├── export_symmetry_overlay.py # Batch-export overlay renders
-│   ├── export_viz_samples.py      # Batch-export sample visualizations + README
-│   ├── render_symmetry_comparison.py # Side-by-side comparison renders
-│   ├── run_all_postprocessing.py  # Sweep entrypoint: map_to_3d → estimate → evaluate
-│   ├── cleanup_experiments.py     # Remove n_views keys from JSON results
-│   ├── cleanup_all_experiments.sh # Delete all experiment files for all prompts
-│   ├── find_extra_renders.sh      # Audit render directories vs source .obj files
-│   ├── archive/                   # Superseded one-off diagnostic scripts, kept for reference
-│   │   ├── audit_view_indices.py       # superseded by audit_view_indices_v2.py
-│   │   └── check_origin_compactness.py # superseded by check_origin_full.py
-│   ├── audit_view_indices_v2.py, check_independent_vs_midpoint.py,
-│   │   check_origin_full.py, check_sde_vs_angular.py  # ad hoc analysis scripts
-│   │   tied to specific thesis findings — see each file's docstring
-│   └── README.md
+├── Mapping/
+│   ├── estimate_symmetry_no_mesh.py  # mesh-free triangulation (baseline estimator)
+│   ├── evaluate.py                   # angular error, AUC, precision@θ, SDE_ref/F1_ref
+│   ├── compare_results_no_mesh.py    # comparison CSVs across experiments
+│   ├── map_to_3d.py  estimate_symmetry.py  compare_results.py   # with-mesh comparison
+│   └── visualize_rays.py  visualize_symmetry.py  export_symmetry_overlay.py  render_symmetry_comparison.py
 │
-├── InteractiveViewer/             # Polyscope viewer for objects and GT symmetries
-│   ├── view_symmetries.py
-│   └── README.md
+├── Pipeline_Experiments/
+│   ├── estimate_symmetry_variants.py   # EXP-E axis estimator (triangulation_variants/)
+│   ├── config.py  view_filtering.py
+│   └── diagnostics/                    # center bias, repeated points, trivial baselines, missing reasons
 │
-├── ExploratoryDataAnalysis/
-│   └── EDA.ipynb
+├── PlaneScoreData/             # S plane estimator, run_*.py of every reported experiment,
+│                               # diagnostico_*.py, run audit and tests
+├── RandomBaseline/             # uniform random baseline (outputs/random_baseline_reference.csv)
+├── ExploratoryDataAnalysis/    # dataset EDA, categories, orientation/visibility analysis
+├── InteractiveViewer/          # Open3D viewer for meshes and GT symmetries
+├── Examples/                   # 2 example objects + their 448 px renders
+├── imgs/vistas_degeneradas/    # source of the degenerate-views figure
 │
-├── Examples/                      # One axis_sym + one plane_sym example object
-│   ├── objects/
-│   └── renders/
+├── utils/
+│   ├── generar_tablas_resultados_cap4.py  verificar_tablas_resultados_cap4.py  generar_anexo_prompts.py
+│   ├── fig_camaras.py  copiar_vistas_degeneradas.py  verificar_convencion_ndc.py
+│   └── rerun_ndc_fix.sh  muestras_render.sh
 │
-├── pipeline_common/                # Shared helpers used across all stages
-│   ├── naming.py                   # --experiment-id filename suffixing
-│   ├── datasets.py                 # OBJECTS_SUBDIR + mesh loading
-│   ├── camera.py                   # NDC/ray math, ray casting (exact + patch)
-│   ├── clustering.py                # Greedy centroid + HDBSCAN clustering
-│   ├── view_selection.py           # Seeded description-view selection (Flow B/C)
-│   └── triangulation.py            # Ray/interpretation-plane primitives (mesh-free pipeline)
+├── resultados_finales/         # CSVs, logs and paired comparisons read by the thesis tables
+│   ├── <one folder per experiment>/
+│   ├── diagnosticos/  referencias/
+│   └── logs/  (logs/inferencia/<config>/ holds the VLM inference logs)
 │
-└── docs/                          # Design docs, metric definitions, audits (see below)
+└── docs/                       # design docs, metrics, schemas, features, audits, archive/
 ```
 
 ---
@@ -127,7 +111,7 @@ pip install transformers==4.57.1 accelerate==1.10.1 \
 # Mapping pipeline
 pip install trimesh scipy pandas matplotlib
 
-# HDBSCAN clustering (estimate_symmetry.py --clustering-method hdbscan)
+# HDBSCAN clustering (with-mesh estimate_symmetry.py --clustering-method hdbscan)
 pip install scikit-learn
 
 # Optional: reference metrics (evaluate.py --with-reference-metrics / --all / --experiment-ids)
@@ -154,7 +138,6 @@ conda env create -f environment.yml
 ### Step 1 — Render objects
 
 ```bash
-# GPU 0: axis symmetry
 CUDA_VISIBLE_DEVICES=0 python3 -m ImagesGenerator.data_render \
   --input-folder ../data/objects/curated_axis_sym_obj \
   --output-folder ../data/renders \
@@ -162,204 +145,101 @@ CUDA_VISIBLE_DEVICES=0 python3 -m ImagesGenerator.data_render \
   --repo-views 114 \
   --sizes 224 448 1136 \
   --lightings flat darker brighter
-
-# GPU 1: plane symmetry
-CUDA_VISIBLE_DEVICES=1 python3 -m ImagesGenerator.data_render \
-  --input-folder ../data/objects/curated_plane_sym_obj \
-  --output-folder ../data/renders \
-  --symmetry-type plane_sym \
-  --repo-views 114 \
-  --sizes 224 448 1136 \
-  --lightings flat darker brighter
 ```
 
-Each object produces images under `<renders_root>/<symmetry_type>/<object_id>/<size>/<lighting>/`.
+Same for `plane_sym` with `curated_plane_sym_obj`. Each object produces images under
+`<renders_root>/<symmetry_type>/<object_id>/<size>/<lighting>/`.
+`--subset-n-views 6 14 26` renders only the 36 views the pointing runners pick for those view
+counts (same filenames and indices as the full 114-view sequence); `--roll-seed` rolls each
+camera about its optical axis.
 
-### Step 2 — Molmo2 inference (GPU required)
+### Step 2 — VLM inference (GPU required)
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
     --renders-root ../data/renders \
     --symmetry-type axis_sym \
     --sizes 224 --lightings flat \
-    --view-groups 1 6 14 26 \
+    --view-groups 6 14 26 \
+    --prompt-id axis_v04 --experiment-id axis_v04 \
     --prompt-mode auto --yes
 ```
 
-Results accumulate in `molmo_multiview.json`. Already-computed keys are skipped automatically. See `MolmoPointing/README.md` for multi-GPU and experiment variants.
+Results accumulate in `molmo_multiview[_<EXP>].json`; already-computed keys are skipped.
+`QwenPointing/qwen3vl_multiview_runner.py` and `MolmoPointPointing/molmopoint_multiview_runner.py`
+write the same schema. See `MolmoPointing/README.md` and
+`docs/features/molmopoint-qwen3vl-pointing.md`.
 
-### Step 3 — Map 2D points to 3D
-
-```bash
-python Mapping/map_to_3d.py \
-    --renders-root ../data/renders \
-    --objects-root ../data/objects \
-    --symmetry-type axis_sym \
-    --sizes 224 --lightings flat \
-    --overwrite --yes
-```
-
-### Step 4 — Fit symmetry (4 methods)
+### Step 3 — Fit symmetry without the mesh (final method)
 
 ```bash
-python Mapping/estimate_symmetry.py \
-    --renders-root ../data/renders \
-    --objects-root ../data/objects \
-    --symmetry-type axis_sym \
-    --sizes 224 --lightings flat \
-    --point-mode independent \
-    --overwrite
-```
-
-`--point-mode` must match the prompt strategy (see `MolmoPointing/Experiments.md`):
-- `independent` — points lie directly on the axis/plane
-- `midpoint` — bilateral pairs; midpoint is computed before SVD
-
-### Step 5 — Evaluate vs ground truth
-
-```bash
-for METHOD in svd ransac_svd svd_sde ransac_svd_sde; do
-    python Mapping/evaluate.py \
-        --renders-root ../data/renders \
-        --objects-root ../data/objects \
-        --symmetry-type axis_sym \
-        --sizes 224 --lightings flat \
-        --method $METHOD
-done
-```
-
-### Step 6 — Compare results
-
-```bash
-python Mapping/compare_results.py \
-    --renders-root ../data/renders \
-    --symmetry-type axis_sym \
-    --save-dir ../results/plots \
-    --csv-dir ../results
-```
-
----
-
-## Alternate pipeline: mesh-free (no ray-casting against the mesh)
-
-Steps 1–2 (render + Molmo2 inference) are identical. From there, this variant
-skips `map_to_3d.py`/`estimate_symmetry.py` entirely and estimates the
-axis/plane directly from multi-view ray triangulation — see
-[docs/pipeline_sin_malla.md](docs/pipeline_sin_malla.md) and
-[docs/implementacion_pipeline_sin_malla.md](docs/implementacion_pipeline_sin_malla.md)
-for the full design rationale.
-
-### Step 3' — Fit symmetry without the mesh
-
-```bash
-# axis_sym
-python Mapping/estimate_symmetry_no_mesh.py \
-    --renders-root ../data/renders \
-    --symmetry-type axis_sym \
-    --sizes 224 --lightings flat \
-    --overwrite
-
-# plane_sym, single best-fit plane (method "triangulation")
-python Mapping/estimate_symmetry_no_mesh.py \
-    --renders-root ../data/renders \
-    --symmetry-type plane_sym \
-    --sizes 224 --lightings flat \
-    --max-planes 1 --overwrite
-
-# plane_sym, up to 3 candidate planes (method "triangulation_multiplane")
-python Mapping/estimate_symmetry_no_mesh.py \
-    --renders-root ../data/renders \
-    --symmetry-type plane_sym \
-    --sizes 224 --lightings flat \
-    --max-planes 3 --overwrite
-```
-
-Writes `predicted_symmetry[_<EXP>].json` under the method key `triangulation`
-(single axis/plane) or `triangulation_multiplane` (`--max-planes > 1`, a list
-of candidate planes) — see [docs/data-schemas.md](docs/data-schemas.md).
-
-### Step 4' — Evaluate
-
-```bash
-# axis_sym / plane_sym, single plane — same angular-error metrics as the with-mesh path
-python Mapping/evaluate.py \
-    --renders-root ../data/renders \
-    --objects-root ../data/objects \
-    --symmetry-type axis_sym \
-    --sizes 224 --lightings flat \
-    --method triangulation --with-reference-metrics
-
-# plane_sym, multi-plane — recall/precision over the full GT plane set instead
-# of a single angular error, plus per-plane SDE_ref/F1_ref
-python Mapping/evaluate.py \
-    --renders-root ../data/renders \
-    --objects-root ../data/objects \
-    --symmetry-type plane_sym \
-    --sizes 224 --lightings flat \
-    --method triangulation_multiplane --with-reference-metrics
-```
-
-`--with-reference-metrics` requires `gpytoolbox` (see Installation below).
-`compare_results.py` (Step 6) works the same way against these outputs.
-
----
-
-## Running prompt experiments
-
-To compare multiple prompt strategies, use `--experiment-id` to isolate results from production files. See `MolmoPointing/Experiments.md` for the full loop (axis + plane, all 6 prompts each).
-
-```bash
-EXP=axis_v02
-MODE=independent   # from the prompt table in Experiments.md
-
-CUDA_VISIBLE_DEVICES=0 python MolmoPointing/molmo_multiview_runner.py \
+# axis_sym: EXP-E
+python Pipeline_Experiments/estimate_symmetry_variants.py \
     --renders-root ../data/renders --symmetry-type axis_sym \
-    --sizes 224 --lightings flat --view-groups 1 6 14 26 \
-    --prompt-id $EXP --experiment-id $EXP --prompt-mode auto --yes
+    --sizes 224 --lightings flat \
+    --experiment-id axis_v04 --variant expE --overwrite
 
-python Mapping/map_to_3d.py \
-    --renders-root ../data/renders --objects-root ../data/objects \
-    --symmetry-type axis_sym --sizes 224 --lightings flat \
-    --experiment-id $EXP --overwrite --yes
-
-python Mapping/estimate_symmetry.py \
-    --renders-root ../data/renders --objects-root ../data/objects \
-    --symmetry-type axis_sym --sizes 224 --lightings flat \
-    --experiment-id $EXP --point-mode $MODE --overwrite
-
-for METHOD in svd ransac_svd svd_sde ransac_svd_sde; do
-    python Mapping/evaluate.py \
-        --renders-root ../data/renders --objects-root ../data/objects \
-        --symmetry-type axis_sym --sizes 224 --lightings flat \
-        --experiment-id $EXP --method $METHOD
-done
+# plane_sym: S score (S_dat), one plane per object
+python PlaneScoreData/plane_score_data.py \
+    --renders-root ../data/renders \
+    --input-id plane_v02 --output-id plane_v02_sdat \
+    --criterio datos --size 224 --lighting flat --overwrite
 ```
 
-Files with `--experiment-id` get an `_<ID>` suffix; production files are never touched.
+The baseline mesh-free estimator (`Mapping/estimate_symmetry_no_mesh.py`, SVD triangulation)
+is documented in [docs/pipeline_sin_malla.md](docs/pipeline_sin_malla.md) and
+[docs/implementacion_pipeline_sin_malla.md](docs/implementacion_pipeline_sin_malla.md).
+All of them write `predicted_symmetry_<EXP>.json` under the method key `triangulation`
+(or `triangulation_multiplane` with `--max-planes > 1`) — see [docs/data-schemas.md](docs/data-schemas.md).
 
-To delete all experiment files and start clean:
+### Step 4 — Evaluate vs ground truth
 
 ```bash
-bash Mapping/cleanup_all_experiments.sh          # dry-run (shows counts)
-bash Mapping/cleanup_all_experiments.sh --delete # execute
+python Mapping/evaluate.py \
+    --renders-root ../data/renders --objects-root ../data/objects \
+    --symmetry-type axis_sym --sizes 224 --lightings flat \
+    --experiment-id axis_v04_expE_nomesh \
+    --method triangulation --with-reference-metrics
+```
+
+`--with-reference-metrics` adds SDE_ref/F1_ref and requires `gpytoolbox`.
+
+### Step 5 — Compare experiments
+
+```bash
+python Mapping/compare_results_no_mesh.py \
+    --renders-root ../data/renders --symmetry-type axis_sym \
+    --experiment-id axis_v04_expE_nomesh --csv-dir resultados_finales/<folder> --no-plots
+```
+
+### Step 6 — Reproduce the thesis results
+
+```bash
+# Re-estimates every final configuration (EXP-E in axis, S in plane) from the points already
+# inferred, evaluates and compares; writes to resultados_finales/<folder>/
+bash PlaneScoreData/run_resultados_finales.sh
+
+# Each additional experiment has its own runner in PlaneScoreData/ (resolution, lighting,
+# flows, sending mode, VLMs, mesh, random silhouette, multi-plane, SO(3)/Aguirre rotations,
+# roll, view oracle), most with the subcommands `chequeo` (read-only) and `todo`, e.g.:
+python3 PlaneScoreData/run_plane_v02_224.py chequeo
+
+# Thesis tables (chapter 4) and prompt appendix, read from resultados_finales/
+python utils/generar_tablas_resultados_cap4.py
+python utils/verificar_tablas_resultados_cap4.py
+python utils/generar_anexo_prompts.py
 ```
 
 ---
 
-## Experimental matrix: flows, clustering, backprojection
+## With-mesh comparison
 
-Beyond the base Flow-A prompt experiments above, the methodology defines three
-orthogonal axes of variation:
-
-| Axis | Options | Where |
-|---|---|---|
-| **Flow** (VLM prompting) | `a` direct pointing, `b` pointing + description, `c` description + pointing integrados | `--flow` in `molmo_multiview_runner.py` — see `MolmoPointing/README.md` |
-| **Clustering** | `none`, `greedy`, `hdbscan` (`min_samples` 2/3/5) | `--clustering-method` in `estimate_symmetry.py` — see `Mapping/README.md` |
-| **Backprojection** | `1` (exact), `3`, `5` (averaged patch) | `--patch-size` in `map_to_3d.py` — see `Mapping/README.md` |
-
-These compose with the existing `--experiment-id` isolation pattern (a distinct
-ID per flow keeps artifacts separate; clustering/patch-size append their own
-tag to the output filename automatically).
+`Mapping/map_to_3d.py` casts each 2D point onto the mesh and `Mapping/estimate_symmetry.py`
+fits the axis/plane on the 3D hits (`svd`, `ransac_svd`, `svd_sde`, `ransac_svd_sde`, with
+optional patch backprojection and clustering). The reported comparison is run by
+`PlaneScoreData/run_axis_malla.py` and `PlaneScoreData/run_plane_malla.py`; see
+`Mapping/README.md` for the individual commands. `--point-mode` must match the prompt strategy:
+`independent` (points on the axis/plane) or `midpoint` (bilateral pairs).
 
 ---
 
@@ -367,45 +247,13 @@ tag to the output filename automatically).
 
 | Choice | Detail |
 |---|---|
-| **View sampling** | Fibonacci sphere — near-uniform angular coverage; 8 groups: 1, 6, 14, 26, 42, 62, 86, 114 views |
-| **Molmo2 output scale** | Coordinates in [0, 1000], independent of image resolution |
-| **Camera convention** | PyTorch3D row-vector: `p_cam = p_world @ R + T` |
-| **Symmetry fitting** | SVD: axis = first PC (max variance), plane normal = last PC (min variance) |
-| **RANSAC threshold** | 5% of point cloud bounding-box diagonal |
-| **SDE** | `mean(2 × |signed distance to plane|) / bbox_diag` — normalized Symmetry Distance Error |
-| **Evaluation** | Sign-agnostic angular error [0°, 90°]; best-match for plane_sym (up to 3 GT planes) |
+| **View sampling** | Fibonacci sphere, 114 views; groups of 6, 14 and 26 views picked with `round(linspace(0, 113, n))` |
+| **VLM output scale** | Coordinates in [0, 1000], independent of image resolution |
+| **Camera convention** | PyTorch3D row-vector `p_cam = p_world @ R + T`; Molmo→NDC with +X to the left (fixed 2026-10-05, ids `*_ndcfix`) |
+| **Axis estimator** | EXP-E: weighted triangulation of the interpretation planes with iterative residual reweighting |
+| **Plane estimator** | S score (`S_dat`): candidate normal chosen by agreement with the data, one plane per object |
+| **Evaluation** | Sign-agnostic angular error [0°, 90°]; AUC truncated at 45°; objects without prediction count as 90° |
 | **Dataset** | ShapeNet, 850 objects per symmetry type, normalized to unit cube |
-| **Description-view selection** (Flow B/C) | Seeded random pick per object (`MD5(object_id) mod 2^31`), filtered to elevation in (-60°, +60°) |
-| **Clustering** | Greedy centroid (5% bbox diag, always assigns) or HDBSCAN (`min_samples` 2/3/5, drops noise) |
-| **Patch backprojection** | Average 3D hits of a `h x h` sub-ray grid (`h` in {1, 3, 5}) around each point |
-
----
-
-## Additional tools
-
-Maintenance and diagnostic scripts that sit outside the main step-by-step flow:
-
-```bash
-# Sweep entrypoint: chains map_to_3d.py -> estimate_symmetry.py -> evaluate.py
-# for every method/n_views combination in one call
-python Mapping/run_all_postprocessing.py \
-    --renders-root ../data/renders --objects-root ../data/objects \
-    --symmetry-type axis_sym --sizes 224 --lightings flat
-
-# Remove n_views keys from accumulated JSON results (e.g. after a bad partial run)
-python Mapping/cleanup_experiments.py --renders-root ../data/renders --symmetry-type axis_sym
-
-# Audit render directories vs. source .obj files (find missing/extra renders)
-bash Mapping/find_extra_renders.sh
-```
-
-`Mapping/audit_view_indices_v2.py`, `Mapping/check_independent_vs_midpoint.py`,
-`Mapping/check_sde_vs_angular.py`, and `Mapping/check_origin_full.py` are ad hoc
-analysis scripts tied to specific thesis findings (view-index consistency,
-`--point-mode` comparison, SDE-vs-angular-error correlation) — see each
-script's own docstring for its exact input/output and when to use it.
-`Mapping/archive/` holds their now-superseded predecessors, kept for reference
-only (see [docs/audits/refactor-log.md](docs/audits/refactor-log.md)).
 
 ---
 
@@ -428,7 +276,10 @@ tmux ls                      # list sessions
 | Module | README |
 |---|---|
 | Rendering | [ImagesGenerator/README.md](ImagesGenerator/README.md) |
-| Molmo2 inference + experiments | [MolmoPointing/README.md](MolmoPointing/README.md) |
+| Molmo2 inference | [MolmoPointing/README.md](MolmoPointing/README.md) |
+| MolmoPoint / Qwen3-VL inference | [docs/features/molmopoint-qwen3vl-pointing.md](docs/features/molmopoint-qwen3vl-pointing.md), [docs/instalacion_molmopoint_qwen3vl.md](docs/instalacion_molmopoint_qwen3vl.md) |
+| Final experiments (S estimator, runners, diagnostics) | `PlaneScoreData/` (header of each script) |
+| Random baseline | [RandomBaseline/README.md](RandomBaseline/README.md) |
 | Mapping + evaluation | [Mapping/README.md](Mapping/README.md) |
 | Interactive viewer | [InteractiveViewer/README.md](InteractiveViewer/README.md) |
 | Mesh-free pipeline design | [docs/pipeline_sin_malla.md](docs/pipeline_sin_malla.md), [docs/implementacion_pipeline_sin_malla.md](docs/implementacion_pipeline_sin_malla.md) |
