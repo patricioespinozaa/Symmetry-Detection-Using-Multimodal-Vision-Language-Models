@@ -7,9 +7,9 @@
 # y subida a GitHub). El experimento "rot_so3" se registra solo en memoria. Diferencias:
 #   - renders en /data/pespinoz/renders_rot_so3 (36 vistas: las de 6/14/26 de las 114) y objetos
 #     (mallas + etiquetas rotadas) en /data/pespinoz/objects_rot_so3;
-#   - la inferencia la hace MolmoPointing/molmo_multiview_runner_subset.py, no el runner original,
-#     que elegiria mal las vistas en un render parcial. Este script espera a que terminen los
-#     procesos de inferencia (--esperar-pid) y, si faltan objetos, la retoma una vez en --gpus;
+#   - la inferencia la hace MolmoPointing/molmo_multiview_runner.py, que elige las vistas
+#     sobre la secuencia Fibonacci completa (fibonacci_total) y por eso sirve en un render parcial.
+#     Este script espera a que terminen los procesos de inferencia (--esperar-pid) y, si faltan objetos, la retoma una vez en --gpus;
 #   - el pareado lee ambas evaluaciones desde --renders-root, asi que se enlaza ahi (solo lectura)
 #     el eval_*_results.json de la linea base sin rotar. Los objetos son los mismos 850 ids.
 #
@@ -30,13 +30,13 @@ import run_plane_v02_224 as base  # noqa: E402
 NOMBRE = "rot_so3"
 EXP = dict(tipo="plane_sym", luz="flat", modelo="molmo", exp=f"{base.PROMPT}_rot_so3",
            prompt=base.PROMPT, modo="auto", flujo="a")
-RUNNER = "MolmoPointing/molmo_multiview_runner_subset.py"
+RUNNER = "MolmoPointing/molmo_multiview_runner.py"
 # Codigo nuevo del experimento, que se sube junto con los resultados para poder reproducirlo.
 CODIGO = ["ExploratoryDataAnalysis/rotar_planares.py", "ExploratoryDataAnalysis/rotar_mallas.py",
-          "ImagesGenerator/export_fibonacci_views_subset.py", "ImagesGenerator/data_render_subset.py",
-          "MolmoPointing/molmo_multiview_runner_subset.py",
-          "MolmoPointPointing/molmopoint_multiview_runner_subset.py",
-          "QwenPointing/qwen3vl_multiview_runner_subset.py",
+          "ImagesGenerator/export_fibonacci_views.py", "ImagesGenerator/data_render.py",
+          "MolmoPointing/molmo_multiview_runner.py",
+          "MolmoPointPointing/molmopoint_multiview_runner.py",
+          "QwenPointing/qwen3vl_multiview_runner.py",
           "PlaneScoreData/run_plane_v02_224_rot_so3.py"]
 COAUTOR = "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
@@ -57,7 +57,7 @@ def esperar(pids: list[int]) -> None:
 
 
 def inferir(args: argparse.Namespace, logs: Path) -> None:
-    """ Retoma la inferencia en todas las GPUs con el runner _subset (salta lo ya hecho). """
+    """ Retoma la inferencia en todas las GPUs con el runner (admite renders parciales) (salta lo ya hecho). """
     procesos = []
     for i, gpu in enumerate(args.gpus):
         comando = [base.PY, RUNNER, "--renders-root", str(args.renders_root),
@@ -102,7 +102,7 @@ def subir(salida: Path) -> None:
             return
         mensaje = (f"Add plane_v02 224px results: {NOMBRE} (planar meshes with random SO(3) rotation)"
                    f"\n\nRenders with the 36 views used by 6/14/26 of the 114 Fibonacci views;"
-                   f" inference with the _subset runners.\n\n{COAUTOR}")
+                   f" inference with the runners that accept partial renders.\n\n{COAUTOR}")
         subprocess.run(["git", "commit", "-m", mensaje], cwd=REPO, check=True)
         subprocess.run(["git", "push", "origin", base.RAMA], cwd=REPO, check=True)
         log(f"{NOMBRE}: SUBIDO A GITHUB")

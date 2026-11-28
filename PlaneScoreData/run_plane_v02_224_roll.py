@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Control del experimento de orientación: objetos planares en su pose canónica, pero cada cámara
-# girada al azar en torno a su eje óptico (ImagesGenerator/export_fibonacci_views_subset.py
+# girada al azar en torno a su eje óptico (ImagesGenerator/export_fibonacci_views.py
 # --roll-seed). Las posiciones y direcciones de las cámaras son las de siempre, así que las vistas
 # de canto y la geometría 3D no cambian (el techo del estimador con puntos perfectos es el mismo que
 # sin giro); solo cambia que la traza del plano deja de ser vertical en la imagen. Compara contra
@@ -34,7 +34,7 @@ SEMILLA_GIRO = 0
 REPO_VIEWS = 114
 EXP = dict(tipo="plane_sym", luz="flat", modelo="molmo", exp=f"{base.PROMPT}_roll",
            prompt=base.PROMPT, modo="auto", flujo="a")
-CODIGO = ["ImagesGenerator/export_fibonacci_views_subset.py", "ImagesGenerator/data_render_subset.py",
+CODIGO = ["ImagesGenerator/export_fibonacci_views.py", "ImagesGenerator/data_render.py",
           "PlaneScoreData/run_plane_v02_224_roll.py"]
 COAUTOR = "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
@@ -77,7 +77,7 @@ def renders_listos(args: argparse.Namespace) -> int:
 
 def renderizar(args: argparse.Namespace, logs: Path) -> None:
     """ Renderiza las 6 vistas con giro de los objetos que falten (salta los ya hechos). """
-    comando = [base.PY, "ImagesGenerator/data_render_subset.py",
+    comando = [base.PY, "ImagesGenerator/data_render.py",
                "--input-folder", str(args.objects_root / "curated_plane_sym_obj"),
                "--output-folder", str(args.renders_root), "--symmetry-type", EXP["tipo"],
                "--repo-views", str(REPO_VIEWS), "--sizes", str(base.SIZE), "--lightings", EXP["luz"],
@@ -91,7 +91,7 @@ def renderizar(args: argparse.Namespace, logs: Path) -> None:
 
 
 def inferir(args: argparse.Namespace, logs: Path) -> None:
-    """ Inferencia con el runner _subset de Molmo2, repartida en las GPUs; retoma lo que falte. """
+    """ Inferencia con el runner de Molmo2 (admite renders parciales), repartida en las GPUs; retoma lo que falte. """
     procesos = []
     for i, gpu in enumerate(args.gpus):
         comando = [base.PY, rot.RUNNER, "--renders-root", str(args.renders_root),

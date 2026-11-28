@@ -4,15 +4,33 @@ from tqdm import tqdm
 import argparse
 import sys
 
+import numpy as np
 
-def preview_execution(obj_files, sizes, lightings, repo_views, output_folder, symmetry_type):
+EXPORT_SCRIPT = Path(__file__).resolve().parent / "export_fibonacci_views.py"
+
+
+def subset_indices(total, subset_n_views):
+    """Same union of indices as export_fibonacci_views.subset_indices (kept here to avoid importing torch)."""
+    chosen = set()
+    for n in subset_n_views:
+        if n >= total:
+            chosen.update(range(total))
+        else:
+            chosen.update(int(round(i)) for i in np.linspace(0, total - 1, n))
+    return sorted(chosen)
+
+
+def preview_execution(obj_files, sizes, lightings, repo_views, output_folder, symmetry_type,
+                      views_per_object=None, assume_yes=False):
     """
-    Show execution summary and ask for confirmation.
+    Show execution summary and ask for confirmation (skipped with assume_yes).
     """
+    if views_per_object is None:
+        views_per_object = repo_views
 
     total_objects = len(obj_files)
     total_configs = len(sizes) * len(lightings)
-    images_per_object = repo_views * total_configs  
+    images_per_object = views_per_object * total_configs
     total_images = total_objects * images_per_object
 
     print("\n========== EXECUTION PLAN ==========")
@@ -20,13 +38,15 @@ def preview_execution(obj_files, sizes, lightings, repo_views, output_folder, sy
     print(f"Output folder:    {output_folder}")
     print(f"Symmetry type:    {symmetry_type}")
     print(f"Objects:          {total_objects}")
-    print(f"Views per object: {repo_views}")
+    print(f"Views per object: {views_per_object} (of {repo_views} Fibonacci)")
     print(f"Sizes:            {sizes}")
     print(f"Lightings:        {lightings}")
     print(f"Images/object:    {images_per_object}")
     print(f"TOTAL IMAGES:     {total_images}")
     print("====================================\n")
 
+    if assume_yes:
+        return
     confirm = input("Type 'OK' to start: ")
     if confirm.strip() != "OK":
         print("Execution cancelled.")
@@ -43,6 +63,16 @@ def main():
     parser.add_argument('--repo-views', type=int, default=114)
     parser.add_argument('--sizes', type=int, nargs='+', default=[224])
     parser.add_argument('--lightings', nargs='+', default=['flat'], choices=['flat', 'darker', 'brighter'])
+    parser.add_argument('--subset-n-views', type=int, nargs='+', default=None,
+                        help='Render only the views the pointing runners pick for these view counts '
+                             '(e.g. 6 14 26 -> 36 of 114); passed through to export_fibonacci_views.py')
+    parser.add_argument('--roll-seed', type=int, default=None,
+                        help='Roll each camera about its optical axis (see export_fibonacci_views.py); '
+                             'default: no roll')
+    parser.add_argument('--device', type=str, default='cuda:0')
+    parser.add_argument('--skip-existing', action='store_true',
+                        help='Skip object/size/lighting combos whose manifest.json already exists')
+    parser.add_argument('--yes', action='store_true', help='Do not ask for interactive confirmation')
 
     args = parser.parse_args()
 
@@ -53,6 +83,10 @@ def main():
         print("No .obj files found.")
         return
 
+    views_per_object = args.repo_views
+    if args.subset_n_views:
+        views_per_object = len(subset_indices(args.repo_views, args.subset_n_views))
+
     # 🔍 PREVIEW + CONFIRMATION
     preview_execution(
         obj_files,
@@ -60,7 +94,9 @@ def main():
         args.lightings,
         args.repo_views,
         args.output_folder,
-        args.symmetry_type
+        args.symmetry_type,
+        views_per_object=views_per_object,
+        assume_yes=args.yes,
     )
 
     # =========================
@@ -79,16 +115,24 @@ def main():
             for size in args.sizes:
                 for lighting in args.lightings:
                     pbar.set_description(f"{object_id} | {size}px | {lighting}")
+                    out_dir = Path(args.output_folder) / args.symmetry_type / object_id / str(size) / lighting
+                    if args.skip_existing and (out_dir / "manifest.json").exists():
+                        continue
                     # Pasar solo la raíz, la estructura la arma export_fibonacci_views.py
                     cmd = [
-                        sys.executable, "ImagesGenerator/export_fibonacci_views.py",
+                        sys.executable, str(EXPORT_SCRIPT),
                         "--mesh", str(obj_path),
                         "--output", str(args.output_folder),
                         "--repo-views", str(args.repo_views),
                         "--image-size", str(size),
                         "--illumination", lighting,
-                        "--symmetry-type", args.symmetry_type
+                        "--symmetry-type", args.symmetry_type,
+                        "--device", args.device,
                     ]
+                    if args.subset_n_views:
+                        cmd += ["--subset-n-views", *map(str, args.subset_n_views)]
+                    if args.roll_seed is not None:
+                        cmd += ["--roll-seed", str(args.roll_seed)]
                     subprocess.run(cmd, check=True)
             pbar.update(1)
         pbar.set_description("Done!")

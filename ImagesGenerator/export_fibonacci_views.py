@@ -1,4 +1,10 @@
+# --subset-n-views (opcional) renderiza solo las vistas que eligen los runners de pointing
+# para esos números de vistas, con los mismos nombres e índices que la secuencia completa.
+# --roll-seed (opcional) gira cada cámara en torno a su eje óptico: misma posición y dirección de
+# vista, pero la imagen sale rotada en su plano, así que el "arriba" del objeto deja de coincidir
+# con el de la imagen. Sin --roll-seed el render es idéntico al de siempre.
 import argparse
+import hashlib
 import json
 import time
 from pathlib import Path
@@ -180,7 +186,72 @@ def save_image_tensor(image_tensor: torch.Tensor, output_path: Path):
     image_rgb = np.clip(image_rgb * 255.0, 0, 255).astype(np.uint8)
     Image.fromarray(image_rgb).save(output_path)
 
-def render_fibonacci(mesh, eye_positions, output_dir: Path, fov: float, image_size: int, device: torch.device, angle_info=None):
+def subset_indices(total: int, subset_n_views: list[int]) -> list[int]:
+    """
+    Union of the view indices the pointing runners pick for each n in subset_n_views.
+
+    Mirrors get_n_views_entries in the pointing runners: for n views out of a
+    `total`-point Fibonacci sequence they take round(linspace(0, total-1, n)).
+    Rendering only this union (e.g. 36 views for {6, 14, 26} out of 114) gives
+    exactly the same images those runners would pick from a full render.
+
+    Args:
+        total: number of points of the full Fibonacci sequence (--repo-views)
+        subset_n_views: view counts that will be requested downstream
+    Returns:
+        sorted list of original Fibonacci indices to render
+    """
+    chosen = set()
+    for n in subset_n_views:
+        if n >= total:
+            chosen.update(range(total))
+        else:
+            chosen.update(int(round(i)) for i in np.linspace(0, total - 1, n))
+    return sorted(chosen)
+
+def roll_angles(seed: int, object_id: str, total: int) -> np.ndarray:
+    """
+    Giro en el plano de la imagen (grados, uniforme en [0, 360)) de cada vista Fibonacci.
+
+    Mismo esquema de semilla que ExploratoryDataAnalysis/rotar_planares.py: un generador por
+    objeto, derivado de la semilla y del md5 de su id. Se sortea un ángulo para cada una de las
+    `total` vistas de la secuencia completa, así el ángulo de una vista no depende de qué
+    subconjunto se renderice.
+
+    Args:
+        seed: semilla global
+        object_id: id del objeto (nombre del .obj)
+        total: tamaño de la secuencia Fibonacci completa
+    Returns:
+        vector (total,) de ángulos en grados
+    """
+    h = int(hashlib.md5(object_id.strip().lower().encode("utf-8")).hexdigest()[:8], 16)
+    return np.random.default_rng([seed, h]).uniform(0.0, 360.0, total)
+
+
+def roll_cameras(R: torch.Tensor, T: torch.Tensor, roll_deg: np.ndarray):
+    """
+    Gira cada cámara en torno a su eje óptico (z de la cámara).
+
+    Convención de PyTorch3D: p_cam = p_world @ R + T. Con p_cam' = p_cam @ Rz queda
+    R' = R @ Rz y T' = T @ Rz: el centro de la cámara -(R' T') y el eje óptico no cambian,
+    solo rota la imagen alrededor de su centro.
+
+    Args:
+        R: (N, 3, 3) rotaciones de look_at_view_transform
+        T: (N, 3) traslaciones
+        roll_deg: (N,) ángulos en grados
+    Returns:
+        (R', T')
+    """
+    th = torch.tensor(np.deg2rad(roll_deg), dtype=R.dtype, device=R.device)
+    c, s = torch.cos(th), torch.sin(th)
+    Rz = torch.zeros((len(roll_deg), 3, 3), dtype=R.dtype, device=R.device)
+    Rz[:, 0, 0], Rz[:, 0, 1], Rz[:, 1, 0], Rz[:, 1, 1], Rz[:, 2, 2] = c, -s, s, c, 1.0
+    return R @ Rz, (T[:, None, :] @ Rz)[:, 0, :]
+
+
+def render_fibonacci(mesh, eye_positions, output_dir: Path, fov: float, image_size: int, device: torch.device, angle_info=None, indices=None, fibonacci_total=None, roll_deg=None):
     """
     Render the mesh from all Fibonacci viewpoints and save one image per view.
     Args:
@@ -191,9 +262,20 @@ def render_fibonacci(mesh, eye_positions, output_dir: Path, fov: float, image_si
         image_size: Output image size
         device: Device
         angle_info: List of angle dicts (optional)
+        indices: original Fibonacci index of each row of eye_positions (default 0..N-1);
+            used for filenames and the "index" field, so a partial render keeps the
+            same names/indices as the full one
+        fibonacci_total: size of the full Fibonacci sequence these views come from
+            (default len(eye_positions)); saved per record as "fibonacci_total"
+        roll_deg: optional (N,) in-plane roll of each camera in degrees (see roll_cameras);
+            saved per record as "roll_deg"
     Returns:
         List of metadata records for all images
     """
+    if indices is None:
+        indices = list(range(len(eye_positions)))
+    if fibonacci_total is None:
+        fibonacci_total = len(eye_positions)
     # Create output directory if it doesn't exist
     output_dir.mkdir(parents=True, exist_ok=True)
     # Stabilize eye positions to avoid degenerate cases
@@ -202,6 +284,8 @@ def render_fibonacci(mesh, eye_positions, output_dir: Path, fov: float, image_si
     eye_tensor = torch.tensor(eye_positions, dtype=torch.float32, device=device)
     # Compute camera rotation (R) and translation (T) matrices for each eye position
     R, T = look_at_view_transform(eye=eye_tensor, device=device)
+    if roll_deg is not None:
+        R, T = roll_cameras(R, T, np.asarray(roll_deg, dtype=np.float64))
     # Rasterization settings for rendering
     raster_settings = RasterizationSettings(
         image_size=(image_size, image_size),
@@ -249,12 +333,14 @@ def render_fibonacci(mesh, eye_positions, output_dir: Path, fov: float, image_si
     # Save each image and its metadata
     records = []
     for i in range(len(eye_positions)):
+        idx = int(indices[i])
         az = angle_info[i]['azimuth']
         el = angle_info[i]['elevation']
-        filename = f"IND_{i:02d}_AZ_{az:03d}_EL_{el:+03d}.png"
+        filename = f"IND_{idx:02d}_AZ_{az:03d}_EL_{el:+03d}.png"
         save_image_tensor(images[i], output_dir / filename)
-        records.append({
-            "index": i,
+        record = {
+            "index": idx,
+            "fibonacci_total": int(fibonacci_total),
             "filename": filename,
             "azimuth": az,
             "elevation": el,
@@ -262,7 +348,10 @@ def render_fibonacci(mesh, eye_positions, output_dir: Path, fov: float, image_si
             "eye": [float(x) for x in eye_positions[i].tolist()],
             "R": R[i].detach().cpu().tolist(),
             "T": T[i].detach().cpu().tolist(),
-        })
+        }
+        if roll_deg is not None:
+            record["roll_deg"] = float(roll_deg[i])
+        records.append(record)
     return records
 
 def write_metadata(object_output_dir: Path, all_records):
@@ -294,6 +383,14 @@ def main():
     parser.add_argument("--camera-distance-factor", type=float, default=1.2, help="Camera distance multiplier (default 1.2)")
     parser.add_argument("--illumination", type=str, default="flat", choices=["flat", "darker", "brighter"], help="Illumination mode: flat (default), darker, brighter")
     parser.add_argument("--symmetry-type", type=str, required=True, choices=["axis_sym", "plane_sym"], help="Type of symmetry to detect")
+    parser.add_argument("--subset-n-views", type=int, nargs="+", default=None,
+                        help="Render only the views the pointing runners pick for these view counts "
+                             "out of the --repo-views sequence (e.g. 6 14 26 -> 36 of 114). "
+                             "Filenames and indices stay those of the full sequence.")
+    parser.add_argument("--roll-seed", type=int, default=None,
+                        help="Roll each camera about its optical axis by a per-object, per-view "
+                             "uniform angle in [0, 360) derived from this seed and the object id "
+                             "(default: no roll, same render as always)")
     args = parser.parse_args()
     
     # Start processing
@@ -333,7 +430,18 @@ def main():
     
     # Generate Fibonacci viewpoints
     fib_views, fib_angles = sample_fibonacci_viewpoints(camera_distance, args.repo_views)
-    
+
+    # Optionally keep only the views used downstream (same positions as the full sequence)
+    if args.subset_n_views:
+        rendered_indices = subset_indices(args.repo_views, args.subset_n_views)
+    else:
+        rendered_indices = list(range(args.repo_views))
+    fib_views = fib_views[rendered_indices]
+    fib_angles = [fib_angles[i] for i in rendered_indices]
+    roll_deg = None
+    if args.roll_seed is not None:
+        roll_deg = roll_angles(args.roll_seed, object_name, args.repo_views)[rendered_indices]
+
     # Render and save one image per view
     all_records = render_fibonacci(
         mesh=mesh,
@@ -343,6 +451,9 @@ def main():
         image_size=args.image_size,
         device=device,
         angle_info=fib_angles,
+        indices=rendered_indices,
+        fibonacci_total=args.repo_views,
+        roll_deg=roll_deg,
     )
 
     # Save metadata
@@ -355,6 +466,10 @@ def main():
         "image_size": args.image_size,
         "camera_distance": camera_distance,
         "total_images": len(all_records),
+        "repo_views": args.repo_views,
+        "subset_n_views": args.subset_n_views,
+        "rendered_indices": rendered_indices,
+        "roll_seed": args.roll_seed,
         "processing_time_seconds": round(elapsed_time, 2),
         "processing_time_human": f"{int(elapsed_time // 60)}m {elapsed_time % 60:.2f}s",
         "illumination": args.illumination,

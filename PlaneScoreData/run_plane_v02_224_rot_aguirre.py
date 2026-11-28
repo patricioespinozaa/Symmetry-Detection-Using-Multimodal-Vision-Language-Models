@@ -9,7 +9,7 @@
 #      mallas limpias, invirtiendo las caras cuando hay reflexion;
 #   2. render de las 36 vistas de 6/14/26 de las 114 (como rot_so3; asi 14 y 26 no necesitan
 #      volver a renderizar), sin giro de camara;
-#   3. inferencia de los grupos de --vistas (6 por defecto) con el runner _subset, repartida en
+#   3. inferencia de los grupos de --vistas (6 por defecto) con el runner (admite renders parciales), repartida en
 #      --gpus; los grupos ya inferidos se saltan, asi que --vistas 6 14 26 solo agrega 14 y 26;
 #   4. sin malla: S_dat con un plano, evaluate.py con metricas de referencia, comparacion,
 #      auditoria y pareado contra plane_v02 canonico (run_plane_v02_224.posprocesar);
@@ -55,8 +55,8 @@ CSV_MALLA_BASE = (REPO / "resultados_finales" / "plane_malla_224" / "experiments
                   / "plane_sym_final_comparison.csv")
 CODIGO = ["ExploratoryDataAnalysis/rotaciones_aguirre.py",
           "ExploratoryDataAnalysis/rotar_mallas.py",
-          "ImagesGenerator/export_fibonacci_views_subset.py",
-          "ImagesGenerator/data_render_subset.py",
+          "ImagesGenerator/export_fibonacci_views.py",
+          "ImagesGenerator/data_render.py",
           "PlaneScoreData/run_plane_v02_224_rot_aguirre.py"]
 COAUTOR = "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
@@ -173,7 +173,7 @@ def renders_listos(args: argparse.Namespace) -> int:
 
 def renderizar(args: argparse.Namespace, logs: Path) -> None:
     """ Renderiza las 36 vistas de los objetos que falten (salta los ya hechos). """
-    correr([base.PY, "ImagesGenerator/data_render_subset.py",
+    correr([base.PY, "ImagesGenerator/data_render.py",
             "--input-folder", args.objects_root / SUBDIR, "--output-folder", args.renders_root,
             "--symmetry-type", EXP["tipo"], "--repo-views", REPO_VIEWS, "--sizes", base.SIZE,
             "--lightings", EXP["luz"], "--subset-n-views", *VISTAS_RENDER,
@@ -182,7 +182,7 @@ def renderizar(args: argparse.Namespace, logs: Path) -> None:
 
 
 def inferir(args: argparse.Namespace, logs: Path) -> None:
-    """ Inferencia de los grupos de VISTAS con el runner _subset (salta los ya hechos). """
+    """ Inferencia de los grupos de VISTAS con el runner (admite renders parciales) (salta los ya hechos). """
     procesos = []
     for i, gpu in enumerate(args.gpus):
         comando = [base.PY, rot.RUNNER, "--renders-root", str(args.renders_root),

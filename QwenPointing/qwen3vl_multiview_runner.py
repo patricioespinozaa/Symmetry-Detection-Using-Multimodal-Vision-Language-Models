@@ -139,11 +139,23 @@ def get_n_views_entries(metadata: list[dict], n_views: int) -> list[dict]:
     Returns:
     - list of n_views metadata entries with uniform index spacing, sorted by index
     """
-    total = len(metadata)
+    # Size of the full Fibonacci sequence. Partial renders (export_fibonacci_views.py
+    # --subset-n-views) store it per entry as "fibonacci_total", so the indices picked
+    # here are the same ones a full render would give; old full renders lack the
+    # field and fall back to len(metadata), the previous behaviour.
+    total = max(int(m.get("fibonacci_total", len(metadata))) for m in metadata)
     if n_views >= total:
-        return sorted(metadata, key=lambda e: e["index"])
-    indices = {int(round(i)) for i in np.linspace(0, total - 1, n_views)}
-    entries = [m for m in metadata if m["index"] in indices]
+        wanted = set(range(total))
+    else:
+        wanted = {int(round(i)) for i in np.linspace(0, total - 1, n_views)}
+    entries = [m for m in metadata if m["index"] in wanted]
+    missing = sorted(wanted - {m["index"] for m in entries})
+    if missing:
+        raise ValueError(
+            f"n_views={n_views} needs Fibonacci indices {missing} (of {total}) that were "
+            f"not rendered; this render only has {len(metadata)} views -- re-render with "
+            f"--subset-n-views including {n_views}"
+        )
     return sorted(entries, key=lambda e: e["index"])
 
 

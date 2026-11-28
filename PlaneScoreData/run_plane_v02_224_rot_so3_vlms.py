@@ -7,7 +7,7 @@
 #   rot_so3_molmopoint_frase  MolmoPoint-8B, versión de una frase de plane_v02, la que rinde
 #                             mejor en plano sin rotar
 #
-# Para cada experimento: inferencia con el runner _subset del modelo repartida entre --gpus (los
+# Para cada experimento: inferencia con el runner del modelo (admite renders parciales) repartida entre --gpus (los
 # renders rotados solo tienen las 36 vistas de 6/14/26), S_dat con un plano, evaluate.py con
 # métricas de referencia, comparación, auditoría, pareado contra la corrida SIN rotar del mismo
 # modelo y envío individual, y subida a GitHub. Reusa run_plane_v02_224.py sin modificarlo.
@@ -27,10 +27,10 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "PlaneScoreData"))
 import run_plane_v02_224 as base  # noqa: E402
 
-RUNNERS_SUBSET = {
-    "molmo": "MolmoPointing/molmo_multiview_runner_subset.py",
-    "qwen": "QwenPointing/qwen3vl_multiview_runner_subset.py",
-    "molmopoint": "MolmoPointPointing/molmopoint_multiview_runner_subset.py",
+RUNNERS = {
+    "molmo": "MolmoPointing/molmo_multiview_runner.py",
+    "qwen": "QwenPointing/qwen3vl_multiview_runner.py",
+    "molmopoint": "MolmoPointPointing/molmopoint_multiview_runner.py",
 }
 SUFIJO_BASE = f"_s{base.SIZE}_flat_ndcfix_sdat_mp1_nomesh"
 # nombre: experimento (formato de base.EXPERIMENTOS) y su corrida sin rotar (id y carpeta)
@@ -76,11 +76,11 @@ def registrar(nombre: str) -> dict:
 
 
 def inferir(args: argparse.Namespace, nombre: str, logs: Path) -> None:
-    """ Inferencia con el runner _subset, repartiendo los objetos entre las GPUs; retoma lo que falte. """
+    """ Inferencia con el runner (admite renders parciales), repartiendo los objetos entre las GPUs; retoma lo que falte. """
     e = base.EXPERIMENTOS[nombre]
     procesos = []
     for i, gpu in enumerate(args.gpus):
-        comando = [base.PY, RUNNERS_SUBSET[e["modelo"]], "--renders-root", str(args.renders_root),
+        comando = [base.PY, RUNNERS[e["modelo"]], "--renders-root", str(args.renders_root),
                    "--symmetry-type", e["tipo"], "--sizes", str(base.SIZE), "--lightings", e["luz"],
                    "--view-groups", *map(str, base.VISTAS), "--prompt-mode", e["modo"],
                    "--prompt-id", e["prompt"], "--experiment-id", e["exp"],
