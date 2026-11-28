@@ -1,16 +1,15 @@
 # estimate_symmetry_variants.py
 #
 # Sibling of Mapping/estimate_symmetry_no_mesh.py that runs one of the
-# triangulation ablations (EXP-A..F, triangulation_variants/) instead of the
+# triangulation variants (today only EXP-E, triangulation_variants/) instead of the
 # baseline estimator, over a SINGLE already-run --experiment-id (a prior
 # Molmo2 prompt execution). Reads the same molmo_multiview_<EXP>.json files,
 # writes predicted_symmetry_<EXP>_<variant>.json in the exact schema
 # Mapping/evaluate.py already understands ("triangulation" /
 # "triangulation_multiplane" method keys) -- no changes needed downstream.
 #
-# For running this over MANY prompt executions at once, see run_batch.py,
-# which drives this module's process_object() directly from a YAML config
-# instead of shelling out once per experiment_id.
+# The final runs call it once per experiment from PlaneScoreData/run_*.py and
+# PlaneScoreData/run_resultados_finales.sh.
 from __future__ import annotations
 
 import argparse
@@ -291,7 +290,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--experiment-id", required=True,
                    help="Source prompt run to read points from (its molmo_multiview_<ID>.json "
                         "must already exist for every object).")
-    p.add_argument("--variant", required=True, choices=["expA", "expB", "expC", "expD", "expE", "expF"])
+    p.add_argument("--variant", required=True, choices=["expE"])
     p.add_argument("--sizes", type=int, nargs="+", default=[224, 448, 1136])
     p.add_argument("--lightings", type=str, nargs="+", default=["flat", "brighter", "darker"],
                    choices=["flat", "darker", "brighter"])

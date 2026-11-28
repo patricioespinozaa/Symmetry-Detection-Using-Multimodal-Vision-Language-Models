@@ -161,6 +161,10 @@ renombrar_csv() {
 
 csv_base() {
     # uso: csv_base <tipo> <carpeta>
+    # La rama *) lee la línea base de ndc_fix/<carpeta>/experiments_*, que se quitó del repo en
+    # la reestructuración (docs/plan_reestructuracion_repo.md §5.4). Los pareados contra esa base
+    # ya están guardados en resultados_finales/*/pareado/. Para volver a correr esas filas hay que
+    # recuperar ndc_fix/ desde el historial de git.
     case "$2" in
         molmopoint) ls MolmoPointPointing/experiments_*/"$1"_molmopoint_comparison.csv ;;
         qwen3vl)    ls QwenPointing/experiments_*/"$1"_qwen3vl_comparison.csv ;;

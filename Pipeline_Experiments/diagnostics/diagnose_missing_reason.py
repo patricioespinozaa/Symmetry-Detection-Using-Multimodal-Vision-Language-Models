@@ -1,6 +1,6 @@
 # diagnose_missing_reason.py
 #
-# Targeted follow-up to Pipeline_Experiments/audit_results.py: that script
+# Targeted follow-up to the former Pipeline_Experiments/audit_results.py (removed): that script
 # only counts n_molmo vs n_pred per (source_experiment_id, variant); it can't
 # tell whether a missing predicted_symmetry_<ID>.json is expected ("Molmo2
 # didn't return >=2/>=4 usable points for this object") or a real bug hiding
@@ -13,7 +13,7 @@
 # row flagged as "pred missing N/850" -- start with the biggest outliers):
 #   python Pipeline_Experiments/diagnostics/diagnose_missing_reason.py \
 #       --renders-root ../data/renders --symmetry-type axis_sym \
-#       --experiment-id axis_v05_1_flowC --variant expA \
+#       --experiment-id axis_v05_1_flowC --variant expE \
 #       --out ../results/diagnostics/axis_v05_1_flowC_expA_missing_reasons.csv
 from __future__ import annotations
 
@@ -99,7 +99,7 @@ def main() -> None:
     p.add_argument("--objects-root", default=None, help="Required only for --variant expF.")
     p.add_argument("--symmetry-type", required=True, choices=["axis_sym", "plane_sym"])
     p.add_argument("--experiment-id", required=True, help="Source prompt run (audit_results.py 'source').")
-    p.add_argument("--variant", required=True, choices=["expA", "expB", "expC", "expD", "expE", "expF"])
+    p.add_argument("--variant", required=True, choices=["expE"])
     p.add_argument("--filter-policy", default="none", choices=["none", "per_point", "any", "both"])
     p.add_argument("--max-planes", type=int, default=1, help="plane_sym only.")
     p.add_argument("--edge-on-thresh", type=float, default=0.5, help="plane_sym only.")

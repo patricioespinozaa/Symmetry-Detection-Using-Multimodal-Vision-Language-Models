@@ -17,7 +17,6 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import chance  # noqa: E402
-import latex_tables  # noqa: E402
 import run_baseline  # noqa: E402
 from significance import compare_metric  # noqa: E402
 from simulation import (  # noqa: E402
@@ -334,55 +333,6 @@ def test_compare_eval_results_multiplane() -> None:
     assert by_metric["recall_planes_mean"]["n_objects"] == 20
     assert by_metric["recall_planes_mean"]["random_coverage"] == 0.5
     assert abs(by_metric["recall_adj"]["method_value"] - 0.25) < 1e-12
-
-
-def test_plane_multi_table() -> None:
-    """ The multi-plane LaTeX table has one column per K and one row per metric. """
-    gt = _synthetic_gt("plane_sym", [1, 2] * 50)
-    simulated = {k: simulate_random_multiplane(gt, 10, 0, mean_planes=k) for k in (1, 2, 3)}
-    table = latex_tables.plane_multi_table(gt, simulated, 10, 15.0)
-    assert "tab:plane_azar_multi" in table
-    assert "3 planos por objeto" in table
-    assert table.count(r"\\") == len(latex_tables.MULTIPLANE_ROWS) + 1
-
-
-def _write_labels(root: Path) -> None:
-    """ Writes synthetic labels in the dataset's .txt format, with known answers.
-
-    Args:
-        * root: folder that will hold curated_axis_sym_obj/ and curated_plane_sym_obj/
-
-    """
-    axis_dir, plane_dir = root / "curated_axis_sym_obj", root / "curated_plane_sym_obj"
-    axis_dir.mkdir()
-    plane_dir.mkdir()
-    for i in range(20):
-        (axis_dir / f"a{i}.txt").write_text("1\naxis 0 1 0 0 0 0\n4\nangles 180 90\n")
-        (plane_dir / f"p{i}.txt").write_text("1\nplane 1 0 0 -0.0 0.0 0.0\n")
-    for i in range(20, 25):
-        (plane_dir / f"p{i}.txt").write_text("2\nplane 1 0 0 0 0 0\nplane 0 0 1 0 0 0\n")
-
-
-def test_cap4_file_has_both_baselines() -> None:
-    """ The cap4 file holds all tables, and fixed axes score as the labels dictate. """
-    with tempfile.TemporaryDirectory() as folder:
-        root = Path(folder)
-        _write_labels(root)
-        out = root / "salida" / "cap4_baselines.tex"
-        run_baseline.run_cap4(argparse.Namespace(objects_root=str(root), repetitions=5, seed=0,
-                                                 out=str(out)))
-        text = out.read_text(encoding="utf-8")
-    for label in ("axis_azar", "axis_fijos", "plane_azar", "plane_azar_multi", "plane_fijos",
-                  "plane_fijos_multi"):
-        assert rf"\label{{tab:base_{label}}}" in text, label
-    assert text.count(r"\begin{table}") == 6
-    assert "25 de las 30" in text or "20 de las 30" in text
-    # Y predicts the axis exactly, and X is exact on every plane object; a perfect AUC is
-    # 0.995 because auc_from_errors counts errors strictly below each threshold, 0 included
-    assert r"Siempre $Y$ & 0.995 & 0.0 & 0.0 & 1.000 & 1.000 & 1.000 \\" in text
-    assert r"Siempre $X$ & 0.995 & 0.0 & 0.0 & 1.000 & 1.000 & 1.000 \\" in text
-    # {X,Z} finds all planes: recall 1, precision (20 * 0.5 + 5 * 1) / 25, F1 from global counts
-    assert r"Siempre $\{X,Z\}$ & 2 & 1.000 & 0.600 &" in text
 
 
 if __name__ == "__main__":

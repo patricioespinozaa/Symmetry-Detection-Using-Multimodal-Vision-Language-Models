@@ -13,17 +13,10 @@
 #              gives the random predictor the method's coverage instead.
 #              Multi-plane rows are compared against a random predictor with
 #              the method's number of planes (RandomBaseline/multiplane.py).
-#   latex:     LaTeX tables of the random baseline on the full dataset: axial,
-#              planar with one plane, and planar with several planes.
-#   cap4:      one .tex with both baselines on the full dataset: random predictors
-#              and fixed world-axis predictors (Pipeline_Experiments/diagnostics/
-#              trivial_baselines.py), by default Tesis_DCC_MDS/cap4_baselines.tex.
 #
 #   python RandomBaseline/run_baseline.py reference --objects-root ../data/objects
 #   python RandomBaseline/run_baseline.py reference --objects-root ../data/objects \
 #       --symmetry-type plane_sym --n-planes 1 2 3
-#   python RandomBaseline/run_baseline.py latex --objects-root ../data/objects
-#   python RandomBaseline/run_baseline.py cap4 --objects-root ../data/objects
 #   python RandomBaseline/run_baseline.py compare --objects-root ../data/objects \
 #       --symmetry-type axis_sym --summary-csv <comparison.csv> [...]
 #   python RandomBaseline/run_baseline.py compare --objects-root ../data/objects \
@@ -41,23 +34,14 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import chance  # noqa: E402
-import latex_tables  # noqa: E402
 from significance import COMPARED_METRICS, MULTIPLANE_METRICS, compare_metric  # noqa: E402
 from simulation import (  # noqa: E402
-    ANGULAR_THRESHOLDS, AUC_ANGULAR_MAX, GroundTruth, best_match_errors,
-    load_ground_truth, simulate_random_baseline, summarize_errors,
+    ANGULAR_THRESHOLDS, AUC_ANGULAR_MAX, GroundTruth, load_ground_truth, simulate_random_baseline,
 )
 from multiplane import (  # noqa: E402
-    DUP_ANGLE_THRESH_DEFAULT, adjusted_metrics, simulate_random_multiplane,
+    adjusted_metrics, simulate_random_multiplane,
 )
 from evaluate import compute_summary  # noqa: E402
-
-REPO = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO / "Pipeline_Experiments" / "diagnostics"))
-from trivial_baselines import (  # noqa: E402
-    AXIS_PREDICTORS, PLANE_PREDICTORS, WORLD_AXES, load_labels, orientation_report,
-    score_plane_predictor,
-)
 
 SYMMETRY_TYPES = ("axis_sym", "plane_sym")
 REFERENCE_METRICS = ["angular_error_mean", "angular_error_median", "angular_error_std",
@@ -69,10 +53,6 @@ COMPARE_FIELDS = ["experiment", "method", "n_views", "n_total", "n_objects", "co
                   "metric", "method_value", "random_mean", "random_std", "random_ci_low",
                   "random_ci_high", "z", "p_empirical", "p_normal", "better_than_random",
                   "n_planes_mean"]
-LATEX_N_PLANES = (1, 2, 3)
-CAP4_OUTPUT = REPO / "Tesis_DCC_MDS" / "cap4_baselines.tex"
-CAP4_HEADER = ("% Generado por RandomBaseline/run_baseline.py cap4. "
-               "Requiere booktabs y adjustbox.\n\n")
 
 
 def _to_float(value: str | float | None) -> float | None:
@@ -400,132 +380,6 @@ def run_compare(args: argparse.Namespace) -> None:
     _write_csv(rows, Path(args.out), COMPARE_FIELDS)
 
 
-def run_latex(args: argparse.Namespace) -> None:
-    """ Write the random-baseline LaTeX tables (azar_axis, azar_plane, azar_plane_multi).
-
-    Args:
-        * args: parsed CLI arguments of the "latex" subcommand
-
-    """
-    out_dir = Path(args.out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    for symmetry_type in args.symmetry_type:
-        gt = load_ground_truth(Path(args.objects_root), symmetry_type)
-        simulated = simulate_random_baseline(gt, args.repetitions, args.seed)
-        if symmetry_type == "axis_sym":
-            closed_form = chance.analytic_summary(ANGULAR_THRESHOLDS, AUC_ANGULAR_MAX)
-            table = latex_tables.axis_table(gt, simulated, closed_form, args.repetitions)
-            path = out_dir / "azar_axis.tex"
-        else:
-            table = latex_tables.plane_table(gt, simulated, args.repetitions)
-            path = out_dir / "azar_plane.tex"
-        path.write_text(latex_tables.HEADER + table, encoding="utf-8")
-        print(f"{symmetry_type}: {_gt_profile(gt)} -> Saved: {path}")
-        if symmetry_type == "plane_sym":
-            multi = {k: simulate_random_multiplane(gt, args.repetitions, args.seed, mean_planes=k)
-                     for k in LATEX_N_PLANES}
-            table = latex_tables.plane_multi_table(gt, multi, args.repetitions,
-                                                   DUP_ANGLE_THRESH_DEFAULT)
-            path = out_dir / "azar_plane_multi.tex"
-            path.write_text(latex_tables.HEADER + table, encoding="utf-8")
-            print(f"{symmetry_type}: multi-plane -> Saved: {path}")
-
-
-def fixed_axis_scores(gt: GroundTruth, predictors: list[str]) -> dict[str, dict[str, float]]:
-    """ Angular metrics of predicting the same world axis for every object.
-
-    Args:
-        * gt: ground truth; the error is measured against the closest GT element
-        * predictors: world-axis names
-
-    Returns:
-        * dict[str, dict[str, float]]: LaTeX predictor label -> summarize_errors output
-
-    """
-    scores = {}
-    for name in predictors:
-        directions = np.tile(WORLD_AXES[name], (gt.n_objects, 1))
-        errors = best_match_errors(directions, gt.vectors)
-        scores[f"Siempre ${name}$"] = summarize_errors(errors)
-    return scores
-
-
-def cap4_tables(objects_root: Path, repetitions: int, seed: int) -> list[str]:
-    """ Build the tables of both baselines, random and fixed world axes.
-
-    Args:
-        * objects_root: folder holding curated_*_sym_obj/
-        * repetitions: simulated datasets per random baseline
-        * seed: RNG seed
-
-    Returns:
-        * list[str]: LaTeX tables, with tab:base_* labels so that they can coexist with cap4.tex
-
-    """
-    axis_gt = load_ground_truth(objects_root, "axis_sym")
-    plane_gt = load_ground_truth(objects_root, "plane_sym")
-    print(f"axis_sym: {_gt_profile(axis_gt)}\nplane_sym: {_gt_profile(plane_gt)}")
-
-    closed_form = chance.analytic_summary(ANGULAR_THRESHOLDS, AUC_ANGULAR_MAX)
-    axis_random = simulate_random_baseline(axis_gt, repetitions, seed)
-    plane_random = simulate_random_baseline(plane_gt, repetitions, seed)
-    multi_random = {k: simulate_random_multiplane(plane_gt, repetitions, seed, mean_planes=k)
-                    for k in LATEX_N_PLANES}
-
-    plane_labels = load_labels(objects_root, "plane_sym")
-    by_axis = orientation_report(plane_labels, "normal")
-    n_x, n_normals = by_axis["by_axis"].get("X", 0), by_axis["n_elements"]
-    plane_sets = []
-    for axes in PLANE_PREDICTORS:
-        row = score_plane_predictor(plane_labels, axes)
-        name = axes if len(axes) == 1 else r"\{" + ",".join(axes) + r"\}"
-        plane_sets.append({**row, "predictor": f"Siempre ${name}$"})
-
-    return [
-        latex_tables.axis_table(axis_gt, axis_random, closed_form, repetitions)
-        .replace("tab:axis_azar", "tab:base_axis_azar"),
-        latex_tables.trivial_angular_table(
-            fixed_axis_scores(axis_gt, AXIS_PREDICTORS),
-            "Línea base de ejes fijos para simetría axial: se predice siempre el mismo eje del "
-            f"mundo, sin mirar las imágenes, para los {axis_gt.n_objects} objetos.",
-            "tab:base_axis_fijos"),
-        latex_tables.plane_table(plane_gt, plane_random, repetitions)
-        .replace("tab:plane_azar", "tab:base_plane_azar"),
-        latex_tables.plane_multi_table(plane_gt, multi_random, repetitions,
-                                       DUP_ANGLE_THRESH_DEFAULT)
-        .replace("tab:plane_azar_multi", "tab:base_plane_azar_multi"),
-        latex_tables.trivial_angular_table(
-            fixed_axis_scores(plane_gt, list(WORLD_AXES)),
-            "Línea base de ejes fijos para simetría planar, un plano por objeto: la normal es "
-            f"siempre el mismo eje del mundo y el plano pasa por el origen, para los "
-            f"{plane_gt.n_objects} objetos. El error se mide contra el plano verdadero más "
-            f"cercano. {n_x} de las {n_normals} normales verdaderas están más cerca de $X$ que "
-            "de los otros ejes.",
-            "tab:base_plane_fijos"),
-        latex_tables.trivial_plane_set_table(
-            plane_sets,
-            "Línea base de ejes fijos para simetría planar por conjunto de planos: se predicen "
-            "siempre los mismos planos del mundo, que pasan por el origen, para los "
-            f"{plane_gt.n_objects} objetos. Recall y precisión usan el emparejamiento voraz a "
-            r"$15^\circ$ de la evaluación multiplano.",
-            "tab:base_plane_fijos_multi"),
-    ]
-
-
-def run_cap4(args: argparse.Namespace) -> None:
-    """ Write one .tex with the tables of both baselines.
-
-    Args:
-        * args: parsed CLI arguments of the "cap4" subcommand
-
-    """
-    tables = cap4_tables(Path(args.objects_root), args.repetitions, args.seed)
-    out = Path(args.out)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(CAP4_HEADER + "\n".join(tables), encoding="utf-8")
-    print(f"Saved: {out} ({len(tables)} tables)")
-
-
 def parse_args() -> argparse.Namespace:
     """ Parse CLI arguments. """
     p = argparse.ArgumentParser(description="Uniform random-direction baseline for axis/plane "
@@ -561,16 +415,6 @@ def parse_args() -> argparse.Namespace:
                            "matched: same coverage as the method")
     cmp_.add_argument("--out", default="RandomBaseline/outputs/random_baseline_comparison.csv")
 
-    tex = sub.add_parser("latex", parents=[common],
-                         help="LaTeX tables of the random baseline (axial and planar)")
-    tex.add_argument("--symmetry-type", nargs="+", choices=SYMMETRY_TYPES,
-                     default=list(SYMMETRY_TYPES))
-    tex.add_argument("--out-dir", default="docs/archive/resultados/tablas_azar")
-
-    cap4 = sub.add_parser("cap4", parents=[common],
-                          help="one .tex with the random and the fixed-axis baselines")
-    cap4.add_argument("--out", default=str(CAP4_OUTPUT))
-
     args = p.parse_args()
     if args.command == "compare" and not (args.summary_csv or args.eval_results):
         p.error("compare needs --summary-csv and/or --eval-results")
@@ -582,10 +426,6 @@ def main() -> None:
     args = parse_args()
     if args.command == "reference":
         run_reference(args)
-    elif args.command == "latex":
-        run_latex(args)
-    elif args.command == "cap4":
-        run_cap4(args)
     else:
         run_compare(args)
 
