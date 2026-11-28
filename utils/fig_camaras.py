@@ -39,7 +39,7 @@ RADIUS = 1.0
 UP = np.array([0.0, 1.0, 0.0])          # "arriba" de las cámaras (PyTorch3D)
 
 REPO = Path(__file__).resolve().parents[1]
-OUT_DEFAULT = REPO / "Tesis_DCC_MDS" / "imgs" / "chapter_3"
+OUT_DEFAULT = REPO / "Tesis_DCC_MDS" / "imagenes" / "cap3"
 
 
 # ---------------------------------------------------------------- utilidades

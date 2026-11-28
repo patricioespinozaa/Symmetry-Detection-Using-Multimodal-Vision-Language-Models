@@ -183,9 +183,9 @@ ruido) para compararse con su columna N1 % de la Tabla 2 (F1 0.906, SDE 0.343
   agregar el grupo "Este trabajo, rotación de Aguirre y Sipiran" (6/14/26) en
   el bloque planar, con su `\cmidrule`. Después regenerar y correr
   `utils/verificar_tablas_resultados_cap4.py`.
-- `Tesis_DCC_MDS/cap4.tex`, `sec:res-aguirre`: actualizar el texto y eliminar el
+- `Tesis_DCC_MDS/capitulos/cap4.tex`, `sec:res-aguirre`: actualizar el texto y eliminar el
   `\verificar` sobre la rotación.
-- `Tesis_DCC_MDS/cap3.tex`, `sec:sm_aguirre`: mencionar que las rotaciones se
+- `Tesis_DCC_MDS/capitulos/cap3.tex`, `sec:sm_aguirre`: mencionar que las rotaciones se
   recuperaron de sus conjuntos de robustez (Kabsch) y se aplicaron a las mallas
   limpias.
 - Si se corre la opción sobre `rot_1_noise`, agregar los valores N1 % de su

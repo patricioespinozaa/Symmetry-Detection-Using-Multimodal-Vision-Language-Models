@@ -192,7 +192,9 @@ def main() -> None:
         for k, (en_tabla, registrada) in enumerate(zip(numeros, ordenadas)):
             if en_tabla != registrada:
                 errores.append(f"{nombre}: celda numérica {k + 1} muestra {en_tabla}, la fuente da {registrada}")
-    cap4 = (REPO / "Tesis_DCC_MDS" / "cap4.tex").read_text(encoding="utf-8")
+    tesis = REPO / "Tesis_DCC_MDS"
+    ruta_cap4 = tesis / "capitulos" / "cap4.tex"   # estructura actual; antes estaba en la raíz
+    cap4 = (ruta_cap4 if ruta_cap4.exists() else tesis / "cap4.tex").read_text(encoding="utf-8")
     for incluido in re.findall(r"\\input\{tablas_resultados/([^}]+)\}", cap4):
         if not (CARPETA / f"{incluido}.tex").exists():
             errores.append(f"cap4.tex incluye tablas_resultados/{incluido}, que no existe")
