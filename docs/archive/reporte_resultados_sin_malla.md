@@ -4,8 +4,8 @@
 > estima eje/plano por triangulación de los puntos 2D de Molmo2, sin
 > ray-casting contra la malla (`Mapping/estimate_symmetry_no_mesh.py` y las
 > ablaciones de `Pipeline_Experiments/`). Fecha del análisis: 2026-09-26.
-> Resumen corto: `docs/resumen_ejecutivo_sin_malla.md`. Contexto de los
-> prompts y de la metodología: `docs/experimentos_pipeline_sin_malla.md`.
+> Resumen corto: `docs/archive/resumen_ejecutivo_sin_malla.md`. Contexto de los
+> prompts y de la metodología: `docs/archive/experimentos_pipeline_sin_malla.md`.
 >
 > Todas las tablas numéricas de este documento se generaron por script
 > directamente desde los CSV (no se transcribieron a mano). Las
@@ -360,7 +360,7 @@ entre prompts con z entre −2 y +2 **no es una diferencia real**.
   típico −0.003; 22 combinaciones mejoran y 20 empeoran)**: su ancla (punto más cercano a todos
   los rayos) cae en el centro al que miran las cámaras, que está sobre el GT.
   Elimina los outliers del ancla del baseline; no localiza mejor el eje.
-  **Esto corrige** lo afirmado en `docs/experimentos_pipeline_sin_malla.md`
+  **Esto corrige** lo afirmado en `docs/archive/experimentos_pipeline_sin_malla.md`
   §5.2bis.
 
 ---
@@ -496,7 +496,7 @@ desempeño.
      candidatos con `SDE_ref` > 0.02.
   3. **Usa la malla para predecir**, así que no es una variante "sin malla".
 
-  **Esto corrige** lo afirmado en `docs/experimentos_pipeline_sin_malla.md`
+  **Esto corrige** lo afirmado en `docs/archive/experimentos_pipeline_sin_malla.md`
   §5.4 ("la ablación con evidencia más sólida").
 
 Detalle por prompt de EXP-F:

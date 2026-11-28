@@ -3,7 +3,7 @@
 #
 # Uso:
 #   python utils/generar_tablas_latex.py                                   # todo, por consola
-#   python utils/generar_tablas_latex.py --salida docs/resultados/tablas.tex
+#   python utils/generar_tablas_latex.py --salida docs/archive/resultados/tablas.tex
 #   python utils/generar_tablas_latex.py --dir-salida Tesis_DCC_MDS/tablas  # un .tex por tipo y parte
 #   python utils/generar_tablas_latex.py --tipo plane_sym --partes base variantes_1 --bloques f1
 #   python utils/generar_tablas_latex.py --pivot auc_angular                # una métrica × n_views

@@ -1,7 +1,7 @@
 # Literatura por tipo de experimento (`Experiments/`)
 
 Un archivo por tipo de experimento o análisis del inventario
-[`docs/inventario_Experiments.md`](../../inventario_Experiments.md).
+[`docs/archive/inventario_Experiments.md`](../../archive/inventario_Experiments.md).
 
 | Archivo | Tipo | Experimentos del inventario |
 |---|---|---|

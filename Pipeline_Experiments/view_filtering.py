@@ -2,7 +2,7 @@
 # (which only implements one policy -- drop individual off-object points,
 # invalidate the view if too few survive) into the 3 named view-discard
 # policies from Experiments/sandbox_pipeline_server_final.ipynb section 14,
-# plus a "none" no-op. See docs/diagnostico_conditioning_axis.md S7 for why
+# plus a "none" no-op. See docs/archive/diagnostico_conditioning_axis.md S7 for why
 # this matters: points off the rendered silhouette don't explain
 # angular_error on their own, but correlate with translation_error outliers.
 from __future__ import annotations

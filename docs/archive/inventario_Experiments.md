@@ -7,8 +7,8 @@ tipo de experimento está en [`docs/literature/experimentos/`](literature/experi
 
 > **Advertencia de interpretación.** Todo lo de acá es *sandbox* (1 objeto o 30 objetos). Varias
 > "mejoras" no se sostuvieron en la corrida completa de 850 objetos — ver
-> `docs/experimentos_pipeline_sin_malla.md` §5.6 (winner's curse, EXP-C mezclaba dos mecanismos)
-> y `docs/reporte_resultados_sin_malla.md` (eje a nivel de azar; plano sin comparar todavía
+> `docs/archive/experimentos_pipeline_sin_malla.md` §5.6 (winner's curse, EXP-C mezclaba dos mecanismos)
+> y `docs/archive/reporte_resultados_sin_malla.md` (eje a nivel de azar; plano sin comparar todavía
 > contra el predictor trivial "siempre el plano X").
 
 ---
@@ -32,7 +32,7 @@ tipo de experimento está en [`docs/literature/experimentos/`](literature/experi
 
 Las corridas `*_6pts` y `*_2pts` (prompts multi-vista) **existen como JSON pero ningún notebook
 tiene sus métricas guardadas en los outputs**; los resultados a escala completa de esas familias
-están en `docs/resultados/Prompts_6pts.md` y `docs/resultados/Prompts_v08.md`.
+están en `docs/archive/resultados/Prompts_6pts.md` y `docs/archive/resultados/Prompts_v08.md`.
 
 ---
 

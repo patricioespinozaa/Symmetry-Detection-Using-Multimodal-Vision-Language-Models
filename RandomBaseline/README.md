@@ -40,7 +40,7 @@ python RandomBaseline/run_baseline.py compare --objects-root <objects_root> \
     --symmetry-type plane_sym \
     --eval-results <renders_root>/plane_sym/eval_s448_default_<EXP>_triangulation_results.json
 
-# 3. Tablas LaTeX del azar -> docs/resultados/tablas_azar/
+# 3. Tablas LaTeX del azar -> docs/archive/resultados/tablas_azar/
 #    azar_axis.tex, azar_plane.tex y azar_plane_multi.tex
 python RandomBaseline/run_baseline.py latex --objects-root ../data/objects
 

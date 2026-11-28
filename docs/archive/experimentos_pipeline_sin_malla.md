@@ -4,8 +4,8 @@
 > nueva — reorganiza y cita lo que ya está documentado en
 > `docs/pipeline_sin_malla.md`, `docs/implementacion_pipeline_sin_malla.md`,
 > `docs/implementacion_pipeline_experiments.md`,
-> `docs/diagnostico_conditioning_axis.md`,
-> `docs/verificacion_metricas_literatura.md`, `MolmoPointing/Experiments.md`,
+> `docs/archive/diagnostico_conditioning_axis.md`,
+> `docs/archive/verificacion_metricas_literatura.md`, `MolmoPointing/Experiments.md`,
 > `MolmoPointing/PROMPT_IMPROVEMENTS_v1.md`, `MolmoPointing/prompts_registry.py`,
 > `Pipeline_Experiments/README.md`, los docstrings de
 > `Pipeline_Experiments/triangulation_variants/*.py`, y los CSV de
@@ -165,9 +165,9 @@ global — resultado ambiguo, en `plane_v04_1` mejor a n=1 pero peor a n=6).
   "centro de curvatura" ayuda en tapas redondeadas; `axis_v07` invierte
   deliberadamente el ancla "más ancha" de v02 por "más angosta" (cuello/cintura)
   como contraste controlado.
-- **Ronda 3** (`_6pts`) — ver `docs/diagnostico_conditioning_axis.md` §7:
+- **Ronda 3** (`_6pts`) — ver `docs/archive/diagnostico_conditioning_axis.md` §7:
   motivada por la hipótesis (luego **descartada empíricamente**, ver
-  `docs/diagnostico_conditioning_axis.md` §4) de que más puntos por vista
+  `docs/archive/diagnostico_conditioning_axis.md` §4) de que más puntos por vista
   mejorarían el *conditioning* de la triangulación. Exige explícitamente que
   los 6 puntos caigan dentro del objeto.
 - **Ronda 4** (`v08`) — anti-degeneración explícita: además de STEP1/STEP2,
@@ -245,7 +245,7 @@ la selección para habilitar Flujo C (que devuelve puntos sin rol fijo).
 **Riesgo conocido**: mal condicionamiento cuando los centros de cámara y la
 línea son casi coplanares/colineales (Hartley 1997; Hartley & Zisserman
 2004) — el muestreo Fibonacci debería hacerlo infrecuente, pero se
-verificó empíricamente (ver §6, `docs/diagnostico_conditioning_axis.md`: **no
+verificó empíricamente (ver §6, `docs/archive/diagnostico_conditioning_axis.md`: **no
 se encontró señal de que esto explique el error residual**).
 
 ### 3.4 Plano — consolidación secuencial multi-plano (implementado, `detect_planes_no_mesh`)
@@ -355,7 +355,7 @@ individuales fuera del objeto, invalidar la vista si sobreviven muy pocos) en
 punto se clasifica dentro/fuera del objeto comparando el pixel renderizado en
 esa coordenada contra el umbral de fondo blanco plano
 (`BACKGROUND_THRESH=250`, PyTorch3D `HardFlatShader`). Motivado por
-`docs/diagnostico_conditioning_axis.md` §7: los puntos fuera de la silueta no
+`docs/archive/diagnostico_conditioning_axis.md` §7: los puntos fuera de la silueta no
 explican `angular_error` por sí solos, pero correlacionan con outliers de
 `translation_error` (lift 1.2–1.4×).
 
@@ -399,8 +399,8 @@ pero sin evidencia de haber corrido** — no se encontró ningún
 ## 5. Métricas obtenidas (`experiments_15_09_2026/`)
 
 > **Corrección (2026-09-26) — leer antes de usar esta sección en la tesis.**
-> Un análisis posterior (`docs/reporte_resultados_sin_malla.md`, resumen en
-> `docs/resumen_ejecutivo_sin_malla.md`) encontró que: (1) los resultados de
+> Un análisis posterior (`docs/archive/reporte_resultados_sin_malla.md`, resumen en
+> `docs/archive/resumen_ejecutivo_sin_malla.md`) encontró que: (1) los resultados de
 > eje de esta sección son **indistinguibles de una dirección al azar**
 > (57.3° de error medio analítico; los ejes GT están rotados al azar y las
 > predicciones colapsan al eje vertical del render); (2) los de plano **no
@@ -485,7 +485,7 @@ triviales, verificados en el código antes de reportarlos:
 3. **Toda variante que pondera por separación en píxeles (A, B, D) empeora
    ~0.6°; la que repondera iterativamente por residuo (E) empeora menos
    (~0.26°) pero sigue sin mejorar.** Esto es **consistente** (no
-   contradictorio) con la conclusión de `docs/diagnostico_conditioning_axis.md`
+   contradictorio) con la conclusión de `docs/archive/diagnostico_conditioning_axis.md`
    §4: el error angular alto y uniforme (~58–70°) no está explicado por
    ningún mecanismo de *varianza*/ruido de conditioning (ese diagnóstico ya
    había descartado `pixel_sep_mean`, `cond_number` y `axis_span` como
@@ -583,7 +583,7 @@ para los prompts `independent` de eje.
 > miran todas las cámaras: el ancla de EXP-B (punto más cercano a todos los
 > rayos) cae ahí sin importar si la dirección es correcta. EXP-B elimina
 > outliers del ancla del baseline; **no es evidencia de que localice mejor el
-> eje**. Ver `docs/reporte_resultados_sin_malla.md` §2.4 y §3.6.
+> eje**. Ver `docs/archive/reporte_resultados_sin_malla.md` §2.4 y §3.6.
 
 ### 5.3 Baseline de plano — ranking por prompt (multi-plano, `max_planes=3`)
 
@@ -676,7 +676,7 @@ resultados de plano.
 > filtra por `SDE_ref`) y EXP-F usa la malla para predecir. La corrida
 > `experiments_22_09_2026` (`--max-planes 3` + `f1_ref`) confirma además que
 > EXP-A/C/D no tienen efecto en plano. Ver
-> `docs/reporte_resultados_sin_malla.md` §4.5.
+> `docs/archive/reporte_resultados_sin_malla.md` §4.5.
 
 **Desglose prompt-por-prompt de EXP-F** (14 prompts × 3 `n_views` = 42 filas,
 umbral 0.03 para contar como cambio real en vez de ruido):
@@ -865,7 +865,7 @@ evaluó a escala completa.
    (necesita GPU).
 5. **Diagnóstico de consistencia de identidad** (residuo perpendicular al eje
    por punto, buscando distribución bimodal) — próximo paso priorizado por
-   `docs/diagnostico_conditioning_axis.md` §5.2, todavía no implementado; es
+   `docs/archive/diagnostico_conditioning_axis.md` §5.2, todavía no implementado; es
    el que decidiría si vale la pena el experimento híbrido `hybrid_v08`
    (verificación cross-view) antes que cualquier otra variante geométrica.
 
@@ -873,7 +873,7 @@ evaluó a escala completa.
 
 ## 7. Diagnósticos complementarios (fuera del alcance de este documento, referenciados)
 
-`docs/diagnostico_conditioning_axis.md` corrió 3 diagnósticos de costo cero
+`docs/archive/diagnostico_conditioning_axis.md` corrió 3 diagnósticos de costo cero
 (sin llamar a Molmo2) sobre por qué el error angular de eje es alto y
 uniforme (~58–70°, §5.1): conditioning de las normales de triangulación
 (§2–5), ángulo cámara-eje vs. GT (§6), y fracción de puntos que caen fuera
@@ -907,7 +907,7 @@ Fuente: `docs/pipeline_sin_malla.md` §8.1.
   Tensor*. IJCV, 22(2), 125–140.
 - Hartley, R., Zisserman, A. (2004). *Multiple View Geometry in Computer
   Vision* (2ª ed.). Cambridge University Press. — Cap. 15 (degeneración);
-  también citado en `docs/diagnostico_conditioning_axis.md` §2.1/2.2 (base
+  también citado en `docs/archive/diagnostico_conditioning_axis.md` §2.1/2.2 (base
   del argumento de conditioning/SVD).
 - Josephson, K., Kahl, F. *Triangulation of Points, Lines and Conics*. SCIA
   2007 / JMIV. *(verificar venue exacto antes de citar formalmente)*.
@@ -1013,7 +1013,7 @@ Fuente: `Pipeline_Experiments/README.md`,
 - Gao, Y. et al. *PRS-Net*. IEEE TVCG 2021 (DOI:10.1109/TVCG.2020.3003823).
 - `EnhancedBackProjection` (WACV 2026) — repositorio de referencia del que
   `Mapping/reference_metrics.py`/`Mapping/evaluate.py` portan `SDE_ref`/`F1_ref`
-  verbatim (`docs/verificacion_metricas_literatura.md` §A.3/B.3) — la misma
+  verbatim (`docs/archive/verificacion_metricas_literatura.md` §A.3/B.3) — la misma
   fórmula que `expF` usa para el gate, en vez de solo para puntuar.
 
 ### 8.8 Nota de verificación

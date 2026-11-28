@@ -466,7 +466,7 @@ def _f1_from_counts_by_threshold(counts_by_t: dict[float, tuple[int, int, int]])
 # n_views). Call this directly once a multi-plane detector (up to 3 planes,
 # matching the curated dataset's 1/2/3-plane objects) produces a LIST of
 # candidate planes per object — it fills the gap noted in
-# docs/verificacion_metricas_literatura.md B.1 ("no hay concepto de recall
+# docs/archive/verificacion_metricas_literatura.md B.1 ("no hay concepto de recall
 # sobre el conjunto completo de simetrías"), using the project's own angular
 # convention (ANGULAR_THRESHOLDS) instead of F1_ref's plane-vector distance.
 

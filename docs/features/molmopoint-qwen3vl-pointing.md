@@ -15,8 +15,8 @@ This doc exists specifically so the whole thing can be **replicated on a
 different server from scratch** — environment, folder layout, exact
 commands, and (most importantly) the non-obvious bugs/behaviors that were
 only found by actually running both models against real renders. The
-original planning document, `guia_instalacion_molmopoint_qwen3vl.md` (repo
-root), proposed the integration up front and flagged several things as
+original planning document, `docs/instalacion_molmopoint_qwen3vl.md`
+proposed the integration up front and flagged several things as
 "unverified" — this doc records what was actually true once tested live
 against the models on GPU, which in a few places differs from that original
 plan (see "What changed vs. the original plan" below).
@@ -485,7 +485,7 @@ Then copy into the repo under the matching model folder
   model's stages to completion (process exits, frees the GPU) before
   starting the other's.
 
-## What changed vs. the original plan (`guia_instalacion_molmopoint_qwen3vl.md`)
+## What changed vs. the original plan (`docs/instalacion_molmopoint_qwen3vl.md`)
 
 That document proposed the integration and correctly flagged several things
 as unverified. Once actually tested against the models on GPU:

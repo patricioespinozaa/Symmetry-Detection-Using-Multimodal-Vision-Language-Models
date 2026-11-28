@@ -3,7 +3,7 @@
 Documento de contexto para `contar_tokens_molmo2.py`. Alcance: **pipeline sin malla**
 (`Mapping/estimate_symmetry_no_mesh.py`, triangulación de rayos multi-vista; ver
 `docs/pipeline_sin_malla.md`). Las cifras de la sección 1 salen de
-`docs/resultados/tablas_448/`, `tablas_1136/` y `tablas_iluminacion/iluminacion_224.tex`.
+`docs/archive/resultados/tablas_448/`, `tablas_1136/` y `tablas_iluminacion/iluminacion_224.tex`.
 
 ## 1. El problema
 
@@ -104,7 +104,7 @@ Por eso, además del largo de la entrada, interesa medir **cuántas vistas queda
 ## 4. Tokens medidos y primeros hallazgos
 
 Resultados en `MolmoPointing/ContextLimits/resultados/` (CSV de los dos modos) y tablas LaTeX
-en `docs/resultados/tablas_tokens/tokens_molmo2.tex`, generadas con
+en `docs/archive/resultados/tablas_tokens/tokens_molmo2.tex`, generadas con
 `python utils/generar_tablas_tokens.py`. El conteo del procesador coincide con
 `n_input_tokens` de las corridas en las 31 combinaciones comparables.
 
@@ -308,8 +308,8 @@ además justifica cambiar el pipeline a una llamada por vista (`--prompt-mode si
 
 ## 9. Fuentes
 
-- Resultados del repositorio: `docs/resultados/tablas_448/`, `docs/resultados/tablas_1136/`,
-  `docs/resultados/tablas_iluminacion/iluminacion_224.tex`.
+- Resultados del repositorio: `docs/archive/resultados/tablas_448/`, `docs/archive/resultados/tablas_1136/`,
+  `docs/archive/resultados/tablas_iluminacion/iluminacion_224.tex`.
 - Código: `MolmoPointing/molmo_multiview_runner.py` (`_call_model`, `get_n_views_entries`,
   `parse_multi_coords`, `process_object`), `Mapping/estimate_symmetry_no_mesh.py`.
 - Molmo2-8B, model card: https://huggingface.co/allenai/Molmo2-8B

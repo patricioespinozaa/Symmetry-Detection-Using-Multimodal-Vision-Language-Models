@@ -16,7 +16,7 @@ folder has zero import-time coupling to it. The output JSON schema
 (points_by_image, images_sent, n_points, ...) is kept identical on purpose,
 so the existing no-mesh triangulation pipeline (Mapping/estimate_symmetry_no_mesh.py,
 Mapping/evaluate.py) can read it the same way once pointed at the right
-filename. See ../guia_instalacion_molmopoint_qwen3vl.md for the model-specific
+filename. See ../docs/instalacion_molmopoint_qwen3vl.md for the model-specific
 background.
 
 Output goes to qwen3vl_multiview[_<EXP>].json in the SAME render_dir Molmo2

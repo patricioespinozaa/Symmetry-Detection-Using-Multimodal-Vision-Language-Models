@@ -16,7 +16,7 @@ y `_updated_6_pts_v2.ipynb` §10–12 (ejecución). EXP-F se trata en
 ## Referencias citadas en los notebooks y en el repo
 
 Fuentes: encabezados de las celdas EXP-A..E de los notebooks;
-`docs/experimentos_pipeline_sin_malla.md` §4.1 y §8.3; `Pipeline_Experiments/README.md`.
+`docs/archive/experimentos_pipeline_sin_malla.md` §4.1 y §8.3; `Pipeline_Experiments/README.md`.
 
 - **[repo]** Bartoli, A., Sturm, P. (2005). *Structure-from-motion using lines*. CVIU, 100(3),
   416–441. DOI:10.1016/j.cviu.2005.06.001. — **EXP-A**.
@@ -56,7 +56,7 @@ Fuentes: encabezados de las celdas EXP-A..E de los notebooks;
 
 Ponderar (A, D, E) ayuda cuando el ruido es **heterocedástico y aleatorio** entre vistas. En el
 sandbox el baseline ganó casi todas las columnas. Esto es coherente con el diagnóstico del repo
-(`docs/diagnostico_conditioning_axis.md`): el error del eje parece venir de una **inconsistencia
+(`docs/archive/diagnostico_conditioning_axis.md`): el error del eje parece venir de una **inconsistencia
 de identidad** entre vistas, un sesgo sistemático que ningún esquema de pesos corrige. Ver
 [08_diagnostico_casos_conditioning.md](08_diagnostico_casos_conditioning.md) para el sesgo de
 selección en la tabla por objeto (A5).

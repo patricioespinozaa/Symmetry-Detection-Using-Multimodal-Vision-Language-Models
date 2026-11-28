@@ -4,7 +4,7 @@
 # metrics Mapping/evaluate.py reports would give for predictors that never
 # look at an image -- a fixed world axis (X/Y/Z) for axis_sym, a fixed set of
 # world-aligned planes through the render look-at point (the origin) for
-# plane_sym. Motivated by docs/reporte_resultados_sin_malla.md: on the 30
+# plane_sym. Motivated by docs/archive/reporte_resultados_sin_malla.md: on the 30
 # local sandbox objects, axis GT directions are randomly oriented (so the
 # chance reference is a uniform random direction) while plane GT normals are
 # all within ~1.4 deg of a world axis (ShapeNet canonical pose), so a fixed

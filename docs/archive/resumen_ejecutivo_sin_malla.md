@@ -1,6 +1,6 @@
 # Resumen ejecutivo — pipeline sin malla (triangulación multivista)
 
-> Síntesis de `docs/reporte_resultados_sin_malla.md` (detalle, tablas
+> Síntesis de `docs/archive/reporte_resultados_sin_malla.md` (detalle, tablas
 > completas y método). Datos: `results/experiments_15_09_2026` (eje) y
 > `results/experiments_22_09_2026` (plano), 850 objetos por tipo, más los
 > diagnósticos de `results/diagnostics/`. Fecha: 2026-09-26.
@@ -55,7 +55,7 @@ de triangulación (EXP-A..F).
 
 **Ninguna ablación mejora la tarea de fondo**: no se puede re-ponderar hacia
 una dirección que los puntos de entrada no contienen. Esto **corrige** dos
-conclusiones previas de `docs/experimentos_pipeline_sin_malla.md`: EXP-B no
+conclusiones previas de `docs/archive/experimentos_pipeline_sin_malla.md`: EXP-B no
 localiza mejor el eje, y EXP-F no es "la ablación más sólida" (mejora
 absteniéndose en ~1/3 de los objetos).
 

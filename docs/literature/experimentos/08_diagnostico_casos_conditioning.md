@@ -8,11 +8,11 @@ BUENO / MEDIO / MALO de `Mapping/select_sandbox_objects.py`.
 **Qué se hace:** inspección visual de los puntos 2D y de los rayos 3D para separar dos
 hipótesis. (a) Ruido/condicionamiento: los rayos no convergen. (b) Inconsistencia de identidad:
 los rayos convergen, pero a una estructura distinta del eje real. Complementa los diagnósticos
-cuantitativos de `docs/diagnostico_conditioning_axis.md`.
+cuantitativos de `docs/archive/diagnostico_conditioning_axis.md`.
 
 ## Conditioning de la triangulación
 
-Fuente de las **[repo]**: `docs/diagnostico_conditioning_axis.md` §2.
+Fuente de las **[repo]**: `docs/archive/diagnostico_conditioning_axis.md` §2.
 
 - **[repo]** Hartley, R., Zisserman, A. (2004). *Multiple View Geometry in Computer Vision*
   (2ª ed.). — El error de triangulación escala aproximadamente como 1/sin(θ) con la separación
@@ -36,7 +36,7 @@ Fuente de las **[repo]**: `docs/diagnostico_conditioning_axis.md` §2.
 
 ## Sesgo de selección: "mejor de N" por objeto (A5)
 
-`docs/experimentos_pipeline_sin_malla.md` §5.6 lo analiza: quedarse con el mínimo de 6
+`docs/archive/experimentos_pipeline_sin_malla.md` §5.6 lo analiza: quedarse con el mínimo de 6
 estimadores ruidosos por objeto hace que alguna ablación "gane" aunque ninguna sea mejor.
 
 - **[nuevo]** Cawley, G. C., Talbot, N. L. C. (2010). *On Over-fitting in Model Selection and

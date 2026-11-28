@@ -5,7 +5,7 @@
 # plane_sym). Today expA/expC/expD only exist as single-plane (max_planes=1,
 # method="triangulation"), which shares no metric column with the baseline's
 # method="triangulation_multiplane" rows -- see
-# docs/experimentos_pipeline_sin_malla.md S5.4.
+# docs/archive/experimentos_pipeline_sin_malla.md S5.4.
 #
 # Also turns on --with-reference-metrics so SDE_ref/F1_ref get computed for
 # expA/expC/expD/expF -- today those columns are populated ONLY for the 42

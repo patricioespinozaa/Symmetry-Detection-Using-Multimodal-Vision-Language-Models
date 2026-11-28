@@ -1,7 +1,7 @@
 # Actualización de métricas: plan de refactor
 
 > Decisiones sobre qué métricas eliminar, renombrar, mantener y agregar,
-> tomadas a partir de `docs/verificacion_metricas_literatura.md` y las
+> tomadas a partir de `docs/archive/verificacion_metricas_literatura.md` y las
 > respuestas obtenidas de Claude Web (con websearch) sobre cada una. Motivado
 > además por un cambio de alcance: el pipeline pasa de predecir **un solo**
 > plano por objeto a detectar **hasta 3 planos** de simetría (el dataset
@@ -15,7 +15,7 @@
 
 ---
 
-## 0. Qué cambió respecto a `docs/verificacion_metricas_literatura.md`
+## 0. Qué cambió respecto a `docs/archive/verificacion_metricas_literatura.md`
 
 Claude Web (con websearch) confirmó/aportó tres cosas nuevas que no estaban
 en la revisión interna:

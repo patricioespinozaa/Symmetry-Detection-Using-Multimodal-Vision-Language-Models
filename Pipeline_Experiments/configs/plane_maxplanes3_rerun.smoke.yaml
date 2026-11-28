@@ -2,7 +2,7 @@
 # dataset.max_objects differs (20 instead of every object). Run this first,
 # time it, and multiply by ~42.5 (850/20) to estimate the full run before
 # committing CPU time to it -- see the timing note in
-# docs/experimentos_pipeline_sin_malla.md.
+# docs/archive/experimentos_pipeline_sin_malla.md.
 #
 #   time python Pipeline_Experiments/run_batch.py \
 #       --config Pipeline_Experiments/configs/plane_maxplanes3_rerun.smoke.yaml

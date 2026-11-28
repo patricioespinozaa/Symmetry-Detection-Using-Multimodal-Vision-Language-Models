@@ -49,7 +49,7 @@ implemented; the paired Wilcoxon test (option B) was removed.
   per `(experiment, method, n_views, metric)`: the method and random
   coverage, the method value, the random mean/std/interval, `z`,
   `p_empirical`, `p_normal` and `better_than_random`.
-- `latex --out-dir` (default `docs/resultados/tablas_azar/`): `azar_axis.tex`
+- `latex --out-dir` (default `docs/archive/resultados/tablas_azar/`): `azar_axis.tex`
   (`tab:axis_azar`: closed form, simulation, 95% interval) and
   `azar_plane.tex` (`tab:plane_azar`: simulation and 95% interval; F1_ref
   rows included). Full coverage. `azar_plane_multi.tex` (`tab:plane_azar_multi`):

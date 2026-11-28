@@ -121,7 +121,7 @@ MIN_POINTS_ON_OBJECT_DEFAULT = 2   # una vista con menos puntos ON-OBJECT que es
 
 
 # ── Filtro opcional: descartar puntos que no caen sobre el objeto ─────────────
-# Ver docs/diagnostico_conditioning_axis.md S7: los puntos fuera de la silueta
+# Ver docs/archive/diagnostico_conditioning_axis.md S7: los puntos fuera de la silueta
 # (fondo blanco) no explican angular_error, pero SI correlacionan con outliers
 # de translation_error (lift 1.2-1.4x). Este filtro es puramente aditivo/previo
 # a widest_pair/get_point_by_obj_id -- no requiere ningun cambio en la logica
@@ -601,7 +601,7 @@ def parse_args() -> argparse.Namespace:
                    help="Descarta puntos que no caen sobre el objeto renderizado (fondo blanco) "
                         "ANTES de widest_pair/get_point_by_obj_id. Si a una vista le quedan menos "
                         "de --min-points-on-object puntos, la vista queda invalida (ver "
-                        "docs/diagnostico_conditioning_axis.md S7). Requiere que los PNG de los "
+                        "docs/archive/diagnostico_conditioning_axis.md S7). Requiere que los PNG de los "
                         "renders esten disponibles junto al molmo_multiview_<ID>.json.")
     p.add_argument("--min-points-on-object", type=int, default=MIN_POINTS_ON_OBJECT_DEFAULT,
                    help="Solo con --filter-off-object: minimo de puntos ON-OBJECT que debe "

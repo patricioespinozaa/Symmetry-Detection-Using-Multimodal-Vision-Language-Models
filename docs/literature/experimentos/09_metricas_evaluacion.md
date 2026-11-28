@@ -39,7 +39,7 @@ Los notebooks copian o importan las fórmulas de `Mapping/evaluate.py` sin cambi
 
 ## Referencias de nivel de azar (para interpretar cualquier tabla)
 
-- **[repo]** `docs/reporte_resultados_sin_malla.md` §2.1: error angular esperado de una
+- **[repo]** `docs/archive/reporte_resultados_sin_malla.md` §2.1: error angular esperado de una
   dirección aleatoria = 57.3°. El baseline de eje del sandbox (51–55°) está cerca de ese
   nivel.
 - **[repo]** `docs/literature/baseline_aleatorio.md` y el módulo `RandomBaseline/`

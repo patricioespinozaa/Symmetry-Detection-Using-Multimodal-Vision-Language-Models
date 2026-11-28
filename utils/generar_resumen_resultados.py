@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Genera un resumen en Markdown (mismo formato que docs/resultados/Flujo_A.md)
+Genera un resumen en Markdown (mismo formato que docs/archive/resultados/Flujo_A.md)
 a partir de los CSV de comparación de una corrida ndcfix
 (ndc_fix/<carpeta>/experiments_<fecha>/*_comparison.csv).
 
 Uso:
   python utils/generar_resumen_resultados.py --carpeta ndc_fix/ndcfix_6pts \
-      --titulo "Prompts de 6 puntos por vista" --salida docs/resultados/Prompts_6pts.md \
+      --titulo "Prompts de 6 puntos por vista" --salida docs/archive/resultados/Prompts_6pts.md \
       --base axis_v06_6pts=axis_v06 --base plane_v05_6pts=plane_v05 \
       --conclusiones notas.md
 

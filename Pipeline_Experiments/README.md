@@ -2,7 +2,7 @@
 
 Production-scale (850-object) implementation of the experiments prototyped in
 `Experiments/*.ipynb` (sandbox notebooks on ~30 curated objects) and in
-`docs/verificacion_metricas_literatura.md`. Everything here is **config-driven**:
+`docs/archive/verificacion_metricas_literatura.md`. Everything here is **config-driven**:
 instead of hardcoding one prompt/experiment_id the way the sandbox notebooks
 did, every script accepts an explicit list of `--experiment-id` values, and
 `run_batch.py` can auto-discover every prompt run you've already executed

@@ -12,7 +12,7 @@ fondo blanco (RGB > 250 en los 3 canales). `any` descarta la vista si algún pun
 
 ## Referencias en el repo
 
-- **[repo]** `docs/diagnostico_conditioning_axis.md` §7 (análisis propio): el porcentaje de
+- **[repo]** `docs/archive/diagnostico_conditioning_axis.md` §7 (análisis propio): el porcentaje de
   puntos sobre el objeto baja de 82.8% (n=6) a 51.5% (n=26). No explica el error angular
   (lift ≈ 1), pero sí parte de los outliers de traslación (lift 1.2–1.4×). Es la motivación del
   experimento.

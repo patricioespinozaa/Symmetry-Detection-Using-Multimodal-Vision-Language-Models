@@ -17,3 +17,8 @@ experiments_17*
 Gemini_poster_theme
 ECCV GeoInt poster
 .vscode
+# Reestructuración (docs/plan_reestructuracion_repo.md §5.6)
+*.pid
+*.synctex.gz
+logs_*/
+experiments_[0-9]*/

@@ -197,6 +197,6 @@ bugs":
   corrida descrita acá.
 - `docs/pipeline_sin_malla.md`, `docs/implementacion_pipeline_sin_malla.md`
   — diseño del pipeline sin malla que estas ablaciones extienden.
-- `docs/metricas_evaluacion.md`, `docs/verificacion_metricas_literatura.md`
+- `docs/metricas_evaluacion.md`, `docs/archive/verificacion_metricas_literatura.md`
   — definición de las métricas que `evaluate.py`/`compare_results_no_mesh.py`
   producen sobre la salida de este módulo.

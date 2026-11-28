@@ -15,7 +15,7 @@ malla al predecir, y es un experimento controlado a propósito.
 - **[repo]** Gao, L. et al. *PRS-Net: Planar Reflective Symmetry Detection Net for 3D Models*.
   IEEE TVCG 2021, DOI:10.1109/TVCG.2020.3003823. — Popularizó la distancia de simetría (SDE)
   como pérdida y criterio de validación de planos. EXP-F reusa esa idea como criterio de parada.
-  Fuente: celda EXP-F del notebook, `docs/experimentos_pipeline_sin_malla.md` §8.7. *(En
+  Fuente: celda EXP-F del notebook, `docs/archive/experimentos_pipeline_sin_malla.md` §8.7. *(En
   `docs/metricas_evaluacion.md` el año aparece "a confirmar".)*
 - **[repo]** Aguirre & Sipiran. *Enhanced Back-Projection of Vision Features for 3D Symmetry
   Detection*. WACV 2026 (repo `EnhancedBackProjection`). — Fuente verbatim de `SDE_ref`/`F1_ref`.

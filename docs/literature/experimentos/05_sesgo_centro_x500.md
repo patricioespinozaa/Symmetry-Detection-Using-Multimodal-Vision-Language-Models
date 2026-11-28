@@ -44,4 +44,4 @@ X_std = 2.3 px.
 Que el sesgo sea casi total en el prompt de plano (98.9%) e independiente de la elevación
 indica que la respuesta no depende de la geometría de la vista. Es el mismo modo de falla que la
 literatura de *shortcut learning* describe, y justifica medir siempre contra un predictor
-trivial (`docs/reporte_resultados_sin_malla.md`).
+trivial (`docs/archive/reporte_resultados_sin_malla.md`).

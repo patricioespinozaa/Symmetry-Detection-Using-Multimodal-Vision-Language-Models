@@ -41,9 +41,9 @@ midpoint* (`plane_v04*`), bilateral (`plane_v01*`), 6 puntos por vista (`axis_v0
 ## Nota sobre resolución (224 vs. 448 px)
 
 No encontré en el repo literatura específica que justifique el cambio de resolución. Los
-resultados a escala completa están en `docs/resultados/tablas_448` y `tablas_1136`. Si se
+resultados a escala completa están en `docs/archive/resultados/tablas_448` y `tablas_1136`. Si se
 quiere fundamentar, lo pertinente es la documentación del preprocesamiento de Molmo2 (recorte en
-*crops*), que ya se analizó en `docs/resultados/tablas_tokens`.
+*crops*), que ya se analizó en `docs/archive/resultados/tablas_tokens`.
 
 ## Lectura
 

@@ -3,7 +3,7 @@
 # todas las vistas en una sola llamada (Flujo A, --prompt-mode auto) frente a una imagen por
 # llamada (--prompt-mode single, corrida single_oct26), para axis_v04 y plane_v05_1.
 #
-# Genera dos juegos de tablas en docs/resultados/tablas_modo_envio/:
+# Genera dos juegos de tablas en docs/archive/resultados/tablas_modo_envio/:
 #   modo_envio_224.tex             resumen: una tabla por tipo con las métricas principales
 #   axis_modo_envio.tex            completas, mismas tablas que generar_tablas_latex.py
 #   plane_modo_envio.tex           (angular y posición; en plano también F1 y conteos)

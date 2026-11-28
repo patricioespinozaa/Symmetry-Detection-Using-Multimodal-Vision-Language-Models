@@ -25,7 +25,7 @@
   implementado en `axis_lit3_cot`.
 - **[repo]** Implementación real de LIT-1 con inferencia:
   `Pipeline_Experiments/candidates_then_select/`, todavía sin correr
-  (`docs/experimentos_pipeline_sin_malla.md` §4.3).
+  (`docs/archive/experimentos_pipeline_sin_malla.md` §4.3).
 
 ## Fundamentos agregados
 

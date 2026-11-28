@@ -565,7 +565,7 @@ def parse_args() -> argparse.Namespace:
                          help="LaTeX tables of the random baseline (axial and planar)")
     tex.add_argument("--symmetry-type", nargs="+", choices=SYMMETRY_TYPES,
                      default=list(SYMMETRY_TYPES))
-    tex.add_argument("--out-dir", default="docs/resultados/tablas_azar")
+    tex.add_argument("--out-dir", default="docs/archive/resultados/tablas_azar")
 
     cap4 = sub.add_parser("cap4", parents=[common],
                           help="one .tex with the random and the fixed-axis baselines")
