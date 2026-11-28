@@ -5,7 +5,7 @@
 # legitimate cenital views (elevation near +-90 deg, where X~=500 IS the
 # correct answer) from every other view (where it would indicate the bug).
 # Needs no GPU and no new Molmo2 calls -- it re-reads molmo_multiview_<EXP>.json
-# files that already exist, exactly like Mapping/diagnose_point_localization.py.
+# files that already exist, like the other read-only diagnostics in this folder.
 from __future__ import annotations
 
 import argparse

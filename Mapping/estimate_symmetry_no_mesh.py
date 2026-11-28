@@ -116,7 +116,7 @@ DEFAULT_FOV         = 60.0
 EDGE_ON_THRESH_DEFAULT     = 0.5    # |cos(angle)| below this = view is "edge-on" to a plane candidate
 DUP_ANGLE_THRESH_DEFAULT   = 15.0   # degrees; candidate planes closer than this are treated as duplicates
 
-BACKGROUND_THRESH        = 250  # RGB channel > this = fondo blanco (ver Mapping/diagnose_point_localization.py)
+BACKGROUND_THRESH        = 250  # RGB channel > this = fondo blanco (render PyTorch3D con fondo (1, 1, 1))
 MIN_POINTS_ON_OBJECT_DEFAULT = 2   # una vista con menos puntos ON-OBJECT que esto queda invalida
 
 

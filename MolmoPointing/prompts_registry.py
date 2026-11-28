@@ -70,30 +70,17 @@ DESCRIPTIONS: dict[str, str] = {
     "axis_v07":  "Narrowest cross-section (neck/waist) — inversion of v02's view-dependent 'widest' anchor",
     "plane_v06": "Seam/spine reinforced — v02 with explicit non-bilateral constraint + v04-style midpoint fallback",
     "plane_v07": "Global-orientation midpoint — v04_1 midpoint formula anchored to the plane's own orientation, not image-vertical",
-    # Round 3 (6 puntos por vista + filtro fondo/objeto, ver docs/diagnostico_conditioning_axis.md S7)
-    "axis_v06_6pts":  "v06 extendido a 6 puntos a lo largo del eje (poles + 4 intermedios), exige puntos dentro del objeto — compatible sin cambios con widest_pair",
-    "plane_v04_1_6pts": "v04_1 extendido a 6 midpoints a lo largo de la traza, exige puntos dentro del objeto — REQUIERE extender estimate_plane_no_mesh a 3 pares (hoy solo lee obj_id 1/2)",
-    # Borrador en Experiments/sandbox_pipeline_server_updated_6_pts_v2.ipynb, nunca extraído
-    # al registro ni corrido sobre los 850 -- NO es duplicado de axis_v06_6pts/plane_v04_1_6pts:
-    # base v07/v05 (no v06/v04_1), porcentajes explícitos (20/40/60/80%) en vez de "cuarto
-    # superior/inferior", y agrega un self-check explícito de colinealidad (precursor del
-    # self-check de axis_v08/plane_v08, aplicado acá a la variante de 6 puntos).
-    "axis_v07_6pts":  "v07 (narrowest cross-section) extendido a 6 puntos con self-check de colinealidad explícito",
-    "plane_v05_6pts": "v05 (plane trace extremes) extendido a 6 puntos con self-check de colinealidad explícito",
+    # Round 3 (6 puntos por vista) se quitó del repo; sus prompts siguen en el historial de git.
     # Round 4 (anti-degeneración STEP1/STEP2 + auto-verificación "Do NOT default to X=500";
-    # texto ya redactado y validado sobre el sandbox de Experiments/ bajo los IDs ad hoc
-    # "axis_v08_2pts"/"plane_v06_2pts" — ver Experiments/sandbox_pipeline_server_updated_6_pts_v2.ipynb.
+    # texto validado antes en el sandbox de agosto bajo los IDs ad hoc
+    # "axis_v08_2pts"/"plane_v06_2pts", hoy solo en el historial de git).
     # Renombrados aquí a axis_v08/plane_v08 (NO plane_v06 — ese ID ya está tomado por el
     # prompt Round 2 "Seam/spine reinforced" de arriba) para el registro formal y la corrida
     # sobre el corpus completo.
     "axis_v08":  "Poles con auto-verificación anti-colinealidad — STEP1 (geometría global) + STEP2 (por vista) + self-check 'si ambos puntos caen en X≈500, la cámara probablemente no mira de frente al eje'",
     "plane_v08": "Seam con auto-verificación anti-colinealidad — STEP1 (geometría global) + STEP2 (por vista) + self-check análogo a axis_v08 para el plano",
-    # Round 5 (EXP-LIT-2/EXP-LIT-3 de docs/verificacion_metricas_literatura.md y
-    # Experiments/sandbox_literatura.ipynb — ahí solo se SIMULARON con transformaciones
-    # geométricas sobre predicciones ya existentes de axis_v06_sandbox, nunca se corrió
-    # Molmo2 de verdad con estos prompts. Estos .txt son la primera implementación real).
-    "axis_lit2_grid": "Grilla 5x5 (A-E x 1-5) superpuesta sobre el render vía MolmoPointing/molmo_multiview_runner.py --grid-overlay — ancla por celda antes de coordenada fina (estilo MOKA arXiv:2403.03174)",
-    "axis_lit3_cot":  "CoT estructurado tipo scene-graph — declara categoría de objeto + orientación global + definición de los poles ANTES de señalar coordenadas (estilo arXiv:2507.13362)",
+    # Round 5 (axis_lit2_grid / axis_lit3_cot, no reportados) se quitó del repo; sus prompts
+    # siguen en el historial de git. --grid-overlay del runner se conserva.
 }
 
 

@@ -33,9 +33,9 @@ python Mapping/export_symmetry_overlay.py \\
 
 Note on --photos-root
 ----------------------
-export_viz_samples.py only copies the pipeline JSONs into
-results/<exp>/viz_samples/{good,bad}/, not the rendered PNGs (too heavy).
---photos-root must point at wherever the actual <object_id>/<size>/<lighting>/
+--json-root holds only the pipeline JSONs (the folder layout produced by the
+former export_viz_samples.py, now removed from the repo), not the rendered PNGs
+(too heavy). --photos-root must point at wherever the actual <object_id>/<size>/<lighting>/
 *.png files live (typically the original ../data/renders tree). If those
 renders aren't on this machine, copy the handful of PNGs you need over from
 wherever the multi-view rendering was run.
